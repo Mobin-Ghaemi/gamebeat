@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+
+{% block home %}
+{% if post %}
+    {% if request.user.id == post.user.id %}
+        <div class="text-center">
+            <a href="{% url 'home:deletepost' post.id %}" class="btn btn-danger">حذف</a>
+            <a href="{% url 'home:update_post' post.id %}" class="btn btn-info btn-separator">ویرایش</a>
+        </div>
+
+    
+    {% endif %}
+    <h3 class = "text-center"><a href="{% url 'account:profile_user' post.user.username %}">{{ post.user }}</a></h3>
+    <h3 class = "text-center">{{ post.user.email }}</h3><hr>
+    <h5 class = "text-center">{{ post.body }}</h5><hr>
+    <h5 class = "text-center">ایجاد شده در :</h5>
+    <h5 class = "text-center">{{ post.updated|date:"Y-M-d" }}</h5><hr>
+{% endif %}
+{% endblock %}

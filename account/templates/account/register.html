@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+
+{% block home %}
+    <h1>ثبت نام </h1>
+
+    <form method="post" class="col-md-3" novalidate>
+        
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit">ثبت نام</button>
+    </form>
+
+{% endblock %}

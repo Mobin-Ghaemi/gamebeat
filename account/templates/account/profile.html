@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block home %}
+
+    <h1 class='text-center'>{{ user }}</h1>
+    {% if request.user.username == user.username  %}
+
+            <a href="{% url 'home:create_post' %}" class ='btn btn-primary'> ساخت پست </a>
+    {% endif %}
+    {%if user == request.user%}
+        {% if user_count > 0 %}
+            <h5>پست های شما : </h5>
+        {% endif %}
+    {% else %}
+        {% if user_count > 0 %}
+            <h5 > : پست های کاربر<h5><br>
+        {% endif %}
+    {% endif %}
+    <div class='card'>
+        {% for x in post %}
+            <a href="{% url 'home:detail_post' x.id x.slug %}" class="card-body">{{ x.body|truncatewords:6 }}</a>
+        {% endfor %}
+    </div>
+    {% if user == request.user %}
+        {% if user_count == 0 %}
+            <h4 class='text-center'>شما تا کنون پستی به اشتراک نزاشتید</h4>
+        {% endif %}
+    {% else %}
+        {% if user_count == 0 %}
+        <h4 class='text-center'>این کاربر تا به حال پستی به اشتراک نگذاشته</h4>
+
+        {% endif %}
+    {% endif %}
+{% if user == request.user %}
+    <h4>تعداد پست های شما : {{user_count}}</h4>
+{% else %}
+<h4>تعداد پست های کاربر: {{user_count}} </h4>
+{% endif %}
+{% endblock %}
