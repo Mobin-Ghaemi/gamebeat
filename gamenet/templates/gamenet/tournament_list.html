@@ -1,0 +1,321 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+
+{% block title %}مسابقات{% endblock %}
+{% block page_title %}مسابقات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-title i { color: #f59e0b; }
+
+    .btn-create {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: none;
+        text-decoration: none;
+        font-weight: 700;
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #111;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .stat-box {
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.62);
+        margin-bottom: 4px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 14px;
+        border-radius: 11px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .filter-chip.active {
+        color: #fff;
+        border-color: rgba(124, 58, 237, 0.5);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.22), rgba(236, 72, 153, 0.15));
+    }
+
+    .t-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 14px;
+    }
+
+    .t-card {
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        padding: 16px;
+    }
+
+    .t-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .t-name {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .t-game {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 13px;
+        margin-top: 3px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .chip-public { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.32); }
+    .chip-private { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .chip-upcoming { background: rgba(59, 130, 246, 0.17); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.34); }
+    .chip-ongoing { background: rgba(245, 158, 11, 0.17); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.32); }
+    .chip-completed { background: rgba(107, 114, 128, 0.22); color: #d1d5db; border: 1px solid rgba(107, 114, 128, 0.38); }
+    .chip-cancelled { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .t-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 10px 0 14px;
+    }
+
+    .meta-box {
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px;
+    }
+
+    .meta-label {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+
+    .meta-value {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .t-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        flex: 1;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        border-radius: 10px;
+        padding: 10px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .btn-view {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-edit {
+        color: #bfdbfe;
+        border: 1px solid rgba(59, 130, 246, 0.33);
+        background: rgba(59, 130, 246, 0.14);
+    }
+
+    .empty-box {
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 42px 18px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.68);
+    }
+
+    @media (max-width: 768px) {
+        .stats-row { grid-template-columns: 1fr; }
+        .t-meta { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="fas fa-trophy"></i> مسابقات</h1>
+    <a href="{% url 'gamenet:tournament_create' %}" class="btn-create">
+        <i class="fas fa-plus"></i>
+        افزودن مسابقه
+    </a>
+</div>
+
+<div class="stats-row">
+    <div class="stat-box">
+        <div class="stat-label">کل مسابقات</div>
+        <div class="stat-value">{{ total_tournaments }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">مسابقات پابلیک</div>
+        <div class="stat-value">{{ public_count }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">مسابقات خصوصی</div>
+        <div class="stat-value">{{ private_count }}</div>
+    </div>
+</div>
+
+<div class="filters">
+    <a href="{% url 'gamenet:tournament_list' %}" class="filter-chip {% if not selected_visibility %}active{% endif %}">
+        <i class="fas fa-list"></i>
+        همه
+    </a>
+    <a href="{% url 'gamenet:tournament_list' %}?visibility=public" class="filter-chip {% if selected_visibility == 'public' %}active{% endif %}">
+        <i class="fas fa-globe"></i>
+        پابلیک
+    </a>
+    <a href="{% url 'gamenet:tournament_list' %}?visibility=private" class="filter-chip {% if selected_visibility == 'private' %}active{% endif %}">
+        <i class="fas fa-lock"></i>
+        خصوصی
+    </a>
+</div>
+
+{% if tournaments %}
+<div class="t-grid">
+    {% for tournament in tournaments %}
+    <div class="t-card">
+        <div class="t-head">
+            <div>
+                <div class="t-name">{{ tournament.name }}</div>
+                <div class="t-game">{{ tournament.game.name }}</div>
+            </div>
+            {% if tournament.visibility == 'public' %}
+                <span class="chip chip-public"><i class="fas fa-globe"></i> پابلیک</span>
+            {% else %}
+                <span class="chip chip-private"><i class="fas fa-lock"></i> خصوصی</span>
+            {% endif %}
+        </div>
+
+        {% if tournament.status == 'upcoming' %}
+            <span class="chip chip-upcoming">{{ tournament.get_status_display }}</span>
+        {% elif tournament.status == 'ongoing' %}
+            <span class="chip chip-ongoing">{{ tournament.get_status_display }}</span>
+        {% elif tournament.status == 'completed' %}
+            <span class="chip chip-completed">{{ tournament.get_status_display }}</span>
+        {% else %}
+            <span class="chip chip-cancelled">{{ tournament.get_status_display }}</span>
+        {% endif %}
+
+        <div class="t-meta">
+            <div class="meta-box">
+                <div class="meta-label">تاریخ شروع</div>
+                <div class="meta-value">{{ tournament.start_date|date:"Y/m/d H:i" }}</div>
+            </div>
+            <div class="meta-box">
+                <div class="meta-label">شرکت‌کننده</div>
+                <div class="meta-value">{{ tournament.participants_count }} / {{ tournament.max_participants }}</div>
+            </div>
+            <div class="meta-box">
+                <div class="meta-label">جایزه</div>
+                <div class="meta-value">{{ tournament.prize_pool|floatformat:0|intcomma }} تومان</div>
+            </div>
+            <div class="meta-box">
+                <div class="meta-label">ورودی</div>
+                <div class="meta-value">{{ tournament.entry_fee|floatformat:0|intcomma }} تومان</div>
+            </div>
+        </div>
+
+        <div class="t-actions">
+            <a href="{% url 'gamenet:tournament_detail' tournament.id %}" class="btn-action btn-view">
+                <i class="fas fa-eye"></i>
+                جزئیات
+            </a>
+            <a href="{% url 'gamenet:tournament_edit' tournament.id %}" class="btn-action btn-edit">
+                <i class="fas fa-edit"></i>
+                ویرایش
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+    <i class="fas fa-trophy" style="font-size:44px;margin-bottom:8px;display:block;"></i>
+    مسابقه‌ای پیدا نشد. از دکمه «افزودن مسابقه» استفاده کنید.
+</div>
+{% endif %}
+{% endblock %}

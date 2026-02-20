@@ -1,0 +1,305 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load custom_filters %}
+
+{% block title %}فروش های اخیر{% endblock %}
+{% block page_title %}فروش های اخیر{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-header h1 i { color: #8b5cf6; }
+
+    .tools-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 10px 12px;
+    }
+
+    .tools-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .tools-select {
+        min-width: 120px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #fff;
+        border-radius: 10px;
+        padding: 8px 10px;
+    }
+
+    .tools-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #8b5cf6, #a855f7);
+        color: #fff;
+    }
+
+    .tools-meta {
+        margin-right: auto;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+    }
+
+    .table-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    .stat-title {
+        color: #fff;
+        font-size: 17px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #10b981;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .table-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    .sales-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .sales-table th {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 12px 10px;
+        text-align: right;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sales-table td {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 14px;
+        padding: 12px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        white-space: nowrap;
+    }
+
+    .sales-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+
+    .cell-amount {
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    .cell-order {
+        color: #a78bfa;
+        font-weight: 700;
+    }
+
+    .empty-text {
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+        padding: 20px 10px;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 7px 12px;
+        border-radius: 9px;
+        font-size: 13px;
+    }
+
+    .pagination a {
+        text-decoration: none;
+        color: #c4b5fd;
+        border: 1px solid rgba(139, 92, 246, 0.35);
+        background: rgba(139, 92, 246, 0.12);
+    }
+
+    .pagination .current {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.07);
+    }
+
+    .pagination .disabled {
+        color: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-receipt"></i> فروش های اخیر</h1>
+</div>
+
+<div class="tools-bar">
+    <form method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="tools-label">تعداد رکورد در هر صفحه</span>
+        <select name="per_page" class="tools-select">
+            {% for choice in per_page_choices %}
+                <option value="{{ choice }}" {% if per_page == choice %}selected{% endif %}>{{ choice }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="tools-btn">اعمال</button>
+    </form>
+    <div class="tools-meta">نمایش {{ start_record }} تا {{ end_record }} از {{ total_records }} رکورد</div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">بیشترین فروش از نظر تعداد</div>
+        {% if top_product_by_qty %}
+            <div class="stat-title">{{ top_product_by_qty.product__name }}</div>
+            <div class="stat-value">{{ top_product_by_qty.total_qty }} عدد</div>
+        {% else %}
+            <div class="stat-title">داده‌ای ثبت نشده</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">بیشترین فروش از نظر مبلغ</div>
+        {% if top_product_by_revenue %}
+            <div class="stat-title">{{ top_product_by_revenue.product__name }}</div>
+            <div class="stat-value">{{ top_product_by_revenue.total_revenue|round_thousands }} تومان</div>
+        {% else %}
+            <div class="stat-title">داده‌ای ثبت نشده</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">پرفروش‌ترین دسته‌بندی</div>
+        {% if top_category_by_qty %}
+            <div class="stat-title">{{ top_category_by_qty.category_name }}</div>
+            <div class="stat-value">{{ top_category_by_qty.total_qty }} عدد</div>
+        {% else %}
+            <div class="stat-title">داده‌ای ثبت نشده</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-title"><i class="fas fa-table"></i> جدول آیتم‌های فروخته‌شده</div>
+    <div class="table-wrap">
+        <table class="sales-table">
+            <thead>
+                <tr>
+                    <th>سفارش</th>
+                    <th>زمان فروش</th>
+                    <th>جنس</th>
+                    <th>تعداد</th>
+                    <th>قیمت واحد</th>
+                    <th>مبلغ ردیف</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sales_items %}
+                <tr>
+                    <td class="cell-order">#{{ item.order_id }}</td>
+                    <td>{{ item.order.created_at|date:"Y/m/d H:i" }}</td>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.unit_price|round_thousands }} تومان</td>
+                    <td class="cell-amount">{{ item.total_price|round_thousands }} تومان</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="empty-text">هنوز آیتم فروخته‌شده‌ای وجود ندارد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if sales_items.has_other_pages %}
+    <div class="pagination">
+        {% if sales_items.has_previous %}
+            <a href="?per_page={{ per_page }}&page=1">اولین</a>
+            <a href="?per_page={{ per_page }}&page={{ sales_items.previous_page_number }}">قبلی</a>
+        {% else %}
+            <span class="disabled">اولین</span>
+            <span class="disabled">قبلی</span>
+        {% endif %}
+
+        <span class="current">صفحه {{ sales_items.number }} از {{ sales_items.paginator.num_pages }}</span>
+
+        {% if sales_items.has_next %}
+            <a href="?per_page={{ per_page }}&page={{ sales_items.next_page_number }}">بعدی</a>
+            <a href="?per_page={{ per_page }}&page={{ sales_items.paginator.num_pages }}">آخرین</a>
+        {% else %}
+            <span class="disabled">بعدی</span>
+            <span class="disabled">آخرین</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

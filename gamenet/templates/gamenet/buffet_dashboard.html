@@ -1,0 +1,702 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block title %}بوفه - {{ gamenet.name }}{% endblock %}
+{% block page_title %}بوفه{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== HEADER ========== */
+    .buffet-header {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.1));
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 24px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .buffet-header-content h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .buffet-header-content h1 i { color: #f59e0b; }
+    .buffet-header-content p { color: rgba(255,255,255,0.6); font-size: 14px; }
+    .buffet-actions { display: flex; gap: 10px; }
+    .btn-buffet {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 12px 22px; border-radius: 14px; font-size: 14px;
+        font-weight: 600; text-decoration: none; transition: all 0.3s ease;
+        cursor: pointer; border: none;
+    }
+    .btn-buffet-primary {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #000; box-shadow: 0 6px 16px rgba(245,158,11,0.3);
+    }
+    .btn-buffet-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(245,158,11,0.4); }
+    .btn-buffet-secondary {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1); color: #fff;
+    }
+    .btn-buffet-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    /* ========== STATS ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+        background: linear-gradient(135deg, rgba(26,26,37,0.9), rgba(18,18,26,0.95));
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 18px; padding: 20px;
+        position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0;
+        height: 3px; background: linear-gradient(90deg, var(--stat-color), transparent);
+    }
+    .stat-card.orange { --stat-color: #f59e0b; --stat-rgb: 245,158,11; }
+    .stat-card.green  { --stat-color: #10b981; --stat-rgb: 16,185,129; }
+    .stat-card.blue   { --stat-color: #3b82f6; --stat-rgb: 59,130,246; }
+    .stat-card.purple { --stat-color: #8b5cf6; --stat-rgb: 139,92,246; }
+    .stat-card.cyan   { --stat-color: #06b6d4; --stat-rgb: 6,182,212; }
+    .stat-card.red    { --stat-color: #ef4444; --stat-rgb: 239,68,68; }
+    .stat-icon {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg, rgba(var(--stat-rgb),0.2), rgba(var(--stat-rgb),0.1));
+        border-radius: 12px; display: flex; align-items: center;
+        justify-content: center; font-size: 20px;
+        color: var(--stat-color); margin-bottom: 14px;
+    }
+    .stat-value { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+    /* ========== SECTION CARD ========== */
+    .section-card {
+        background: linear-gradient(135deg, rgba(26,26,37,0.9), rgba(18,18,26,0.95));
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 24px; padding: 28px; margin-bottom: 28px;
+    }
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 24px; padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .section-header-tools {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .section-title {
+        font-size: 20px; font-weight: 700; color: #fff;
+        display: flex; align-items: center; gap: 12px;
+    }
+
+    /* ========== CATEGORY BLOCK ========== */
+    .category-block {
+        margin-bottom: 32px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 20px;
+        padding: 20px;
+    }
+    .category-block:last-child { margin-bottom: 0; }
+
+    .category-header {
+        display: flex; align-items: center; gap: 16px;
+        margin-bottom: 20px; padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.09);
+    }
+    .category-header-icon {
+        width: 66px; height: 66px; border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px; flex-shrink: 0;
+    }
+    .category-header-info h3 {
+        font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;
+    }
+    .category-header-info span {
+        font-size: 14px; color: rgba(255,255,255,0.55);
+    }
+
+    /* ========== PRODUCT ITEMS ========== */
+    .products-sale-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+    }
+    .sale-product-item {
+        display: flex; align-items: center; justify-content: space-between;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 14px; padding: 14px 18px;
+        transition: all 0.2s ease;
+    }
+    .sale-product-item:hover {
+        border-color: rgba(16,185,129,0.3);
+        background: rgba(16,185,129,0.04);
+    }
+    .sale-product-item.in-cart {
+        border-color: rgba(16,185,129,0.4);
+        background: rgba(16,185,129,0.08);
+        box-shadow: 0 0 12px rgba(16,185,129,0.1);
+    }
+    .sale-product-item.out-of-stock {
+        opacity: 0.4; pointer-events: none;
+    }
+    .sale-product-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .sale-product-price { font-size: 13px; color: #10b981; font-weight: 600; }
+    .sale-product-stock { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .sale-product-controls {
+        display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .sale-qty-btn {
+        width: 36px; height: 36px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.05); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s ease; font-size: 14px;
+    }
+    .sale-qty-btn:hover:not(:disabled) { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
+    .sale-qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .sale-qty-btn.minus:hover:not(:disabled) { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    .sale-qty-value {
+        font-size: 18px; font-weight: 700; color: #fff;
+        min-width: 30px; text-align: center;
+    }
+
+    /* ========== CART ========== */
+    .cart-bar {
+        position: sticky; bottom: 0; z-index: 100;
+        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08));
+        border: 1px solid rgba(16,185,129,0.25);
+        border-radius: 20px; padding: 20px 24px;
+        margin-top: 24px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.3);
+        display: none;
+    }
+    .cart-bar.visible { display: block; }
+    .cart-header-row {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 14px;
+    }
+    .cart-title {
+        font-size: 16px; font-weight: 700; color: #fff;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .cart-title i { color: #10b981; }
+    .cart-clear-btn {
+        background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25);
+        color: #ef4444; padding: 6px 14px; border-radius: 8px;
+        cursor: pointer; font-size: 13px; font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .cart-clear-btn:hover { background: rgba(239,68,68,0.2); }
+    .cart-items-list { margin-bottom: 14px; }
+    .cart-item-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 14px;
+    }
+    .cart-item-name { color: rgba(255,255,255,0.8); }
+    .cart-item-price { color: #10b981; font-weight: 600; }
+    .cart-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .cart-total { font-size: 22px; font-weight: 800; color: #10b981; }
+    .cart-submit-btn {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 14px 28px; border-radius: 14px; font-size: 15px;
+        font-weight: 700; border: none; cursor: pointer;
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: #000; box-shadow: 0 8px 20px rgba(16,185,129,0.3);
+        transition: all 0.3s ease;
+    }
+    .cart-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(16,185,129,0.4); }
+    .cart-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ========== RECENT SALES ========== */
+    .recent-sales-list { display: flex; flex-direction: column; gap: 10px; }
+    .recent-sale-item {
+        display: flex; align-items: center; justify-content: space-between;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px; padding: 14px 18px;
+        transition: all 0.2s ease;
+    }
+    .recent-sale-item:hover { border-color: rgba(139,92,246,0.3); }
+    .recent-sale-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .recent-sale-id {
+        background: rgba(139,92,246,0.15); color: #8b5cf6;
+        padding: 4px 10px; border-radius: 8px;
+        font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .recent-sale-items { display: flex; gap: 6px; flex-wrap: wrap; }
+    .recent-sale-chip {
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.7);
+        padding: 4px 10px; border-radius: 8px;
+        font-size: 12px; font-weight: 500;
+    }
+    .recent-sale-left { text-align: left; flex-shrink: 0; }
+    .recent-sale-amount { font-size: 15px; font-weight: 700; color: #10b981; }
+    .recent-sale-time { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state { text-align: center; padding: 50px 24px; }
+    .empty-icon {
+        width: 80px; height: 80px;
+        background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,191,36,0.05));
+        border: 2px dashed rgba(245,158,11,0.3); border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px; font-size: 32px; color: rgba(255,255,255,0.3);
+    }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .empty-state p { color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+
+    /* ========== TOAST ========== */
+    .sale-toast {
+        position: fixed; top: 24px; left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; padding: 16px 28px; border-radius: 14px;
+        font-size: 15px; font-weight: 600;
+        box-shadow: 0 12px 40px rgba(16,185,129,0.4);
+        z-index: 9999;
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        display: flex; align-items: center; gap: 10px;
+    }
+    .sale-toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+        .buffet-header { flex-direction: column; text-align: center; }
+        .buffet-actions { width: 100%; justify-content: center; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .products-sale-grid { grid-template-columns: 1fr; }
+        .cart-footer { flex-direction: column; gap: 12px; }
+        .cart-submit-btn { width: 100%; justify-content: center; }
+        .recent-sale-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .recent-sale-left {
+            text-align: right; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="buffet-header">
+    <div class="buffet-header-content">
+        <h1>
+            <i class="fas fa-cash-register"></i>
+            فروش بوفه
+        </h1>
+        <p>محصولات مورد نظر را انتخاب کنید و فروش را ثبت نمایید</p>
+    </div>
+    <div class="buffet-actions">
+        <a href="{% url 'gamenet:product_list' %}" class="btn-buffet btn-buffet-secondary">
+            <i class="fas fa-cog"></i>
+            مدیریت محصولات
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card orange">
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-value">{{ total_products }}</div>
+        <div class="stat-label">کل محصولات</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ available_products }}</div>
+        <div class="stat-label">محصولات موجود</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+        <div class="stat-value">{{ today_sales_count }}</div>
+        <div class="stat-label">تعداد فروش امروز</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-icon"><i class="fas fa-coins"></i></div>
+        <div class="stat-value">{{ today_sales|round_thousands }}</div>
+        <div class="stat-label">فروش امروز (تومان)</div>
+    </div>
+    <div class="stat-card cyan">
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-value">{{ today_net_profit|round_thousands }}</div>
+        <div class="stat-label">سود خالص امروز</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ pending_orders }}</div>
+        <div class="stat-label">سفارشات در انتظار</div>
+    </div>
+</div>
+
+<!-- Products by Category -->
+<div class="section-card" style="border-color: rgba(16,185,129,0.15);">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-store" style="color: #10b981;"></i>
+            انتخاب محصول برای فروش
+        </h2>
+        <div class="section-header-tools">
+            <div id="cart-total-header" style="display: none; font-size: 18px; font-weight: 700; color: #10b981;">
+                <i class="fas fa-shopping-basket"></i>
+                <span id="cart-total-value">۰</span> تومان
+            </div>
+        </div>
+    </div>
+
+    {% for category in categories %}
+    {% with cat_products=category.active_products %}
+    {% if cat_products %}
+    <div class="category-block">
+        <div class="category-header">
+            <div class="category-header-icon" style="background: {{ category.color }}20; color: {{ category.color }};">
+                <i class="{{ category.icon|default:'fas fa-box' }}"></i>
+            </div>
+            <div class="category-header-info">
+                <h3>{{ category.name }}</h3>
+                <span>{{ cat_products|length }} محصول</span>
+            </div>
+        </div>
+        <div class="products-sale-grid">
+            {% for product in cat_products %}
+            <div class="sale-product-item {% if not product.is_available or product.stock <= 0 %}out-of-stock{% endif %}"
+                 data-product-id="{{ product.id }}" data-category="{{ category.id }}"
+                 data-price="{{ product.sale_price|default:product.price }}" data-name="{{ product.name }}" data-stock="{{ product.stock }}">
+                <div class="sale-product-info">
+                    <div class="sale-product-name">{{ product.name }}</div>
+                    <div class="sale-product-price">
+                        {% if product.sale_price %}{{ product.sale_price|round_thousands }}{% else %}{{ product.price|round_thousands }}{% endif %} تومان
+                    </div>
+                    <div class="sale-product-stock">
+                        {% if product.stock > 0 %}موجودی: {{ product.stock }}{% else %}ناموجود{% endif %}
+                    </div>
+                </div>
+                {% if product.is_available and product.stock > 0 %}
+                <div class="sale-product-controls">
+                    <button class="sale-qty-btn minus" onclick="changeQty({{ product.id }}, -1)" disabled>
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="sale-qty-value" id="qty-{{ product.id }}">0</span>
+                    <button class="sale-qty-btn plus" onclick="changeQty({{ product.id }}, 1)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endfor %}
+
+    <!-- Uncategorized Products -->
+    {% if uncategorized_products %}
+    <div class="category-block">
+        <div class="category-header">
+            <div class="category-header-icon" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);">
+                <i class="fas fa-th-large"></i>
+            </div>
+            <div class="category-header-info">
+                <h3>سایر محصولات</h3>
+                <span>{{ uncategorized_products|length }} محصول</span>
+            </div>
+        </div>
+        <div class="products-sale-grid">
+            {% for product in uncategorized_products %}
+            <div class="sale-product-item {% if not product.is_available or product.stock <= 0 %}out-of-stock{% endif %}"
+                 data-product-id="{{ product.id }}" data-category="none"
+                 data-price="{{ product.sale_price|default:product.price }}" data-name="{{ product.name }}" data-stock="{{ product.stock }}">
+                <div class="sale-product-info">
+                    <div class="sale-product-name">{{ product.name }}</div>
+                    <div class="sale-product-price">
+                        {% if product.sale_price %}{{ product.sale_price|round_thousands }}{% else %}{{ product.price|round_thousands }}{% endif %} تومان
+                    </div>
+                    <div class="sale-product-stock">
+                        {% if product.stock > 0 %}موجودی: {{ product.stock }}{% else %}ناموجود{% endif %}
+                    </div>
+                </div>
+                {% if product.is_available and product.stock > 0 %}
+                <div class="sale-product-controls">
+                    <button class="sale-qty-btn minus" onclick="changeQty({{ product.id }}, -1)" disabled>
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="sale-qty-value" id="qty-{{ product.id }}">0</span>
+                    <button class="sale-qty-btn plus" onclick="changeQty({{ product.id }}, 1)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not categories and not uncategorized_products %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+        <h3>هنوز محصولی ثبت نشده</h3>
+        <p>از بخش مدیریت محصولات، محصول جدید اضافه کنید</p>
+        <a href="{% url 'gamenet:product_list' %}" class="btn-buffet btn-buffet-secondary">
+            <i class="fas fa-box"></i> مدیریت محصولات
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Sticky Cart Bar -->
+    <div class="cart-bar" id="cartBar">
+        <div class="cart-header-row">
+            <div class="cart-title"><i class="fas fa-shopping-basket"></i> سبد خرید</div>
+            <button onclick="clearCart()" class="cart-clear-btn">
+                <i class="fas fa-trash"></i> پاک کردن
+            </button>
+        </div>
+        <div class="cart-items-list" id="cart-items-list"></div>
+        <div class="cart-footer">
+            <div class="cart-total">جمع: <span id="cart-total-final">۰</span> تومان</div>
+            <button onclick="submitSale()" id="submit-sale-btn" class="cart-submit-btn">
+                <i class="fas fa-check-circle"></i> ثبت فروش
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="section-card">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-history" style="color: #8b5cf6;"></i>
+            فروش های اخیر
+        </h2>
+        <a href="{% url 'gamenet:recent_sales_page' %}" class="btn-buffet btn-buffet-secondary">
+            <i class="fas fa-external-link-alt"></i>
+            مشاهده همه
+        </a>
+    </div>
+    {% if recent_orders %}
+    <div class="recent-sales-list">
+        {% for order in recent_orders %}
+        <div class="recent-sale-item">
+            <div class="recent-sale-right">
+                <div class="recent-sale-id">#{{ order.id }}</div>
+                <div class="recent-sale-items">
+                    {% for item in order.items.all %}
+                    <span class="recent-sale-chip">{{ item.quantity }}× {{ item.product.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="recent-sale-left">
+                <div class="recent-sale-amount">{{ order.total_amount|round_thousands }} تومان</div>
+                <div class="recent-sale-time">{{ order.created_at|date:"H:i" }} - {{ order.created_at|date:"Y/m/d" }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding: 40px 24px;">
+        <div class="empty-icon" style="width: 60px; height: 60px; border-radius: 16px; font-size: 24px;">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <h3 style="font-size: 16px;">هنوز فروشی ثبت نشده</h3>
+        <p>از بالا محصولات را انتخاب کنید و فروش ثبت نمایید</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Toast -->
+<div class="sale-toast" id="saleToast">
+    <i class="fas fa-check-circle"></i>
+    <span id="saleToastMsg">فروش ثبت شد!</span>
+</div>
+
+<script>
+    const cart = {};
+
+    function toPersianNum(num) {
+        const p = '۰۱۲۳۴۵۶۷۸۹';
+        return String(num).replace(/\d/g, d => p[d]);
+    }
+
+    function formatPrice(price) {
+        return toPersianNum(Math.round(price).toLocaleString('en-US'));
+    }
+
+    function getCookie(name) {
+        let v = null;
+        if (document.cookie && document.cookie !== '') {
+            for (const c of document.cookie.split(';')) {
+                const t = c.trim();
+                if (t.substring(0, name.length + 1) === (name + '=')) {
+                    v = decodeURIComponent(t.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return v;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function changeQty(productId, delta) {
+        const item = document.querySelector(`.sale-product-item[data-product-id="${productId}"]`);
+        if (!item) return;
+        const stock = parseInt(item.dataset.stock);
+        const price = parseFloat(item.dataset.price);
+        const name = item.dataset.name;
+        const qtyEl = document.getElementById(`qty-${productId}`);
+
+        let current = cart[productId] ? cart[productId].qty : 0;
+        current += delta;
+        if (current < 0) current = 0;
+        if (current > stock) current = stock;
+
+        if (current === 0) {
+            delete cart[productId];
+            item.classList.remove('in-cart');
+        } else {
+            cart[productId] = { qty: current, price: price, name: name };
+            item.classList.add('in-cart');
+        }
+
+        qtyEl.textContent = toPersianNum(current);
+        item.querySelector('.sale-qty-btn.minus').disabled = current === 0;
+        item.querySelector('.sale-qty-btn.plus').disabled = current >= stock;
+
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const keys = Object.keys(cart);
+        const cartBar = document.getElementById('cartBar');
+        const cartHeader = document.getElementById('cart-total-header');
+        const cartList = document.getElementById('cart-items-list');
+
+        if (keys.length === 0) {
+            cartBar.classList.remove('visible');
+            cartHeader.style.display = 'none';
+            return;
+        }
+
+        cartBar.classList.add('visible');
+        cartHeader.style.display = 'block';
+
+        let total = 0;
+        let html = '';
+        for (const pid of keys) {
+            const ci = cart[pid];
+            const lineTotal = ci.qty * ci.price;
+            total += lineTotal;
+            html += `<div class="cart-item-row">
+                <span class="cart-item-name">${toPersianNum(ci.qty)}× ${ci.name}</span>
+                <span class="cart-item-price">${formatPrice(lineTotal)} تومان</span>
+            </div>`;
+        }
+
+        cartList.innerHTML = html;
+        document.getElementById('cart-total-final').textContent = formatPrice(total);
+        document.getElementById('cart-total-value').textContent = formatPrice(total);
+    }
+
+    function clearCart() {
+        for (const pid of Object.keys(cart)) {
+            const item = document.querySelector(`.sale-product-item[data-product-id="${pid}"]`);
+            if (item) {
+                item.classList.remove('in-cart');
+                const qtyEl = document.getElementById(`qty-${pid}`);
+                if (qtyEl) qtyEl.textContent = toPersianNum(0);
+                const minusBtn = item.querySelector('.sale-qty-btn.minus');
+                if (minusBtn) minusBtn.disabled = true;
+                const plusBtn = item.querySelector('.sale-qty-btn.plus');
+                if (plusBtn) plusBtn.disabled = false;
+            }
+        }
+        for (const k in cart) delete cart[k];
+        updateCartUI();
+    }
+
+    function submitSale() {
+        const keys = Object.keys(cart);
+        if (keys.length === 0) return;
+
+        const btn = document.getElementById('submit-sale-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت...';
+
+        const items = keys.map(pid => ({
+            product_id: parseInt(pid),
+            quantity: cart[pid].qty
+        }));
+
+        fetch("{% url 'gamenet:quick_sell' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ items: items })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`فروش ثبت شد! ${data.items_summary} — ${formatPrice(data.total_amount)} تومان`);
+
+                for (const pid of keys) {
+                    const item = document.querySelector(`.sale-product-item[data-product-id="${pid}"]`);
+                    if (item) {
+                        let newStock = parseInt(item.dataset.stock) - cart[pid].qty;
+                        if (newStock < 0) newStock = 0;
+                        item.dataset.stock = newStock;
+                        const stockEl = item.querySelector('.sale-product-stock');
+                        if (stockEl) stockEl.textContent = newStock > 0 ? `موجودی: ${toPersianNum(newStock)}` : 'ناموجود';
+                        if (newStock === 0) {
+                            item.classList.add('out-of-stock');
+                            item.classList.remove('in-cart');
+                            const controls = item.querySelector('.sale-product-controls');
+                            if (controls) controls.remove();
+                        }
+                    }
+                }
+
+                clearCart();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert(data.error || 'خطا در ثبت فروش');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش';
+        })
+        .catch(err => {
+            console.error(err);
+            alert('خطا در ارتباط با سرور');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش';
+        });
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('saleToast');
+        document.getElementById('saleToastMsg').textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+</script>
+{% endblock %}

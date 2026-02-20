@@ -1,0 +1,76 @@
+{% extends 'gamenet/base.html' %}
+{% load static %}
+
+{% block title %}قیمت‌ها | گیم‌بیت{% endblock %}
+
+{% block content %}
+<section class="pricing-section" style="padding: 40px 0;">
+    <div class="container">
+        <div class="section-header fade-in">
+            <h1 class="section-title">پلن‌های ابونمان</h1>
+            <p class="section-subtitle">
+                بسته مناسب خودت رو انتخاب کن و گیم‌نت رو به سطح جدیدی ببر
+            </p>
+        </div>
+        
+        <div class="pricing-grid">
+            <div class="pricing-card fade-in">
+                <h3 class="pricing-name">پایه</h3>
+                <p class="pricing-desc">برای گیم‌نت‌های کوچک</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۴۹</span>
+                    <span class="price-period">هزار تومان/ماه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> تا ۱۰ دستگاه</li>
+                    <li><i class="fas fa-check"></i> گزارش‌گیری پایه</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی ایمیل</li>
+                    <li><i class="fas fa-check"></i> ذخیره‌سازی ابری</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg">انتخاب پلن</a>
+                {% endif %}
+            </div>
+            
+            <div class="pricing-card featured fade-in">
+                <div class="pricing-badge">پرطرفدار</div>
+                <h3 class="pricing-name">حرفه‌ای</h3>
+                <p class="pricing-desc">برای گیم‌نت‌های متوسط</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۹۹</span>
+                    <span class="price-period">هزار تومان/ماه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> تا ۵۰ دستگاه</li>
+                    <li><i class="fas fa-check"></i> گزارش‌گیری پیشرفته</li>
+                    <li><i class="fas fa-check"></i> مدیریت مسابقات</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی تلفنی</li>
+                    <li><i class="fas fa-check"></i> API دسترسی</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg glow-box">انتخاب پلن</a>
+                {% endif %}
+            </div>
+            
+            <div class="pricing-card fade-in">
+                <h3 class="pricing-name">سازمانی</h3>
+                <p class="pricing-desc">برای گیم‌نت‌های بزرگ</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۱۹۹</span>
+                    <span class="price-period">هزار تومان/ماه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> دستگاه نامحدود</li>
+                    <li><i class="fas fa-check"></i> تحلیل هوش مصنوعی</li>
+                    <li><i class="fas fa-check"></i> مدیریت چندشعبه</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی ۲۴/۷</li>
+                    <li><i class="fas fa-check"></i> سفارشی‌سازی کامل</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg">انتخاب پلن</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

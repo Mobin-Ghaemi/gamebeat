@@ -1,0 +1,104 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}ثبت‌نام در {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">ثبت‌نام در مسابقه</h1>
+        <p class="page-subtitle">{{ tournament.name }}</p>
+    </div>
+    <a href="{% url 'gamenet:tournament_detail' tournament.id %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
+    <div class="card fade-in">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-user-plus" style="color: var(--accent-secondary)"></i>
+            اطلاعات شرکت‌کننده
+        </h3>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">نام و نام خانوادگی *</label>
+                {{ form.name }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">شماره تلفن *</label>
+                {{ form.phone }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">آیدی گیمری</label>
+                {{ form.gamer_tag }}
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                    آیدی شما در بازی (اختیاری)
+                </small>
+            </div>
+            
+            {% if tournament.entry_fee > 0 %}
+            <div class="alert alert-warning">
+                <i class="fas fa-coins"></i>
+                هزینه ورودی این مسابقه <strong>{{ tournament.entry_fee|floatformat:0 }} تومان</strong> می‌باشد.
+            </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-success btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-check"></i>
+                تکمیل ثبت‌نام
+            </button>
+        </form>
+    </div>
+    
+    <div class="card fade-in" style="animation-delay: 0.2s;">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-trophy" style="color: var(--warning)"></i>
+            اطلاعات مسابقه
+        </h3>
+        
+        <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 48px; color: var(--warning); margin-bottom: 12px;">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2 style="margin-bottom: 8px;">{{ tournament.name }}</h2>
+            <div style="color: var(--accent-secondary);">{{ tournament.game.name }}</div>
+            {% if tournament.visibility == 'private' %}
+            <div style="margin-top: 10px; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid rgba(239,68,68,.35); color:#f87171; background:rgba(239,68,68,.12); font-size:12px; font-weight:700;">
+                <i class="fas fa-lock"></i>
+                مسابقه خصوصی
+            </div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">جایزه کل</span>
+                <span style="font-weight: 600; color: var(--warning);">{{ tournament.prize_pool|floatformat:0 }} تومان</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">هزینه ورودی</span>
+                <span style="font-weight: 600;">{{ tournament.entry_fee|floatformat:0 }} تومان</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">تاریخ شروع</span>
+                <span style="font-weight: 600;">{{ tournament.start_date|date:"Y/m/d" }}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">ظرفیت باقیمانده</span>
+                <span style="font-weight: 600; color: var(--success);">
+                    {{ tournament.max_participants|add:"-"|add:tournament.participants_count }} نفر
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

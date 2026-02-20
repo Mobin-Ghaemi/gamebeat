@@ -1,0 +1,41 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}حذف دستگاه{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">حذف دستگاه</h1>
+        <p class="page-subtitle">آیا مطمئن هستید؟</p>
+    </div>
+</div>
+
+<div class="card fade-in" style="max-width: 500px; text-align: center;">
+    <div style="font-size: 64px; color: var(--danger); margin-bottom: 24px;">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    
+    <h2 style="margin-bottom: 12px;">حذف دستگاه #{{ device.number }}</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        {{ device.name }}
+    </p>
+    
+    <p style="color: var(--warning); font-size: 14px; margin-bottom: 24px;">
+        <i class="fas fa-warning"></i>
+        این عملیات غیرقابل بازگشت است و تمام جلسات مرتبط با این دستگاه نیز حذف خواهند شد.
+    </p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="fas fa-trash"></i>
+                بله، حذف کن
+            </button>
+            <a href="{% url 'gamenet:device_list' %}" class="btn btn-secondary btn-lg">
+                انصراف
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

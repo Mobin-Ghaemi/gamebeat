@@ -1,0 +1,2338 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block title %}داشبورد GameNet{% endblock %}
+{% block page_title %}صفحه اصلی{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== DASHBOARD HEADER ========== */
+    .dashboard-hero {
+        background: linear-gradient(135deg, #1a0a2e 0%, #0f0f1a 50%, #1a1a25 100%);
+        border-radius: 28px;
+        border: 1px solid rgba(124, 58, 237, 0.2);
+        padding: 40px;
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-hero::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+        animation: heroGlow 8s ease-in-out infinite;
+    }
+
+    .dashboard-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -100px;
+        left: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+        animation: heroGlow 6s ease-in-out infinite reverse;
+    }
+
+    @keyframes heroGlow {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .hero-info h1 {
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 900;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #7c3aed, #ec4899, #f59e0b);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 5s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% center; }
+        50% { background-position: 100% center; }
+    }
+
+    /* ========== DEVICE CARDS ========== */
+    .device-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .device-card {
+        background: linear-gradient(135deg, rgba(30, 30, 42, 0.9), rgba(20, 20, 30, 0.95));
+        border: 1px solid rgba(124, 58, 237, 0.15);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .device-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 8px 30px rgba(124, 58, 237, 0.2);
+    }
+
+    .device-card.available {
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .device-card.occupied {
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .device-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: rgba(124, 58, 237, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .device-number {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .device-number-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .device-number-value {
+        font-size: 20px;
+        font-weight: 900;
+        color: #7c3aed;
+        font-family: 'SF Mono', monospace;
+    }
+
+    .device-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .device-status.status-available {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .device-status.status-occupied {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .device-status i {
+        font-size: 8px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .device-body {
+        padding: 15px;
+    }
+
+    .device-body h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 12px;
+    }
+
+    .device-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .device-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .device-info-item i {
+        width: 28px;
+        height: 28px;
+        background: rgba(124, 58, 237, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a855f7;
+        font-size: 13px;
+    }
+
+    /* Timer Box */
+    .device-timer-box {
+        padding: 12px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(124, 58, 237, 0.05));
+        border-radius: 10px;
+        margin: 12px;
+        text-align: center;
+        border: 1px solid rgba(124, 58, 237, 0.2);
+    }
+
+    .timer-display {
+        font-size: 20px;
+        font-weight: 800;
+        color: #7c3aed;
+        margin-bottom: 6px;
+        font-family: 'SF Mono', monospace;
+    }
+
+    .timer-cost {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .timer-cost span {
+        color: #7c3aed;
+        font-weight: 700;
+    }
+
+    /* Buttons */
+    .device-buttons {
+        padding: 12px;
+        display: flex;
+        gap: 8px;
+    }
+
+    .device-buttons .btn {
+        flex: 1;
+        padding: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .device-card .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .device-card .btn-success:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .device-card .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .device-card .btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .device-timer {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 0 24px;
+        text-align: center;
+    }
+
+    .timer-display {
+        font-size: 36px;
+        font-weight: 900;
+        font-family: 'SF Mono', 'Monaco', monospace;
+        color: #ef4444;
+        text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        margin-bottom: 8px;
+    }
+
+    .timer-cost {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .timer-cost span {
+        color: #f59e0b;
+        font-weight: 700;
+    }
+
+    /* Session Result Styles */
+    .session-result {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        margin: 0 24px;
+        text-align: center;
+        animation: resultSlideIn 0.5s ease;
+    }
+
+    @keyframes resultSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #10b981;
+        margin-bottom: 16px;
+    }
+
+    .result-header i {
+        font-size: 24px;
+    }
+
+    .result-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .result-item.total {
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .result-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+    }
+
+    .result-value {
+        font-weight: 700;
+        font-size: 18px;
+        color: #fff;
+        font-family: 'SF Mono', 'Monaco', monospace;
+    }
+
+    .result-item.total .result-value {
+        color: #f59e0b;
+        font-size: 24px;
+    }
+
+    .result-unit {
+        font-size: 14px;
+        color: rgba(245, 158, 11, 0.8);
+        margin-right: 4px;
+    }
+
+    .btn-close-result {
+        margin-top: 8px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 8px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-close-result:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
+    }
+
+    /* Extra Controllers Section */
+    .extra-controllers {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(236, 72, 153, 0.05));
+        border: 1px solid rgba(124, 58, 237, 0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin: 0 24px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .controller-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+    }
+
+    .controller-label i {
+        color: #a855f7;
+        font-size: 18px;
+    }
+
+    .controller-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .controller-count {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .btn-controller {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-controller-add {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: white;
+    }
+
+    .btn-controller-add:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-controller-remove {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-controller-remove:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-controller-remove:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .controller-price {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 4px;
+    }
+
+    /* Button Loading State */
+    .btn.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .btn.loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .device-actions {
+        padding: 20px 24px;
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .device-actions .btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .device-actions .btn-success {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: white;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .device-actions .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+    }
+
+    .device-actions .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+        color: white;
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .device-actions .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+    }
+
+    .device-actions .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        flex: 0;
+        padding: 12px;
+    }
+
+    .device-actions .btn-secondary:hover {
+        background: rgba(124, 58, 237, 0.1);
+        border-color: rgba(124, 58, 237, 0.3);
+        color: #a855f7;
+    }
+
+    /* ========== BUFFET MODAL STYLES ========== */
+    .buffet-session-info {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.1));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+
+    /* session-cost-preview removed: cost is fetched from server only when stopping */
+
+    .buffet-categories {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .category-btn {
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .category-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .category-btn.active {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .buffet-products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .loading-products {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .buffet-product-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .buffet-product-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(124, 58, 237, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .buffet-product-card.selected {
+        background: rgba(124, 58, 237, 0.15);
+        border-color: rgba(124, 58, 237, 0.5);
+    }
+
+    .buffet-product-card .product-image {
+        width: 100%;
+        height: 80px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+
+    .buffet-product-card .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .buffet-product-card .product-image i {
+        font-size: 28px;
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    .buffet-product-card .product-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .buffet-product-card .product-price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #10b981;
+        margin-bottom: 8px;
+    }
+
+    .buffet-product-card .quantity-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .buffet-product-card.selected .quantity-control {
+        display: flex;
+    }
+
+    .quantity-control button {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .quantity-control button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+    }
+
+    .quantity-control button:active {
+        transform: scale(0.95);
+    }
+
+    .quantity-control button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .quantity-control .qty {
+        font-size: 20px;
+        font-weight: 800;
+        color: #fff;
+        min-width: 40px;
+        text-align: center;
+        font-family: 'SF Mono', monospace;
+    }
+
+    .selected-items-section {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 16px;
+        padding: 16px;
+        margin-top: 20px;
+    }
+
+    .selected-items-section h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .selected-items-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .selected-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .selected-item .item-name {
+        font-size: 14px;
+        color: #fff;
+    }
+
+    .selected-item .item-qty {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .selected-item .item-price {
+        font-size: 14px;
+        font-weight: 600;
+        color: #10b981;
+    }
+
+    .buffet-total-section {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.95), rgba(18, 18, 26, 0.98));
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px 28px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .total-row.grand-total {
+        padding-top: 16px;
+        margin-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .total-row.grand-total span:last-child {
+        color: #10b981;
+        font-size: 24px;
+    }
+
+    /* ========== MODAL STYLES ========== */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-container {
+        background: linear-gradient(145deg, #1e1e2e, #252538);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.9) translateY(20px);
+        transition: all 0.3s ease;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-overlay.active .modal-container {
+        transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 28px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-header h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .modal-header h3 i {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a855f7;
+    }
+
+    .modal-close {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+
+    .modal-body {
+        padding: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #aaa;
+        margin-bottom: 10px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: rgba(124, 58, 237, 0.5);
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .form-control option {
+        background: #1e1e2e;
+        color: #fff;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+        padding: 20px 28px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-footer .btn {
+        flex: 1;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .modal-footer .btn-cancel {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #888;
+    }
+
+    .modal-footer .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .modal-footer .btn-save {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        border: none;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .modal-footer .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(124, 58, 237, 0.4);
+    }
+
+    .modal-footer .btn-save:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .price-input-wrapper {
+        position: relative;
+    }
+
+    .price-input-wrapper .form-control {
+        padding-left: 70px;
+    }
+
+    .price-unit {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        font-size: 13px;
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+    }
+
+    .empty-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(236, 72, 153, 0.1));
+        border: 2px dashed rgba(124, 58, 237, 0.3);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: rgba(124, 58, 237, 0.5);
+        margin: 0 auto 28px;
+    }
+
+    .empty-state h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 28px;
+        font-size: 15px;
+    }
+
+    .empty-state .btn-add-device {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        border: none;
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+    }
+
+    .empty-state .btn-add-device:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(124, 58, 237, 0.5);
+    }
+
+    /* ========== TOURNAMENT SECTION ========== */
+    .tournament-card {
+        background: linear-gradient(135deg, rgba(30, 30, 45, 0.9), rgba(20, 20, 30, 0.95));
+        border-radius: 20px;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    .tournament-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .tournament-banner {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        padding: 24px;
+        text-align: center;
+    }
+
+    .tournament-banner i {
+        font-size: 40px;
+        color: white;
+    }
+
+    .tournament-content {
+        padding: 24px;
+    }
+
+    .tournament-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 12px;
+    }
+
+    .tournament-game {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 20px;
+    }
+
+    .tournament-game i {
+        color: #a855f7;
+    }
+
+    .tournament-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .tournament-stat {
+        text-align: center;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+
+    .tournament-stat-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: #f59e0b;
+        margin-bottom: 4px;
+    }
+
+    .tournament-stat-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ========== ANIMATIONS ========== */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+        .dashboard-hero {
+            padding: 28px;
+        }
+
+        .hero-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .hero-meta {
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .device-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-header {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Hero -->
+<div class="dashboard-hero fade-in">
+    <div class="hero-content">
+        <div class="hero-info">
+            <h1>{{ gamenet.name }}</h1>
+            <div class="hero-meta">
+                <div class="meta-badge">
+                    <i class="fas fa-calendar-alt"></i>
+                    خوش آمدید به داشبورد گیم‌نت
+                </div>
+                {% if subscription %}
+                <div class="meta-badge active">
+                    <i class="fas fa-check-circle"></i>
+                    اشتراک فعال تا {{ subscription.end_date|date:"Y/m/d" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-action">
+            <a href="{% url 'gamenet:device_create' %}" class="btn-add">
+                <i class="fas fa-plus"></i>
+                افزودن دستگاه
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card purple fade-in" style="animation-delay: 0.1s">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-desktop"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_devices }}</div>
+        <div class="stat-label">کل دستگاه‌ها</div>
+    </div>
+    
+    <div class="stat-card green fade-in" style="animation-delay: 0.2s">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ available_devices }}</div>
+        <div class="stat-label">دستگاه‌های آزاد</div>
+    </div>
+</div>
+
+<!-- Devices Section -->
+<div class="section-card fade-in" style="animation-delay: 0.5s">
+    <div class="section-header">
+        <div class="section-title">
+            <div class="section-title-icon">
+                <i class="fas fa-desktop"></i>
+            </div>
+            دستگاه‌ها
+        </div>
+        <div class="section-actions">
+            <a href="{% url 'gamenet:device_list' %}" class="btn-outline">
+                مشاهده همه
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+    
+    <div class="section-body">
+        {% if devices %}
+        <div class="device-grid">
+            {% for device in devices %}
+            <div class="device-card {% if device.status == 'available' %}available{% elif device.status == 'occupied' %}occupied{% endif %}" id="device-{{ device.id }}">
+                <div class="device-header">
+                    <div class="device-number">
+                        <span class="device-number-label">دستگاه</span>
+                        <span class="device-number-value">{{ device.number }}</span>
+                    </div>
+                    <span class="device-status status-{{ device.status }}">
+                        {% if device.status == 'available' %}
+                            <i class="fas fa-circle"></i> آزاد
+                        {% elif device.status == 'occupied' %}
+                            <i class="fas fa-circle"></i> مشغول
+                        {% else %}
+                            <i class="fas fa-tools"></i> تعمیر
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="device-body">
+                    <h3>{{ device.name }}</h3>
+                    <div class="device-info">
+                        <div class="device-info-item">
+                            <i class="fas fa-gamepad"></i>
+                            <span>{{ device.get_device_type_display }}</span>
+                        </div>
+                        <div class="device-info-item">
+                            <i class="fas fa-coins"></i>
+                            <span>{{ device.hourly_rate|round_thousands }} تومان/ساعت</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timer Box -->
+                <div class="device-timer-box" id="timer-box-{{ device.id }}" style="display: {% if device.status == 'occupied' %}block{% else %}none{% endif %};">
+                    <div class="timer-display" id="timer-{{ device.id }}">00:00:00</div>
+                </div>
+                
+                <!-- Buttons -->
+                <div class="device-buttons" id="buttons-{{ device.id }}">
+                    {% if device.status == 'available' %}
+                    <button class="btn btn-success" onclick="handleStart({{ device.id }}, {{ device.hourly_rate }})">
+                        <i class="fas fa-play"></i> شروع
+                    </button>
+                    {% else %}
+                    {% for session in device.sessions.all %}
+                    {% if session.is_active %}
+                    <button class="btn btn-danger" onclick="handleStop({{ session.id }}, {{ device.id }})">
+                        <i class="fas fa-stop"></i> پایان
+                    </button>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-desktop"></i>
+            </div>
+            <h3>هیچ دستگاهی ثبت نشده</h3>
+            <p>برای شروع، اولین دستگاه خود را اضافه کنید</p>
+            <a href="{% url 'gamenet:device_create' %}" class="btn-add-device">
+                <i class="fas fa-plus"></i>
+                افزودن دستگاه
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if upcoming_tournaments %}
+<div class="section-card fade-in" style="margin-top: 32px; animation-delay: 0.6s">
+    <div class="section-header">
+        <div class="section-title">
+            <div class="section-title-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2)); border-color: rgba(245, 158, 11, 0.3);">
+                <i class="fas fa-trophy" style="color: #f59e0b;"></i>
+            </div>
+            مسابقات آینده
+        </div>
+        <div class="section-actions">
+            <a href="{% url 'gamenet:tournament_list' %}" class="btn-outline">
+                مشاهده همه
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+    
+    <div class="section-body">
+        <div class="device-grid">
+            {% for tournament in upcoming_tournaments %}
+            <div class="tournament-card">
+                <div class="tournament-banner">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="tournament-content">
+                    <h3 class="tournament-title">{{ tournament.name }}</h3>
+                    <div class="tournament-game">
+                        <i class="fas fa-gamepad"></i>
+                        {{ tournament.game.name }}
+                    </div>
+                    <div class="tournament-stats">
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">{{ tournament.prize_pool|floatformat:0 }}</div>
+                            <div class="tournament-stat-label">جایزه (تومان)</div>
+                        </div>
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">{{ tournament.participants_count }}/{{ tournament.max_participants }}</div>
+                            <div class="tournament-stat-label">شرکت‌کنندگان</div>
+                        </div>
+                    </div>
+                    <a href="{% url 'gamenet:tournament_detail' tournament.id %}" class="btn btn-success" style="width: 100%; justify-content: center;">
+                        مشاهده جزئیات
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Edit Device Modal -->
+<div class="modal-overlay" id="editDeviceModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-cog"></i>
+                ویرایش دستگاه
+            </h3>
+            <button class="modal-close" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-device-id">
+            
+            <div class="form-group">
+                <label>نام دستگاه</label>
+                <input type="text" class="form-control" id="edit-device-name" placeholder="مثال: PlayStation 5">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>شماره دستگاه</label>
+                    <input type="number" class="form-control" id="edit-device-number" min="1">
+                </div>
+                <div class="form-group">
+                    <label>نوع دستگاه</label>
+                    <select class="form-control" id="edit-device-type">
+                        <option value="pc">کامپیوتر</option>
+                        <option value="ps4">PS4</option>
+                        <option value="ps5">PS5</option>
+                        <option value="xbox">Xbox</option>
+                        <option value="vr">VR</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>قیمت ساعتی</label>
+                <div class="price-input-wrapper">
+                    <input type="number" class="form-control" id="edit-device-rate" min="0" step="1000">
+                    <span class="price-unit">تومان</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+                انصراف
+            </button>
+            <button class="btn btn-save" id="saveDeviceBtn" onclick="saveDevice()">
+                <i class="fas fa-check"></i>
+                ذخیره تغییرات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Buffet Products Modal -->
+<div class="modal-overlay" id="buffetModal">
+    <div class="modal-container" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-shopping-cart"></i>
+                انتخاب محصولات بوفه
+            </h3>
+            <button class="modal-close" onclick="closeBuffetModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+            <input type="hidden" id="buffet-session-id">
+            <input type="hidden" id="buffet-device-id">
+            
+            <!-- Session cost preview removed (server-calculated on stop) -->
+            
+            <!-- Categories Filter -->
+            <div class="buffet-categories" id="buffet-categories">
+                <button class="category-btn active" data-category="all">همه</button>
+            </div>
+            
+            <!-- Products Grid -->
+            <div class="buffet-products-grid" id="buffet-products-grid">
+                <div class="loading-products">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    در حال بارگذاری محصولات...
+                </div>
+            </div>
+            
+            <!-- Selected Items -->
+            <div class="selected-items-section" id="selected-items-section" style="display: none;">
+                <h4><i class="fas fa-list"></i> محصولات انتخاب شده</h4>
+                <div class="selected-items-list" id="selected-items-list"></div>
+            </div>
+        </div>
+        
+        <!-- Total Section -->
+        <div class="buffet-total-section">
+            <div class="total-row">
+                <span>هزینه بازی:</span>
+                <span id="final-session-cost">0 تومان</span>
+            </div>
+            <div class="total-row">
+                <span>هزینه بوفه:</span>
+                <span id="final-buffet-cost">0 تومان</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>مجموع کل:</span>
+                <span id="final-grand-total">0 تومان</span>
+            </div>
+        </div>
+        
+        <div class="modal-footer" style="justify-content: center;">
+            <button class="btn btn-save" id="confirmBuffetBtn" onclick="confirmBuffetOrder()" style="min-width: 200px;">
+                <i class="fas fa-check"></i>
+                تأیید و پایان
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ========================================
+// سیستم ساده دستگاه‌ها
+// ========================================
+
+// نگهداری تایمرها
+const timers = {};
+const sessions = {};
+
+// گرفتن CSRF Token
+function getCSRF() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           getCookie('csrftoken') || '';
+}
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// نمایش پیام
+function toast(msg, type) {
+    const div = document.createElement('div');
+    div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        background: ${type === 'error' ? '#ef4444' : '#10b981'};
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+        z-index: 99999;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    `;
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
+
+// آپدیت تایمر - فقط نمایش زمان
+function updateTimer(deviceId) {
+    const s = sessions[deviceId];
+    if (!s) {
+        console.warn('⚠️ No session found for device', deviceId);
+        return;
+    }
+    
+    // چک کن که element برای این device وجود دارد یا نه
+    if (!document.getElementById('timer-' + deviceId)) {
+        console.warn('⚠️ Device ' + deviceId + ' not found in DOM. Stopping timer.');
+        // اگر device نیست، interval رو پاک کن
+        if (timers[deviceId]) {
+            clearInterval(timers[deviceId]);
+            delete timers[deviceId];
+        }
+        return;
+    }
+    
+    // استفاده از Date.now() برای زمان فعلی
+    const now = Date.now();
+    const elapsed = Math.floor((now - s.start) / 1000);
+    
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const sec = elapsed % 60;
+    
+    const timerEl = document.getElementById('timer-' + deviceId);
+    if (timerEl) {
+        timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+}
+
+// (حذف شده - محاسبه محلی استفاده میشود)
+
+// شروع تایمر
+function startTimer(deviceId, sessionId, startTime, rate) {
+    if (timers[deviceId]) clearInterval(timers[deviceId]);
+    
+    console.log(`🚀 startTimer called: deviceId=${deviceId}, sessionId=${sessionId}, startTime=${startTime}, rate=${rate}, type=${typeof startTime}`);
+    
+    // تبدیل startTime به milliseconds
+    let startTimestamp;
+    if (typeof startTime === 'string') {
+        // ISO string از API
+        startTimestamp = new Date(startTime).getTime();
+    } else if (startTime > 10000000000) {
+        // قبلا milliseconds (از localStorage یا JS timestamp)
+        startTimestamp = startTime;
+    } else {
+        // timestamp (seconds) از Django template - تبدیل به milliseconds
+        startTimestamp = startTime * 1000;
+    }
+    
+    sessions[deviceId] = {
+        id: sessionId,
+        start: startTimestamp,
+        rate: rate
+    };
+    
+    // ذخیره در localStorage برای persistence بعد از refresh
+    const sessionKey = `session_${sessionId}`;
+    localStorage.setItem(sessionKey, JSON.stringify({
+        deviceId: deviceId,
+        sessionId: sessionId,
+        start: startTimestamp,
+        rate: rate
+    }));
+    
+    console.log(`📦 Session stored:`, sessions[deviceId]);
+    console.log(`📅 Start timestamp: ${startTimestamp} (${new Date(startTimestamp).toISOString()})`);
+    
+    // ✅ UI رو update کن
+    const deviceCard = document.getElementById('device-' + deviceId);
+    if (!deviceCard) {
+        console.error('❌ Device card NOT FOUND for device ' + deviceId);
+        return;
+    }
+    
+    // timer-box را نشان بده
+    const timerBox = document.getElementById('timer-box-' + deviceId);
+    if (timerBox) {
+        timerBox.style.display = 'block';
+    } else {
+        console.error('❌ Timer box NOT FOUND for device ' + deviceId);
+    }
+    
+    // device card رو occupied علامت کن
+    deviceCard.classList.remove('available');
+    deviceCard.classList.add('occupied');
+    
+    // button ها رو update کن
+    const buttons = document.getElementById('buttons-' + deviceId);
+    if (buttons) {
+        buttons.innerHTML = `
+            <button class="btn btn-danger" onclick="handleStop(${sessionId}, ${deviceId})">
+                <i class="fas fa-stop"></i> پایان
+            </button>
+        `;
+    }
+    
+    updateTimer(deviceId);
+    timers[deviceId] = setInterval(() => updateTimer(deviceId), 1000);
+}
+
+// شروع دستگاه
+function handleStart(deviceId, rate) {
+    console.log('Start clicked:', deviceId);
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> صبر...';
+    
+    fetch(`/gamenet/api/quick-start/${deviceId}/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCSRF()}
+    })
+    .then(r => r.json())
+    .then(data => {
+        console.log('Response:', data);
+        if (data.success) {
+            // نمایش تایمر
+            document.getElementById('timer-box-' + deviceId).style.display = 'block';
+            
+            // شروع تایمر
+            startTimer(deviceId, data.session_id, data.start_time, data.hourly_rate);
+            
+            // تغییر دکمه
+            document.getElementById('buttons-' + deviceId).innerHTML = `
+                <button class="btn btn-danger" onclick="handleStop(${data.session_id}, ${deviceId})">
+                    <i class="fas fa-stop"></i> پایان
+                </button>
+            `;
+            
+            // تغییر وضعیت کارت
+            const card = document.getElementById('device-' + deviceId);
+            card.classList.remove('available');
+            card.classList.add('occupied');
+            card.querySelector('.device-status').innerHTML = '<i class="fas fa-circle"></i> مشغول';
+            card.querySelector('.device-status').className = 'device-status status-occupied';
+            
+            toast('شروع شد', 'success');
+        } else {
+            toast(data.error || 'خطا', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> شروع';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        toast('خطا در ارتباط', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-play"></i> شروع';
+    });
+}
+
+// پایان دستگاه - باز کردن مودال بوفه
+function handleStop(sessionId, deviceId) {
+    console.log('Stop clicked:', sessionId);
+    
+    // توقف موقت تایمر برای محاسبه دقیق
+    const wasRunning = !!timers[deviceId];
+    if (timers[deviceId]) {
+        clearInterval(timers[deviceId]);
+        delete timers[deviceId];
+    }
+    // برای دقت قیمت، هزینه را از سرور بگیریم (بدون پایان جلسه)
+    document.getElementById('buffet-session-id').value = sessionId;
+    document.getElementById('buffet-device-id').value = deviceId;
+
+    function requestCost(idToUse) {
+        return fetch(`/gamenet/api/session-cost/${idToUse}/`, { headers: {'X-CSRFToken': getCSRF()} })
+            .then(r => r.json());
+    }
+
+    // دریافت هزینه از سرور و نگهداری در متغیر currentSessionCost (بدون تغییر DOM)
+    const costFlow = requestCost(sessionId)
+    .then(data => {
+        if (data && data.success) {
+            currentSessionCost = Math.round(data.current_cost);
+            console.log('💰 Received session cost from server:', currentSessionCost);
+            console.log('📊 Session details - ID:', data.session_id, 'Cost:', data.current_cost, 'Hourly Rate:', data.hourly_rate, 'Elapsed:', data.elapsed_seconds, 's');
+            return null;
+        }
+        console.warn('Session cost fetch failed, attempting to recreate session:', data && data.error);
+        return recreateServerSession(sessionId, deviceId).then(newId => {
+            if (!newId) {
+                console.warn('Could not recreate session on server; calculating locally');
+                // محاسبه محلی بر اساس زمان رفته
+                const session = sessions[deviceId];
+                if (session && session.start && session.rate) {
+                    const elapsedMs = Date.now() - session.start;
+                    const elapsedHours = elapsedMs / (1000 * 60 * 60);
+                    currentSessionCost = Math.round(elapsedHours * session.rate);
+                    console.log('💰 Calculated session cost locally:', currentSessionCost, '(elapsed:', elapsedHours.toFixed(2), 'h, rate:', session.rate, ')');
+                } else {
+                    currentSessionCost = 0;
+                    console.warn('⚠️ No session data available for local calculation');
+                }
+                return null;
+            }
+            return requestCost(newId).then(d2 => {
+                if (d2 && d2.success) {
+                    currentSessionCost = Math.round(d2.current_cost);
+                    console.log('💰 Received session cost after recreate:', currentSessionCost);
+                } else {
+                    console.warn('Failed to fetch cost after recreate', d2 && d2.error);
+                    // محاسبه محلی
+                    const session = sessions[deviceId];
+                    if (session && session.start && session.rate) {
+                        const elapsedMs = Date.now() - session.start;
+                        const elapsedHours = elapsedMs / (1000 * 60 * 60);
+                        currentSessionCost = Math.round(elapsedHours * session.rate);
+                        console.log('💰 Calculated session cost locally after recreate:', currentSessionCost);
+                    } else {
+                        currentSessionCost = 0;
+                    }
+                }
+            });
+        });
+    })
+    .catch(err => {
+        console.error('Error fetching session cost:', err);
+        // محاسبه محلی در صورت خطا
+        const session = sessions[deviceId];
+        if (session && session.start && session.rate) {
+            const elapsedMs = Date.now() - session.start;
+            const elapsedHours = elapsedMs / (1000 * 60 * 60);
+            currentSessionCost = Math.round(elapsedHours * session.rate);
+            console.log('💰 Calculated session cost locally (error fallback):', currentSessionCost);
+        } else {
+            currentSessionCost = 0;
+        }
+    })
+    .finally(() => {
+        // reset محصولات انتخاب شده و بارگذاری محصولات پس از تکمیل دریافت هزینه (یا fallback)
+        selectedProducts = {};
+        loadBuffetProducts();
+        updateBuffetSummary();
+        document.getElementById('buffetModal').classList.add('active');
+    });
+}
+
+// بارگذاری اولیه
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Device system loaded');
+    
+    // تأخیر کوچک برای اطمینان از آمادگی DOM
+    setTimeout(() => {
+        // شروع تایمرهای فعال
+        {% for device in devices %}
+        {% if device.status == 'occupied' %}
+        {% for session in device.sessions.all %}
+        {% if session.is_active %}
+        console.log('🟢 Loading active session: Device {{ device.id }}, Session {{ session.id }}, Start: {{ session.start_time|date:"U" }}');
+        startTimer({{ device.id }}, {{ session.id }}, {{ session.start_time|date:"U" }}, {{ session.hourly_rate }});
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+        
+        // بازیابی جلسات از localStorage با پاکسازی خودکار آیتم‌های قدیمی
+        console.log('🔍 Restoring sessions from localStorage...');
+        const MAX_SESSION_AGE_MS = 1000 * 60 * 60 * 24; // 24 hours
+        const now = Date.now();
+        for (let key in localStorage) {
+            if (!key.startsWith('session_')) continue;
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                if (!(data && data.deviceId && data.sessionId && data.start && data.rate)) {
+                    // مقادیر نامعتبر — پاک کن
+                    console.warn('Invalid session data, removing', key);
+                    localStorage.removeItem(key);
+                    continue;
+                }
+
+                // اگر خیلی قدیمی است، پاکش کن
+                if (now - data.start > MAX_SESSION_AGE_MS) {
+                    console.log(`🧹 Removing stale local session ${data.sessionId} (age ${(now - data.start) / 1000 / 3600}h)`);
+                    localStorage.removeItem(key);
+                    continue;
+                }
+
+                // اگر المنت دستگاه در DOM وجود ندارد، skip کن (ممکن است صفحه دیگری باشد)
+                const deviceEl = document.getElementById('device-' + data.deviceId);
+                if (!deviceEl) {
+                    console.log(`ℹ️ Device element not found for device ${data.deviceId}; skipping restore for local key ${key}`);
+                    continue;
+                }
+
+                // اگر قبلاً با template از سرور load شده است، پاک کن تا تکراری نشود
+                if (sessions[data.deviceId]) {
+                    console.log(`🔁 Session for device ${data.deviceId} already active from server; removing local key ${key}`);
+                    localStorage.removeItem(key);
+                    continue;
+                }
+
+                console.log(`♻️ Restoring session from localStorage: Device ${data.deviceId}, Session ${data.sessionId}`);
+                startTimer(data.deviceId, data.sessionId, data.start, data.rate);
+            } catch (e) {
+                console.warn('Failed to parse session key, removing', key, e);
+                localStorage.removeItem(key);
+            }
+        }
+    }, 100);
+});
+
+// ========================================
+// سیستم بوفه و محصولات
+// ========================================
+
+let selectedProducts = {}; // {productId: {name, price, quantity}}
+let currentSessionCost = 0; // هزینه فعلی بازی
+
+// بارگذاری محصولات از سرور
+function loadBuffetProducts() {
+    const grid = document.getElementById('buffet-products-grid');
+    grid.innerHTML = '<div class="loading-products"><i class="fas fa-spinner fa-spin"></i> در حال بارگذاری...</div>';
+    
+    fetch('/gamenet/api/products/', {
+        headers: {'X-CSRFToken': getCSRF()}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.products && data.products.length > 0) {
+            renderProducts(data.products);
+            renderCategories(data.categories || []);
+        } else {
+            grid.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">محصولی موجود نیست</div>';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        grid.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">خطا در بارگذاری محصولات</div>';
+    });
+}
+
+// ایجاد session روی سرور از داده‌های محلی (fallback وقتی session روی سرور وجود ندارد)
+function recreateServerSession(localSessionId, deviceId) {
+    const sessionKey = `session_${localSessionId}`;
+    const local = JSON.parse(localStorage.getItem(sessionKey) || 'null');
+    const start = local && local.start ? local.start : Date.now();
+
+    return fetch(`/gamenet/api/quick-start/${deviceId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRF(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({start_time: start})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data && data.success) {
+            // بروزرسانی localStorage با session جدید
+            const newKey = `session_${data.session_id}`;
+            localStorage.setItem(newKey, JSON.stringify({
+                deviceId: deviceId,
+                sessionId: data.session_id,
+                start: start,
+                rate: data.hourly_rate
+            }));
+            // پاک کردن کلید قبلی
+            try { localStorage.removeItem(sessionKey); } catch(e){}
+            return data.session_id;
+        }
+        return null;
+    })
+    .catch(err => {
+        console.error('Failed to recreate server session', err);
+        return null;
+    });
+}
+
+// نمایش دسته‌بندی‌ها
+function renderCategories(categories) {
+    const container = document.getElementById('buffet-categories');
+    container.innerHTML = '<button class="category-btn active" onclick="filterCategory(\'all\')">همه</button>';
+    
+    categories.forEach(cat => {
+        container.innerHTML += `
+            <button class="category-btn" onclick="filterCategory(${cat.id})">${cat.name}</button>
+        `;
+    });
+}
+
+// فیلتر بر اساس دسته‌بندی
+function filterCategory(catId) {
+    document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const products = document.querySelectorAll('.buffet-product-card');
+    products.forEach(card => {
+        if (catId === 'all' || card.dataset.category == catId) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// نمایش محصولات
+function renderProducts(products) {
+    const grid = document.getElementById('buffet-products-grid');
+    grid.innerHTML = '';
+    
+    products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'buffet-product-card';
+        card.dataset.productId = p.id;
+        card.dataset.productName = p.name;
+        card.dataset.productPrice = p.price;
+        card.dataset.productStock = p.stock || 0;
+        card.dataset.category = p.category_id || '';
+        
+        const isOutOfStock = p.stock <= 0;
+        
+        card.innerHTML = `
+            <div class="product-image" style="${isOutOfStock ? 'opacity: 0.5;' : ''}">
+                ${p.image ? `<img src="${p.image}" alt="${p.name}">` : '<i class="fas fa-box"></i>'}
+            </div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-price">${(Math.floor(parseInt(p.price) / 1000) * 1000).toLocaleString('fa-IR')} تومان</div>
+            <div class="product-stock" style="font-size: 12px; color: ${p.stock > 5 ? '#10b981' : p.stock > 0 ? '#f59e0b' : '#ef4444'}; margin-bottom: 8px;">
+                ${isOutOfStock ? '<i class="fas fa-times-circle"></i> ناموجود' : `<i class="fas fa-box"></i> ${p.stock} عدد`}
+            </div>
+            <div class="quantity-control">
+                <button id="minus-${p.id}" onclick="changeProductQty(${p.id}, -1)" disabled style="${isOutOfStock ? 'opacity: 0.5;' : ''}">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span class="qty" id="qty-${p.id}">0</span>
+                <button id="plus-${p.id}" onclick="changeProductQty(${p.id}, 1)" ${isOutOfStock ? 'disabled' : ''} style="${isOutOfStock ? 'opacity: 0.5;' : ''}">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+// تغییر تعداد محصول
+function changeProductQty(productId, change) {
+    const card = document.querySelector(`[data-product-id="${productId}"]`);
+    const qtyEl = document.getElementById('qty-' + productId);
+    const minusBtn = document.getElementById('minus-' + productId);
+    const plusBtn = document.getElementById('plus-' + productId);
+    const stock = parseInt(card.dataset.productStock) || 0;
+    
+    const currentQty = parseInt(qtyEl.textContent);
+    const newQty = Math.max(0, Math.min(stock, currentQty + change)); // حداکثر تا موجودی
+    
+    qtyEl.textContent = newQty;
+    
+    // enable/disable دکمه منهی
+    if (newQty === 0) {
+        minusBtn.disabled = true;
+    } else {
+        minusBtn.disabled = false;
+    }
+    
+    // enable/disable دکمه جمع (اگر به حد موجودی رسید)
+    if (newQty >= stock) {
+        plusBtn.disabled = true;
+    } else {
+        plusBtn.disabled = false;
+    }
+    
+    if (newQty > 0) {
+        card.classList.add('selected');
+        selectedProducts[productId] = {
+            name: card.dataset.productName,
+            price: parseFloat(card.dataset.productPrice),
+            quantity: newQty
+        };
+    } else {
+        card.classList.remove('selected');
+        delete selectedProducts[productId];
+    }
+    
+    updateBuffetSummary();
+}
+
+// آپدیت خلاصه سفارش
+function updateBuffetSummary() {
+    const selectedSection = document.getElementById('selected-items-section');
+    const selectedList = document.getElementById('selected-items-list');
+    
+    const items = Object.values(selectedProducts);
+    
+    if (items.length === 0) {
+        selectedSection.style.display = 'none';
+    } else {
+        selectedSection.style.display = 'block';
+        selectedList.innerHTML = items.map(item => `
+            <div class="selected-item">
+                <div>
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-qty"> × ${item.quantity}</span>
+                </div>
+                <span class="item-price">${(Math.floor((item.price * item.quantity) / 1000) * 1000).toLocaleString('fa-IR')} تومان</span>
+            </div>
+        `).join('');
+    }
+    
+    // محاسبه مجموع
+    const sessionCost = currentSessionCost;
+    const buffetCost = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const grandTotal = sessionCost + buffetCost;
+    
+    console.log('💰 updateBuffetSummary: Session=' + sessionCost + ' | Buffet=' + buffetCost + ' | Total=' + grandTotal);
+    
+    document.getElementById('final-session-cost').textContent = formatTomanDisplay(sessionCost);
+    document.getElementById('final-buffet-cost').textContent = formatTomanDisplay(buffetCost);
+    document.getElementById('final-grand-total').textContent = formatTomanDisplay(grandTotal);
+}
+
+// قالب‌بندی نمایش قیمت: برای مبالغ بالای 1000 تومان گرد کردن، در غیر این صورت نمایش دقیق
+function formatTomanDisplay(amount) {
+    const value = Number(amount);
+    if (value >= 1000) {
+        // برای مبالغ بالای 1000، گرد کردن به هزار تومان
+        const rounded = Math.floor(value / 1000) * 1000;
+        return rounded.toLocaleString('fa-IR') + ' تومان';
+    } else {
+        // برای مبالغ کمتر از 1000، نمایش دقیق بدون گرد کردن
+        return Math.round(value).toLocaleString('fa-IR') + ' تومان';
+    }
+}
+
+// بازگردانی دستگاه به حالت available بدون رفرش
+function resetDeviceUI(deviceId, hourlyRate) {
+    console.log('🔄 Resetting device UI:', deviceId);
+    
+    // عناصر
+    const timerBox = document.getElementById('timer-box-' + deviceId);
+    const buttonsDiv = document.getElementById('buttons-' + deviceId);
+    const card = document.getElementById('device-' + deviceId);
+    
+    // پنهان کردن تایمر
+    if (timerBox) timerBox.style.display = 'none';
+    
+    // تغییر دکمه
+    if (buttonsDiv) {
+        buttonsDiv.innerHTML = `
+            <button class="btn btn-success" onclick="handleStart(${deviceId}, ${hourlyRate})">
+                <i class="fas fa-play"></i> شروع
+            </button>
+        `;
+    }
+    
+    // تغییر وضعیت کارت
+    if (card) {
+        card.classList.remove('occupied');
+        card.classList.add('available');
+        const statusEl = card.querySelector('.device-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-circle"></i> آزاد';
+            statusEl.className = 'device-status status-available';
+        }
+    }
+    
+    // پاک کردن session
+    if (sessions[deviceId]) {
+        delete sessions[deviceId];
+    }
+    if (timers[deviceId]) {
+        clearInterval(timers[deviceId]);
+        delete timers[deviceId];
+    }
+}
+
+// بستن مودال بوفه (بدون متوقف کردن تایمر)
+function closeBuffetModal() {
+    const deviceId = document.getElementById('buffet-device-id').value;
+    
+    // بستن مودال
+    document.getElementById('buffetModal').classList.remove('active');
+    
+    // reset کردن دکمه تأیید به حالت اولیه
+    const confirmBtn = document.getElementById('confirmBuffetBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check"></i> تأیید و پایان';
+    }
+    
+    // پاک کردن انتخاب‌ها (نه currentSessionCost - آن برای محاسبات لازم است)
+    selectedProducts = {};
+    
+    // پاک کردن cache برای این session
+    if (deviceId && sessions[deviceId]) {
+        const sessionKey = `session_${sessions[deviceId].id}`;
+        localStorage.removeItem(sessionKey);
+    }
+    
+    // راه‌اندازی مجدد تایمر اگر متوقف شده بود
+    if (deviceId && sessions[deviceId]) {
+        if (!timers[deviceId]) {
+            startTimer(deviceId, sessions[deviceId].id, new Date(sessions[deviceId].start).toISOString(), sessions[deviceId].rate);
+        }
+    }
+}
+
+// پایان بدون خرید بوفه
+function skipBuffetAndEnd() {
+    const sessionId = document.getElementById('buffet-session-id').value;
+    const deviceId = document.getElementById('buffet-device-id').value;
+    
+    // متوقف کردن قطعی تایمر
+    if (timers[deviceId]) {
+        clearInterval(timers[deviceId]);
+        delete timers[deviceId];
+    }
+    
+    // گرفتن hourly_rate برای reset
+    const device = document.getElementById('device-' + deviceId);
+    const rateText = device ? device.querySelector('.device-info-item:nth-child(2) span')?.textContent : '0';
+    const rate = parseInt(rateText.replace(/[^0-9]/g, '')) || 0;
+    
+    fetch(`/gamenet/api/quick-stop/${sessionId}/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCSRF()}
+    })
+    .then(r => {
+        if (!r.ok) {
+            // session not found on server — تلاش برای بازسازی آن با start time محلی
+            console.warn('Session not found on server, attempting to recreate it');
+            return recreateServerSession(sessionId, deviceId)
+                .then(newSessionId => {
+                    if (!newSessionId) {
+                        // اگر نتوانست، fallback به reset UI
+                        resetDeviceUI(deviceId, rate);
+                        closeBuffetModal();
+                        const sessionKey = `session_${sessionId}`;
+                        localStorage.removeItem(sessionKey);
+                        delete sessions[deviceId];
+                        toast('پایان یافت', 'success');
+                        return null;
+                    }
+                    // تلاش دوباره برای quick-stop با session جدید
+                    return fetch(`/gamenet/api/quick-stop/${newSessionId}/`, {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': getCSRF()}
+                    }).then(rr => rr.json());
+                });
+        }
+        return r.json();
+    })
+    .then(data => {
+        if (!data) return;
+        if (data && data.success) {
+            resetDeviceUI(deviceId, data.hourly_rate || rate);
+            closeBuffetModal();
+            // پاک کردن localStorage
+            const sessionKey = `session_${sessionId}`;
+            localStorage.removeItem(sessionKey);
+            delete sessions[deviceId];
+            toast(`پایان - ${data.formatted_cost} تومان`, 'success');
+        } else if (data && !data.success) {
+            toast(data.error || 'خطا', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        toast('خطا در ارتباط', 'error');
+    });
+}
+
+// تأیید و ثبت سفارش بوفه
+function confirmBuffetOrder() {
+    const sessionId = document.getElementById('buffet-session-id').value;
+    const deviceId = document.getElementById('buffet-device-id').value;
+    const btn = document.getElementById('confirmBuffetBtn');
+    
+    // متوقف کردن قطعی تایمر
+    if (timers[deviceId]) {
+        clearInterval(timers[deviceId]);
+        delete timers[deviceId];
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پایان...';
+    
+    // گرفتن hourly_rate برای reset
+    const device = document.getElementById('device-' + deviceId);
+    const rateText = device ? device.querySelector('.device-info-item:nth-child(2) span')?.textContent : '0';
+    const rate = parseInt(rateText.replace(/[^0-9]/g, '')) || 0;
+    
+    // اگر محصولی انتخاب نشده، مستقیم session رو end کن
+    if (Object.keys(selectedProducts).length === 0) {
+        fetch(`/gamenet/api/quick-stop/${sessionId}/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCSRF()}
+        })
+        .then(r => {
+            if (!r.ok) {
+                // تلاش برای بازسازی session روی سرور و تکرار عملیات
+                console.warn('Session not found on server, attempting to recreate it');
+                return recreateServerSession(sessionId, deviceId).then(newId => {
+                    if (!newId) throw new Error('Could not recreate session on server');
+                    return fetch(`/gamenet/api/quick-stop/${newId}/`, {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': getCSRF()}
+                    });
+                });
+            }
+            return r;
+        })
+        .then(rr => rr ? rr.json() : null)
+        .then(data => {
+            if (!data) return;
+            if (data && data.success) {
+                resetDeviceUI(deviceId, data.hourly_rate || rate);
+                closeBuffetModal();
+                // پاک کردن localStorage
+                const sessionKey = `session_${sessionId}`;
+                localStorage.removeItem(sessionKey);
+                delete sessions[deviceId];
+                toast(`پایان - ${data.formatted_cost} تومان`, 'success');
+            } else if (data && !data.success) {
+                throw new Error(data.error || 'خطا در پایان');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            toast(err.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> تأیید و پایان';
+        });
+        return;
+    }
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت سفارش...';
+    
+    // ایجاد سفارش
+    const orderData = {
+        session_id: sessionId,
+        device_id: deviceId,
+        customer_name: 'مشتری',
+        items: Object.entries(selectedProducts).map(([id, item]) => ({
+            product_id: parseInt(id),
+            quantity: item.quantity
+        }))
+    };
+    
+    fetch('/gamenet/api/order/create/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRF(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // پایان جلسه
+            return fetch(`/gamenet/api/quick-stop/${sessionId}/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCSRF()}
+            });
+        } else {
+            throw new Error(data.error || 'خطا در ثبت سفارش');
+        }
+    })
+    .then(r => {
+        if (!r.ok) {
+            // اگر session نیست، فقط UI رو reset کن
+            console.warn('Session not found on server, resetting UI only');
+            resetDeviceUI(deviceId, rate);
+            closeBuffetModal();
+            // پاک کردن localStorage
+            const sessionKey = `session_${sessionId}`;
+            localStorage.removeItem(sessionKey);
+            delete sessions[deviceId];
+            toast('سفارش ثبت شد و جلسه پایان یافت', 'success');
+            return null;
+        }
+        return r.json();
+    })
+    .then(data => {
+        if (data && data.success) {
+            resetDeviceUI(deviceId, data.hourly_rate || rate);
+            closeBuffetModal();
+            // پاک کردن localStorage
+            const sessionKey = `session_${sessionId}`;
+            localStorage.removeItem(sessionKey);
+            delete sessions[deviceId];
+            toast('سفارش ثبت شد و جلسه پایان یافت', 'success');
+        } else if (data && !data.success) {
+            throw new Error(data.error || 'خطا در پایان جلسه');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        toast(err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> تأیید و پایان';
+    });
+}
+</script>
+{% endblock %}

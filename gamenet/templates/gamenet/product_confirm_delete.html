@@ -1,0 +1,164 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}حذف محصول{% endblock %}
+{% block page_title %}حذف محصول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 500px;
+        margin: 60px auto;
+    }
+
+    .delete-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 24px;
+        padding: 48px 36px;
+        text-align: center;
+    }
+
+    .delete-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 28px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delete-icon i {
+        font-size: 36px;
+        color: #ef4444;
+    }
+
+    .delete-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 16px;
+    }
+
+    .delete-message {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.7;
+        margin-bottom: 8px;
+    }
+
+    .product-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #f59e0b;
+        margin-bottom: 32px;
+    }
+
+    .warning-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        margin-bottom: 32px;
+        text-align: right;
+    }
+
+    .warning-box i {
+        color: #ef4444;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .warning-box span {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 16px;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 24px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .btn-delete {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: none;
+        border-radius: 14px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="delete-icon">
+            <i class="fas fa-trash-alt"></i>
+        </div>
+        
+        <h1 class="delete-title">حذف محصول</h1>
+        <p class="delete-message">آیا از حذف این محصول اطمینان دارید؟</p>
+        <div class="product-name">{{ product.name }}</div>
+        
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>این عملیات قابل بازگشت نیست و تمام اطلاعات مربوط به این محصول حذف خواهد شد.</span>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="delete-actions">
+                <a href="{% url 'gamenet:product_list' %}" class="btn-cancel">
+                    <i class="fas fa-arrow-right"></i>
+                    انصراف
+                </a>
+                <button type="submit" class="btn-delete">
+                    <i class="fas fa-trash"></i>
+                    حذف محصول
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

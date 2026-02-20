@@ -1,0 +1,587 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load static %}
+
+{% block title %}داشبورد {{ gamenet.name }} | گیم‌بیت{% endblock %}
+
+{% block extra_css %}
+<style>
+    .panel-header {
+        background: linear-gradient(135deg, #1a1a25 0%, #2d1b4e 100%);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        padding: 32px;
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .panel-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .panel-header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .panel-info h1 {
+        font-size: 32px;
+        font-weight: 900;
+        margin-bottom: 12px;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+    }
+    
+    .panel-meta {
+        color: var(--text-secondary);
+        font-size: 14px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .panel-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .panel-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #1a1a25 0%, #252535 100%);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(124, 58, 237, 0.3);
+        border-color: var(--accent-primary);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        background: var(--accent-gradient);
+        opacity: 0.08;
+        border-radius: 50%;
+        transform: translate(40%, -40%);
+        transition: all 0.4s ease;
+    }
+    
+    .stat-card:hover::before {
+        opacity: 0.15;
+        transform: translate(35%, -35%) scale(1.1);
+    }
+    
+    .stat-icon {
+        width: 64px;
+        height: 64px;
+        background: var(--accent-gradient);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 20px;
+        box-shadow: var(--accent-glow);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-value {
+        font-size: 40px;
+        font-weight: 900;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 15px;
+        margin-bottom: 12px;
+        font-weight: 500;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-change {
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-up {
+        color: var(--success);
+    }
+    
+    .stat-down {
+        color: var(--danger);
+    }
+    
+    .quick-actions {
+        background: linear-gradient(135deg, #1a1a25 0%, #252535 100%);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 32px;
+        margin-bottom: 32px;
+    }
+    
+    .quick-actions h2 {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+    
+    .action-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        color: inherit;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--accent-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 0;
+    }
+    
+    .action-card:hover::before {
+        opacity: 0.1;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        border-color: var(--accent-primary);
+        box-shadow: 0 12px 24px rgba(124, 58, 237, 0.3);
+    }
+    
+    .action-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--accent-gradient);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin: 0 auto 16px;
+        box-shadow: var(--accent-glow);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .action-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 16px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .action-desc {
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recent-activity {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+    }
+    
+    .recent-activity h2 {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+    }
+    
+    .activity-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .activity-session {
+        background: var(--success);
+    }
+    
+    .activity-device {
+        background: var(--accent-primary);
+    }
+    
+    .activity-tournament {
+        background: var(--warning);
+    }
+    
+    .activity-content {
+        flex-grow: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .activity-desc {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .activity-time {
+        color: var(--text-muted);
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+    
+    .main-content {
+        padding: 24px;
+    }
+    
+    @media (max-width: 768px) {
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .panel-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- Panel Header -->
+    <div class="panel-header fade-in">
+        <div class="panel-header-content">
+            <div class="panel-info">
+                <h1>{{ gamenet.name }}</h1>
+                <div class="panel-meta">
+                    <div class="panel-meta-item">
+                        <i class="fas fa-link"></i>
+                        <span>{{ gamenet.slug }}</span>
+                    </div>
+                    <div class="panel-meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ gamenet.created_at|date:"Y/m/d" }}</span>
+                    </div>
+                    {% if gamenet.address %}
+                    <div class="panel-meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ gamenet.address }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="panel-actions">
+                <a href="{% url 'account:dashboard' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i>
+                    بازگشت
+                </a>
+                <a href="{% url 'gamenet:edit_gamenet' gamenet.slug %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-cog"></i>
+                    تنظیمات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-desktop"></i>
+            </div>
+            <div class="stat-value">{{ total_devices }}</div>
+            <div class="stat-label">تعداد دستگاه</div>
+            <div class="stat-change stat-up">
+                <i class="fas fa-arrow-up"></i>
+                +{{ new_devices_this_week }} این هفته
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-play"></i>
+            </div>
+            <div class="stat-value">{{ active_sessions }}</div>
+            <div class="stat-label">جلسه فعال</div>
+            <div class="stat-change stat-up">
+                <i class="fas fa-users"></i>
+                {{ total_users_playing }} نفر در حال بازی
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-value">{{ today_revenue|floatformat:0 }}</div>
+            <div class="stat-label">درآمد امروز (تومان)</div>
+            <div class="stat-change {% if revenue_change >= 0 %}stat-up{% else %}stat-down{% endif %}">
+                <i class="fas fa-arrow-{% if revenue_change >= 0 %}up{% else %}down{% endif %}"></i>
+                {% if revenue_change >= 0 %}+{% endif %}{{ revenue_change|floatformat:0 }}% نسبت به دیروز
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stat-value">{{ active_tournaments }}</div>
+            <div class="stat-label">مسابقه فعال</div>
+            <div class="stat-change stat-up">
+                <i class="fas fa-users"></i>
+                {{ tournament_participants }} شرکت‌کننده
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions fade-in">
+        <h2>
+            <i class="fas fa-bolt"></i>
+            دسترسی سریع
+        </h2>
+        <div class="actions-grid">
+            <a href="{% url 'gamenet:panel_device_list' gamenet.slug %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <div class="action-title">مدیریت دستگاه‌ها</div>
+                <div class="action-desc">اضافه، ویرایش و کنترل دستگاه‌ها</div>
+            </a>
+            
+            <a href="{% url 'gamenet:panel_session_list' gamenet.slug %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="action-title">جلسات</div>
+                <div class="action-desc">شروع جلسه جدید و مدیریت تایمر</div>
+            </a>
+            
+            <a href="{% url 'gamenet:panel_game_list' gamenet.slug %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <div class="action-title">بازی‌ها</div>
+                <div class="action-desc">مدیریت کتابخانه بازی‌ها</div>
+            </a>
+            
+            <a href="{% url 'gamenet:panel_tournament_list' gamenet.slug %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="action-title">مسابقات</div>
+                <div class="action-desc">برگزاری و مدیریت تورنمنت‌ها</div>
+            </a>
+            
+            <a href="{% url 'gamenet:panel_reports' gamenet.slug %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="action-title">گزارشات</div>
+                <div class="action-desc">آمار و تحلیل عملکرد</div>
+            </a>
+            
+            <a href="#" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="action-title">تنظیمات</div>
+                <div class="action-desc">پیکربندی سیستم</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity fade-in">
+        <h2>
+            <i class="fas fa-history"></i>
+            فعالیت‌های اخیر
+        </h2>
+        
+        {% if recent_activities %}
+            {% for activity in recent_activities %}
+            <div class="activity-item">
+                <div class="activity-icon activity-{{ activity.type }}">
+                    <i class="fas fa-{% if activity.type == 'session' %}play{% elif activity.type == 'device' %}desktop{% elif activity.type == 'tournament' %}trophy{% else %}circle{% endif %}"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">{{ activity.title }}</div>
+                    <div class="activity-desc">{{ activity.description }}</div>
+                </div>
+                <div class="activity-time">{{ activity.timestamp|timesince }} پیش</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="activity-item">
+                <div class="activity-icon" style="background: var(--text-muted);">
+                    <i class="fas fa-info"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">هیچ فعالیتی ثبت نشده</div>
+                    <div class="activity-desc">شروع به کار کن تا فعالیت‌ها اینجا نمایش داده بشن</div>
+                </div>
+                <div class="activity-time">الان</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh stats every 30 seconds
+    function refreshStats() {
+        // This would be an AJAX call to update stats
+        console.log('Refreshing stats...');
+    }
+    
+    setInterval(refreshStats, 30000);
+    
+    // Animate stat numbers on page load
+    function animateStats() {
+        const statValues = document.querySelectorAll('.stat-value');
+        statValues.forEach(stat => {
+            const target = parseInt(stat.textContent.replace(/[^\d]/g, ''));
+            if (isNaN(target)) return;
+            
+            let current = 0;
+            const increment = target / 30;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                stat.textContent = Math.floor(current).toLocaleString('fa-IR');
+            }, 50);
+        });
+    }
+    
+    // Run animation on page load
+    document.addEventListener('DOMContentLoaded', animateStats);
+    
+    // Add live time to activity timestamps
+    function updateActivityTimes() {
+        const times = document.querySelectorAll('.activity-time');
+        times.forEach(time => {
+            // This would update relative times
+        });
+    }
+    
+    setInterval(updateActivityTimes, 60000);
+</script>
+{% endblock %}

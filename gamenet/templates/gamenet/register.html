@@ -1,0 +1,209 @@
+{% extends 'gamenet/base.html' %}
+{% load static %}
+
+{% block title %}ثبت نام | گیم‌بیت{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: calc(100vh - 100px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+    }
+    
+    .auth-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 40px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    
+    .auth-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .auth-footer {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .auth-link {
+        color: var(--accent-secondary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .auth-link:hover {
+        color: var(--accent-primary);
+    }
+    
+    .error-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .error-list li {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid var(--danger);
+        color: var(--danger);
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+        .auth-card {
+            padding: 24px;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card fade-in">
+        <div class="auth-header">
+            <h1 class="auth-title">ثبت نام در گیم‌بیت</h1>
+            <p class="auth-subtitle">گیم‌نت خودت رو هوشمند کن</p>
+        </div>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.first_name.id_for_label }}">نام</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <ul class="error-list">
+                            {% for error in form.first_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.last_name.id_for_label }}">نام خانوادگی</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <ul class="error-list">
+                            {% for error in form.last_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.username.id_for_label }}">نام کاربری</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <ul class="error-list">
+                        {% for error in form.username.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.email.id_for_label }}">ایمیل</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <ul class="error-list">
+                        {% for error in form.email.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.password1.id_for_label }}">رمز عبور</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <ul class="error-list">
+                            {% for error in form.password1.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.password2.id_for_label }}">تایید رمز عبور</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <ul class="error-list">
+                            {% for error in form.password2.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="form-group">
+                    <ul class="error-list">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                <i class="fas fa-user-plus"></i>
+                ثبت نام
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p class="text-secondary">
+                حساب کاربری داری؟ 
+                <a href="{% url 'account:login' %}" class="auth-link">وارد شو</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,940 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+
+{% block title %}تنظیمات گیم‌نت{% endblock %}
+{% block page_title %}تنظیمات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .settings-header {
+        margin-bottom: 40px;
+    }
+
+    .settings-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .settings-title-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #a855f7;
+    }
+
+    .settings-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 16px;
+        margin-right: 72px;
+    }
+
+    /* ========== TAB NAVIGATION ========== */
+    .tab-navigation {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 8px;
+        margin-bottom: 32px;
+        display: flex;
+        gap: 8px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-button {
+        flex: 1;
+        padding: 18px 24px;
+        background: transparent;
+        border: none;
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .tab-button.active {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .tab-button:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .tab-button i {
+        font-size: 18px;
+    }
+
+    /* ========== TAB CONTENT ========== */
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 36px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .settings-card-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .settings-card-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border: 2px solid rgba(124, 58, 237, 0.3);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #a855f7;
+    }
+
+    .settings-card-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .settings-card-desc {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 4px;
+    }
+
+    /* ========== FORM STYLES ========== */
+    .form-group {
+        margin-bottom: 28px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 12px;
+    }
+
+    .form-label .required {
+        color: #ef4444;
+        margin-right: 4px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        color: #fff;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 130px;
+    }
+
+    .form-help {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 10px;
+        line-height: 1.6;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .tab-navigation {
+            flex-direction: column;
+        }
+    }
+
+    /* ========== LOGO UPLOAD ========== */
+    .logo-upload-area {
+        display: flex;
+        align-items: flex-start;
+        gap: 28px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 18px;
+        padding: 28px;
+    }
+
+    .current-logo {
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .current-logo:hover {
+        border-color: rgba(124, 58, 237, 0.4);
+    }
+
+    .current-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .current-logo i {
+        font-size: 50px;
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    .logo-upload-content {
+        flex: 1;
+    }
+
+    .logo-upload-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 12px;
+    }
+
+    .logo-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        border-radius: 14px;
+        color: #a855f7;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .logo-upload-btn:hover {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(236, 72, 153, 0.3));
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
+    }
+
+    .logo-upload-btn input {
+        display: none;
+    }
+
+    .logo-formats {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 14px;
+        line-height: 1.6;
+    }
+
+    /* ========== PRICE INPUT ========== */
+    .price-input-wrapper {
+        position: relative;
+    }
+
+    .price-input-wrapper .form-input {
+        padding-left: 110px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .price-unit {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    /* ========== PRICING INFO BOX ========== */
+    .pricing-info {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.05));
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 28px;
+    }
+
+    .pricing-info-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .pricing-info-icon {
+        width: 44px;
+        height: 44px;
+        background: rgba(245, 158, 11, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f59e0b;
+        font-size: 20px;
+    }
+
+    .pricing-info-header span {
+        font-weight: 700;
+        color: #f59e0b;
+        font-size: 16px;
+    }
+
+    .pricing-info-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.8;
+    }
+
+    /* ========== GALLERY UPLOAD ZONE ========== */
+    .gallery-upload-zone {
+        border: 2px dashed rgba(124, 58, 237, 0.3);
+        border-radius: 20px;
+        padding: 48px 32px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(236, 72, 153, 0.05));
+        margin-bottom: 32px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .gallery-upload-zone:hover {
+        border-color: rgba(124, 58, 237, 0.5);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(236, 72, 153, 0.1));
+        transform: translateY(-2px);
+    }
+
+    .gallery-upload-zone.dragover {
+        border-color: #a855f7;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(236, 72, 153, 0.15));
+    }
+
+    .upload-icon {
+        width: 90px;
+        height: 90px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 36px;
+        color: #a855f7;
+    }
+
+    .upload-text {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .upload-hint {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 20px;
+    }
+
+    .upload-file-input {
+        display: none;
+    }
+
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        border: none;
+        border-radius: 14px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(124, 58, 237, 0.4);
+    }
+
+    /* ========== GALLERY GRID ========== */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 18px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .gallery-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        border-color: rgba(124, 58, 237, 0.4);
+    }
+
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .gallery-item-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-item-overlay {
+        opacity: 1;
+    }
+
+    .gallery-delete-btn {
+        width: 48px;
+        height: 48px;
+        background: rgba(239, 68, 68, 0.9);
+        border: none;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .gallery-delete-btn:hover {
+        background: #ef4444;
+        transform: scale(1.15);
+    }
+
+    .gallery-empty {
+        text-align: center;
+        padding: 48px 24px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .gallery-empty i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    /* ========== SUBMIT BUTTONS ========== */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-top: 40px;
+        padding-top: 32px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 36px;
+        background: linear-gradient(135deg, #10b981, #34d399);
+        border: none;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 28px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* ========== MESSAGES ========== */
+    .alert {
+        padding: 18px 24px;
+        border-radius: 16px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .alert i {
+        font-size: 20px;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #10b981;
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1 class="settings-title">
+            <div class="settings-title-icon">
+                <i class="fas fa-cog"></i>
+            </div>
+            تنظیمات گیم‌نت
+        </h1>
+        <p class="settings-subtitle">مدیریت اطلاعات، تصاویر و قیمت‌گذاری گیم‌نت</p>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-button active" onclick="switchTab('gamenet-info')">
+            <i class="fas fa-store"></i>
+            اطلاعات گیم‌نت
+        </button>
+        <button class="tab-button" onclick="switchTab('pricing')">
+            <i class="fas fa-coins"></i>
+            قیمت‌گذاری
+        </button>
+        <button class="tab-button" onclick="switchTab('gallery')">
+            <i class="fas fa-images"></i>
+            گالری تصاویر
+        </button>
+    </div>
+
+    <!-- Tab 1: GameNet Info -->
+    <div id="gamenet-info" class="tab-content active">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_settings">
+            
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">اطلاعات اصلی</h2>
+                        <p class="settings-card-desc">نام، توضیحات و لوگوی گیم‌نت خود را مدیریت کنید</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">لوگو گیم‌نت</label>
+                    <div class="logo-upload-area">
+                        <div class="current-logo">
+                            {% if gamenet.logo %}
+                            <img src="{{ gamenet.logo.url }}" alt="لوگو">
+                            {% else %}
+                            <i class="fas fa-image"></i>
+                            {% endif %}
+                        </div>
+                        <div class="logo-upload-content">
+                            <div class="logo-upload-title">آپلود لوگو</div>
+                            <label class="logo-upload-btn">
+                                <i class="fas fa-upload"></i>
+                                انتخاب فایل
+                                {{ form.logo }}
+                            </label>
+                            <p class="logo-formats">فرمت‌های مجاز: JPG, PNG, GIF - حداکثر 2MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        نام گیم‌نت
+                        <span class="required">*</span>
+                    </label>
+                    {{ form.name }}
+                    <p class="form-help">این نام در صفحه اصلی و همه‌جا نمایش داده می‌شود</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">توضیحات درباره گیم‌نت</label>
+                    {{ form.description }}
+                    <p class="form-help">توضیحات مختصری درباره گیم‌نت، امکانات و خدمات شما</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">شماره تماس</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">آدرس</label>
+                        {{ form.address }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'gamenet:dashboard' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    انصراف
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i>
+                    ذخیره اطلاعات
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tab 2: Pricing -->
+    <div id="pricing" class="tab-content">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_pricing">
+            
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2)); border-color: rgba(245, 158, 11, 0.3);">
+                        <i class="fas fa-coins" style="color: #f59e0b;"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">تنظیمات قیمت‌گذاری</h2>
+                        <p class="settings-card-desc">قیمت خدمات اضافی را تنظیم کنید</p>
+                    </div>
+                </div>
+
+                <div class="pricing-info">
+                    <div class="pricing-info-header">
+                        <div class="pricing-info-icon">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <span>دسته بازی اضافی</span>
+                    </div>
+                    <p class="pricing-info-text">
+                        وقتی مشتری دسته بازی اضافی درخواست می‌کند، این مبلغ به ازای هر ساعت به هزینه جلسه اضافه می‌شود.
+                        بعد از شروع جلسه، می‌توانید از داشبورد دسته‌های اضافی را به جلسه اضافه یا از آن کم کنید.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">قیمت دسته اضافی به ازای هر ساعت</label>
+                    <div class="price-input-wrapper">
+                        <input type="number" name="extra_controller_price" class="form-input" 
+                               value="{{ gamenet.extra_controller_price|floatformat:0 }}" 
+                               min="0" step="1000" placeholder="0">
+                        <span class="price-unit">تومان/ساعت</span>
+                    </div>
+                    <p class="form-help">اگر این مقدار صفر باشد، گزینه دسته اضافی در داشبورد نمایش داده نمی‌شود</p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'gamenet:dashboard' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    انصراف
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i>
+                    ذخیره قیمت‌گذاری
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tab 3: Gallery -->
+    <div id="gallery" class="tab-content">
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="settings-card-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.2)); border-color: rgba(16, 185, 129, 0.3);">
+                    <i class="fas fa-images" style="color: #10b981;"></i>
+                </div>
+                <div>
+                    <h2 class="settings-card-title">گالری تصاویر</h2>
+                    <p class="settings-card-desc">تصاویر گیم‌نت خود را آپلود و مدیریت کنید</p>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="galleryForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="upload_images">
+                
+                <div class="gallery-upload-zone" id="uploadZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">آپلود تصاویر</div>
+                    <p class="upload-hint">فایل‌ها را اینجا بکشید و رها کنید یا کلیک کنید</p>
+                    <input type="file" name="gallery_images" id="galleryInput" class="upload-file-input" 
+                           multiple accept="image/*">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('galleryInput').click()">
+                        <i class="fas fa-folder-open"></i>
+                        انتخاب فایل‌ها
+                    </button>
+                </div>
+            </form>
+
+            {% if images %}
+            <div class="gallery-grid">
+                {% for image in images %}
+                <div class="gallery-item" data-image-id="{{ image.id }}">
+                    <img src="{{ image.image.url }}" alt="{{ image.title }}">
+                    <div class="gallery-item-overlay">
+                        <button class="gallery-delete-btn" onclick="deleteImage({{ image.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="gallery-empty">
+                <i class="fas fa-images"></i>
+                <p>هنوز تصویری آپلود نشده است</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Tab switching
+    function switchTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active from all buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabId).classList.add('active');
+        
+        // Mark button as active
+        event.target.closest('.tab-button').classList.add('active');
+    }
+
+    // Gallery upload with drag & drop
+    const uploadZone = document.getElementById('uploadZone');
+    const galleryInput = document.getElementById('galleryInput');
+    const galleryForm = document.getElementById('galleryForm');
+
+    if (uploadZone && galleryInput) {
+        uploadZone.addEventListener('click', () => {
+            if (event.target.type !== 'file' && event.target.tagName !== 'BUTTON') {
+                galleryInput.click();
+            }
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            galleryInput.files = files;
+            
+            if (files.length > 0) {
+                galleryForm.submit();
+            }
+        });
+
+        galleryInput.addEventListener('change', () => {
+            if (galleryInput.files.length > 0) {
+                galleryForm.submit();
+            }
+        });
+    }
+
+    // Delete image
+    function deleteImage(imageId) {
+        if (!confirm('آیا مطمئن هستید که می‌خواهید این تصویر را حذف کنید؟')) {
+            return;
+        }
+
+        fetch(`/gamenet/api/delete-image/${imageId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the image element
+                const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (imageEl) {
+                    imageEl.style.opacity = '0';
+                    imageEl.style.transform = 'scale(0.8)';
+                    setTimeout(() => imageEl.remove(), 300);
+                }
+            } else {
+                alert('خطا در حذف تصویر');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('خطا در ارتباط با سرور');
+        });
+    }
+</script>
+{% endblock %}

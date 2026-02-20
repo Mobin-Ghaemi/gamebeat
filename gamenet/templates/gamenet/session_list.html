@@ -1,0 +1,632 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}تاریخچه جلسات{% endblock %}
+
+{% block extra_css %}
+<style>
+    * { box-sizing: border-box; }
+
+    .sessions-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    /* ───── Header ───── */
+    .page-header-sessions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .header-icon {
+        width: 52px; height: 52px;
+        border-radius: var(--radius);
+        background: var(--accent-gradient);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; color: #fff;
+        box-shadow: var(--accent-glow);
+        flex-shrink: 0;
+    }
+    .header-text h1 {
+        font-size: 26px; font-weight: 800; color: var(--text-primary);
+        margin: 0 0 2px 0; line-height: 1.2;
+    }
+    .header-text p {
+        font-size: 13px; color: var(--text-secondary); margin: 0;
+    }
+
+    /* ───── Stats Row ───── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: border-color .25s, box-shadow .25s;
+    }
+    .stat-card:hover {
+        border-color: rgba(124, 58, 237, .35);
+        box-shadow: 0 0 20px rgba(124, 58, 237, .08);
+    }
+    .stat-icon-box {
+        width: 42px; height: 42px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; flex-shrink: 0;
+    }
+    .stat-icon-box.ic-blue   { background: rgba(59,130,246,.12); color: #60a5fa; }
+    .stat-icon-box.ic-green  { background: rgba(16,185,129,.12); color: #34d399; }
+    .stat-icon-box.ic-purple { background: rgba(139,92,246,.12);  color: #a78bfa; }
+    .stat-icon-box.ic-amber  { background: rgba(251,191,36,.12);  color: #fbbf24; }
+    .stat-info .stat-val {
+        font-size: 22px; font-weight: 800; color: #fff; line-height: 1.1;
+    }
+    .stat-info .stat-lbl {
+        font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 2px;
+    }
+
+    /* ───── Toolbar (search + filters) ───── */
+    .toolbar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .toolbar .search-box {
+        flex: 1; min-width: 220px;
+        position: relative;
+    }
+    .toolbar .search-box i {
+        position: absolute;
+        right: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); font-size: 13px;
+        pointer-events: none;
+    }
+    .toolbar input,
+    .toolbar select {
+        width: 100%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: var(--radius);
+        padding: 11px 16px 11px 16px;
+        font-size: 13px;
+        font-family: inherit;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .toolbar .search-box input { padding-right: 38px; }
+    .toolbar input:focus,
+    .toolbar select:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(124,58,237,.15);
+    }
+    .toolbar input::placeholder { color: var(--text-muted); }
+    .toolbar select { min-width: 150px; cursor: pointer; }
+    .toolbar select option { background: var(--bg-secondary); }
+
+    /* ───── Table Container ───── */
+    .table-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    /* ───── Table ───── */
+    .sessions-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .sessions-table thead {
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .sessions-table thead th {
+        padding: 14px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-align: right;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        white-space: nowrap;
+        border: none;
+    }
+    .sessions-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,.04);
+        transition: background .2s;
+    }
+    .sessions-table tbody tr:last-child { border-bottom: none; }
+    .sessions-table tbody tr:hover {
+        background: rgba(124, 58, 237, .04);
+    }
+    .sessions-table tbody td {
+        padding: 16px 18px;
+        font-size: 14px;
+        color: var(--text-primary);
+        vertical-align: middle;
+        text-align: right;
+        border: none;
+    }
+
+    /* Column widths */
+    .col-device  { width: 22%; }
+    .col-time    { width: 20%; }
+    .col-dur     { width: 14%; }
+    .col-cost    { width: 14%; }
+    .col-status  { width: 12%; }
+    .col-actions { width: 18%; }
+
+    /* ── Device Cell ── */
+    .device-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .device-cell .d-icon {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        background: rgba(139,92,246,.1);
+        display: flex; align-items: center; justify-content: center;
+        color: #a78bfa; font-size: 16px;
+        flex-shrink: 0;
+    }
+    .device-cell .d-name {
+        font-weight: 700; font-size: 14px; color: #fff;
+        margin-bottom: 2px; line-height: 1.2;
+    }
+    .device-cell .d-type {
+        font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ── Time Cell ── */
+    .time-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .time-cell .t-date {
+        font-weight: 600; font-size: 14px; color: #fff;
+    }
+    .time-cell .t-range {
+        font-size: 12px; color: var(--text-secondary);
+        display: flex; align-items: center; gap: 4px;
+    }
+    .time-cell .t-range .sep {
+        color: var(--text-muted);
+    }
+
+    /* ── Duration Cell ── */
+    .dur-cell {
+        font-weight: 700; font-size: 15px; color: #fff;
+    }
+    .dur-cell small {
+        font-weight: 500; font-size: 12px; color: var(--text-muted); margin-right: 3px;
+    }
+    .dur-ongoing {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--success); font-weight: 600; font-size: 13px;
+    }
+    .dur-ongoing .dot-pulse {
+        width: 7px; height: 7px;
+        background: var(--success); border-radius: 50%;
+        animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+        0%,100% { opacity: 1; }
+        50%     { opacity: .35; }
+    }
+
+    /* ── Cost Cell ── */
+    .cost-cell {
+        font-weight: 700; font-size: 15px; color: #fbbf24;
+    }
+    .cost-cell small {
+        font-weight: 500; font-size: 11px; color: var(--text-muted); margin-right: 3px;
+    }
+
+    /* ── Status Badge ── */
+    .badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 20px;
+        font-size: 12px; font-weight: 700;
+    }
+    .badge-active {
+        background: rgba(16,185,129,.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,.25);
+    }
+    .badge-completed {
+        background: rgba(59,130,246,.10);
+        color: #60a5fa;
+        border: 1px solid rgba(59,130,246,.20);
+    }
+    .badge .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: currentColor;
+    }
+    .badge-active .dot { animation: blink 1.5s ease-in-out infinite; }
+
+    /* ── Action Buttons ── */
+    .act-group {
+        display: flex; gap: 8px; align-items: center;
+    }
+    .act-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+        padding: 8px 14px; border-radius: 8px;
+        font-size: 12px; font-weight: 700; font-family: inherit;
+        text-decoration: none; border: 1px solid; cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+    .act-view {
+        background: rgba(59,130,246,.1);
+        color: #60a5fa;
+        border-color: rgba(59,130,246,.25);
+    }
+    .act-view:hover {
+        background: rgba(59,130,246,.2);
+        border-color: rgba(59,130,246,.45);
+        box-shadow: 0 4px 12px rgba(59,130,246,.2);
+    }
+    .act-stop {
+        background: rgba(239,68,68,.08);
+        color: #f87171;
+        border-color: rgba(239,68,68,.2);
+    }
+    .act-stop:hover {
+        background: rgba(239,68,68,.18);
+        border-color: rgba(239,68,68,.4);
+        box-shadow: 0 4px 12px rgba(239,68,68,.2);
+    }
+
+    /* ───── Empty State ───── */
+    .empty-state {
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 80px 40px;
+        text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+    }
+    .empty-state i.big-icon {
+        font-size: 64px; color: rgba(124,58,237,.2);
+        margin-bottom: 20px;
+    }
+    .empty-state h3 {
+        font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;
+    }
+    .empty-state p {
+        font-size: 14px; color: var(--text-secondary); max-width: 420px; line-height: 1.6;
+    }
+
+    /* ───── No Results ───── */
+    .no-results-row td {
+        text-align: center !important;
+        padding: 60px 20px !important;
+    }
+    .no-results-inner i {
+        font-size: 48px; color: rgba(124,58,237,.2); margin-bottom: 12px;
+    }
+    .no-results-inner h4 {
+        font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px;
+    }
+    .no-results-inner p {
+        font-size: 13px; color: var(--text-muted);
+    }
+
+    /* ───── Responsive ───── */
+    @media (max-width: 1024px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .col-device  { width: auto; }
+        .col-time    { width: auto; }
+        .col-dur     { width: auto; }
+        .col-cost    { width: auto; }
+        .col-status  { width: auto; }
+        .col-actions { width: auto; }
+        .sessions-table { table-layout: auto; }
+    }
+
+    @media (max-width: 768px) {
+        .sessions-container { padding: 16px; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-card { padding: 14px; }
+        .stat-info .stat-val { font-size: 18px; }
+
+        /* Transform table to cards on mobile */
+        .table-container { background: none; border: none; border-radius: 0; }
+        .sessions-table thead { display: none; }
+        .sessions-table, .sessions-table tbody { display: block; }
+        .sessions-table tbody tr {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            padding: 16px;
+        }
+        .sessions-table tbody td {
+            padding: 8px 4px;
+            border: none;
+        }
+        .sessions-table tbody td::before {
+            content: attr(data-label);
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            margin-bottom: 4px;
+        }
+        .sessions-table tbody td.td-actions {
+            grid-column: 1 / -1;
+            padding-top: 12px;
+            margin-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+        .act-group { width: 100%; }
+        .act-btn { flex: 1; justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+        .sessions-container { padding: 12px; }
+        .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-card { padding: 12px; gap: 10px; }
+        .stat-icon-box { width: 36px; height: 36px; font-size: 15px; }
+        .stat-info .stat-val { font-size: 16px; }
+        .toolbar { flex-direction: column; }
+        .toolbar select { min-width: auto; }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="sessions-container">
+
+    <!-- Header -->
+    <div class="page-header-sessions">
+        <div class="header-right">
+            <div class="header-icon"><i class="fas fa-history"></i></div>
+            <div class="header-text">
+                <h1>تاریخچه جلسات</h1>
+                <p>مدیریت و مشاهده تمام جلسات ثبت شده</p>
+            </div>
+        </div>
+    </div>
+
+    {% if sessions %}
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon-box ic-blue"><i class="fas fa-layer-group"></i></div>
+            <div class="stat-info">
+                <div class="stat-val" id="totalSessions">{{ sessions|length }}</div>
+                <div class="stat-lbl">کل جلسات</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-box ic-green"><i class="fas fa-signal"></i></div>
+            <div class="stat-info">
+                <div class="stat-val" id="activeSessions">0</div>
+                <div class="stat-lbl">فعال</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-box ic-purple"><i class="fas fa-hourglass-half"></i></div>
+            <div class="stat-info">
+                <div class="stat-val" id="totalMinutes">0</div>
+                <div class="stat-lbl">دقیقه</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-box ic-amber"><i class="fas fa-coins"></i></div>
+            <div class="stat-info">
+                <div class="stat-val" id="totalRevenue">0</div>
+                <div class="stat-lbl">تومان</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="جستجو در دستگاه، مشتری ...">
+        </div>
+        <select id="statusFilter">
+            <option value="all">همه وضعیت‌ها</option>
+            <option value="active">فعال</option>
+            <option value="completed">تمام شده</option>
+        </select>
+        <select id="sortFilter">
+            <option value="newest">جدیدترین</option>
+            <option value="oldest">قدیمی‌ترین</option>
+            <option value="duration">بیشترین مدت</option>
+            <option value="cost">بیشترین قیمت</option>
+        </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="sessions-table" id="sessionsTable">
+            <thead>
+                <tr>
+                    <th class="col-device">دستگاه</th>
+                    <th class="col-time">زمان</th>
+                    <th class="col-dur">مدت</th>
+                    <th class="col-cost">هزینه</th>
+                    <th class="col-status">وضعیت</th>
+                    <th class="col-actions">عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="sessionsBody">
+                {% for session in sessions %}
+                <tr class="session-row"
+                    data-active="{{ session.is_active|yesno:'true,false' }}"
+                    data-duration="{{ session.calculate_duration_minutes|default:0 }}"
+                    data-cost="{{ session.total_cost|floatformat:0|default:0 }}"
+                    data-idx="{{ forloop.counter }}">
+
+                    <td data-label="دستگاه">
+                        <div class="device-cell">
+                            <div class="d-icon">
+                                {% if session.device.device_type == 'ps5' %}
+                                    <i class="fas fa-gamepad"></i>
+                                {% elif session.device.device_type == 'ps4' %}
+                                    <i class="fas fa-gamepad"></i>
+                                {% elif session.device.device_type == 'xbox' %}
+                                    <i class="fas fa-gamepad"></i>
+                                {% elif session.device.device_type == 'vr' %}
+                                    <i class="fas fa-vr-cardboard"></i>
+                                {% else %}
+                                    <i class="fas fa-desktop"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="d-name">{{ session.device.name }}</div>
+                                <div class="d-type">#{{ session.device.number }} · {{ session.device.get_device_type_display }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td data-label="زمان">
+                        <div class="time-cell">
+                            <span class="t-date">{{ session.start_time|date:"Y/m/d" }}</span>
+                            <span class="t-range">
+                                {{ session.start_time|date:"H:i" }}
+                                {% if session.end_time %}
+                                    <span class="sep">←</span>
+                                    {{ session.end_time|date:"H:i" }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </td>
+
+                    <td data-label="مدت">
+                        {% if session.end_time %}
+                            <span class="dur-cell">{{ session.calculate_duration_minutes }}<small>دقیقه</small></span>
+                        {% else %}
+                            <span class="dur-ongoing"><span class="dot-pulse"></span>درحال انجام</span>
+                        {% endif %}
+                    </td>
+
+                    <td data-label="هزینه">
+                        <span class="cost-cell">{{ session.total_cost|floatformat:0|default:"0" }}<small>تومان</small></span>
+                    </td>
+
+                    <td data-label="وضعیت">
+                        {% if session.is_active %}
+                            <span class="badge badge-active"><span class="dot"></span>فعال</span>
+                        {% else %}
+                            <span class="badge badge-completed"><i class="fas fa-check" style="font-size:10px"></i>تمام شده</span>
+                        {% endif %}
+                    </td>
+
+                    <td data-label="عملیات" class="td-actions">
+                        <div class="act-group">
+                            <a href="{% url 'gamenet:session_detail' session.id %}" class="act-btn act-view">
+                                <i class="fas fa-eye"></i>جزئیات
+                            </a>
+                            {% if session.is_active %}
+                            <a href="{% url 'gamenet:stop_session' session.id %}" class="act-btn act-stop">
+                                <i class="fas fa-stop"></i>پایان
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-history big-icon"></i>
+        <h3>هیچ جلسه‌ای ثبت نشده</h3>
+        <p>با شروع اولین جلسه در صفحه داشبورد، تاریخچه جلسات اینجا نمایش داده می‌شود.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('.session-row');
+    if (!rows.length) return;
+
+    /* ── Stats ── */
+    let active = 0, mins = 0, rev = 0;
+    rows.forEach(r => {
+        if (r.dataset.active === 'true') active++;
+        mins += parseInt(r.dataset.duration) || 0;
+        rev  += parseInt(r.dataset.cost) || 0;
+    });
+    const el = id => document.getElementById(id);
+    el('activeSessions').textContent = active.toLocaleString('fa-IR');
+    el('totalMinutes').textContent   = mins.toLocaleString('fa-IR');
+    el('totalRevenue').textContent   = rev.toLocaleString('fa-IR');
+
+    /* ── Filter / Sort ── */
+    const search = el('searchInput');
+    const status = el('statusFilter');
+    const sort   = el('sortFilter');
+    const tbody  = el('sessionsBody');
+
+    function apply() {
+        const q = (search?.value || '').toLowerCase();
+        const sv = status?.value || 'all';
+        let arr = Array.from(rows);
+
+        arr.forEach(r => {
+            const text = r.textContent.toLowerCase();
+            const isActive = r.dataset.active === 'true';
+            const matchQ = !q || text.includes(q);
+            const matchS = sv === 'all'
+                || (sv === 'active' && isActive)
+                || (sv === 'completed' && !isActive);
+            r.style.display = matchQ && matchS ? '' : 'none';
+        });
+
+        const vis = arr.filter(r => r.style.display !== 'none');
+        const srt = sort?.value || 'newest';
+        if (srt === 'oldest')   vis.sort((a,b) => +a.dataset.idx - +b.dataset.idx);
+        if (srt === 'duration') vis.sort((a,b) => +b.dataset.duration - +a.dataset.duration);
+        if (srt === 'cost')     vis.sort((a,b) => +b.dataset.cost - +a.dataset.cost);
+        if (srt === 'newest')   vis.sort((a,b) => +a.dataset.idx - +b.dataset.idx); // original order
+
+        vis.forEach(r => tbody.appendChild(r));
+        // Also move hidden rows after visible ones
+        arr.filter(r => r.style.display === 'none').forEach(r => tbody.appendChild(r));
+    }
+
+    search?.addEventListener('input', apply);
+    status?.addEventListener('change', apply);
+    sort?.addEventListener('change', apply);
+});
+</script>
+{% endblock %}

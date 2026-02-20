@@ -1,0 +1,195 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}{{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ tournament.name }}</h1>
+        <p class="page-subtitle">{{ tournament.game.name }}</p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        {% if tournament.status == 'upcoming' and tournament.participants_count < tournament.max_participants %}
+        <a href="{% url 'gamenet:tournament_register' tournament.id %}" class="btn btn-success">
+            <i class="fas fa-user-plus"></i>
+            ثبت‌نام
+        </a>
+        {% endif %}
+        <a href="{% url 'gamenet:tournament_edit' tournament.id %}" class="btn btn-secondary">
+            <i class="fas fa-edit"></i>
+            ویرایش
+        </a>
+        <a href="{% url 'gamenet:tournament_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right"></i>
+            بازگشت
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <!-- Tournament Info -->
+        <div class="card fade-in" style="margin-bottom: 24px;">
+            <div style="height: 200px; background: var(--accent-gradient); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                {% if tournament.image %}
+                <img src="{{ tournament.image.url }}" alt="{{ tournament.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">
+                {% else %}
+                <i class="fas fa-trophy" style="font-size: 80px;"></i>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>{{ tournament.name }}</h2>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span class="device-status status-{% if tournament.status == 'upcoming' %}available{% elif tournament.status == 'ongoing' %}occupied{% else %}maintenance{% endif %}" style="padding: 8px 16px; font-size: 14px;">
+                        {{ tournament.get_status_display }}
+                    </span>
+                    <span style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; border:1px solid {% if tournament.visibility == 'public' %}rgba(16,185,129,.35){% else %}rgba(239,68,68,.35){% endif %}; color:{% if tournament.visibility == 'public' %}#34d399{% else %}#f87171{% endif %}; background:{% if tournament.visibility == 'public' %}rgba(16,185,129,.15){% else %}rgba(239,68,68,.12){% endif %};">
+                        {% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            {% if tournament.description %}
+            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 24px;">
+                {{ tournament.description }}
+            </p>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--warning); margin-bottom: 4px;">
+                        {{ tournament.prize_pool|floatformat:0 }}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">جایزه کل (تومان)</div>
+                </div>
+                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--accent-secondary); margin-bottom: 4px;">
+                        {{ tournament.entry_fee|floatformat:0 }}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">هزینه ورودی</div>
+                </div>
+                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--success); margin-bottom: 4px;">
+                        {{ tournament.participants_count }}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">ثبت‌نام شده</div>
+                </div>
+                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                        {{ tournament.max_participants }}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">ظرفیت کل</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Participants -->
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users" style="margin-left: 8px; color: var(--accent-secondary)"></i>
+                    شرکت‌کنندگان ({{ participants.count }})
+                </h3>
+            </div>
+            
+            {% if participants %}
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام</th>
+                            <th>آیدی گیمری</th>
+                            <th>شماره تلفن</th>
+                            <th>وضعیت پرداخت</th>
+                            <th>رتبه</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participant in participants %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ participant.name }}</strong></td>
+                            <td>{{ participant.gamer_tag|default:"-" }}</td>
+                            <td>{{ participant.phone }}</td>
+                            <td>
+                                {% if participant.paid %}
+                                <span style="color: var(--success)"><i class="fas fa-check-circle"></i> پرداخت شده</span>
+                                {% else %}
+                                <span style="color: var(--warning)"><i class="fas fa-clock"></i> در انتظار</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if participant.rank %}
+                                <span style="background: var(--accent-gradient); padding: 4px 12px; border-radius: 20px;">{{ participant.rank }}</span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: 40px;">
+                <i class="fas fa-users" style="font-size: 48px;"></i>
+                <h3>هیچ شرکت‌کننده‌ای ثبت‌نام نکرده</h3>
+                <p>منتظر اولین ثبت‌نام باشید</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div>
+        <!-- Quick Info -->
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <h3 style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle" style="margin-left: 8px; color: var(--accent-secondary)"></i>
+                اطلاعات مسابقه
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted);">بازی</span>
+                    <span style="font-weight: 600;">{{ tournament.game.name }}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted);">تاریخ شروع</span>
+                    <span style="font-weight: 600;">{{ tournament.start_date|date:"Y/m/d H:i" }}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted);">تاریخ پایان</span>
+                    <span style="font-weight: 600;">{{ tournament.end_date|date:"Y/m/d H:i" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted);">نوع دسترسی</span>
+                    <span style="font-weight: 600;">{% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted);">ظرفیت باقیمانده</span>
+                    <span style="font-weight: 600; color: {% if tournament.participants_count >= tournament.max_participants %}var(--danger){% else %}var(--success){% endif %}">
+                        {{ tournament.max_participants|add:tournament.participants_count|add:"-"|add:tournament.participants_count }} نفر
+                    </span>
+                </div>
+            </div>
+            
+            {% if tournament.status == 'upcoming' and tournament.participants_count < tournament.max_participants %}
+            <a href="{% url 'gamenet:tournament_register' tournament.id %}" class="btn btn-success btn-lg" style="width: 100%; justify-content: center; margin-top: 24px;">
+                <i class="fas fa-user-plus"></i>
+                ثبت‌نام در مسابقه
+            </a>
+            {% elif tournament.participants_count >= tournament.max_participants %}
+            <div class="alert alert-warning" style="margin-top: 24px;">
+                <i class="fas fa-exclamation-circle"></i>
+                ظرفیت مسابقه تکمیل شده است
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

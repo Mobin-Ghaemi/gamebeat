@@ -1,0 +1,410 @@
+{% extends 'account/base.html' %}
+
+{% block title %}GameBeat - پلتفرم خدمات گیمینگ{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row min-vh-100 align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-content py-5">
+                    <h1 class="display-3 fw-bold mb-4">
+                        <span style="background: linear-gradient(45deg, var(--primary-purple), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            GameBeat
+                        </span>
+                        <br>
+                        پلتفرم خدمات گیمینگ
+                    </h1>
+                    <p class="lead mb-5" style="color: var(--text-muted);">
+                        با GameBeat تجربه مدیریت گیم‌نت خود را به سطح بعدی ببرید. 
+                        از مدیریت دستگاه‌ها تا گزارش‌های تفصیلی، همه چیز در یک مکان.
+                    </p>
+                    
+                    <div class="hero-buttons d-flex flex-column flex-md-row gap-3">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'account:dashboard' %}" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-grid-fill"></i>
+                                داشبورد من
+                            </a>
+                        {% else %}
+                            <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-rocket-takeoff"></i>
+                                شروع رایگان
+                            </a>
+                        {% endif %}
+                        <a href="#features" class="btn btn-outline-light btn-lg px-5">
+                            <i class="bi bi-arrow-down-circle"></i>
+                            بیشتر بدانید
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="hero-image text-center">
+                    <div class="gaming-showcase">
+                        <div class="gaming-card">
+                            <i class="bi bi-controller" style="font-size: 8rem; color: var(--primary-purple);"></i>
+                        </div>
+                        <div class="floating-elements">
+                            <div class="floating-element element-1">
+                                <i class="bi bi-laptop"></i>
+                            </div>
+                            <div class="floating-element element-2">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <div class="floating-element element-3">
+                                <i class="bi bi-people"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div id="features" class="py-5" style="background: var(--card-bg);">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-4">
+                    ویژگی‌های 
+                    <span style="background: linear-gradient(45deg, var(--primary-purple), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        GameBeat
+                    </span>
+                </h2>
+                <p class="lead" style="color: var(--text-muted);">
+                    همه ابزارهای مورد نیاز برای مدیریت حرفه‌ای گیم‌نت شما
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">مدیریت دستگاه‌ها</h5>
+                    <p style="color: var(--text-muted);">
+                        کنترل کامل تمام دستگاه‌های گیم‌نت، نظارت بر وضعیت و مدیریت هوشمند
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-stopwatch"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">مدیریت جلسات</h5>
+                    <p style="color: var(--text-muted);">
+                        ثبت دقیق زمان بازی، محاسبه خودکار هزینه و پیگیری جلسات فعال
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">گزارشات تفصیلی</h5>
+                    <p style="color: var(--text-muted);">
+                        آمار کامل درآمد، تحلیل عملکرد و گزارش‌های مالی دقیق
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">امنیت بالا</h5>
+                    <p style="color: var(--text-muted);">
+                        حفاظت از اطلاعات با بالاترین استانداردهای امنیتی
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-cloud"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Cloud-Based</h5>
+                    <p style="color: var(--text-muted);">
+                        دسترسی از هر مکان، بدون نیاز به نصب نرم‌افزار
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">پشتیبانی ۲۴/۷</h5>
+                    <p style="color: var(--text-muted);">
+                        تیم پشتیبانی متخصص همیشه در خدمت شما
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pricing Preview -->
+<div class="py-5" style="background: var(--darker-bg);">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-4">
+                    طرح‌های 
+                    <span style="background: linear-gradient(45deg, var(--primary-purple), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        اشتراک
+                    </span>
+                </h2>
+                <p class="lead" style="color: var(--text-muted);">
+                    طرح مناسب خود را انتخاب کنید
+                </p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="pricing-card popular">
+                    <div class="pricing-badge">محبوب‌ترین</div>
+                    <div class="pricing-header">
+                        <h4>اشتراک GameNet</h4>
+                        <div class="price">
+                            <span class="price-amount">از ۹۹,۰۰۰</span>
+                            <span class="price-period">تومان / ماه</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="bi bi-check"></i> مدیریت نامحدود دستگاه</li>
+                            <li><i class="bi bi-check"></i> گزارش‌های تفصیلی</li>
+                            <li><i class="bi bi-check"></i> پشتیبانی آنلاین</li>
+                            <li><i class="bi bi-check"></i> بروزرسانی رایگان</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-action">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'account:purchase_subscription' service_type='gamenet' %}" class="btn btn-primary w-100">
+                                خرید اشتراک
+                            </a>
+                        {% else %}
+                            <a href="{% url 'account:register' %}" class="btn btn-primary w-100">
+                                شروع کنید
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="py-5" style="background: var(--card-bg);">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-4">
+                    همین الان 
+                    <span style="background: linear-gradient(45deg, var(--primary-purple), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        شروع کنید
+                    </span>
+                </h2>
+                <p class="lead mb-5" style="color: var(--text-muted);">
+                    امروز حساب رایگان خود را ایجاد کرده و تجربه مدیریت حرفه‌ای گیم‌نت را آغاز کنید
+                </p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'account:dashboard' %}" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-grid-fill"></i>
+                        ورود به داشبورد
+                    </a>
+                {% else %}
+                    <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-rocket-takeoff"></i>
+                        ثبت نام رایگان
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.gaming-showcase {
+    position: relative;
+    padding: 50px;
+}
+
+.gaming-card {
+    background: var(--card-bg);
+    border: 2px solid var(--primary-purple);
+    border-radius: 20px;
+    padding: 60px 40px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+}
+
+.floating-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.floating-element {
+    position: absolute;
+    background: var(--primary-purple);
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.element-1 {
+    top: 20%;
+    right: 10%;
+    animation-delay: 0s;
+}
+
+.element-2 {
+    bottom: 30%;
+    left: 0%;
+    animation-delay: 1s;
+}
+
+.element-3 {
+    top: 10%;
+    left: 20%;
+    animation-delay: 2s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.feature-card {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-purple);
+    box-shadow: 0 15px 35px rgba(139, 92, 246, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: var(--primary-purple);
+}
+
+.pricing-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 30px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.pricing-card.popular {
+    border-color: var(--primary-purple);
+    transform: scale(1.05);
+}
+
+.pricing-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, var(--primary-purple), var(--accent-purple));
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.price-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-purple);
+}
+
+.price-period {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.pricing-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.pricing-features li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pricing-features li:last-child {
+    border-bottom: none;
+}
+
+.pricing-features .bi-check {
+    color: #10b981;
+    margin-left: 10px;
+}
+
+.btn-outline-light {
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+
+.btn-outline-light:hover {
+    background-color: var(--primary-purple);
+    border-color: var(--primary-purple);
+    color: white;
+}
+</style>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

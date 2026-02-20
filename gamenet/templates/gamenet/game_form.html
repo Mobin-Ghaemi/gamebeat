@@ -1,0 +1,52 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-subtitle">اطلاعات بازی را وارد کنید</p>
+    </div>
+    <a href="{% url 'gamenet:game_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت
+    </a>
+</div>
+
+<div class="card fade-in" style="max-width: 600px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label">نام بازی *</label>
+            {{ form.name }}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">ژانر</label>
+            {{ form.genre }}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">توضیحات</label>
+            {{ form.description }}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">تصویر بازی</label>
+            {{ form.image }}
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i>
+                ذخیره بازی
+            </button>
+            <a href="{% url 'gamenet:game_list' %}" class="btn btn-secondary btn-lg">
+                انصراف
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,834 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-title i {
+        color: #f59e0b;
+    }
+
+    .form-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: 36px;
+    }
+
+    .form-group {
+        margin-bottom: 28px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 12px;
+    }
+
+    .form-label .required {
+        color: #ef4444;
+        margin-right: 4px;
+    }
+
+    .form-input,
+    .form-select {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Display Type Selector */
+    .display-type-selector {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .display-type-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .display-type-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .display-type-btn.active {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .display-type-btn i {
+        font-size: 18px;
+    }
+
+    /* Icon/Image Content Panels */
+    .display-content {
+        display: none;
+    }
+
+    .display-content.active {
+        display: block;
+    }
+
+    /* Icon Picker */
+    .icon-picker {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 8px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+
+    .icon-option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        aspect-ratio: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .icon-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transform: scale(1.05);
+    }
+
+    .icon-option.selected {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .icon-option input {
+        display: none;
+    }
+
+    /* Image Upload */
+    .image-upload-area {
+        padding: 32px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .image-upload-area:hover {
+        border-color: rgba(245, 158, 11, 0.5);
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .image-upload-area.has-image {
+        border-style: solid;
+        border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .upload-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .image-upload-area.has-image .upload-icon {
+        display: none;
+    }
+
+    .upload-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 8px;
+    }
+
+    .upload-hint {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .preview-image {
+        max-width: 120px;
+        max-height: 120px;
+        border-radius: 12px;
+        display: none;
+        margin: 0 auto;
+    }
+
+    .image-upload-area.has-image .preview-image {
+        display: block;
+    }
+
+    .image-upload-area.has-image .upload-text,
+    .image-upload-area.has-image .upload-hint {
+        display: none;
+    }
+
+    #imageInput {
+        display: none;
+    }
+
+    .remove-image-btn {
+        display: none;
+        margin-top: 12px;
+        padding: 8px 16px;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        color: #ef4444;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .image-upload-area.has-image + .remove-image-btn {
+        display: inline-block;
+    }
+
+    .remove-image-btn:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Color Picker */
+    .color-picker {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+
+    .color-option.selected {
+        border-color: #fff;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .color-option.selected::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 14px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .color-option input {
+        display: none;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 24px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        border: none;
+        border-radius: 14px;
+        color: #000;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Preview Card */
+    .preview-card {
+        margin-top: 28px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .preview-title {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .preview-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .preview-icon-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: #fff;
+        overflow: hidden;
+    }
+
+    .preview-icon-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .preview-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <a href="{% url 'gamenet:product_list' %}#categories-section" class="btn-back">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="page-title">
+            <i class="fas fa-{% if category %}edit{% else %}plus{% endif %}"></i>
+            {{ title }}
+        </h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="categoryForm">
+        {% csrf_token %}
+        
+        <div class="form-card">
+            <div class="form-group">
+                <label class="form-label">
+                    نام دسته‌بندی
+                    <span class="required">*</span>
+                </label>
+                <input type="text" name="name" id="categoryName" class="form-input" 
+                       placeholder="مثال: نوشیدنی‌ها" required
+                       value="{% if category %}{{ category.name }}{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">نمایش دسته‌بندی</label>
+                
+                <div class="display-type-selector">
+                    <div class="display-type-btn {% if not category.image %}active{% endif %}" data-type="icon">
+                        <i class="fas fa-icons"></i>
+                        آیکون
+                    </div>
+                    <div class="display-type-btn {% if category.image %}active{% endif %}" data-type="image">
+                        <i class="fas fa-image"></i>
+                        تصویر
+                    </div>
+                    <div class="display-type-btn" data-type="none">
+                        <i class="fas fa-ban"></i>
+                        بدون نشان
+                    </div>
+                </div>
+
+                <!-- Icon Picker -->
+                <div class="display-content {% if not category.image %}active{% endif %}" id="iconContent">
+                    <div class="icon-picker">
+                        <label class="icon-option {% if category.icon == 'fas fa-coffee' or not category %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-coffee" {% if category.icon == 'fas fa-coffee' or not category %}checked{% endif %}>
+                            <i class="fas fa-coffee"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-mug-hot' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-mug-hot" {% if category.icon == 'fas fa-mug-hot' %}checked{% endif %}>
+                            <i class="fas fa-mug-hot"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-glass-water' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-glass-water" {% if category.icon == 'fas fa-glass-water' %}checked{% endif %}>
+                            <i class="fas fa-glass-water"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-wine-glass' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-wine-glass" {% if category.icon == 'fas fa-wine-glass' %}checked{% endif %}>
+                            <i class="fas fa-wine-glass"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-beer-mug-empty' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-beer-mug-empty" {% if category.icon == 'fas fa-beer-mug-empty' %}checked{% endif %}>
+                            <i class="fas fa-beer-mug-empty"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-martini-glass' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-martini-glass" {% if category.icon == 'fas fa-martini-glass' %}checked{% endif %}>
+                            <i class="fas fa-martini-glass"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-bottle-water' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-bottle-water" {% if category.icon == 'fas fa-bottle-water' %}checked{% endif %}>
+                            <i class="fas fa-bottle-water"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-whiskey-glass' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-whiskey-glass" {% if category.icon == 'fas fa-whiskey-glass' %}checked{% endif %}>
+                            <i class="fas fa-whiskey-glass"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-cookie' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-cookie" {% if category.icon == 'fas fa-cookie' %}checked{% endif %}>
+                            <i class="fas fa-cookie"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-cookie-bite' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-cookie-bite" {% if category.icon == 'fas fa-cookie-bite' %}checked{% endif %}>
+                            <i class="fas fa-cookie-bite"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-candy-cane' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-candy-cane" {% if category.icon == 'fas fa-candy-cane' %}checked{% endif %}>
+                            <i class="fas fa-candy-cane"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-ice-cream' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-ice-cream" {% if category.icon == 'fas fa-ice-cream' %}checked{% endif %}>
+                            <i class="fas fa-ice-cream"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-pizza-slice' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-pizza-slice" {% if category.icon == 'fas fa-pizza-slice' %}checked{% endif %}>
+                            <i class="fas fa-pizza-slice"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-burger' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-burger" {% if category.icon == 'fas fa-burger' %}checked{% endif %}>
+                            <i class="fas fa-burger"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-hotdog' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-hotdog" {% if category.icon == 'fas fa-hotdog' %}checked{% endif %}>
+                            <i class="fas fa-hotdog"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-drumstick-bite' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-drumstick-bite" {% if category.icon == 'fas fa-drumstick-bite' %}checked{% endif %}>
+                            <i class="fas fa-drumstick-bite"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-bowl-food' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-bowl-food" {% if category.icon == 'fas fa-bowl-food' %}checked{% endif %}>
+                            <i class="fas fa-bowl-food"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-bowl-rice' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-bowl-rice" {% if category.icon == 'fas fa-bowl-rice' %}checked{% endif %}>
+                            <i class="fas fa-bowl-rice"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-cheese' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-cheese" {% if category.icon == 'fas fa-cheese' %}checked{% endif %}>
+                            <i class="fas fa-cheese"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-egg' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-egg" {% if category.icon == 'fas fa-egg' %}checked{% endif %}>
+                            <i class="fas fa-egg"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-bacon' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-bacon" {% if category.icon == 'fas fa-bacon' %}checked{% endif %}>
+                            <i class="fas fa-bacon"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-bread-slice' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-bread-slice" {% if category.icon == 'fas fa-bread-slice' %}checked{% endif %}>
+                            <i class="fas fa-bread-slice"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-apple-whole' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-apple-whole" {% if category.icon == 'fas fa-apple-whole' %}checked{% endif %}>
+                            <i class="fas fa-apple-whole"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-lemon' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-lemon" {% if category.icon == 'fas fa-lemon' %}checked{% endif %}>
+                            <i class="fas fa-lemon"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-carrot' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-carrot" {% if category.icon == 'fas fa-carrot' %}checked{% endif %}>
+                            <i class="fas fa-carrot"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-pepper-hot' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-pepper-hot" {% if category.icon == 'fas fa-pepper-hot' %}checked{% endif %}>
+                            <i class="fas fa-pepper-hot"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-stroopwafel' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-stroopwafel" {% if category.icon == 'fas fa-stroopwafel' %}checked{% endif %}>
+                            <i class="fas fa-stroopwafel"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-box' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-box" {% if category.icon == 'fas fa-box' %}checked{% endif %}>
+                            <i class="fas fa-box"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-gift' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-gift" {% if category.icon == 'fas fa-gift' %}checked{% endif %}>
+                            <i class="fas fa-gift"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-star' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-star" {% if category.icon == 'fas fa-star' %}checked{% endif %}>
+                            <i class="fas fa-star"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-heart' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-heart" {% if category.icon == 'fas fa-heart' %}checked{% endif %}>
+                            <i class="fas fa-heart"></i>
+                        </label>
+                        <label class="icon-option {% if category.icon == 'fas fa-fire' %}selected{% endif %}">
+                            <input type="radio" name="icon" value="fas fa-fire" {% if category.icon == 'fas fa-fire' %}checked{% endif %}>
+                            <i class="fas fa-fire"></i>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="display-content {% if category.image %}active{% endif %}" id="imageContent">
+                    <div class="image-upload-area {% if category.image %}has-image{% endif %}" id="imageUploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text">برای آپلود تصویر کلیک کنید</div>
+                        <div class="upload-hint">فرمت‌های مجاز: JPG, PNG - حداکثر 2MB</div>
+                        <img src="{% if category.image %}{{ category.image.url }}{% endif %}" class="preview-image" id="previewImg">
+                    </div>
+                    <button type="button" class="remove-image-btn" id="removeImageBtn">
+                        <i class="fas fa-trash"></i>
+                        حذف تصویر
+                    </button>
+                    <input type="file" name="image" id="imageInput" accept="image/*">
+                    <input type="hidden" name="remove_image" id="removeImageField" value="0">
+                </div>
+
+                <!-- No Icon/Image -->
+                <div class="display-content" id="noneContent">
+                    <div style="padding: 32px; text-align: center; color: rgba(255, 255, 255, 0.5);">
+                        <i class="fas fa-info-circle" style="font-size: 24px; margin-bottom: 12px; display: block;"></i>
+                        دسته‌بندی بدون آیکون یا تصویر نمایش داده می‌شود
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">رنگ</label>
+                <div class="color-picker">
+                    <label class="color-option {% if category.color == '#7c3aed' or not category %}selected{% endif %}" style="background: #7c3aed">
+                        <input type="radio" name="color" value="#7c3aed" {% if category.color == '#7c3aed' or not category %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#ec4899' %}selected{% endif %}" style="background: #ec4899">
+                        <input type="radio" name="color" value="#ec4899" {% if category.color == '#ec4899' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#f59e0b' %}selected{% endif %}" style="background: #f59e0b">
+                        <input type="radio" name="color" value="#f59e0b" {% if category.color == '#f59e0b' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#10b981' %}selected{% endif %}" style="background: #10b981">
+                        <input type="radio" name="color" value="#10b981" {% if category.color == '#10b981' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#3b82f6' %}selected{% endif %}" style="background: #3b82f6">
+                        <input type="radio" name="color" value="#3b82f6" {% if category.color == '#3b82f6' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#ef4444' %}selected{% endif %}" style="background: #ef4444">
+                        <input type="radio" name="color" value="#ef4444" {% if category.color == '#ef4444' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#06b6d4' %}selected{% endif %}" style="background: #06b6d4">
+                        <input type="radio" name="color" value="#06b6d4" {% if category.color == '#06b6d4' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#8b5cf6' %}selected{% endif %}" style="background: #8b5cf6">
+                        <input type="radio" name="color" value="#8b5cf6" {% if category.color == '#8b5cf6' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#f97316' %}selected{% endif %}" style="background: #f97316">
+                        <input type="radio" name="color" value="#f97316" {% if category.color == '#f97316' %}checked{% endif %}>
+                    </label>
+                    <label class="color-option {% if category.color == '#14b8a6' %}selected{% endif %}" style="background: #14b8a6">
+                        <input type="radio" name="color" value="#14b8a6" {% if category.color == '#14b8a6' %}checked{% endif %}>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">ترتیب نمایش</label>
+                <input type="number" name="order" class="form-input" 
+                       placeholder="0" min="0"
+                       value="{% if category %}{{ category.order }}{% else %}0{% endif %}">
+            </div>
+
+            <div class="preview-card">
+                <div class="preview-title">پیش‌نمایش</div>
+                <div class="preview-content">
+                    <div class="preview-icon-box" id="previewIconBox" style="background: rgba(124, 58, 237, 0.2)">
+                        <i class="fas fa-coffee" id="previewIconI"></i>
+                        <img src="" id="previewIconImg" style="display: none;">
+                    </div>
+                    <div class="preview-name" id="previewName">نام دسته‌بندی</div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'gamenet:product_list' %}#categories-section" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    انصراف
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-check"></i>
+                    {% if category %}ذخیره تغییرات{% else %}افزودن دسته‌بندی{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('categoryName');
+    const previewName = document.getElementById('previewName');
+    const previewIconBox = document.getElementById('previewIconBox');
+    const previewIconI = document.getElementById('previewIconI');
+    const previewIconImg = document.getElementById('previewIconImg');
+    const imageInput = document.getElementById('imageInput');
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    const previewImg = document.getElementById('previewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const removeImageField = document.getElementById('removeImageField');
+    
+    let currentDisplayType = '{% if category.image %}image{% else %}icon{% endif %}';
+
+    // Update preview name
+    nameInput.addEventListener('input', function() {
+        previewName.textContent = this.value || 'نام دسته‌بندی';
+    });
+
+    // Display type selector
+    document.querySelectorAll('.display-type-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const type = this.dataset.type;
+            currentDisplayType = type;
+            
+            // Update buttons
+            document.querySelectorAll('.display-type-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update content panels
+            document.querySelectorAll('.display-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(type + 'Content').classList.add('active');
+            
+            // Update preview
+            updatePreview();
+            
+            // If switching away from image, clear icon selection for "none"
+            if (type === 'none') {
+                document.querySelectorAll('.icon-option input').forEach(i => i.checked = false);
+                document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+            }
+        });
+    });
+
+    // Icon selection
+    document.querySelectorAll('.icon-option input').forEach(function(input) {
+        input.addEventListener('change', function() {
+            document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+            this.closest('.icon-option').classList.add('selected');
+            updatePreview();
+        });
+    });
+
+    // Color selection
+    document.querySelectorAll('.color-option input').forEach(function(input) {
+        input.addEventListener('change', function() {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            this.closest('.color-option').classList.add('selected');
+            updatePreview();
+        });
+    });
+
+    // Image upload area click
+    imageUploadArea.addEventListener('click', function() {
+        imageInput.click();
+    });
+
+    // Image input change
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imageUploadArea.classList.add('has-image');
+                removeImageField.value = '0';
+                updatePreview();
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Remove image
+    removeImageBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        imageInput.value = '';
+        previewImg.src = '';
+        imageUploadArea.classList.remove('has-image');
+        removeImageField.value = '1';
+        updatePreview();
+    });
+
+    function updatePreview() {
+        const selectedColor = document.querySelector('.color-option.selected input');
+        const color = selectedColor ? selectedColor.value : '#7c3aed';
+        
+        previewIconBox.style.background = color + '33';
+        
+        if (currentDisplayType === 'image' && (previewImg.src || imageUploadArea.classList.contains('has-image'))) {
+            previewIconI.style.display = 'none';
+            previewIconImg.style.display = 'block';
+            previewIconImg.src = previewImg.src;
+        } else if (currentDisplayType === 'icon') {
+            const selectedIcon = document.querySelector('.icon-option.selected input');
+            if (selectedIcon) {
+                previewIconI.className = selectedIcon.value;
+                previewIconI.style.color = color;
+                previewIconI.style.display = 'block';
+                previewIconImg.style.display = 'none';
+            }
+        } else {
+            previewIconI.className = 'fas fa-tag';
+            previewIconI.style.color = color;
+            previewIconI.style.display = 'block';
+            previewIconImg.style.display = 'none';
+        }
+    }
+
+    // Initialize
+    {% if category %}
+    previewName.textContent = '{{ category.name }}';
+    {% if category.image %}
+    previewIconImg.src = '{{ category.image.url }}';
+    previewIconImg.style.display = 'block';
+    previewIconI.style.display = 'none';
+    {% elif category.icon %}
+    previewIconI.className = '{{ category.icon }}';
+    previewIconI.style.color = '{{ category.color }}';
+    {% endif %}
+    previewIconBox.style.background = '{{ category.color }}33';
+    {% endif %}
+});
+</script>
+{% endblock %}

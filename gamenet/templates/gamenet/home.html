@@ -1,0 +1,1259 @@
+{% extends 'gamenet/base.html' %}
+{% load static %}
+
+{% block title %}گیم‌بیت | پلتفرم هوشمند مدیریت گیم‌نت{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== ANIMATED BACKGROUND ========== */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%);
+    }
+
+    .hero-bg-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .floating-shapes {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.5;
+        animation: floatShape 15s ease-in-out infinite;
+    }
+
+    .shape-1 {
+        width: 600px;
+        height: 600px;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        top: -200px;
+        right: -100px;
+        animation-delay: 0s;
+    }
+
+    .shape-2 {
+        width: 400px;
+        height: 400px;
+        background: linear-gradient(135deg, #06b6d4, #7c3aed);
+        bottom: -100px;
+        left: -100px;
+        animation-delay: -5s;
+    }
+
+    .shape-3 {
+        width: 300px;
+        height: 300px;
+        background: linear-gradient(135deg, #ec4899, #f59e0b);
+        top: 50%;
+        left: 50%;
+        animation-delay: -10s;
+    }
+
+    @keyframes floatShape {
+        0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+        25% { transform: translate(50px, -50px) rotate(90deg) scale(1.1); }
+        50% { transform: translate(-30px, 30px) rotate(180deg) scale(0.9); }
+        75% { transform: translate(-50px, -30px) rotate(270deg) scale(1.05); }
+    }
+
+    /* Particle System */
+    .particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: rgba(124, 58, 237, 0.8);
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
+        animation: particleFloat 20s linear infinite;
+    }
+
+    @keyframes particleFloat {
+        0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Grid Background */
+    .grid-bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 10;
+        max-width: 900px;
+        padding: 0 24px;
+    }
+
+    /* Badge with Glow */
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(124, 58, 237, 0.15);
+        border: 1px solid rgba(124, 58, 237, 0.5);
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 32px;
+        color: #a855f7;
+        backdrop-filter: blur(10px);
+        animation: badgePulse 3s ease-in-out infinite;
+    }
+
+    .hero-badge i {
+        animation: rocketBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); }
+        50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.5); }
+    }
+
+    @keyframes rocketBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* Hero Title with Typewriter Effect */
+    .hero-title {
+        font-size: clamp(40px, 8vw, 80px);
+        font-weight: 900;
+        margin-bottom: 24px;
+        line-height: 1.1;
+        color: #fff;
+    }
+
+    .hero-title .gradient-text {
+        background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #f59e0b 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientMove 5s ease infinite;
+    }
+
+    .hero-title .glow-word {
+        position: relative;
+        display: inline-block;
+    }
+
+    .hero-title .glow-word::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: blur(30px);
+        opacity: 0.8;
+        z-index: -1;
+    }
+
+    @keyframes gradientMove {
+        0% { background-position: 0% center; }
+        50% { background-position: 100% center; }
+        100% { background-position: 0% center; }
+    }
+
+    .hero-subtitle {
+        font-size: clamp(16px, 2.5vw, 22px);
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 48px;
+        line-height: 1.8;
+        max-width: 650px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Animated CTA Buttons */
+    .hero-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+    }
+
+    .btn-hero-primary {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 40px;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        border: none;
+        border-radius: 60px;
+        cursor: pointer;
+        text-decoration: none;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-hero-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 20px 60px rgba(124, 58, 237, 0.6);
+    }
+
+    .btn-hero-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-hero-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 40px;
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 60px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-5px);
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        animation: scrollBounce 2s ease-in-out infinite;
+    }
+
+    .scroll-indicator a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        font-size: 12px;
+        transition: color 0.3s ease;
+    }
+
+    .scroll-indicator a:hover {
+        color: #a855f7;
+    }
+
+    .scroll-indicator .mouse {
+        width: 26px;
+        height: 40px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        position: relative;
+    }
+
+    .scroll-indicator .wheel {
+        width: 4px;
+        height: 8px;
+        background: #a855f7;
+        border-radius: 4px;
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: wheelScroll 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    @keyframes wheelScroll {
+        0% { opacity: 1; top: 8px; }
+        100% { opacity: 0; top: 24px; }
+    }
+
+    /* ========== FEATURES SECTION ========== */
+    .features-section {
+        padding: 120px 0;
+        background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+        position: relative;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 80px;
+    }
+
+    .section-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #a855f7;
+    }
+
+    .section-title {
+        font-size: clamp(32px, 5vw, 56px);
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+
+    .section-title .highlight {
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .section-subtitle {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 30px;
+        margin-bottom: 0;
+    }
+
+    .feature-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.8), rgba(18, 18, 26, 0.9));
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 40px 32px;
+        text-align: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #ec4899, #f59e0b);
+        transform: scaleX(0);
+        transition: transform 0.5s ease;
+    }
+
+    .feature-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+            rgba(124, 58, 237, 0.15) 0%, transparent 50%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-12px);
+        border-color: rgba(124, 58, 237, 0.3);
+        box-shadow: 
+            0 30px 60px rgba(0, 0, 0, 0.3),
+            0 0 40px rgba(124, 58, 237, 0.2);
+    }
+
+    .feature-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .feature-card:hover::after {
+        opacity: 1;
+    }
+
+    .feature-icon {
+        width: 90px;
+        height: 90px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border: 2px solid rgba(124, 58, 237, 0.3);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin: 0 auto 28px;
+        color: #a855f7;
+        transition: all 0.4s ease;
+        position: relative;
+        z-index: 2;
+    }
+
+    .feature-card:hover .feature-icon {
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: #fff;
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 15px 40px rgba(124, 58, 237, 0.4);
+    }
+
+    .feature-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #fff;
+        position: relative;
+        z-index: 2;
+    }
+
+    .feature-desc {
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.7;
+        font-size: 15px;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* ========== STATS SECTION ========== */
+    .stats-section {
+        padding: 100px 0;
+        background: linear-gradient(135deg, #12121a 0%, #1a0a2e 50%, #12121a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-section::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 40px;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .stat-item {
+        padding: 30px;
+        position: relative;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #a855f7;
+        margin: 0 auto 20px;
+    }
+
+    .stat-number {
+        font-size: clamp(40px, 6vw, 64px);
+        font-weight: 900;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 600;
+    }
+
+    /* ========== PRICING SECTION ========== */
+    .pricing-section {
+        background: linear-gradient(180deg, #12121a 0%, #0a0a0f 100%);
+        padding: 120px 0;
+        position: relative;
+    }
+
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .pricing-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 40px 32px;
+        text-align: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+    }
+
+    .pricing-card.featured {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(236, 72, 153, 0.15));
+        border: 2px solid rgba(124, 58, 237, 0.5);
+        transform: scale(1.05);
+        box-shadow: 0 0 60px rgba(124, 58, 237, 0.3);
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .pricing-card.featured:hover {
+        transform: translateY(-12px) scale(1.05);
+        box-shadow: 0 30px 60px rgba(124, 58, 237, 0.4);
+    }
+
+    .pricing-popular {
+        position: absolute;
+        top: -12px;
+        right: 50%;
+        transform: translateX(50%);
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: white;
+        padding: 8px 24px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+    }
+
+    .pricing-name {
+        font-size: 26px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: #fff;
+        margin-top: 20px;
+    }
+
+    .pricing-desc {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 32px;
+        font-size: 14px;
+    }
+
+    .pricing-price {
+        margin-bottom: 32px;
+        padding: 24px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 16px;
+    }
+
+    .price-amount {
+        font-size: 56px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .price-currency {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.5);
+        vertical-align: top;
+    }
+
+    .price-period {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+        display: block;
+        margin-top: 8px;
+    }
+
+    .pricing-features {
+        list-style: none;
+        margin-bottom: 32px;
+        text-align: right;
+    }
+
+    .pricing-features li {
+        padding: 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 15px;
+    }
+
+    .pricing-features li:last-child {
+        border-bottom: none;
+    }
+
+    .pricing-features i {
+        color: #10b981;
+        width: 24px;
+        height: 24px;
+        background: rgba(16, 185, 129, 0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .btn-pricing {
+        display: block;
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 14px;
+        text-decoration: none;
+        transition: all 0.4s ease;
+    }
+
+    .btn-pricing-primary {
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: white;
+        border: none;
+        box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-pricing-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(124, 58, 237, 0.5);
+    }
+
+    .btn-pricing-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-pricing-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ========== CTA SECTION ========== */
+    .cta-section {
+        background: linear-gradient(135deg, #1a0a2e 0%, #0a0a0f 100%);
+        padding: 120px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1000px;
+        height: 1000px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .cta-title {
+        font-size: clamp(32px, 5vw, 52px);
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+
+    .cta-title .highlight {
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .cta-subtitle {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 40px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    /* ========== FOOTER ENHANCEMENTS ========== */
+    .trust-badges {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 60px;
+        flex-wrap: wrap;
+    }
+
+    .trust-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+    }
+
+    .trust-badge i {
+        font-size: 20px;
+        color: #a855f7;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+        .hero {
+            min-height: auto;
+            padding: 100px 0 80px;
+        }
+        
+        .hero-cta {
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .btn-hero-primary,
+        .btn-hero-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .pricing-card.featured {
+            transform: none;
+        }
+        
+        .pricing-card.featured:hover {
+            transform: translateY(-12px);
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .scroll-indicator {
+            display: none;
+        }
+        
+        .trust-badges {
+            gap: 20px;
+        }
+    }
+
+    /* ========== ANIMATIONS ON SCROLL ========== */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .animate-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .stagger-1 { transition-delay: 0.1s; }
+    .stagger-2 { transition-delay: 0.2s; }
+    .stagger-3 { transition-delay: 0.3s; }
+    .stagger-4 { transition-delay: 0.4s; }
+    .stagger-5 { transition-delay: 0.5s; }
+    .stagger-6 { transition-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg-animation">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="particles" id="particles"></div>
+        <div class="grid-bg"></div>
+    </div>
+    
+    <div class="hero-content">
+        <div class="hero-badge">
+            <i class="fas fa-gamepad"></i>
+            <span>نسل جدید مدیریت گیم‌نت</span>
+        </div>
+        
+        <h1 class="hero-title">
+            گیم‌نت خودت رو<br>
+            <span class="glow-word gradient-text" data-text="هوشمند کن">هوشمند کن</span>
+        </h1>
+        
+        <p class="hero-subtitle">
+            با گیم‌بیت، اولین پلتفرم ایرانی مدیریت گیم‌نت، کسب‌وکارت رو متحول کن!
+            <br>ثبت‌نام کن، پلن مناسب رو انتخاب کن و مدیریت حرفه‌ای رو تجربه کن
+        </p>
+        
+        <div class="hero-cta">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'account:register' %}" class="btn-hero-primary">
+                    <i class="fas fa-rocket"></i>
+                    شروع رایگان
+                </a>
+                <a href="#features" class="btn-hero-secondary">
+                    <i class="fas fa-play-circle"></i>
+                    امکانات
+                </a>
+            {% else %}
+                <a href="{% url 'account:dashboard' %}" class="btn-hero-primary">
+                    <i class="fas fa-tachometer-alt"></i>
+                    ورود به داشبورد
+                </a>
+            {% endif %}
+        </div>
+        
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>امنیت ۱۰۰٪</span>
+            </div>
+            <div class="trust-badge">
+                <i class="fas fa-headset"></i>
+                <span>پشتیبانی ۲۴/۷</span>
+            </div>
+            <div class="trust-badge">
+                <i class="fas fa-sync-alt"></i>
+                <span>بروزرسانی مداوم</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="scroll-indicator">
+        <a href="#features">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>اسکرول کنید</span>
+        </a>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge animate-on-scroll">
+                <i class="fas fa-star"></i>
+                امکانات ویژه
+            </div>
+            <h2 class="section-title animate-on-scroll">
+                چرا <span class="highlight">گیم‌بیت؟</span>
+            </h2>
+            <p class="section-subtitle animate-on-scroll">
+                همه ابزارهایی که برای مدیریت حرفه‌ای گیم‌نت نیاز داری، یکجا!
+            </p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll stagger-1">
+                <div class="feature-icon">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <h3 class="feature-title">مدیریت دستگاه‌ها</h3>
+                <p class="feature-desc">
+                    کنترل کامل تمام دستگاه‌ها با نمایش لحظه‌ای وضعیت، قیمت‌گذاری هوشمند و مدیریت از راه دور
+                </p>
+            </div>
+            
+            <div class="feature-card animate-on-scroll stagger-2">
+                <div class="feature-icon">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <h3 class="feature-title">تایمر هوشمند</h3>
+                <p class="feature-desc">
+                    شروع و پایان خودکار سشن‌ها، محاسبه دقیق هزینه و نمایش زنده زمان باقی‌مانده برای هر دستگاه
+                </p>
+            </div>
+            
+            <div class="feature-card animate-on-scroll stagger-3">
+                <div class="feature-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3 class="feature-title">سیستم مسابقات</h3>
+                <p class="feature-desc">
+                    برگزاری تورنمنت‌های حرفه‌ای با سیستم ثبت‌نام آنلاین، مدیریت براکت و اعلام نتایج اتوماتیک
+                </p>
+            </div>
+            
+            <div class="feature-card animate-on-scroll stagger-4">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">آنالیتیکس پیشرفته</h3>
+                <p class="feature-desc">
+                    گزارش‌های جامع فروش، آمار استفاده دستگاه‌ها، تحلیل رفتار مشتریان و پیش‌بینی درآمد
+                </p>
+            </div>
+            
+            <div class="feature-card animate-on-scroll stagger-5">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="feature-title">اپلیکیشن موبایل</h3>
+                <p class="feature-desc">
+                    مدیریت گیم‌نت از هر جا با اپ موبایل اختصاصی، دریافت نوتیفیکیشن و کنترل از راه دور
+                </p>
+            </div>
+            
+            <div class="feature-card animate-on-scroll stagger-6">
+                <div class="feature-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3 class="feature-title">امنیت سازمانی</h3>
+                <p class="feature-desc">
+                    رمزنگاری end-to-end، احراز هویت دو مرحله‌ای، بکاپ خودکار و حفاظت ۱۰۰٪ از داده‌ها
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item animate-on-scroll stagger-1">
+                <div class="stat-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="stat-number" data-target="500">۵۰۰+</span>
+                <span class="stat-label">گیم‌نت فعال</span>
+            </div>
+            <div class="stat-item animate-on-scroll stagger-2">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="stat-number" data-target="10000">۱۰K+</span>
+                <span class="stat-label">ساعت بازی ثبت شده</span>
+            </div>
+            <div class="stat-item animate-on-scroll stagger-3">
+                <div class="stat-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <span class="stat-number" data-target="2000">۲K+</span>
+                <span class="stat-label">مسابقه برگزار شده</span>
+            </div>
+            <div class="stat-item animate-on-scroll stagger-4">
+                <div class="stat-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <span class="stat-number">۹۹.۹٪</span>
+                <span class="stat-label">آپتایم سرور</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge animate-on-scroll">
+                <i class="fas fa-tags"></i>
+                پلن‌های اشتراک
+            </div>
+            <h2 class="section-title animate-on-scroll">
+                پلن <span class="highlight">مناسب</span> خودت رو انتخاب کن
+            </h2>
+            <p class="section-subtitle animate-on-scroll">
+                بدون پرداخت اولیه شروع کن، هر زمان که خواستی آپگرید کن!
+            </p>
+        </div>
+        
+        <div class="pricing-grid">
+            <div class="pricing-card animate-on-scroll stagger-1">
+                <h3 class="pricing-name">استارتر</h3>
+                <p class="pricing-desc">برای گیم‌نت‌های کوچک</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۴۹</span>
+                    <span class="price-currency">هزار تومان</span>
+                    <span class="price-period">ماهانه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> تا ۱۰ دستگاه</li>
+                    <li><i class="fas fa-check"></i> گزارش‌گیری پایه</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی ایمیل</li>
+                    <li><i class="fas fa-check"></i> ذخیره‌سازی ابری ۵GB</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn-pricing btn-pricing-secondary">انتخاب پلن</a>
+                {% endif %}
+            </div>
+            
+            <div class="pricing-card featured animate-on-scroll stagger-2">
+                <div class="pricing-popular">🔥 پرطرفدارترین</div>
+                <h3 class="pricing-name">حرفه‌ای</h3>
+                <p class="pricing-desc">برای گیم‌نت‌های در حال رشد</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۹۹</span>
+                    <span class="price-currency">هزار تومان</span>
+                    <span class="price-period">ماهانه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> تا ۵۰ دستگاه</li>
+                    <li><i class="fas fa-check"></i> آنالیتیکس پیشرفته</li>
+                    <li><i class="fas fa-check"></i> سیستم مسابقات</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی تلفنی</li>
+                    <li><i class="fas fa-check"></i> API اختصاصی</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn-pricing btn-pricing-primary">انتخاب پلن</a>
+                {% endif %}
+            </div>
+            
+            <div class="pricing-card animate-on-scroll stagger-3">
+                <h3 class="pricing-name">سازمانی</h3>
+                <p class="pricing-desc">برای زنجیره‌های گیم‌نت</p>
+                <div class="pricing-price">
+                    <span class="price-amount">۱۹۹</span>
+                    <span class="price-currency">هزار تومان</span>
+                    <span class="price-period">ماهانه</span>
+                </div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> دستگاه نامحدود</li>
+                    <li><i class="fas fa-check"></i> هوش مصنوعی پیشرفته</li>
+                    <li><i class="fas fa-check"></i> مدیریت چندشعبه‌ای</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی ۲۴/۷</li>
+                    <li><i class="fas fa-check"></i> سفارشی‌سازی کامل</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:register' %}" class="btn-pricing btn-pricing-secondary">انتخاب پلن</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content animate-on-scroll">
+            <h2 class="cta-title">
+                آماده‌ای گیم‌نتت رو <span class="highlight">متحول</span> کنی؟
+            </h2>
+            <p class="cta-subtitle">
+                همین الان ثبت‌نام کن و ۱۴ روز تمام امکانات رو رایگان تست کن!
+            </p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'account:register' %}" class="btn-hero-primary">
+                    <i class="fas fa-rocket"></i>
+                    شروع رایگان - بدون کارت بانکی
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Create Particles
+    function createParticles() {
+        const container = document.getElementById('particles');
+        if (!container) return;
+        
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 20 + 10) + 's';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.width = (Math.random() * 4 + 2) + 'px';
+            particle.style.height = particle.style.width;
+            
+            const colors = ['rgba(124, 58, 237, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(6, 182, 212, 0.8)'];
+            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.boxShadow = `0 0 ${Math.random() * 15 + 5}px ${particle.style.background}`;
+            
+            container.appendChild(particle);
+        }
+    }
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Animate on scroll
+    function animateOnScroll() {
+        const elements = document.querySelectorAll('.animate-on-scroll');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+        
+        elements.forEach(el => observer.observe(el));
+    }
+    
+    // Feature card mouse tracking
+    function initFeatureCards() {
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mouse-x', x + '%');
+                card.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+    }
+    
+    // Typing effect for hero (optional enhancement)
+    function typeWriter(element, text, speed = 100) {
+        let i = 0;
+        element.innerHTML = '';
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        }
+        type();
+    }
+    
+    // Counter Animation
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-number[data-target]');
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+            
+            const updateCounter = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current).toLocaleString('fa-IR') + '+';
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = target.toLocaleString('fa-IR') + '+';
+                }
+            };
+            
+            // Start when visible
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    updateCounter();
+                    observer.disconnect();
+                }
+            });
+            
+            observer.observe(counter);
+        });
+    }
+    
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', () => {
+        createParticles();
+        animateOnScroll();
+        initFeatureCards();
+        animateCounters();
+    });
+</script>
+{% endblock %}

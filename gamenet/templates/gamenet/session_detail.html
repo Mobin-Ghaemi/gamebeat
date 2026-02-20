@@ -1,0 +1,144 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+
+{% block title %}جزئیات جلسه{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">جزئیات جلسه</h1>
+        <p class="page-subtitle">دستگاه #{{ session.device.number }}</p>
+    </div>
+    <a href="{% url 'gamenet:dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت به داشبورد
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
+    <div class="card fade-in">
+        <div style="text-align: center; padding: 20px;">
+            {% if session.status == 'completed' %}
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--success) 0%, #34d399 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: var(--success-glow);">
+                <i class="fas fa-check" style="font-size: 48px;"></i>
+            </div>
+            <h2 style="color: var(--success); margin-bottom: 8px;">جلسه پایان یافت</h2>
+            {% else %}
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--danger) 0%, #f87171 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: var(--danger-glow); animation: pulse 2s infinite;">
+                <i class="fas fa-play" style="font-size: 48px;"></i>
+            </div>
+            <h2 style="color: var(--danger); margin-bottom: 8px;">جلسه فعال</h2>
+            {% endif %}
+        </div>
+        
+        <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">مدت زمان</div>
+            <div style="font-size: 48px; font-weight: 800; font-family: 'Courier New', monospace; color: var(--accent-secondary);">
+                {% if session.status == 'completed' %}
+                    {% with minutes=session.calculate_duration_minutes %}
+                    {{ minutes|floatformat:0|divisibleby:60 }}:{% widthratio minutes 1 1 as m %}{{ m|floatformat:0 }}
+                    {% endwith %}
+                {% else %}
+                    <span id="timer">00:00:00</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 24px; text-align: center;">
+            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">هزینه کل</div>
+            <div style="font-size: 36px; font-weight: 800; color: var(--warning);">
+                {{ session.total_cost|floatformat:0 }}
+                <span style="font-size: 18px; color: var(--text-muted);">تومان</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card fade-in" style="animation-delay: 0.2s;">
+        <h3 style="margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-info-circle" style="color: var(--accent-secondary)"></i>
+            اطلاعات جلسه
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">دستگاه</span>
+                <span style="font-weight: 600;">#{{ session.device.number }} - {{ session.device.name }}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">نام مشتری</span>
+                <span style="font-weight: 600;">{{ session.customer_name|default:"-" }}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">شماره تلفن</span>
+                <span style="font-weight: 600;">{{ session.customer_phone|default:"-" }}</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">زمان شروع</span>
+                <span style="font-weight: 600;">{{ session.start_time|date:"Y/m/d - H:i" }}</span>
+            </div>
+            
+            {% if session.end_time %}
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">زمان پایان</span>
+                <span style="font-weight: 600;">{{ session.end_time|date:"Y/m/d - H:i" }}</span>
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">نرخ ساعتی</span>
+                <span style="font-weight: 600;">{{ session.hourly_rate|floatformat:0 }} تومان</span>
+            </div>
+            
+            {% if session.notes %}
+            <div style="padding-bottom: 16px;">
+                <span style="color: var(--text-muted); display: block; margin-bottom: 8px;">یادداشت</span>
+                <span style="font-weight: 600;">{{ session.notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if session.status == 'active' %}
+        <a href="{% url 'gamenet:stop_session' session.id %}" class="btn btn-danger btn-lg" style="width: 100%; justify-content: center; margin-top: 24px;">
+            <i class="fas fa-stop"></i>
+            پایان جلسه
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if session.status == 'active' %}
+<script>
+    function updateTimer() {
+        fetch('{% url "gamenet:get_session_time" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken
+            },
+            body: `session_id={{ session.id }}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                document.getElementById('timer').textContent = data.formatted_time;
+            }
+        });
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+</script>
+{% endif %}
+{% endblock %}

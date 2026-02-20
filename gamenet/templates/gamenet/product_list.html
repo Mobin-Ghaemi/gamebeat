@@ -1,0 +1,862 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block title %}محصولات بوفه{% endblock %}
+{% block page_title %}محصولات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i { color: #f59e0b; }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-add,
+    .btn-category,
+    .btn-neutral {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: none;
+        text-decoration: none;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-add {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #000;
+    }
+
+    .btn-category {
+        background: linear-gradient(135deg, #10b981, #14b8a6);
+        color: #fff;
+    }
+
+    .btn-neutral {
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 12px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #000;
+        border-color: transparent;
+    }
+
+    .filter-tab .count {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+    }
+
+    .product-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(245, 158, 11, 0.3);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .product-image {
+        height: 180px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.05));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-image i {
+        font-size: 56px;
+        color: rgba(255, 255, 255, 0.15);
+    }
+
+    .product-badges {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-available { background: rgba(16, 185, 129, 0.9); color: #fff; }
+    .badge-unavailable { background: rgba(239, 68, 68, 0.9); color: #fff; }
+    .badge-stock { background: rgba(59, 130, 246, 0.9); color: #fff; }
+
+    .product-body { padding: 24px; }
+
+    .product-category {
+        font-size: 12px;
+        color: #f59e0b;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .product-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .product-description {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 16px;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-price {
+        font-size: 24px;
+        font-weight: 800;
+        color: #10b981;
+        margin-bottom: 20px;
+    }
+
+    .product-price span {
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .product-actions { display: flex; gap: 10px; }
+
+    .btn-action {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-edit {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-toggle {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-toggle.on {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        width: 44px;
+        flex: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 24px;
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+    }
+
+    .empty-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.05));
+        border: 2px dashed rgba(245, 158, 11, 0.3);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 28px;
+        font-size: 48px;
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 12, 0.75);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+        transition: opacity 0.24s ease, visibility 0.24s ease;
+    }
+
+    .modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        display: flex;
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: 560px;
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.98), rgba(18, 18, 26, 0.98));
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 18px;
+        padding: 18px;
+        transform: translateY(-120px) scale(0.98);
+        opacity: 0;
+        transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .modal-overlay.show .modal-card {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .modal-overlay.closing .modal-card {
+        transform: translateY(-140px) scale(0.98);
+        opacity: 0;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .modal-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .modal-desc {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .modal-close {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .modal-grid .full { grid-column: 1 / -1; }
+
+    .modal-input,
+    .modal-select,
+    .modal-textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        color: #fff;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .modal-input:focus,
+    .modal-select:focus,
+    .modal-textarea:focus {
+        outline: none;
+        border-color: rgba(99, 102, 241, 0.8);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .modal-textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .color-picker-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        padding: 6px 10px;
+    }
+
+    .modal-color {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+    }
+
+    .color-open-btn {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        border-radius: 9px;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .color-swatch {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: #7c3aed;
+    }
+
+    .color-value {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+        direction: ltr;
+    }
+
+    .icon-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 13px;
+    }
+
+    .icon-preview i {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(124, 58, 237, 0.22);
+        color: #c4b5fd;
+        transition: all 0.16s ease;
+    }
+
+    .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .icon-option {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.12s ease;
+    }
+
+    .icon-option:hover {
+        border-color: rgba(124, 58, 237, 0.5);
+        color: #c4b5fd;
+    }
+
+    .icon-option.active {
+        border-color: rgba(124, 58, 237, 0.9);
+        background: rgba(124, 58, 237, 0.22);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18) inset;
+    }
+
+    .file-upload-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px dashed rgba(59, 130, 246, 0.45);
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .file-upload-input {
+        display: none;
+    }
+
+    .file-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.18);
+        color: #bfdbfe;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .file-upload-name {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .modal-checks {
+        display: flex;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 14px;
+    }
+
+    .modal-footer {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .modal-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-box"></i>
+        محصولات بوفه
+    </h1>
+    <div class="header-actions">
+        <a href="{% url 'gamenet:buffet_dashboard' %}" class="btn-neutral">
+            <i class="fas fa-arrow-right"></i>
+            بازگشت
+        </a>
+        <button type="button" class="btn-category" data-open-modal="category-modal">
+            <i class="fas fa-tags"></i>
+            افزودن دسته‌بندی
+        </button>
+        <button type="button" class="btn-add" data-open-modal="product-modal">
+            <i class="fas fa-plus"></i>
+            افزودن محصول
+        </button>
+    </div>
+</div>
+
+<div class="filter-tabs">
+    <a href="{% url 'gamenet:product_list' %}" class="filter-tab {% if not selected_category %}active{% endif %}">
+        <i class="fas fa-th"></i>
+        همه
+        <span class="count">{{ products.count }}</span>
+    </a>
+    {% for category in categories %}
+    <a href="{% url 'gamenet:product_list' %}?category={{ category.id }}"
+       class="filter-tab {% if selected_category == category.id|stringformat:'s' %}active{% endif %}"
+       style="{% if selected_category == category.id|stringformat:'s' %}{% else %}border-color: {{ category.color }}30;{% endif %}">
+        <i class="{{ category.icon }}"></i>
+        {{ category.name }}
+        <span class="count">{{ category.products.count }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+{% if products %}
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card" id="product-{{ product.id }}">
+        <div class="product-image">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+            <i class="fas fa-image"></i>
+            {% endif %}
+            <div class="product-badges">
+                <span class="badge {% if product.is_available %}badge-available{% else %}badge-unavailable{% endif %}">
+                    {% if product.is_available %}موجود{% else %}ناموجود{% endif %}
+                </span>
+                {% if product.stock > 0 %}
+                <span class="badge badge-stock">
+                    <i class="fas fa-cubes"></i> {{ product.stock }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="product-body">
+            {% if product.category %}
+            <div class="product-category">
+                <i class="{{ product.category.icon }}"></i>
+                {{ product.category.name }}
+            </div>
+            {% endif %}
+            <div class="product-name">{{ product.name }}</div>
+            {% if product.description %}
+            <div class="product-description">{{ product.description }}</div>
+            {% endif %}
+            <div class="product-price">
+                {% if product.sale_price %}{{ product.sale_price|round_thousands }}{% elif product.price %}{{ product.price|round_thousands }}{% else %}0{% endif %}
+                <span>تومان</span>
+            </div>
+            <div class="product-actions">
+                <a href="{% url 'gamenet:product_edit' product.id %}" class="btn-action btn-edit">
+                    <i class="fas fa-edit"></i>
+                    ویرایش
+                </a>
+                <button class="btn-action btn-toggle {% if product.is_available %}on{% endif %}"
+                        onclick="toggleProduct({{ product.id }})" id="toggle-btn-{{ product.id }}">
+                    {% if product.is_available %}فعال{% else %}غیرفعال{% endif %}
+                </button>
+                <a href="{% url 'gamenet:product_delete' product.id %}" class="btn-action btn-delete">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-box-open"></i>
+    </div>
+    <h3>محصولی یافت نشد</h3>
+    <p>{% if selected_category %}در این دسته‌بندی محصولی وجود ندارد{% else %}هنوز محصولی ثبت نشده است{% endif %}</p>
+    <button type="button" class="btn-add" data-open-modal="product-modal">
+        <i class="fas fa-plus"></i>
+        افزودن محصول
+    </button>
+</div>
+{% endif %}
+
+<div class="modal-overlay" id="product-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">افزودن محصول</div>
+            <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-desc">اطلاعات محصول جدید را وارد کنید تا به لیست فروش اضافه شود.</div>
+        <form method="post" action="{% url 'gamenet:product_list' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="quick_product">
+            <div class="modal-grid">
+                <select name="category" class="modal-select">
+                    <option value="">بدون دسته‌بندی</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="name" class="modal-input" placeholder="نام محصول - مثال: نوشابه خانواده" required>
+                <input type="number" name="purchase_price" class="modal-input" min="0" placeholder="قیمت خرید - مثال: 12000">
+                <input type="number" name="sale_price" class="modal-input" min="0" placeholder="قیمت فروش - مثال: 18000">
+                <input type="number" name="stock" class="modal-input" min="0" placeholder="موجودی - مثال: 30" value="0">
+                <div class="file-upload-wrap full">
+                    <input type="file" id="productImageInput" name="image" class="file-upload-input" accept="image/*">
+                    <label for="productImageInput" class="file-upload-btn">
+                        <i class="fas fa-image"></i>
+                        انتخاب تصویر
+                    </label>
+                    <div id="productImageName" class="file-upload-name">فایلی انتخاب نشده</div>
+                </div>
+                <textarea name="description" class="modal-textarea full" placeholder="توضیحات - مثال: نوشیدنی خنک 1.5 لیتری"></textarea>
+                <div class="modal-checks full">
+                    <label><input type="checkbox" name="is_available" checked> موجود</label>
+                    <label><input type="checkbox" name="is_active" checked> فعال</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-neutral" data-close-modal>انصراف</button>
+                <button type="submit" class="btn-add">ثبت محصول</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="category-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">افزودن دسته‌بندی</div>
+            <button type="button" class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-desc">دسته‌بندی برای مرتب‌سازی بهتر محصولات در فروشگاه.</div>
+        <form method="post" action="{% url 'gamenet:product_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="quick_category">
+            <input type="hidden" id="categoryIconInput" name="icon" value="fas fa-tag">
+            <div class="modal-grid">
+                <input type="text" name="name" class="modal-input full" placeholder="نام دسته‌بندی - مثال: نوشیدنی سرد" required>
+                <div class="icon-grid full" id="categoryIconGrid">
+                    <button type="button" class="icon-option active" data-icon="fas fa-tag" title="برچسب"><i class="fas fa-tag"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-cookie-bite" title="خوراکی"><i class="fas fa-cookie-bite"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-glass-whiskey" title="نوشیدنی"><i class="fas fa-glass-whiskey"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-hamburger" title="فست‌فود"><i class="fas fa-hamburger"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-pizza-slice" title="پیتزا"><i class="fas fa-pizza-slice"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-ice-cream" title="بستنی"><i class="fas fa-ice-cream"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-candy-cane" title="شیرینی"><i class="fas fa-candy-cane"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-mug-hot" title="نوشیدنی گرم"><i class="fas fa-mug-hot"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-box-open" title="سایر"><i class="fas fa-box-open"></i></button>
+                    <button type="button" class="icon-option" data-icon="fas fa-wine-bottle" title="بطری"><i class="fas fa-wine-bottle"></i></button>
+                </div>
+                <div class="icon-preview full">
+                    <i id="categoryIconPreview" class="fas fa-tag"></i>
+                    پیش‌نمایش آیکون
+                </div>
+                <div class="color-picker-wrap full">
+                    <input type="color" id="categoryColorInput" name="color" class="modal-color" value="#7c3aed">
+                    <button type="button" id="openColorPickerBtn" class="color-open-btn">انتخاب رنگ</button>
+                    <span id="categoryColorSwatch" class="color-swatch"></span>
+                    <span id="categoryColorValue" class="color-value">#7c3aed</span>
+                </div>
+                <input type="number" name="order" class="modal-input" min="0" placeholder="ترتیب - مثال: 1" value="0">
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'gamenet:category_create' %}" style="display:none;">fallback</a>
+                <button type="button" class="btn-neutral" data-close-modal>انصراف</button>
+                <button type="submit" class="btn-category">ثبت دسته‌بندی</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function toggleProduct(productId) {
+        const btn = document.getElementById(`toggle-btn-${productId}`);
+        btn.disabled = true;
+
+        fetch(`/gamenet/api/product/${productId}/toggle-availability/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.is_available) {
+                    btn.classList.add('on');
+                    btn.textContent = 'فعال';
+                } else {
+                    btn.classList.remove('on');
+                    btn.textContent = 'غیرفعال';
+                }
+            }
+            btn.disabled = false;
+        })
+        .catch(() => {
+            btn.disabled = false;
+        });
+    }
+
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.remove('closing');
+        modal.classList.add('show');
+    }
+
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.remove('show', 'closing');
+        }, 240);
+    }
+
+    document.querySelectorAll('[data-open-modal]').forEach((btn) => {
+        btn.addEventListener('click', () => openModal(btn.dataset.openModal));
+    });
+
+    document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+        btn.addEventListener('click', () => closeModal(btn.closest('.modal-overlay')));
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach((overlay) => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal(overlay);
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.show').forEach((m) => closeModal(m));
+        }
+    });
+
+    const productImageInput = document.getElementById('productImageInput');
+    const productImageName = document.getElementById('productImageName');
+    if (productImageInput && productImageName) {
+        productImageInput.addEventListener('change', () => {
+            const fileName = productImageInput.files && productImageInput.files[0]
+                ? productImageInput.files[0].name
+                : 'فایلی انتخاب نشده';
+            productImageName.textContent = fileName;
+        });
+    }
+
+    const categoryIconInput = document.getElementById('categoryIconInput');
+    const categoryIconGrid = document.getElementById('categoryIconGrid');
+    const categoryIconPreview = document.getElementById('categoryIconPreview');
+    if (categoryIconInput && categoryIconGrid && categoryIconPreview) {
+        categoryIconGrid.querySelectorAll('.icon-option').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                categoryIconGrid.querySelectorAll('.icon-option').forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                categoryIconInput.value = btn.dataset.icon;
+                categoryIconPreview.className = btn.dataset.icon;
+            });
+        });
+    }
+
+    const categoryColorInput = document.getElementById('categoryColorInput');
+    const categoryColorValue = document.getElementById('categoryColorValue');
+    const categoryColorSwatch = document.getElementById('categoryColorSwatch');
+    const openColorPickerBtn = document.getElementById('openColorPickerBtn');
+    function hexToRgba(hex, alpha) {
+        const clean = (hex || '').replace('#', '');
+        if (clean.length !== 6) return `rgba(124, 58, 237, ${alpha})`;
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (categoryColorInput && categoryColorValue && categoryColorSwatch) {
+        const syncColor = () => {
+            const color = categoryColorInput.value || '#7c3aed';
+            categoryColorValue.textContent = color;
+            categoryColorSwatch.style.background = color;
+            if (categoryIconPreview) {
+                categoryIconPreview.style.color = color;
+                categoryIconPreview.style.background = hexToRgba(color, 0.2);
+            }
+        };
+        categoryColorInput.addEventListener('input', syncColor);
+        if (openColorPickerBtn) {
+            openColorPickerBtn.addEventListener('click', () => categoryColorInput.click());
+        }
+        syncColor();
+    }
+</script>
+{% endblock %}

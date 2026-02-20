@@ -1,0 +1,88 @@
+{% extends 'account/base.html' %}
+
+{% block title %}ثبت نام - GameBeat{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="main-container p-5">
+                <div class="text-center mb-5">
+                    <div class="register-icon mb-4">
+                        <i class="bi bi-person-plus" style="font-size: 4rem; color: var(--primary-purple);"></i>
+                    </div>
+                    <h1 class="h2 fw-bold mb-3">
+                        ایجاد حساب کاربری
+                    </h1>
+                    <p class="text-muted">به خانواده GameBeat بپیوندید</p>
+                </div>
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label fw-bold">
+                            <i class="bi bi-person"></i> نام کاربری
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="id_username" name="username" required>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-2">
+                                {{ form.username.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">نام کاربری باید منحصر به فرد باشد</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_password1" class="form-label fw-bold">
+                            <i class="bi bi-lock"></i> رمز عبور
+                        </label>
+                        <input type="password" class="form-control form-control-lg" id="id_password1" name="password1" required>
+                        {% if form.password1.errors %}
+                            <div class="text-danger small mt-2">
+                                {{ form.password1.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_password2" class="form-label fw-bold">
+                            <i class="bi bi-lock-fill"></i> تکرار رمز عبور
+                        </label>
+                        <input type="password" class="form-control form-control-lg" id="id_password2" name="password2" required>
+                        {% if form.password2.errors %}
+                            <div class="text-danger small mt-2">
+                                {{ form.password2.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus"></i> ثبت نام
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        قبلاً ثبت نام کرده‌اید؟
+                        <a href="{% url 'account:login' %}" class="text-decoration-none" style="color: var(--primary-purple);">
+                            وارد شوید
+                        </a>
+                    </p>
+                    <a href="{% url 'account:home' %}" class="text-decoration-none" style="color: var(--text-muted);">
+                        <i class="bi bi-arrow-right"></i> بازگشت به صفحه اصلی
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,709 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+<style>
+    .hero {
+        position: relative;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 18px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(245, 158, 11, 0.22), transparent 42%),
+            radial-gradient(circle at 86% 20%, rgba(236, 72, 153, 0.18), transparent 45%),
+            linear-gradient(135deg, rgba(26, 26, 37, 0.95), rgba(18, 18, 26, 0.98));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #f59e0b, #ec4899, #6366f1);
+        opacity: 0.8;
+    }
+
+    .hero-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, #f59e0b, #f97316);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
+        font-size: 18px;
+    }
+
+    .hero-title h1 {
+        margin: 0;
+        font-size: 27px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .hero-title p {
+        margin: 4px 0 0;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 13px;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 14px;
+        border-radius: 11px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .form-card,
+    .side-card {
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(18, 18, 26, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .section {
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .section:last-of-type { margin-bottom: 0; }
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: #fff;
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .section-head i { color: #a78bfa; }
+
+    .fields-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .fields-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+    }
+
+    .help-text {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        margin-top: 6px;
+        line-height: 1.6;
+    }
+
+    .upload-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px dashed rgba(59, 130, 246, 0.45);
+        border-radius: 10px;
+        padding: 10px;
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .upload-wrap input[type=file] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        width: 1px;
+        height: 1px;
+    }
+
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(59, 130, 246, 0.45);
+        background: rgba(59, 130, 246, 0.18);
+        color: #bfdbfe;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .upload-name {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .errorlist {
+        margin: 6px 0 0;
+        padding: 0;
+        list-style: none;
+        color: #fda4af;
+        font-size: 12px;
+    }
+
+    .jalali-input {
+        direction: ltr;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .time-inline {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .time-inline .form-input {
+        max-width: 180px;
+    }
+
+    .time-picker-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        background: rgba(99, 102, 241, 0.16);
+        color: #c7d2fe;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .time-picker-box {
+        width: 100%;
+        margin-top: 8px;
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px;
+    }
+
+    .time-picker-box.show { display: block; }
+
+    .time-picker-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .time-picker-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+
+    .time-picker-btn {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        padding: 7px 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 11px;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 11px 14px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #fff;
+    }
+
+    .tips {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .tip {
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px;
+    }
+
+    .tip-title {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .tip-text {
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    .preview-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    .preview-public {
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.15);
+    }
+
+    .preview-private {
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        color: #f87171;
+        background: rgba(239, 68, 68, 0.12);
+    }
+
+    @media (max-width: 1000px) {
+        .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+        .fields-2,
+        .fields-3 { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero fade-in">
+    <div class="hero-head">
+        <div class="hero-title">
+            <div class="hero-icon"><i class="fas fa-trophy"></i></div>
+            <div>
+                <h1>{{ title }}</h1>
+                <p>فرم کامل ساخت و مدیریت مسابقه با تنظیمات وضعیت و سطح دسترسی</p>
+            </div>
+        </div>
+        <a href="{% url 'gamenet:tournament_list' %}" class="btn-back">
+            <i class="fas fa-arrow-right"></i>
+            بازگشت
+        </a>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="form-card fade-in">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="section">
+                <div class="section-head"><i class="fas fa-info-circle"></i> اطلاعات اصلی</div>
+                <div class="form-group">
+                    <label class="form-label">نام مسابقه *</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">بازی *</label>
+                    {{ form.game }}
+                    {{ form.game.errors }}
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">توضیحات</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-head"><i class="fas fa-calendar-alt"></i> زمان‌بندی</div>
+                <div class="fields-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">تاریخ شروع *</label>
+                        <input type="text" id="start_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/15" readonly>
+                        <input type="hidden" id="start_date_gregorian" name="start_date" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        <div class="time-inline">
+                            <label class="form-label" for="start_time_optional" style="margin:0;">ساعت شروع (اختیاری)</label>
+                            <input type="time" id="start_time_optional" class="form-input" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'H:i' }}{% endif %}">
+                            <button type="button" id="openStartTimePicker" class="time-picker-toggle">
+                                <i class="fas fa-clock"></i>
+                                انتخاب دقیق
+                            </button>
+                            <div id="startTimePickerBox" class="time-picker-box">
+                                <div class="time-picker-grid">
+                                    <select id="startHourSelect" class="form-select"></select>
+                                    <select id="startMinuteSelect" class="form-select"></select>
+                                    <span style="color:rgba(255,255,255,.72);font-size:12px;">ساعت</span>
+                                </div>
+                                <div class="time-picker-actions">
+                                    <button type="button" id="clearStartTimeBtn" class="time-picker-btn">پاک‌کردن</button>
+                                    <button type="button" id="applyStartTimeBtn" class="time-picker-btn">اعمال ساعت</button>
+                                </div>
+                            </div>
+                        </div>
+                        {{ form.start_date.errors }}
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">تاریخ پایان (اختیاری)</label>
+                        <input type="text" id="end_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/20" readonly>
+                        <input type="hidden" id="end_date_gregorian" name="end_date" value="{% if tournament and tournament.end_date %}{{ tournament.end_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        {{ form.end_date.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-head"><i class="fas fa-coins"></i> مالی و ظرفیت</div>
+                <div class="fields-3">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">هزینه ورودی</label>
+                        {{ form.entry_fee }}
+                        {{ form.entry_fee.errors }}
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">جایزه کل</label>
+                        {{ form.prize_pool }}
+                        {{ form.prize_pool.errors }}
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">حداکثر شرکت‌کنندگان</label>
+                        {{ form.max_participants }}
+                        {{ form.max_participants.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-head"><i class="fas fa-cog"></i> وضعیت و دسترسی</div>
+                <div class="fields-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">وضعیت</label>
+                        {{ form.status }}
+                        {{ form.status.errors }}
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">نوع دسترسی</label>
+                        {{ form.visibility }}
+                        {{ form.visibility.errors }}
+                        <small class="help-text">پابلیک: نمایش عمومی / خصوصی: مناسب ثبت‌نام کنترل‌شده</small>
+                        <div id="visibilityPreview" class="preview-chip preview-public"><i class="fas fa-globe"></i> پابلیک</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-head"><i class="fas fa-image"></i> تصویر مسابقه</div>
+                <div class="upload-wrap">
+                    {{ form.image }}
+                    <label for="{{ form.image.id_for_label }}" class="upload-btn">
+                        <i class="fas fa-upload"></i>
+                        انتخاب تصویر
+                    </label>
+                    <div id="selectedTournamentFile" class="upload-name">فایلی انتخاب نشده</div>
+                </div>
+                {{ form.image.errors }}
+                <div class="help-text">فرمت‌های پیشنهادی: JPG, PNG - نسبت تصویر 16:9</div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i>
+                    ذخیره مسابقه
+                </button>
+                <a href="{% url 'gamenet:tournament_list' %}" class="btn-cancel">انصراف</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="side-card fade-in" style="animation-delay:0.12s;">
+        <div class="section-head" style="margin-bottom:12px;"><i class="fas fa-lightbulb"></i> راهنمای سریع</div>
+        <div class="tips">
+            <div class="tip">
+                <div class="tip-title"><i class="fas fa-stopwatch"></i> زمان‌بندی دقیق</div>
+                <div class="tip-text">اگر شروع و پایان مشخص باشند، مدیریت ثبت‌نام و اجرا دقیق‌تر می‌شود.</div>
+            </div>
+            <div class="tip">
+                <div class="tip-title"><i class="fas fa-users"></i> ظرفیت واقعی</div>
+                <div class="tip-text">ظرفیت را بر اساس تعداد سیستم‌ها و برنامه اجرایی تعیین کنید تا ازدحام نشود.</div>
+            </div>
+            <div class="tip">
+                <div class="tip-title"><i class="fas fa-lock"></i> پابلیک یا خصوصی</div>
+                <div class="tip-text">خصوصی برای مسابقات دعوتی مناسب است؛ پابلیک برای جذب شرکت‌کننده بیشتر.</div>
+            </div>
+            <div class="tip">
+                <div class="tip-title"><i class="fas fa-money-bill-wave"></i> مالی</div>
+                <div class="tip-text">هزینه ورودی را با جایزه نهایی متناسب نگه دار تا ثبت‌نام پایدارتر شود.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const tournamentImageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const tournamentFileName = document.getElementById('selectedTournamentFile');
+
+    if (tournamentImageInput && tournamentFileName) {
+        tournamentImageInput.addEventListener('change', () => {
+            tournamentFileName.textContent = tournamentImageInput.files && tournamentImageInput.files[0]
+                ? tournamentImageInput.files[0].name
+                : 'فایلی انتخاب نشده';
+        });
+    }
+
+    const visibilitySelect = document.getElementById('{{ form.visibility.id_for_label }}');
+    const visibilityPreview = document.getElementById('visibilityPreview');
+    const openStartTimePicker = document.getElementById('openStartTimePicker');
+    const startTimePickerBox = document.getElementById('startTimePickerBox');
+    const startHourSelect = document.getElementById('startHourSelect');
+    const startMinuteSelect = document.getElementById('startMinuteSelect');
+    const applyStartTimeBtn = document.getElementById('applyStartTimeBtn');
+    const clearStartTimeBtn = document.getElementById('clearStartTimeBtn');
+    const startTimeInput = document.getElementById('start_time_optional');
+
+    function syncVisibilityPreview() {
+        if (!visibilitySelect || !visibilityPreview) return;
+        if (visibilitySelect.value === 'private') {
+            visibilityPreview.className = 'preview-chip preview-private';
+            visibilityPreview.innerHTML = '<i class="fas fa-lock"></i> خصوصی';
+        } else {
+            visibilityPreview.className = 'preview-chip preview-public';
+            visibilityPreview.innerHTML = '<i class="fas fa-globe"></i> پابلیک';
+        }
+    }
+
+    if (visibilitySelect) {
+        visibilitySelect.addEventListener('change', syncVisibilityPreview);
+        syncVisibilityPreview();
+    }
+
+    function pad(v) { return String(v).padStart(2, '0'); }
+    function ensureTimeOptions() {
+        if (!startHourSelect || !startMinuteSelect) return;
+        if (!startHourSelect.options.length) {
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = pad(h);
+                opt.textContent = `${pad(h)} ساعت`;
+                startHourSelect.appendChild(opt);
+            }
+        }
+        if (!startMinuteSelect.options.length) {
+            for (let m = 0; m < 60; m++) {
+                const opt = document.createElement('option');
+                opt.value = pad(m);
+                opt.textContent = `${pad(m)} دقیقه`;
+                startMinuteSelect.appendChild(opt);
+            }
+        }
+    }
+
+    function syncPickerFromInput() {
+        ensureTimeOptions();
+        const val = (startTimeInput && startTimeInput.value ? startTimeInput.value : '00:00');
+        const parts = val.split(':');
+        const h = pad(parts[0] || 0);
+        const m = pad(parts[1] || 0);
+        if (startHourSelect) startHourSelect.value = h;
+        if (startMinuteSelect) startMinuteSelect.value = m;
+    }
+
+    if (openStartTimePicker && startTimePickerBox) {
+        openStartTimePicker.addEventListener('click', () => {
+            syncPickerFromInput();
+            startTimePickerBox.classList.toggle('show');
+        });
+    }
+
+    if (applyStartTimeBtn && startTimeInput) {
+        applyStartTimeBtn.addEventListener('click', () => {
+            const h = startHourSelect ? startHourSelect.value : '00';
+            const m = startMinuteSelect ? startMinuteSelect.value : '00';
+            startTimeInput.value = `${h}:${m}`;
+            if (startTimePickerBox) startTimePickerBox.classList.remove('show');
+        });
+    }
+
+    if (clearStartTimeBtn && startTimeInput) {
+        clearStartTimeBtn.addEventListener('click', () => {
+            startTimeInput.value = '';
+            if (startTimePickerBox) startTimePickerBox.classList.remove('show');
+        });
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script>
+    (function () {
+        const startJalali = document.getElementById('start_date_jalali');
+        const endJalali = document.getElementById('end_date_jalali');
+        const startGregorian = document.getElementById('start_date_gregorian');
+        const endGregorian = document.getElementById('end_date_gregorian');
+        const startTimeOptional = document.getElementById('start_time_optional');
+        const formEl = startJalali ? startJalali.closest('form') : null;
+
+        if (!(startJalali && endJalali && startGregorian && endGregorian && formEl)) return;
+        if (!(window.jQuery && typeof window.jQuery.fn.pDatepicker === 'function')) {
+            // fallback: اگر دیت‌پیکر لود نشود، کاربر مقدار میلادی را مستقیم ببیند
+            startJalali.readOnly = false;
+            endJalali.readOnly = false;
+            startJalali.value = startGregorian.value || '';
+            endJalali.value = endGregorian.value || '';
+            return;
+        }
+
+        // normalize existing values for edit form
+        if (startGregorian.value && startGregorian.value.includes(' ')) {
+            startGregorian.value = startGregorian.value.split(' ')[0];
+        }
+        if (endGregorian.value && endGregorian.value.includes(' ')) {
+            endGregorian.value = endGregorian.value.split(' ')[0];
+        }
+
+        window.jQuery('#start_date_jalali').pDatepicker({
+            format: 'YYYY/MM/DD',
+            altField: '#start_date_gregorian',
+            altFormat: 'YYYY-MM-DD',
+            initialValueType: 'gregorian',
+            initialValue: !!startGregorian.value,
+            observer: true,
+            autoClose: true,
+            calendar: {
+                persian: { locale: 'fa' }
+            },
+            timePicker: {
+                enabled: false
+            }
+        });
+
+        window.jQuery('#end_date_jalali').pDatepicker({
+            format: 'YYYY/MM/DD',
+            altField: '#end_date_gregorian',
+            altFormat: 'YYYY-MM-DD',
+            initialValueType: 'gregorian',
+            initialValue: !!endGregorian.value,
+            observer: true,
+            autoClose: true,
+            calendar: {
+                persian: { locale: 'fa' }
+            },
+            timePicker: {
+                enabled: false
+            }
+        });
+
+        function forceOpen(inputEl) {
+            const openPicker = () => {
+                const jq = window.jQuery(inputEl);
+                try { jq.pDatepicker('show'); } catch (e) {}
+                const inst = jq.data('datepicker');
+                if (inst && typeof inst.show === 'function') inst.show();
+            };
+            inputEl.addEventListener('focus', () => {
+                openPicker();
+            });
+            inputEl.addEventListener('click', () => {
+                openPicker();
+            });
+        }
+
+        forceOpen(startJalali);
+        forceOpen(endJalali);
+
+        formEl.addEventListener('submit', () => {
+            const startDatePart = (startGregorian.value || '').trim();
+            const startTimePart = (startTimeOptional && startTimeOptional.value ? startTimeOptional.value : '00:00').trim();
+            startGregorian.value = startDatePart ? `${startDatePart} ${startTimePart}:00` : '';
+
+            const endDatePart = (endGregorian.value || '').trim();
+            endGregorian.value = endDatePart ? `${endDatePart} 23:59:00` : '';
+        });
+    })();
+</script>
+{% endblock %}

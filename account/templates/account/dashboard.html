@@ -1,0 +1,214 @@
+{% extends 'account/base.html' %}
+
+{% block title %}داشبورد - GameBeat{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-header mb-5">
+                <h1 class="display-4 fw-bold text-center">
+                    <i class="bi bi-grid-fill"></i> 
+                    داشبورد کاربری
+                </h1>
+                <p class="lead text-center" style="color: var(--text-muted);">
+                    خوش آمدید {{ user.first_name|default:user.username }}! از خدمات گیمینگ ما استفاده کنید
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- GameNet Service Card -->
+        <div class="col-md-6 col-xl-4">
+            <div class="service-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="service-icon mb-3">
+                        <i class="bi bi-joystick"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">گیم‌نت</h5>
+                    <p class="card-text" style="color: var(--text-muted);">
+                        مدیریت کامل بازی‌ها، دستگاه‌ها و جلسات بازی
+                    </p>
+                    
+                    {% if has_active_gamenet %}
+                        <div class="subscription-badge mb-3">
+                            <i class="bi bi-check-circle"></i> اشتراک فعال
+                        </div>
+                        <p class="small" style="color: var(--text-muted);">
+                            تا {{ gamenet_subscription.end_date|date:"Y/m/d" }}
+                        </p>
+                        <a href="{% url 'gamenet:dashboard' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-arrow-left-circle"></i> ورود به گیم‌نت
+                        </a>
+                    {% else %}
+                        <a href="{% url 'account:purchase_subscription' service_type='gamenet' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-cart-plus"></i> خرید اشتراک
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Future Service Placeholder -->
+        <div class="col-md-6 col-xl-4">
+            <div class="future-service-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="service-icon mb-3">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">خدمت جدید</h5>
+                    <p class="card-text" style="color: var(--text-muted);">
+                        بزودی خدمات جدید گیمینگ اضافه خواهد شد
+                    </p>
+                    <button class="btn btn-outline-secondary btn-lg w-100" disabled>
+                        <i class="bi bi-clock"></i> بزودی
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Future Service Placeholder -->
+        <div class="col-md-6 col-xl-4">
+            <div class="future-service-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="service-icon mb-3">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">خدمت جدید</h5>
+                    <p class="card-text" style="color: var(--text-muted);">
+                        بزودی خدمات جدید گیمینگ اضافه خواهد شد
+                    </p>
+                    <button class="btn btn-outline-secondary btn-lg w-100" disabled>
+                        <i class="bi bi-clock"></i> بزودی
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user_subscriptions %}
+    <div class="row">
+        <div class="col-12">
+            <div class="main-container p-4">
+                <h3 class="mb-4 fw-bold">
+                    <i class="bi bi-list-check"></i> اشتراک‌های من
+                </h3>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>خدمت</th>
+                                <th>مدت اشتراک</th>
+                                <th>تاریخ شروع</th>
+                                <th>تاریخ پایان</th>
+                                <th>وضعیت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subscription in user_subscriptions %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-joystick text-primary"></i>
+                                    {{ subscription.get_service_type_display }}
+                                </td>
+                                <td>{{ subscription.get_duration_display }}</td>
+                                <td>{{ subscription.start_date|date:"Y/m/d" }}</td>
+                                <td>{{ subscription.end_date|date:"Y/m/d" }}</td>
+                                <td>
+                                    {% if subscription.is_expired %}
+                                        <span class="badge bg-danger">منقضی شده</span>
+                                    {% elif subscription.is_active %}
+                                        <span class="badge bg-success">فعال</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">غیرفعال</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if subscription.service_type == 'gamenet' and not subscription.is_expired and subscription.is_active %}
+                                        <a href="{% url 'gamenet:dashboard' %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-arrow-right-circle"></i> ورود
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.dashboard-header {
+    position: relative;
+    text-align: center;
+    padding: 40px 0;
+}
+
+.service-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+    border-color: var(--primary-purple);
+}
+
+.future-service-card {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    opacity: 0.7;
+}
+
+.service-icon {
+    font-size: 4rem;
+    color: var(--primary-purple);
+}
+
+.future-service-card .service-icon {
+    color: var(--text-muted);
+}
+
+.table-dark {
+    background-color: var(--darker-bg);
+    border-color: var(--border-color);
+}
+
+.table-dark th {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+
+.table-dark td {
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--card-hover);
+}
+
+.btn-outline-secondary {
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.btn-outline-secondary:disabled {
+    opacity: 0.5;
+}
+</style>
+{% endblock %}

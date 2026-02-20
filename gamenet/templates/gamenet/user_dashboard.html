@@ -1,0 +1,431 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load static %}
+
+{% block title %}داشبورد کاربر | گیم‌بیت{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        padding: 40px 0;
+    }
+    
+    .welcome-section {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 32px;
+        margin-bottom: 32px;
+        text-align: center;
+    }
+    
+    .welcome-title {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .welcome-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .gamenets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .gamenet-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .gamenet-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-primary);
+    }
+    
+    .gamenet-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 80px;
+        background: var(--accent-gradient);
+        opacity: 0.1;
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+        transition: all 0.3s ease;
+    }
+    
+    .gamenet-card:hover::before {
+        opacity: 0.2;
+        transform: translate(20%, -20%) scale(1.2);
+    }
+    
+    .gamenet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+    
+    .gamenet-name {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .gamenet-slug {
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .gamenet-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success);
+    }
+    
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+    }
+    
+    .gamenet-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .info-item {
+        text-align: center;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius);
+    }
+    
+    .info-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent-secondary);
+    }
+    
+    .info-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    
+    .gamenet-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .gamenet-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+    }
+    
+    .empty-icon {
+        font-size: 64px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+    }
+    
+    .empty-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+    
+    .empty-desc {
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .subscriptions-section {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .subscription-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+    }
+    
+    .subscription-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .subscription-info h4 {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .subscription-details {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .subscription-status {
+        text-align: center;
+    }
+    
+    .subscription-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: inline-block;
+    }
+    
+    .badge-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--success);
+    }
+    
+    .badge-expired {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+    }
+    
+    @media (max-width: 768px) {
+        .quick-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .gamenets-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .gamenet-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section fade-in">
+        <h1 class="welcome-title">سلام {{ user.get_full_name|default:user.username }}! 👋</h1>
+        <p class="welcome-subtitle">به داشبورد گیم‌بیت خوش اومدی</p>
+        <div class="quick-actions">
+            <a href="{% url 'gamenet:create_gamenet' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                ساخت گیم‌نت جدید
+            </a>
+            <a href="{% url 'account:home' %}" class="btn btn-secondary">
+                <i class="fas fa-credit-card"></i>
+                مشاهده پلن‌ها
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Subscriptions -->
+    {% if subscriptions %}
+    <section class="subscriptions-section fade-in">
+        <h2 class="section-title">
+            <i class="fas fa-credit-card"></i>
+            ابونمان‌های فعال
+        </h2>
+        
+        {% for subscription in subscriptions %}
+        <div class="subscription-item">
+            <div class="subscription-info">
+                <h4>{{ subscription.plan.name }}</h4>
+                <div class="subscription-details">
+                    شروع: {{ subscription.start_date|date:"Y/m/d" }} | 
+                    پایان: {{ subscription.end_date|date:"Y/m/d" }} | 
+                    {{ subscription.plan.price|floatformat:0 }} تومان/ماه
+                </div>
+            </div>
+            <div class="subscription-status">
+                {% if subscription.is_active %}
+                    <span class="subscription-badge badge-active">فعال</span>
+                {% else %}
+                    <span class="subscription-badge badge-expired">منقضی</span>
+                {% endif %}
+                <div class="subscription-details">
+                    {% if subscription.is_active %}
+                        {{ subscription.days_until_expiry }} روز باقی‌مانده
+                    {% else %}
+                        منقضی شده
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- GameNets Section -->
+    <section class="gamenets-section">
+        <h2 class="section-title">
+            <i class="fas fa-gamepad"></i>
+            گیم‌نت‌های من
+        </h2>
+        
+        {% if gamenets %}
+            <div class="gamenets-grid">
+                {% for gamenet in gamenets %}
+                <div class="gamenet-card fade-in">
+                    <div class="gamenet-header">
+                        <div>
+                            <h3 class="gamenet-name">{{ gamenet.name }}</h3>
+                            <p class="gamenet-slug">{{ gamenet.slug }}</p>
+                        </div>
+                        {% if gamenet.is_active %}
+                            <span class="gamenet-status status-active">فعال</span>
+                        {% else %}
+                            <span class="gamenet-status status-inactive">غیرفعال</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="gamenet-info">
+                        <div class="info-item">
+                            <div class="info-value">{{ gamenet.device_count }}</div>
+                            <div class="info-label">دستگاه</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value">{{ gamenet.active_sessions_count }}</div>
+                            <div class="info-label">جلسه فعال</div>
+                        </div>
+                    </div>
+                    
+                    <div class="gamenet-actions">
+                        {% if gamenet.is_active %}
+                            <a href="{% url 'gamenet:panel_dashboard' gamenet.slug %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-tachometer-alt"></i>
+                                مدیریت
+                            </a>
+                        {% else %}
+                            <a href="#" class="btn btn-secondary btn-sm" disabled>
+                                <i class="fas fa-lock"></i>
+                                غیرفعال
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'gamenet:edit_gamenet' gamenet.slug %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-edit"></i>
+                            ویرایش
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state fade-in">
+                <div class="empty-icon">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h3 class="empty-title">هنوز گیم‌نتی نداری!</h3>
+                <p class="empty-desc">
+                    اولین گیم‌نت خودت رو بساز و شروع به مدیریت هوشمند کن
+                </p>
+                <a href="{% url 'gamenet:create_gamenet' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i>
+                    ساخت اولین گیم‌نت
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh active sessions count
+    function updateActiveSessions() {
+        const cards = document.querySelectorAll('.gamenet-card');
+        cards.forEach(card => {
+            const slug = card.querySelector('.gamenet-slug').textContent.trim();
+            // This would be an AJAX call to get updated session count
+            // For now, just a placeholder
+        });
+    }
+    
+    // Refresh every 30 seconds
+    setInterval(updateActiveSessions, 30000);
+    
+    // Animate numbers on load
+    function animateNumbers() {
+        const numbers = document.querySelectorAll('.info-value');
+        numbers.forEach(number => {
+            const target = parseInt(number.textContent);
+            let current = 0;
+            const increment = target / 20;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                number.textContent = Math.floor(current);
+            }, 50);
+        });
+    }
+    
+    // Run animation on page load
+    document.addEventListener('DOMContentLoaded', animateNumbers);
+</script>
+{% endblock %}

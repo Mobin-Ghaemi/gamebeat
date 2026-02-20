@@ -1,0 +1,257 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load static %}
+
+{% block title %}ویرایش {{ gamenet.name }} | گیم‌بیت{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 0 24px;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    
+    .form-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .form-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+    }
+    
+    .form-card {
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 32px;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .form-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .error-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .error-list li {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid var(--danger);
+        color: var(--danger);
+        padding: 8px 12px;
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .help-text {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+    
+    .danger-zone {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--danger);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-top: 32px;
+    }
+    
+    .danger-zone h3 {
+        color: var(--danger);
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .danger-zone p {
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+    
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 24px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header fade-in">
+        <h1 class="form-title">ویرایش گیم‌نت</h1>
+        <p class="form-subtitle">اطلاعات {{ gamenet.name }} رو بروزرسانی کن</p>
+    </div>
+    
+    <div class="form-card fade-in">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.name.id_for_label }}">
+                    <i class="fas fa-gamepad"></i>
+                    نام گیم‌نت
+                </label>
+                {{ form.name }}
+                {% if form.name.help_text %}
+                    <div class="help-text">{{ form.name.help_text }}</div>
+                {% endif %}
+                {% if form.name.errors %}
+                    <ul class="error-list">
+                        {% for error in form.name.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.slug.id_for_label }}">
+                    <i class="fas fa-link"></i>
+                    آدرس گیم‌نت
+                </label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--text-muted); font-size: 14px;">gamebeat.ir/panel/</span>
+                    {{ form.slug }}
+                </div>
+                {% if form.slug.help_text %}
+                    <div class="help-text">{{ form.slug.help_text }}</div>
+                {% endif %}
+                {% if form.slug.errors %}
+                    <ul class="error-list">
+                        {% for error in form.slug.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.address.id_for_label }}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    آدرس
+                </label>
+                {{ form.address }}
+                {% if form.address.help_text %}
+                    <div class="help-text">{{ form.address.help_text }}</div>
+                {% endif %}
+                {% if form.address.errors %}
+                    <ul class="error-list">
+                        {% for error in form.address.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.phone.id_for_label }}">
+                    <i class="fas fa-phone"></i>
+                    تلفن
+                </label>
+                {{ form.phone }}
+                {% if form.phone.help_text %}
+                    <div class="help-text">{{ form.phone.help_text }}</div>
+                {% endif %}
+                {% if form.phone.errors %}
+                    <ul class="error-list">
+                        {% for error in form.phone.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.is_active.id_for_label }}">
+                    <i class="fas fa-toggle-on"></i>
+                    وضعیت فعال‌سازی
+                </label>
+                <div style="margin-top: 12px;">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" style="margin-right: 8px; cursor: pointer;">
+                        گیم‌نت فعال باشد
+                    </label>
+                </div>
+                {% if form.is_active.help_text %}
+                    <div class="help-text">{{ form.is_active.help_text }}</div>
+                {% endif %}
+                {% if form.is_active.errors %}
+                    <ul class="error-list">
+                        {% for error in form.is_active.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="form-group">
+                    <ul class="error-list">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <a href="{% url 'account:dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    لغو
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تغییرات
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Danger Zone -->
+    <div class="danger-zone fade-in">
+        <h3>
+            <i class="fas fa-exclamation-triangle"></i>
+            منطقه خطرناک
+        </h3>
+        <p>عملیات‌هایی که غیرقابل بازگشت هستند.</p>
+        <a href="{% url 'gamenet:delete_gamenet' gamenet.slug %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i>
+            حذف گیم‌نت
+        </a>
+    </div>
+</div>
+{% endblock %}

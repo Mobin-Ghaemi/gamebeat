@@ -1,0 +1,77 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-subtitle">اطلاعات دستگاه را وارد کنید</p>
+    </div>
+    <a href="{% url 'gamenet:device_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت
+    </a>
+</div>
+
+<div class="card fade-in" style="max-width: 700px;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label class="form-label">شماره دستگاه *</label>
+                {{ form.number }}
+                {% if form.number.errors %}
+                <div style="color: var(--danger); font-size: 13px; margin-top: 4px;">{{ form.number.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">نام دستگاه *</label>
+                {{ form.name }}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label class="form-label">نوع دستگاه *</label>
+                {{ form.device_type }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">قیمت ساعتی (تومان) *</label>
+                {{ form.hourly_rate }}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">وضعیت</label>
+            {{ form.status }}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">بازی‌های موجود</label>
+            {{ form.games }}
+            <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                برای انتخاب چند بازی، کلید Ctrl را نگه دارید
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">مشخصات فنی</label>
+            {{ form.specs }}
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i>
+                ذخیره دستگاه
+            </button>
+            <a href="{% url 'gamenet:device_list' %}" class="btn btn-secondary btn-lg">
+                انصراف
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

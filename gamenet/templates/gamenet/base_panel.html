@@ -1,0 +1,972 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}گیم‌بیت{% endblock %} | پنل مدیریت</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --bg-card-hover: #222230;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 70px;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #a855f7;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            --accent-glow: 0 0 30px rgba(124, 58, 237, 0.5);
+            --success: #10b981;
+            --success-glow: 0 0 20px rgba(16, 185, 129, 0.4);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-glow: 0 0 20px rgba(239, 68, 68, 0.4);
+            --border-color: #2a2a3a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        /* ========== LAYOUT ========== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #12121a 0%, #0a0a0f 100%);
+            border-left: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .sidebar-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            font-size: 22px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            display: none;
+        }
+
+        /* Gamenet Info */
+        .gamenet-info {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .gamenet-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gamenet-name i {
+            color: var(--accent-secondary);
+        }
+
+        .subscription-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 11px;
+            color: #10b981;
+        }
+
+        .sidebar.collapsed .gamenet-info {
+            display: none;
+        }
+
+        /* Navigation */
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 16px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 28px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 12px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.1));
+            color: #fff;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: var(--accent-gradient);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 18px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .nav-item.active .nav-icon {
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .nav-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+
+        .nav-badge {
+            margin-right: auto;
+            padding: 4px 10px;
+            background: var(--danger);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .sidebar.collapsed .nav-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 20px 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .user-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sidebar.collapsed .user-info {
+            display: none;
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            left: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-wrapper {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-right 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-wrapper {
+            margin-right: var(--sidebar-collapsed);
+        }
+
+        /* Top Header */
+        .top-header {
+            height: var(--header-height);
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .page-breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .page-breadcrumb a:hover {
+            color: var(--accent-secondary);
+        }
+
+        .page-breadcrumb .current {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .header-btn:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.3);
+            color: var(--accent-secondary);
+        }
+
+        .header-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: var(--danger);
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shift-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            font-size: 13px;
+            color: #10b981;
+        }
+
+        .shift-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 32px;
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: white;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .btn-lg {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* ========== ALERTS ========== */
+        .alert {
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+
+        /* ========== FORMS ========== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea,
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus,
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-right: 0;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .top-header {
+                padding: 0 20px;
+            }
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <div class="sidebar-brand">
+                    <span class="sidebar-title">گیم‌بیت</span>
+                    <span class="sidebar-subtitle">پنل مدیریت هوشمند</span>
+                </div>
+            </div>
+
+            {% if gamenet %}
+            <div class="gamenet-info">
+                <div class="gamenet-name">
+                    <i class="fas fa-store"></i>
+                    {{ gamenet.name }}
+                </div>
+                {% if subscription %}
+                <div class="subscription-badge">
+                    <i class="fas fa-check-circle"></i>
+                    اشتراک فعال تا {{ subscription.end_date|date:"Y/m/d" }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">منوی اصلی</div>
+                    <a href="{% url 'gamenet:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-home"></i></div>
+                        <span class="nav-text">صفحه اصلی</span>
+                    </a>
+                    <a href="{% url 'gamenet:device_list' %}" class="nav-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-desktop"></i></div>
+                        <span class="nav-text">دستگاه‌ها</span>
+                        {% if active_sessions %}<span class="nav-badge">{{ active_sessions }}</span>{% endif %}
+                    </a>
+                    <a href="{% url 'gamenet:session_list' %}" class="nav-item {% if 'session' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-clock"></i></div>
+                        <span class="nav-text">جلسات</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">فروشگاه</div>
+                    <a href="{% url 'gamenet:buffet_dashboard' %}" class="nav-item {% if 'buffet' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-store"></i></div>
+                        <span class="nav-text">بوفه</span>
+                    </a>
+                    <a href="{% url 'gamenet:product_list' %}" class="nav-item {% if 'product' in request.resolver_match.url_name or 'category' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-box"></i></div>
+                        <span class="nav-text">محصولات</span>
+                    </a>
+                    <a href="{% url 'gamenet:recent_sales' %}" class="nav-item {% if request.resolver_match.url_name == 'recent_sales_page' or request.resolver_match.url_name == 'recent_sales' or 'recent-sales' in request.path %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-receipt"></i></div>
+                        <span class="nav-text">فروش های اخیر</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">رویدادها</div>
+                    <a href="{% url 'gamenet:tournament_list' %}" class="nav-item {% if 'tournament' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-trophy"></i></div>
+                        <span class="nav-text">مسابقات</span>
+                    </a>
+                    <a href="{% url 'gamenet:game_list' %}" class="nav-item {% if 'game' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-gamepad"></i></div>
+                        <span class="nav-text">بازی‌ها</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">مالی و گزارش</div>
+                    <a href="{% url 'gamenet:reports' %}" class="nav-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
+                        <span class="nav-text">گزارش‌ها</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <div class="nav-icon"><i class="fas fa-wallet"></i></div>
+                        <span class="nav-text">صندوق</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">کامیونیتی</div>
+                    <a href="#" class="nav-item">
+                        <div class="nav-icon"><i class="fas fa-users"></i></div>
+                        <span class="nav-text">مشتریان</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                        <span class="nav-text">گفتگو</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <div class="nav-icon"><i class="fas fa-medal"></i></div>
+                        <span class="nav-text">لیدربورد</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">تنظیمات</div>
+                    <a href="{% url 'gamenet:gamenet_settings' %}" class="nav-item {% if request.resolver_match.url_name == 'gamenet_settings' %}active{% endif %}">
+                        <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                        <span class="nav-text">تنظیمات گیم‌نت</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{% url 'account:dashboard' %}" class="user-card">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.username }}</div>
+                        <div class="user-role">مدیر گیم‌نت</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-right">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="page-breadcrumb">
+                        <a href="{% url 'gamenet:dashboard' %}"><i class="fas fa-home"></i></a>
+                        <i class="fas fa-chevron-left" style="font-size: 10px;"></i>
+                        <span class="current">{% block page_title %}داشبورد{% endblock %}</span>
+                    </div>
+                </div>
+
+                <div class="header-left">
+                    <div class="shift-indicator">
+                        <div class="dot"></div>
+                        شیفت فعال
+                    </div>
+                    <button class="header-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="header-btn">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <a href="{% url 'account:logout' %}" class="header-btn" title="خروج">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} fade-in">
+                            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const icon = sidebarToggle.querySelector('i');
+            icon.classList.toggle('fa-chevron-left');
+            icon.classList.toggle('fa-chevron-right');
+        });
+
+        // Mobile Menu
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('show');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        });
+
+        // Fullscreen
+        document.querySelector('.header-btn[title=""]')?.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // CSRF Token for AJAX
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // تبدیل اعداد فارسی/عربی به انگلیسی
+        function convertPersianToEnglish(str) {
+            const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            
+            for (let i = 0; i < 10; i++) {
+                str = str.replace(new RegExp(persianNumbers[i], 'g'), englishNumbers[i]);
+                str = str.replace(new RegExp(arabicNumbers[i], 'g'), englishNumbers[i]);
+            }
+            return str;
+        }
+
+        // اعمال تبدیل روی همه input ها
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                const inputType = e.target.type;
+                // فقط برای input های متنی و عددی
+                if (inputType === 'text' || inputType === 'number' || inputType === 'tel' || inputType === 'search' || e.target.tagName === 'TEXTAREA') {
+                    const cursorPos = e.target.selectionStart;
+                    const converted = convertPersianToEnglish(e.target.value);
+                    if (converted !== e.target.value) {
+                        e.target.value = converted;
+                        e.target.setSelectionRange(cursorPos, cursorPos);
+                    }
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

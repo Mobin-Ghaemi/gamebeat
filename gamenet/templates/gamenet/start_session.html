@@ -1,0 +1,91 @@
+{% extends 'gamenet/base_panel.html' %}
+
+{% block title %}شروع جلسه{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">شروع جلسه جدید</h1>
+        <p class="page-subtitle">دستگاه #{{ device.number }} - {{ device.name }}</p>
+    </div>
+    <a href="{% url 'gamenet:dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;">
+    <div class="card fade-in">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-user" style="color: var(--accent-secondary)"></i>
+            اطلاعات مشتری
+        </h3>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">نام مشتری</label>
+                {{ form.customer_name }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">شماره تلفن</label>
+                {{ form.customer_phone }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">یادداشت</label>
+                {{ form.notes }}
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-play"></i>
+                شروع جلسه
+            </button>
+        </form>
+    </div>
+    
+    <div class="card fade-in" style="animation-delay: 0.2s;">
+        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-desktop" style="color: var(--accent-secondary)"></i>
+            اطلاعات دستگاه
+        </h3>
+        
+        <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 20px;">
+            <div style="width: 80px; height: 80px; background: var(--accent-gradient); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; margin: 0 auto 16px; box-shadow: var(--accent-glow);">
+                {{ device.number }}
+            </div>
+            <h2 style="margin-bottom: 8px;">{{ device.name }}</h2>
+            <div style="color: var(--text-secondary);">{{ device.get_device_type_display }}</div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent-secondary);">
+                    {{ device.hourly_rate|floatformat:0 }}
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">تومان/ساعت</div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--success);">
+                    {{ device.games.count }}
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">بازی موجود</div>
+            </div>
+        </div>
+        
+        {% if device.games.exists %}
+        <h4 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;">بازی‌های موجود:</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            {% for game in device.games.all %}
+            <span style="background: var(--bg-secondary); padding: 6px 14px; border-radius: 20px; font-size: 13px;">
+                <i class="fas fa-gamepad" style="margin-left: 6px; color: var(--accent-secondary)"></i>
+                {{ game.name }}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

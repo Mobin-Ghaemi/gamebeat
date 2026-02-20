@@ -1,0 +1,204 @@
+{% extends 'account/base.html' %}
+
+{% block title %}پروفایل - GameBeat{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="display-5">
+                <i class="bi bi-person-gear"></i>
+                پروفایل کاربری
+            </h1>
+            <p class="text-muted">اطلاعات حساب کاربری خود را مدیریت کنید</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                <div class="profile-image-container">
+                    {% if profile.profile_image %}
+                        <img src="{{ profile.profile_image.url }}" alt="تصویر پروفایل" class="profile-image">
+                    {% else %}
+                        <div class="default-avatar">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <h4 class="mt-3">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.email|default:"ایمیل ثبت نشده" }}</p>
+            </div>
+
+            <div class="col-md-8">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">
+                                <i class="bi bi-person"></i> نام
+                            </label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ user.first_name }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">
+                                <i class="bi bi-person-fill"></i> نام خانوادگی
+                            </label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ user.last_name }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope"></i> ایمیل
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">
+                                <i class="bi bi-telephone"></i> شماره تماس
+                            </label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   value="{{ profile.phone|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profile_image" class="form-label">
+                            <i class="bi bi-image"></i> تصویر پروفایل
+                        </label>
+                        <input type="file" class="form-control" id="profile_image" name="profile_image" 
+                               accept="image/*">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> ذخیره تغییرات
+                            </button>
+                            <a href="{% url 'account:dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-right"></i> بازگشت
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h4 class="mb-4">
+                    <i class="bi bi-graph-up"></i> آمار حساب کاربری
+                </h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-calendar-plus"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h6>عضویت از</h6>
+                                <p>{{ user.date_joined|date:"Y/m/d" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h6>تعداد اشتراک‌ها</h6>
+                                <p>{{ user.subscription_set.count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h6>آخرین ورود</h6>
+                                <p>{{ user.last_login|date:"Y/m/d H:i"|default:"هرگز" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-image-container {
+        position: relative;
+        display: inline-block;
+    }
+    .profile-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #667eea;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .default-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+        margin: 0 auto;
+    }
+    .stat-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .stat-icon {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 10px;
+    }
+    .stat-info h6 {
+        color: #6c757d;
+        margin: 0;
+        font-weight: 600;
+    }
+    .stat-info p {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #495057;
+    }
+    .form-control {
+        border-radius: 10px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+</style>
+{% endblock %}
