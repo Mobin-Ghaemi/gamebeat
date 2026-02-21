@@ -295,12 +295,6 @@
         font-family: inherit;
     }
 
-    .row-btn-save {
-        border-color: rgba(16, 185, 129, 0.36);
-        color: #d1fae5;
-        background: rgba(16, 185, 129, 0.18);
-    }
-
     .row-btn-delete {
         border-color: rgba(239, 68, 68, 0.33);
         color: #fecaca;
@@ -913,6 +907,37 @@
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && modal.classList.contains('show')) {
                 closeModal();
+            }
+        });
+    })();
+
+    (function () {
+        const participantForms = document.querySelectorAll('.js-auto-save-participant');
+        if (!participantForms.length) return;
+
+        participantForms.forEach((formEl) => {
+            const paidInput = formEl.querySelector('input[name="paid"][type="checkbox"]');
+            const rankInput = formEl.querySelector('input[name="rank"]');
+            let submitting = false;
+
+            const submitOnce = () => {
+                if (submitting) return;
+                submitting = true;
+                formEl.submit();
+            };
+
+            if (paidInput) {
+                paidInput.addEventListener('change', submitOnce);
+            }
+
+            if (rankInput) {
+                rankInput.addEventListener('blur', submitOnce);
+                rankInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        submitOnce();
+                    }
+                });
             }
         });
     })();
