@@ -1,108 +1,420 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
 
 {% block title %}{{ tournament.name }}{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <div>
-        <h1 class="page-title">{{ tournament.name }}</h1>
-        <p class="page-subtitle">{{ tournament.game.name }}</p>
-    </div>
-    <div style="display: flex; gap: 12px;">
-        {% if tournament.status == 'upcoming' and tournament.participants_count < tournament.max_participants %}
-        <a href="{% url 'gamenet:tournament_register' tournament.id %}" class="btn btn-success">
-            <i class="fas fa-user-plus"></i>
-            ثبت‌نام
-        </a>
-        {% endif %}
-        <a href="{% url 'gamenet:tournament_edit' tournament.id %}" class="btn btn-secondary">
-            <i class="fas fa-edit"></i>
-            ویرایش
-        </a>
-        <a href="{% url 'gamenet:tournament_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right"></i>
-            بازگشت
-        </a>
-    </div>
-</div>
+{% block extra_css %}
+<style>
+    .hero {
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.1);
+        background:
+            radial-gradient(circle at 12% 18%, rgba(59,130,246,.22), transparent 42%),
+            radial-gradient(circle at 88% 18%, rgba(16,185,129,.2), transparent 44%),
+            linear-gradient(135deg, rgba(24,24,35,.94), rgba(12,12,20,.98));
+        padding: 18px;
+        margin-bottom: 14px;
+    }
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-    <div>
-        <!-- Tournament Info -->
-        <div class="card fade-in" style="margin-bottom: 24px;">
-            <div style="height: 200px; background: var(--accent-gradient); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
-                {% if tournament.image %}
-                <img src="{{ tournament.image.url }}" alt="{{ tournament.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">
-                {% else %}
-                <i class="fas fa-trophy" style="font-size: 80px;"></i>
-                {% endif %}
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>{{ tournament.name }}</h2>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <span class="device-status status-{% if tournament.status == 'upcoming' %}available{% elif tournament.status == 'ongoing' %}occupied{% else %}maintenance{% endif %}" style="padding: 8px 16px; font-size: 14px;">
-                        {{ tournament.get_status_display }}
-                    </span>
-                    <span style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; border:1px solid {% if tournament.visibility == 'public' %}rgba(16,185,129,.35){% else %}rgba(239,68,68,.35){% endif %}; color:{% if tournament.visibility == 'public' %}#34d399{% else %}#f87171{% endif %}; background:{% if tournament.visibility == 'public' %}rgba(16,185,129,.15){% else %}rgba(239,68,68,.12){% endif %};">
-                        {% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}
-                    </span>
-                </div>
-            </div>
-            
-            {% if tournament.description %}
-            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 24px;">
-                {{ tournament.description }}
-            </p>
-            {% endif %}
-            
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
-                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: var(--warning); margin-bottom: 4px;">
-                        {{ tournament.prize_pool|floatformat:0 }}
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">جایزه کل (تومان)</div>
-                </div>
-                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: var(--accent-secondary); margin-bottom: 4px;">
-                        {{ tournament.entry_fee|floatformat:0 }}
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">هزینه ورودی</div>
-                </div>
-                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: var(--success); margin-bottom: 4px;">
-                        {{ tournament.participants_count }}
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">ثبت‌نام شده</div>
-                </div>
-                <div style="background: var(--bg-secondary); border-radius: var(--radius); padding: 20px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
-                        {{ tournament.max_participants }}
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">ظرفیت کل</div>
-                </div>
+    .hero-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .hero-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #fff;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        box-shadow: 0 10px 24px rgba(124,58,237,.32);
+    }
+
+    .hero-title h1 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .hero-title p {
+        margin: 3px 0 0;
+        color: rgba(255,255,255,.68);
+        font-size: 13px;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+        border: 1px solid rgba(255,255,255,.15);
+        background: rgba(255,255,255,.05);
+        color: #fff;
+    }
+
+    .hero-btn-manage { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.18); color: #d1fae5; }
+    .hero-btn-register { border-color: rgba(59,130,246,.4); background: rgba(59,130,246,.2); color: #dbeafe; }
+
+    .chip-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .chip-public { color: #34d399; border: 1px solid rgba(16,185,129,.35); background: rgba(16,185,129,.14); }
+    .chip-private { color: #fca5a5; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.14); }
+    .chip-upcoming { color: #93c5fd; border: 1px solid rgba(59,130,246,.35); background: rgba(59,130,246,.16); }
+    .chip-ongoing { color: #fbbf24; border: 1px solid rgba(245,158,11,.35); background: rgba(245,158,11,.16); }
+    .chip-completed { color: #d1fae5; border: 1px solid rgba(16,185,129,.35); background: rgba(16,185,129,.16); }
+    .chip-cancelled { color: #fecaca; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.16); }
+    .chip-closed { color: #fde68a; border: 1px solid rgba(245,158,11,.35); background: rgba(245,158,11,.16); }
+
+    .stats-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 10px;
+    }
+
+    .stat-card {
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(135deg, rgba(24,24,34,.9), rgba(13,13,21,.96));
+        padding: 12px;
+    }
+
+    .stat-label { color: rgba(255,255,255,.62); font-size: 12px; margin-bottom: 5px; }
+    .stat-value { color: #fff; font-size: 24px; font-weight: 900; line-height: 1; }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 14px;
+        align-items: start;
+    }
+
+    .panel {
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(135deg, rgba(24,24,35,.9), rgba(14,14,24,.96));
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .panel:last-child { margin-bottom: 0; }
+
+    .panel-title {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .meta-list { display: grid; gap: 8px; }
+
+    .meta-item {
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: rgba(255,255,255,.03);
+        padding: 10px;
+    }
+
+    .meta-label { color: rgba(255,255,255,.6); font-size: 11px; margin-bottom: 3px; }
+    .meta-value { color: #fff; font-size: 14px; font-weight: 700; }
+
+    .champion-box {
+        border-radius: 12px;
+        border: 1px solid rgba(16,185,129,.38);
+        background: rgba(16,185,129,.16);
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .champion-label { color: rgba(255,255,255,.68); font-size: 12px; margin-bottom: 4px; }
+    .champion-name { color: #d1fae5; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+
+    .round-block {
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: rgba(255,255,255,.03);
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .round-title {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .match-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 9px;
+    }
+
+    .match-card {
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(135deg, rgba(20,20,30,.9), rgba(12,12,20,.96));
+        padding: 9px;
+    }
+
+    .match-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 7px;
+        gap: 8px;
+    }
+
+    .match-no { color: rgba(255,255,255,.62); font-size: 11px; font-weight: 700; }
+
+    .match-status {
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .ms-pending { color: #fde68a; border: 1px solid rgba(245,158,11,.35); background: rgba(245,158,11,.14); }
+    .ms-completed { color: #d1fae5; border: 1px solid rgba(16,185,129,.35); background: rgba(16,185,129,.14); }
+    .ms-bye { color: #bfdbfe; border: 1px solid rgba(59,130,246,.35); background: rgba(59,130,246,.14); }
+
+    .fighter {
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: rgba(255,255,255,.04);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+
+    .fighter-win {
+        border-color: rgba(16,185,129,.4);
+        background: rgba(16,185,129,.16);
+        color: #d1fae5;
+    }
+
+    .vs { text-align: center; color: rgba(255,255,255,.5); font-size: 11px; margin-bottom: 6px; }
+
+    .participants-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 580px;
+    }
+
+    .participants-table-wrap { overflow-x: auto; }
+
+    .participants-table th,
+    .participants-table td {
+        padding: 9px 8px;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        color: #fff;
+        font-size: 13px;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .participants-table th { color: rgba(255,255,255,.68); font-size: 12px; }
+
+    .empty-box {
+        border-radius: 12px;
+        border: 1px dashed rgba(255,255,255,.2);
+        background: rgba(255,255,255,.03);
+        padding: 18px;
+        text-align: center;
+        color: rgba(255,255,255,.72);
+    }
+
+    @media (max-width: 1100px) {
+        .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero fade-in">
+    <div class="hero-head">
+        <div class="hero-title">
+            <div class="hero-icon"><i class="fas fa-trophy"></i></div>
+            <div>
+                <h1>{{ tournament.name }}</h1>
+                <p>{{ tournament.game.name }}</p>
             </div>
         </div>
-        
-        <!-- Participants -->
-        <div class="card fade-in" style="animation-delay: 0.2s;">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-users" style="margin-left: 8px; color: var(--accent-secondary)"></i>
-                    شرکت‌کنندگان ({{ participants.count }})
-                </h3>
+        <div class="hero-actions">
+            {% if tournament.status == 'upcoming' and tournament.registration_open and tournament.participants_count < tournament.max_participants %}
+            <a href="{% url 'gamenet:tournament_register' tournament.id %}" class="hero-btn hero-btn-register">
+                <i class="fas fa-user-plus"></i>
+                ثبت‌نام
+            </a>
+            {% endif %}
+            <a href="{% url 'gamenet:tournament_manage' tournament.id %}" class="hero-btn hero-btn-manage">
+                <i class="fas fa-sliders-h"></i>
+                مدیریت
+            </a>
+            <a href="{% url 'gamenet:tournament_edit' tournament.id %}" class="hero-btn">
+                <i class="fas fa-edit"></i>
+                ویرایش
+            </a>
+            <a href="{% url 'gamenet:tournament_list' %}" class="hero-btn">
+                <i class="fas fa-arrow-right"></i>
+                بازگشت
+            </a>
+        </div>
+    </div>
+
+    <div class="chip-row">
+        {% if tournament.status == 'upcoming' %}
+            <span class="chip chip-upcoming">{{ tournament.get_status_display }}</span>
+        {% elif tournament.status == 'ongoing' %}
+            <span class="chip chip-ongoing">{{ tournament.get_status_display }}</span>
+        {% elif tournament.status == 'completed' %}
+            <span class="chip chip-completed">{{ tournament.get_status_display }}</span>
+        {% else %}
+            <span class="chip chip-cancelled">{{ tournament.get_status_display }}</span>
+        {% endif %}
+
+        {% if tournament.visibility == 'public' %}
+        <span class="chip chip-public"><i class="fas fa-globe"></i> پابلیک</span>
+        {% else %}
+        <span class="chip chip-private"><i class="fas fa-lock"></i> خصوصی</span>
+        {% endif %}
+
+        {% if not tournament.registration_open %}
+        <span class="chip chip-closed"><i class="fas fa-lock"></i> ثبت‌نام بسته</span>
+        {% endif %}
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">شرکت‌کننده</div>
+            <div class="stat-value">{{ participants_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">ظرفیت کل</div>
+            <div class="stat-value">{{ tournament.max_participants }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">هزینه ورودی</div>
+            <div class="stat-value">{{ tournament.entry_fee|floatformat:0|intcomma }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">جایزه کل</div>
+            <div class="stat-value">{{ tournament.prize_pool|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+</section>
+
+<div class="layout">
+    <main>
+        {% if show_results %}
+        <section class="panel fade-in">
+            <h3 class="panel-title"><i class="fas fa-chart-line"></i> نتایج مسابقه</h3>
+            {% if champion %}
+            <div class="champion-box">
+                <div class="champion-label">قهرمان اعلام‌شده</div>
+                <div class="champion-name"><i class="fas fa-crown"></i> {{ champion.name }}</div>
             </div>
-            
+            {% endif %}
+
+            {% for round_number, round_matches in matches_by_round.items %}
+            <div class="round-block">
+                <h4 class="round-title"><i class="fas fa-layer-group"></i> دور {{ round_number }}</h4>
+                <div class="match-grid">
+                    {% for match in round_matches %}
+                    <article class="match-card">
+                        <div class="match-head">
+                            <div class="match-no">بازی {{ match.match_number }}</div>
+                            {% if match.status == 'pending' %}
+                            <span class="match-status ms-pending">در انتظار</span>
+                            {% elif match.status == 'bye' %}
+                            <span class="match-status ms-bye">استراحت</span>
+                            {% else %}
+                            <span class="match-status ms-completed">نهایی</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="fighter {% if match.winner_id and match.participant1_id == match.winner_id %}fighter-win{% endif %}">
+                            {{ match.participant1.name|default:'---' }}
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="fighter {% if match.winner_id and match.participant2_id == match.winner_id %}fighter-win{% endif %}">
+                            {{ match.participant2.name|default:'استراحت' }}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% else %}
+        <section class="panel fade-in">
+            <h3 class="panel-title"><i class="fas fa-info-circle"></i> وضعیت مسابقه</h3>
+            <div class="empty-box">مسابقه هنوز شروع نشده است. بعد از شروع، نتایج هر دور همین‌جا نمایش داده می‌شود.</div>
+        </section>
+
+        {% if show_participants_public %}
+        <section class="panel fade-in" style="animation-delay:.08s;">
+            <h3 class="panel-title"><i class="fas fa-users"></i> شرکت‌کنندگان</h3>
             {% if participants %}
-            <div class="table-wrapper">
-                <table class="table">
+            <div class="participants-table-wrap">
+                <table class="participants-table">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>نام</th>
                             <th>آیدی گیمری</th>
-                            <th>شماره تلفن</th>
-                            <th>وضعیت پرداخت</th>
                             <th>رتبه</th>
                         </tr>
                     </thead>
@@ -110,86 +422,55 @@
                         {% for participant in participants %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td><strong>{{ participant.name }}</strong></td>
-                            <td>{{ participant.gamer_tag|default:"-" }}</td>
-                            <td>{{ participant.phone }}</td>
-                            <td>
-                                {% if participant.paid %}
-                                <span style="color: var(--success)"><i class="fas fa-check-circle"></i> پرداخت شده</span>
-                                {% else %}
-                                <span style="color: var(--warning)"><i class="fas fa-clock"></i> در انتظار</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if participant.rank %}
-                                <span style="background: var(--accent-gradient); padding: 4px 12px; border-radius: 20px;">{{ participant.rank }}</span>
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
+                            <td>{{ participant.name }}</td>
+                            <td>{{ participant.gamer_tag|default:'-' }}</td>
+                            <td>{{ participant.rank|default:'-' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <div class="empty-state" style="padding: 40px;">
-                <i class="fas fa-users" style="font-size: 48px;"></i>
-                <h3>هیچ شرکت‌کننده‌ای ثبت‌نام نکرده</h3>
-                <p>منتظر اولین ثبت‌نام باشید</p>
-            </div>
+            <div class="empty-box">شرکت‌کننده‌ای ثبت نشده است.</div>
             {% endif %}
-        </div>
-    </div>
-    
-    <div>
-        <!-- Quick Info -->
-        <div class="card fade-in" style="animation-delay: 0.1s;">
-            <h3 style="margin-bottom: 20px;">
-                <i class="fas fa-info-circle" style="margin-left: 8px; color: var(--accent-secondary)"></i>
-                اطلاعات مسابقه
-            </h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-                    <span style="color: var(--text-muted);">بازی</span>
-                    <span style="font-weight: 600;">{{ tournament.game.name }}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-                    <span style="color: var(--text-muted);">تاریخ شروع</span>
-                    <span style="font-weight: 600;">{{ tournament.start_date|date:"Y/m/d H:i" }}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-                    <span style="color: var(--text-muted);">تاریخ پایان</span>
-                    <span style="font-weight: 600;">{{ tournament.end_date|date:"Y/m/d H:i" }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-                    <span style="color: var(--text-muted);">نوع دسترسی</span>
-                    <span style="font-weight: 600;">{% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-                    <span style="color: var(--text-muted);">ظرفیت باقیمانده</span>
-                    <span style="font-weight: 600; color: {% if tournament.participants_count >= tournament.max_participants %}var(--danger){% else %}var(--success){% endif %}">
-                        {{ tournament.max_participants|add:tournament.participants_count|add:"-"|add:tournament.participants_count }} نفر
-                    </span>
-                </div>
+        </section>
+        {% else %}
+        <section class="panel fade-in" style="animation-delay:.08s;">
+            <h3 class="panel-title"><i class="fas fa-eye-slash"></i> شرکت‌کنندگان</h3>
+            <div class="empty-box">نمایش عمومی شرکت‌کنندگان توسط مدیر غیرفعال شده است.</div>
+        </section>
+        {% endif %}
+        {% endif %}
+    </main>
+
+    <aside class="panel fade-in" style="animation-delay:.12s;">
+        <h3 class="panel-title"><i class="fas fa-list"></i> اطلاعات مسابقه</h3>
+        <div class="meta-list">
+            <div class="meta-item">
+                <div class="meta-label">بازی</div>
+                <div class="meta-value">{{ tournament.game.name }}</div>
             </div>
-            
-            {% if tournament.status == 'upcoming' and tournament.participants_count < tournament.max_participants %}
-            <a href="{% url 'gamenet:tournament_register' tournament.id %}" class="btn btn-success btn-lg" style="width: 100%; justify-content: center; margin-top: 24px;">
-                <i class="fas fa-user-plus"></i>
-                ثبت‌نام در مسابقه
-            </a>
-            {% elif tournament.participants_count >= tournament.max_participants %}
-            <div class="alert alert-warning" style="margin-top: 24px;">
-                <i class="fas fa-exclamation-circle"></i>
-                ظرفیت مسابقه تکمیل شده است
+            <div class="meta-item">
+                <div class="meta-label">تاریخ شروع</div>
+                <div class="meta-value">{{ tournament.start_date|date:'Y/m/d H:i' }}</div>
             </div>
-            {% endif %}
+            <div class="meta-item">
+                <div class="meta-label">تاریخ پایان</div>
+                <div class="meta-value">{{ tournament.end_date|date:'Y/m/d H:i'|default:'---' }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">ثبت‌نام</div>
+                <div class="meta-value">{% if tournament.registration_open %}باز{% else %}بسته{% endif %}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">ظرفیت باقیمانده</div>
+                <div class="meta-value">{{ remaining_capacity }} نفر</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">نمایش عمومی شرکت‌کنندگان</div>
+                <div class="meta-value">{% if tournament.show_participants_public %}فعال{% else %}غیرفعال{% endif %}</div>
+            </div>
         </div>
-    </div>
+    </aside>
 </div>
 {% endblock %}

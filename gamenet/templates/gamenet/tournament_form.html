@@ -139,6 +139,11 @@
         line-height: 1.6;
     }
 
+    .money-hint {
+        color: #34d399;
+        font-weight: 700;
+    }
+
     .upload-wrap {
         display: flex;
         align-items: center;
@@ -196,64 +201,48 @@
 
     .time-inline {
         margin-top: 8px;
-        display: flex;
-        align-items: center;
+    }
+
+    .time-inline-title {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .time-inline-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        flex-wrap: wrap;
+        align-items: center;
     }
 
     .time-inline .form-input {
-        max-width: 180px;
+        max-width: none;
+        width: 100%;
+        direction: ltr;
+        text-align: center;
     }
 
-    .time-picker-toggle {
+    .time-field {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .time-chip {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 8px 10px;
-        border-radius: 9px;
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        background: rgba(99, 102, 241, 0.16);
-        color: #c7d2fe;
+        justify-content: center;
+        min-width: 58px;
+        padding: 0 10px;
+        height: 42px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.82);
         font-size: 12px;
         font-weight: 700;
-        cursor: pointer;
-    }
-
-    .time-picker-box {
-        width: 100%;
-        margin-top: 8px;
-        display: none;
-        border: 1px solid rgba(255, 255, 255, 0.11);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.03);
-        padding: 10px;
-    }
-
-    .time-picker-box.show { display: block; }
-
-    .time-picker-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr auto;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .time-picker-actions {
-        display: flex;
-        gap: 6px;
-        justify-content: flex-end;
-        margin-top: 8px;
-    }
-
-    .time-picker-btn {
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 8px;
-        padding: 7px 10px;
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-        font-size: 12px;
-        cursor: pointer;
     }
 
     .actions {
@@ -347,6 +336,7 @@
     @media (max-width: 768px) {
         .fields-2,
         .fields-3 { grid-template-columns: 1fr; }
+        .time-inline-row { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -406,31 +396,28 @@
                         <label class="form-label">تاریخ شروع *</label>
                         <input type="text" id="start_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/15" readonly>
                         <input type="hidden" id="start_date_gregorian" name="start_date" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        <div id="startDateValidationError" class="help-text" style="color:#fda4af; display:none;"></div>
                         <div class="time-inline">
-                            <label class="form-label" for="start_time_optional" style="margin:0;">ساعت شروع (اختیاری)</label>
-                            <input type="time" id="start_time_optional" class="form-input" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'H:i' }}{% endif %}">
-                            <button type="button" id="openStartTimePicker" class="time-picker-toggle">
-                                <i class="fas fa-clock"></i>
-                                انتخاب دقیق
-                            </button>
-                            <div id="startTimePickerBox" class="time-picker-box">
-                                <div class="time-picker-grid">
-                                    <select id="startHourSelect" class="form-select"></select>
-                                    <select id="startMinuteSelect" class="form-select"></select>
-                                    <span style="color:rgba(255,255,255,.72);font-size:12px;">ساعت</span>
+                            <label class="form-label time-inline-title">ساعت شروع (اختیاری)</label>
+                            <div class="time-inline-row">
+                                <div class="time-field">
+                                    <span class="time-chip">ساعت</span>
+                                    <input type="text" id="startHourInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۹ یا 09" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'H' }}{% endif %}">
                                 </div>
-                                <div class="time-picker-actions">
-                                    <button type="button" id="clearStartTimeBtn" class="time-picker-btn">پاک‌کردن</button>
-                                    <button type="button" id="applyStartTimeBtn" class="time-picker-btn">اعمال ساعت</button>
+                                <div class="time-field">
+                                    <span class="time-chip">دقیقه</span>
+                                    <input type="text" id="startMinuteInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۵ یا 05" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'i' }}{% endif %}">
                                 </div>
                             </div>
                         </div>
+                        <div id="startTimeValidationError" class="help-text" style="color:#fda4af; display:none;"></div>
                         {{ form.start_date.errors }}
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">تاریخ پایان (اختیاری)</label>
                         <input type="text" id="end_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/20" readonly>
                         <input type="hidden" id="end_date_gregorian" name="end_date" value="{% if tournament and tournament.end_date %}{{ tournament.end_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        <div id="endDateValidationError" class="help-text" style="color:#fda4af; display:none;"></div>
                         {{ form.end_date.errors }}
                     </div>
                 </div>
@@ -442,11 +429,13 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">هزینه ورودی</label>
                         {{ form.entry_fee }}
+                        <div id="entryFeeHint" class="help-text money-hint"></div>
                         {{ form.entry_fee.errors }}
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">جایزه کل</label>
                         {{ form.prize_pool }}
+                        <div id="prizePoolHint" class="help-text money-hint"></div>
                         {{ form.prize_pool.errors }}
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -538,13 +527,10 @@
 
     const visibilitySelect = document.getElementById('{{ form.visibility.id_for_label }}');
     const visibilityPreview = document.getElementById('visibilityPreview');
-    const openStartTimePicker = document.getElementById('openStartTimePicker');
-    const startTimePickerBox = document.getElementById('startTimePickerBox');
-    const startHourSelect = document.getElementById('startHourSelect');
-    const startMinuteSelect = document.getElementById('startMinuteSelect');
-    const applyStartTimeBtn = document.getElementById('applyStartTimeBtn');
-    const clearStartTimeBtn = document.getElementById('clearStartTimeBtn');
-    const startTimeInput = document.getElementById('start_time_optional');
+    const entryFeeInput = document.getElementById('{{ form.entry_fee.id_for_label }}');
+    const prizePoolInput = document.getElementById('{{ form.prize_pool.id_for_label }}');
+    const entryFeeHint = document.getElementById('entryFeeHint');
+    const prizePoolHint = document.getElementById('prizePoolHint');
 
     function syncVisibilityPreview() {
         if (!visibilitySelect || !visibilityPreview) return;
@@ -562,59 +548,46 @@
         syncVisibilityPreview();
     }
 
-    function pad(v) { return String(v).padStart(2, '0'); }
-    function ensureTimeOptions() {
-        if (!startHourSelect || !startMinuteSelect) return;
-        if (!startHourSelect.options.length) {
-            for (let h = 0; h < 24; h++) {
-                const opt = document.createElement('option');
-                opt.value = pad(h);
-                opt.textContent = `${pad(h)} ساعت`;
-                startHourSelect.appendChild(opt);
-            }
+    function normalizeNumericText(rawValue) {
+        if (!rawValue) return '';
+        return String(rawValue)
+            .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+            .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584))
+            .replace(/[٬,]/g, '')
+            .replace(/\s+/g, '')
+            .trim();
+    }
+
+    function formatShortTomanLabel(rawValue) {
+        const normalized = normalizeNumericText(rawValue);
+        if (!normalized || !/^\d+$/.test(normalized)) return '';
+        const amount = Number(normalized);
+        if (!Number.isFinite(amount)) return '';
+        if (amount >= 1000000000) {
+            return `${(amount / 1000000000).toLocaleString('fa-IR', { maximumFractionDigits: 1 })} میلیارد تومان`;
         }
-        if (!startMinuteSelect.options.length) {
-            for (let m = 0; m < 60; m++) {
-                const opt = document.createElement('option');
-                opt.value = pad(m);
-                opt.textContent = `${pad(m)} دقیقه`;
-                startMinuteSelect.appendChild(opt);
-            }
+        if (amount >= 1000000) {
+            return `${(amount / 1000000).toLocaleString('fa-IR', { maximumFractionDigits: 1 })} میلیون تومان`;
         }
+        if (amount >= 1000) {
+            return `${(amount / 1000).toLocaleString('fa-IR', { maximumFractionDigits: 1 })} هزار تومان`;
+        }
+        return `${amount.toLocaleString('fa-IR')} تومان`;
     }
 
-    function syncPickerFromInput() {
-        ensureTimeOptions();
-        const val = (startTimeInput && startTimeInput.value ? startTimeInput.value : '00:00');
-        const parts = val.split(':');
-        const h = pad(parts[0] || 0);
-        const m = pad(parts[1] || 0);
-        if (startHourSelect) startHourSelect.value = h;
-        if (startMinuteSelect) startMinuteSelect.value = m;
+    function bindMoneyHint(inputEl, hintEl) {
+        if (!inputEl || !hintEl) return;
+        const updateHint = () => {
+            const label = formatShortTomanLabel(inputEl.value);
+            hintEl.textContent = label ? `معادل: ${label}` : '';
+        };
+        inputEl.addEventListener('input', updateHint);
+        updateHint();
     }
 
-    if (openStartTimePicker && startTimePickerBox) {
-        openStartTimePicker.addEventListener('click', () => {
-            syncPickerFromInput();
-            startTimePickerBox.classList.toggle('show');
-        });
-    }
+    bindMoneyHint(entryFeeInput, entryFeeHint);
+    bindMoneyHint(prizePoolInput, prizePoolHint);
 
-    if (applyStartTimeBtn && startTimeInput) {
-        applyStartTimeBtn.addEventListener('click', () => {
-            const h = startHourSelect ? startHourSelect.value : '00';
-            const m = startMinuteSelect ? startMinuteSelect.value : '00';
-            startTimeInput.value = `${h}:${m}`;
-            if (startTimePickerBox) startTimePickerBox.classList.remove('show');
-        });
-    }
-
-    if (clearStartTimeBtn && startTimeInput) {
-        clearStartTimeBtn.addEventListener('click', () => {
-            startTimeInput.value = '';
-            if (startTimePickerBox) startTimePickerBox.classList.remove('show');
-        });
-    }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
@@ -625,7 +598,11 @@
         const endJalali = document.getElementById('end_date_jalali');
         const startGregorian = document.getElementById('start_date_gregorian');
         const endGregorian = document.getElementById('end_date_gregorian');
-        const startTimeOptional = document.getElementById('start_time_optional');
+        const startHourInput = document.getElementById('startHourInput');
+        const startMinuteInput = document.getElementById('startMinuteInput');
+        const startDateValidationError = document.getElementById('startDateValidationError');
+        const endDateValidationError = document.getElementById('endDateValidationError');
+        const startTimeValidationError = document.getElementById('startTimeValidationError');
         const formEl = startJalali ? startJalali.closest('form') : null;
 
         if (!(startJalali && endJalali && startGregorian && endGregorian && formEl)) return;
@@ -646,6 +623,8 @@
             endGregorian.value = endGregorian.value.split(' ')[0];
         }
 
+        const todayTimestamp = new persianDate().startOf('day').valueOf();
+
         window.jQuery('#start_date_jalali').pDatepicker({
             format: 'YYYY/MM/DD',
             altField: '#start_date_gregorian',
@@ -654,6 +633,7 @@
             initialValue: !!startGregorian.value,
             observer: true,
             autoClose: true,
+            minDate: todayTimestamp,
             calendar: {
                 persian: { locale: 'fa' }
             },
@@ -670,6 +650,7 @@
             initialValue: !!endGregorian.value,
             observer: true,
             autoClose: true,
+            minDate: todayTimestamp,
             calendar: {
                 persian: { locale: 'fa' }
             },
@@ -696,12 +677,149 @@
         forceOpen(startJalali);
         forceOpen(endJalali);
 
-        formEl.addEventListener('submit', () => {
+        function normalizeDigits(rawValue) {
+            return (rawValue || '')
+                .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+                .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
+        }
+
+        function parseTimePart(rawValue, maxValue, label) {
+            const normalized = normalizeDigits(rawValue).trim();
+            if (!normalized) return { ok: true, value: '' };
+            if (!/^\d{1,2}$/.test(normalized)) {
+                return { ok: false, message: `${label} باید عدد بین 0 تا ${maxValue} باشد.` };
+            }
+            const numeric = Number(normalized);
+            if (numeric < 0 || numeric > maxValue) {
+                return { ok: false, message: `${label} باید بین 0 تا ${maxValue} باشد.` };
+            }
+            return { ok: true, value: String(numeric).padStart(2, '0') };
+        }
+
+        function clearTimeValidationError() {
+            if (!startTimeValidationError) return;
+            startTimeValidationError.textContent = '';
+            startTimeValidationError.style.display = 'none';
+        }
+
+        function clearDateValidationError() {
+            if (!startDateValidationError) return;
+            startDateValidationError.textContent = '';
+            startDateValidationError.style.display = 'none';
+        }
+
+        function clearEndDateValidationError() {
+            if (!endDateValidationError) return;
+            endDateValidationError.textContent = '';
+            endDateValidationError.style.display = 'none';
+        }
+
+        function showTimeValidationError(message) {
+            if (!startTimeValidationError) return;
+            startTimeValidationError.textContent = message;
+            startTimeValidationError.style.display = 'block';
+        }
+
+        function showDateValidationError(message) {
+            if (!startDateValidationError) return;
+            startDateValidationError.textContent = message;
+            startDateValidationError.style.display = 'block';
+        }
+
+        function showEndDateValidationError(message) {
+            if (!endDateValidationError) return;
+            endDateValidationError.textContent = message;
+            endDateValidationError.style.display = 'block';
+        }
+
+        function attachTimeInputCleanup(inputEl) {
+            if (!inputEl) return;
+            inputEl.addEventListener('input', () => {
+                clearTimeValidationError();
+            });
+        }
+
+        attachTimeInputCleanup(startHourInput);
+        attachTimeInputCleanup(startMinuteInput);
+        if (startJalali) {
+            startJalali.addEventListener('input', () => {
+                clearDateValidationError();
+                clearEndDateValidationError();
+            });
+            startJalali.addEventListener('change', () => {
+                clearDateValidationError();
+                clearEndDateValidationError();
+            });
+        }
+        if (endJalali) {
+            endJalali.addEventListener('input', clearEndDateValidationError);
+            endJalali.addEventListener('change', clearEndDateValidationError);
+        }
+
+        formEl.addEventListener('submit', (event) => {
+            clearDateValidationError();
+            clearEndDateValidationError();
+            clearTimeValidationError();
+
             const startDatePart = (startGregorian.value || '').trim();
-            const startTimePart = (startTimeOptional && startTimeOptional.value ? startTimeOptional.value : '00:00').trim();
-            startGregorian.value = startDatePart ? `${startDatePart} ${startTimePart}:00` : '';
+            if (startDatePart) {
+                const [startYearText] = startDatePart.split('-');
+                const startYear = Number(startYearText);
+                if (Number.isFinite(startYear) && startYear >= 1700) {
+                    const selectedStartDate = new Date(`${startDatePart}T00:00:00`);
+                    const now = new Date();
+                    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    if (selectedStartDate < todayLocal) {
+                        showDateValidationError('این تاریخ برای گذشته است. تاریخ شروع باید امروز یا بعد از امروز باشد.');
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
 
             const endDatePart = (endGregorian.value || '').trim();
+            if (startDatePart && endDatePart) {
+                const [startYear, startMonth, startDay] = startDatePart.split('-').map((part) => Number(part));
+                const [endYear, endMonth, endDay] = endDatePart.split('-').map((part) => Number(part));
+                const isComparable =
+                    [startYear, startMonth, startDay, endYear, endMonth, endDay].every((part) => Number.isFinite(part));
+                if (isComparable) {
+                    const startComparable = (startYear * 10000) + (startMonth * 100) + startDay;
+                    const endComparable = (endYear * 10000) + (endMonth * 100) + endDay;
+                    if (endComparable < startComparable) {
+                        showEndDateValidationError('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.');
+                        event.preventDefault();
+                        return;
+                    }
+                } else if (endDatePart < startDatePart) {
+                    showEndDateValidationError('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.');
+                    event.preventDefault();
+                    return;
+                }
+            }
+
+            const hourResult = parseTimePart(startHourInput ? startHourInput.value : '', 23, 'ساعت شروع');
+            if (!hourResult.ok) {
+                showTimeValidationError(hourResult.message);
+                event.preventDefault();
+                return;
+            }
+
+            const minuteResult = parseTimePart(startMinuteInput ? startMinuteInput.value : '', 59, 'دقیقه شروع');
+            if (!minuteResult.ok) {
+                showTimeValidationError(minuteResult.message);
+                event.preventDefault();
+                return;
+            }
+
+            if (startHourInput && hourResult.value) startHourInput.value = hourResult.value;
+            if (startMinuteInput && minuteResult.value) startMinuteInput.value = minuteResult.value;
+
+            const hour = hourResult.value || '00';
+            const minute = minuteResult.value || '00';
+            const startTimePart = `${hour}:${minute}`;
+            startGregorian.value = startDatePart ? `${startDatePart} ${startTimePart}:00` : '';
+
             endGregorian.value = endDatePart ? `${endDatePart} 23:59:00` : '';
         });
     })();

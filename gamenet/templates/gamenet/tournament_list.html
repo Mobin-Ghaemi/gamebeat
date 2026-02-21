@@ -172,6 +172,7 @@
     .t-actions {
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
     }
 
     .btn-action {
@@ -197,6 +198,12 @@
         color: #bfdbfe;
         border: 1px solid rgba(59, 130, 246, 0.33);
         background: rgba(59, 130, 246, 0.14);
+    }
+
+    .btn-manage {
+        color: #d1fae5;
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        background: rgba(16, 185, 129, 0.16);
     }
 
     .empty-box {
@@ -300,6 +307,10 @@
         </div>
 
         <div class="t-actions">
+            <a href="{% url 'gamenet:tournament_manage' tournament.id %}" class="btn-action btn-manage">
+                <i class="fas fa-sliders-h"></i>
+                مدیریت
+            </a>
             <a href="{% url 'gamenet:tournament_detail' tournament.id %}" class="btn-action btn-view">
                 <i class="fas fa-eye"></i>
                 جزئیات

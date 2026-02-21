@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.utils import timezone
+import re
 from .models import Device, Game, Session, Tournament, TournamentParticipant, GameNet, Product, ProductCategory
 
 
@@ -134,9 +136,9 @@ class TournamentForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 4, 'placeholder': 'توضیحات مسابقه'}),
             'start_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
             'end_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
-            'entry_fee': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'هزینه ورودی (تومان)'}),
-            'prize_pool': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'جایزه کل (تومان)'}),
-            'max_participants': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'حداکثر شرکت‌کنندگان'}),
+            'entry_fee': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'هزینه ورودی (تومان)'}),
+            'prize_pool': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'جایزه کل (تومان)'}),
+            'max_participants': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'حداکثر شرکت‌کنندگان'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'visibility': forms.Select(attrs={'class': 'form-select'}),
             'image': forms.FileInput(attrs={'class': 'form-file'}),
@@ -144,15 +146,144 @@ class TournamentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.gamenet = kwargs.pop('gamenet', None)
+        incoming_data = args[0] if args and args[0] is not None else kwargs.get('data')
+        if incoming_data is not None:
+            data = incoming_data.copy()
+            for field_name in ('entry_fee', 'prize_pool', 'max_participants'):
+                raw_value = data.get(field_name, '')
+                data[field_name] = self._normalize_numeric_text(raw_value)
+            for field_name in ('start_date', 'end_date'):
+                raw_value = data.get(field_name, '')
+                data[field_name] = self._normalize_date_text(raw_value)
+            if args and args[0] is not None:
+                args = (data, *args[1:])
+            else:
+                kwargs['data'] = data
         super().__init__(*args, **kwargs)
         if self.gamenet:
             self.fields['game'].queryset = Game.objects.filter(gamenet=self.gamenet)
         self.fields['end_date'].required = False
 
+    @staticmethod
+    def _normalize_numeric_text(raw_value):
+        if raw_value is None:
+            return ''
+        value = str(raw_value).strip()
+        value = TournamentForm._normalize_digits_only(value)
+        value = value.replace('٬', '').replace(',', '')
+        return value
+
+    @staticmethod
+    def _normalize_digits_only(raw_value):
+        if raw_value is None:
+            return ''
+        value = str(raw_value).strip()
+        value = value.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
+        value = value.translate(str.maketrans('٠١٢٣٤٥٦٧٨٩', '0123456789'))
+        return value
+
+    @staticmethod
+    def _jalali_to_gregorian(j_year, j_month, j_day):
+        if not (1 <= j_month <= 12 and 1 <= j_day <= 31):
+            raise ValueError('Invalid Jalali date')
+
+        j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29]
+        if j_month <= 6:
+            max_day = 31
+        elif j_month <= 11:
+            max_day = 30
+        else:
+            max_day = 30
+        if j_day > max_day:
+            raise ValueError('Invalid Jalali day for month')
+
+        jy = j_year - 979
+        jm = j_month - 1
+        jd = j_day - 1
+
+        j_day_no = 365 * jy + (jy // 33) * 8 + ((jy % 33 + 3) // 4)
+        for i in range(jm):
+            j_day_no += j_days_in_month[i]
+        j_day_no += jd
+
+        g_day_no = j_day_no + 79
+        gy = 1600 + 400 * (g_day_no // 146097)
+        g_day_no %= 146097
+
+        leap = True
+        if g_day_no >= 36525:
+            g_day_no -= 1
+            gy += 100 * (g_day_no // 36524)
+            g_day_no %= 36524
+            if g_day_no >= 365:
+                g_day_no += 1
+            else:
+                leap = False
+
+        gy += 4 * (g_day_no // 1461)
+        g_day_no %= 1461
+
+        if g_day_no >= 366:
+            leap = False
+            g_day_no -= 1
+            gy += g_day_no // 365
+            g_day_no %= 365
+
+        gd = g_day_no + 1
+        g_days_in_month = [0, 31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        gm = 1
+        while gm <= 12 and gd > g_days_in_month[gm]:
+            gd -= g_days_in_month[gm]
+            gm += 1
+
+        return gy, gm, gd
+
+    @classmethod
+    def _normalize_date_text(cls, raw_value):
+        value = cls._normalize_digits_only(raw_value)
+        if not value:
+            return ''
+        value = value.replace('/', '-')
+
+        match = re.match(r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$', value)
+        if not match:
+            return value
+
+        year_s, month_s, day_s, hour_s, minute_s, second_s = match.groups()
+        year_i = int(year_s)
+        month_i = int(month_s)
+        day_i = int(day_s)
+
+        if 1300 <= year_i <= 1600:
+            try:
+                year_i, month_i, day_i = cls._jalali_to_gregorian(year_i, month_i, day_i)
+            except ValueError:
+                return value
+
+        if hour_s is None:
+            return f'{year_i:04d}-{month_i:02d}-{day_i:02d}'
+
+        hour_i = int(hour_s)
+        minute_i = int(minute_s or 0)
+        second_i = int(second_s or 0)
+        return f'{year_i:04d}-{month_i:02d}-{day_i:02d} {hour_i:02d}:{minute_i:02d}:{second_i:02d}'
+
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
+
+        today = timezone.localdate()
+        if start_date:
+            start_local_date = timezone.localtime(start_date).date() if timezone.is_aware(start_date) else start_date.date()
+            if start_local_date < today:
+                self.add_error('start_date', 'این تاریخ برای گذشته است. تاریخ شروع باید امروز یا بعد از امروز باشد.')
+
+        if end_date:
+            end_local_date = timezone.localtime(end_date).date() if timezone.is_aware(end_date) else end_date.date()
+            if end_local_date < today:
+                self.add_error('end_date', 'این تاریخ برای گذشته است. تاریخ پایان باید امروز یا بعد از امروز باشد.')
+
         if start_date and end_date and end_date < start_date:
             self.add_error('end_date', 'تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.')
         return cleaned_data

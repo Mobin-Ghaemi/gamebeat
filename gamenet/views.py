@@ -12,11 +12,13 @@ from django.utils.text import slugify
 from contextlib import nullcontext
 from decimal import Decimal
 from datetime import timedelta
+from collections import OrderedDict
+import random
 import json
 
 from .models import (
     Device, Game, Session, Tournament, TournamentParticipant, 
-    DailyReport, GameNet, Product, ProductCategory, Order, OrderItem
+    TournamentMatch, DailyReport, GameNet, Product, ProductCategory, Order, OrderItem
 )
 from .forms import (
     DeviceForm, GameForm, StartSessionForm, TournamentForm, 
@@ -362,10 +364,26 @@ def delete_session_api(request, session_id):
 def game_list(request):
     """لیست بازی‌ها"""
     gamenet = get_object_or_404(GameNet, owner=request.user)
-    games = Game.objects.filter(gamenet=gamenet)
+    games = Game.objects.filter(gamenet=gamenet).order_by('-created_at')
+    total_games = games.count()
+    games_with_image = games.filter(image__isnull=False).exclude(image='').count()
+    games_with_genre = games.exclude(genre='').count()
+    added_today = games.filter(created_at__date=timezone.localdate()).count()
+    genre_counts = list(
+        games.exclude(genre='')
+        .values('genre')
+        .annotate(total=Count('id'))
+        .order_by('-total', 'genre')[:8]
+    )
+
     return render(request, 'gamenet/game_list.html', {
         'gamenet': gamenet,
-        'games': games
+        'games': games,
+        'total_games': total_games,
+        'games_with_image': games_with_image,
+        'games_with_genre': games_with_genre,
+        'added_today': added_today,
+        'genre_counts': genre_counts,
     })
 
 
@@ -695,13 +713,354 @@ def tournament_create(request):
 def tournament_detail(request, pk):
     """جزئیات تورنومنت"""
     gamenet = get_object_or_404(GameNet, owner=request.user)
-    tournament = get_object_or_404(Tournament, pk=pk, gamenet=gamenet)
-    participants = TournamentParticipant.objects.filter(tournament=tournament)
-    
+    tournament = get_object_or_404(Tournament.objects.select_related('game', 'champion'), pk=pk, gamenet=gamenet)
+    participants = list(TournamentParticipant.objects.filter(tournament=tournament).order_by('rank', 'registered_at', 'id'))
+    matches = list(
+        TournamentMatch.objects.filter(tournament=tournament)
+        .select_related('participant1', 'participant2', 'winner')
+        .order_by('round_number', 'match_number', 'id')
+    )
+    matches_by_round = OrderedDict()
+    for match in matches:
+        matches_by_round.setdefault(match.round_number, []).append(match)
+
+    champion = tournament.champion
+    if champion is None and tournament.status == 'completed':
+        champion = next((match.winner for match in reversed(matches) if match.winner_id), None)
+
+    show_results = tournament.status in ('ongoing', 'completed') and bool(matches)
+    remaining_capacity = max(tournament.max_participants - len(participants), 0)
+
     return render(request, 'gamenet/tournament_detail.html', {
         'gamenet': gamenet,
         'tournament': tournament,
-        'participants': participants
+        'participants': participants,
+        'participants_count': len(participants),
+        'matches_by_round': matches_by_round,
+        'show_results': show_results,
+        'champion': champion,
+        'show_participants_public': tournament.show_participants_public,
+        'remaining_capacity': remaining_capacity,
+    })
+
+
+def _normalize_digits(value):
+    if value is None:
+        return ''
+    return str(value).strip().translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789'))
+
+
+def _generate_participant_phone(tournament):
+    while True:
+        candidate = f"m{timezone.now().strftime('%H%M%S%f')}"[-15:]
+        if not TournamentParticipant.objects.filter(tournament=tournament, phone=candidate).exists():
+            return candidate
+
+
+def _create_round_matches(tournament, entrants, round_number):
+    matches_to_create = []
+    match_number = 1
+    for index in range(0, len(entrants), 2):
+        participant1 = entrants[index]
+        participant2 = entrants[index + 1] if index + 1 < len(entrants) else None
+        if participant2 is None:
+            matches_to_create.append(TournamentMatch(
+                tournament=tournament,
+                round_number=round_number,
+                match_number=match_number,
+                participant1=participant1,
+                participant2=None,
+                winner=participant1,
+                status='bye',
+            ))
+        else:
+            matches_to_create.append(TournamentMatch(
+                tournament=tournament,
+                round_number=round_number,
+                match_number=match_number,
+                participant1=participant1,
+                participant2=participant2,
+                status='pending',
+            ))
+        match_number += 1
+    TournamentMatch.objects.bulk_create(matches_to_create)
+
+
+def _advance_tournament_bracket(tournament):
+    changed = False
+    while True:
+        round_numbers = list(
+            TournamentMatch.objects.filter(tournament=tournament)
+            .values_list('round_number', flat=True)
+            .distinct()
+            .order_by('round_number')
+        )
+        if not round_numbers:
+            return changed
+
+        progressed = False
+        for round_number in round_numbers:
+            round_matches_qs = TournamentMatch.objects.filter(
+                tournament=tournament,
+                round_number=round_number,
+            ).order_by('match_number', 'id')
+
+            if round_matches_qs.filter(winner__isnull=True).exists():
+                continue
+
+            winners_ids = [winner_id for winner_id in round_matches_qs.values_list('winner_id', flat=True) if winner_id]
+            if not winners_ids:
+                continue
+
+            next_round_exists = TournamentMatch.objects.filter(
+                tournament=tournament,
+                round_number=round_number + 1,
+            ).exists()
+            if next_round_exists:
+                continue
+
+            if len(winners_ids) == 1:
+                champion = TournamentParticipant.objects.filter(id=winners_ids[0]).first()
+                needs_update = (
+                    champion is not None and (
+                        tournament.champion_id != champion.id
+                        or tournament.status != 'completed'
+                        or tournament.registration_open
+                    )
+                )
+                if needs_update:
+                    tournament.champion = champion
+                    tournament.status = 'completed'
+                    tournament.registration_open = False
+                    tournament.save(update_fields=['champion', 'status', 'registration_open'])
+                    changed = True
+                return changed
+
+            winners_map = {
+                participant.id: participant
+                for participant in TournamentParticipant.objects.filter(id__in=winners_ids)
+            }
+            ordered_winners = [winners_map[winner_id] for winner_id in winners_ids if winner_id in winners_map]
+            if not ordered_winners:
+                continue
+
+            _create_round_matches(tournament, ordered_winners, round_number + 1)
+            changed = True
+            progressed = True
+            break
+
+        if not progressed:
+            break
+
+    return changed
+
+
+@gamenet_subscription_required
+def tournament_manage(request, pk):
+    """مدیریت تورنومنت"""
+    gamenet = get_object_or_404(GameNet, owner=request.user)
+    tournament = get_object_or_404(
+        Tournament.objects.select_related('game'),
+        pk=pk,
+        gamenet=gamenet,
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '').strip()
+        valid_statuses = {code for code, _ in Tournament.STATUS_CHOICES}
+        has_matches = TournamentMatch.objects.filter(tournament=tournament).exists()
+
+        if action == 'update_status':
+            new_status = request.POST.get('status', '').strip()
+            if new_status not in valid_statuses:
+                messages.error(request, 'وضعیت انتخاب‌شده معتبر نیست.')
+            else:
+                tournament.status = new_status
+                tournament.save(update_fields=['status'])
+                messages.success(request, 'وضعیت مسابقه با موفقیت به‌روزرسانی شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'toggle_registration':
+            registration_open = request.POST.get('registration_open', '0') in ('1', 'true', 'True', 'on')
+            if registration_open and has_matches:
+                messages.error(request, 'بعد از شروع براکت، بازکردن ثبت‌نام مجاز نیست.')
+            else:
+                tournament.registration_open = registration_open
+                tournament.save(update_fields=['registration_open'])
+                messages.success(request, 'تنظیمات ثبت‌نام ذخیره شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'toggle_public_participants':
+            show_participants_public = request.POST.get('show_participants_public', '0') in ('1', 'true', 'True', 'on')
+            tournament.show_participants_public = show_participants_public
+            tournament.save(update_fields=['show_participants_public'])
+            messages.success(request, 'تنظیمات نمایش عمومی شرکت‌کنندگان ذخیره شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'create_participant':
+            if has_matches:
+                messages.error(request, 'بعد از شروع مسابقه، افزودن شرکت‌کننده جدید غیرفعال است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+            if tournament.participants_count >= tournament.max_participants:
+                messages.error(request, 'ظرفیت مسابقه تکمیل شده است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            name = request.POST.get('name', '').strip()
+            phone = _normalize_digits(request.POST.get('phone', ''))
+            gamer_tag = request.POST.get('gamer_tag', '').strip()
+            paid = request.POST.get('paid', '0') in ('1', 'true', 'True', 'on')
+
+            if not name:
+                messages.error(request, 'نام شرکت‌کننده الزامی است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            if not phone:
+                phone = _generate_participant_phone(tournament)
+
+            if TournamentParticipant.objects.filter(tournament=tournament, phone=phone).exists():
+                messages.error(request, 'این شماره قبلا در مسابقه ثبت شده است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            TournamentParticipant.objects.create(
+                tournament=tournament,
+                name=name,
+                phone=phone,
+                gamer_tag=gamer_tag,
+                paid=paid,
+            )
+            messages.success(request, f'{name} به مسابقه اضافه شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'start_tournament':
+            participants = list(TournamentParticipant.objects.filter(tournament=tournament).order_by('registered_at', 'id'))
+            if has_matches:
+                messages.error(request, 'قرعه‌کشی قبلا انجام شده است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+            if len(participants) < 2:
+                messages.error(request, 'برای شروع مسابقه حداقل 2 شرکت‌کننده لازم است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            random.shuffle(participants)
+            with transaction.atomic():
+                _create_round_matches(tournament, participants, round_number=1)
+                tournament.status = 'ongoing'
+                tournament.registration_open = False
+                tournament.champion = None
+                tournament.save(update_fields=['status', 'registration_open', 'champion'])
+                _advance_tournament_bracket(tournament)
+            messages.success(request, 'مسابقه شروع شد و قرعه‌کشی انجام شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'set_match_winner':
+            match_id = request.POST.get('match_id')
+            winner_id = request.POST.get('winner_id')
+            match = get_object_or_404(TournamentMatch, id=match_id, tournament=tournament)
+            if match.status == 'bye':
+                messages.info(request, 'این بازی حالت استراحت دارد و برنده آن مشخص است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            winner = TournamentParticipant.objects.filter(id=winner_id, tournament=tournament).first() if winner_id else None
+            if winner is None:
+                messages.error(request, 'برنده انتخاب‌شده معتبر نیست.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+            if winner.id not in {match.participant1_id, match.participant2_id}:
+                messages.error(request, 'برنده باید یکی از دو طرف بازی باشد.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            with transaction.atomic():
+                match.winner = winner
+                match.status = 'completed'
+                match.save(update_fields=['winner', 'status'])
+                _advance_tournament_bracket(tournament)
+
+            tournament.refresh_from_db(fields=['status', 'champion'])
+            if tournament.status == 'completed' and tournament.champion:
+                messages.success(request, f'مسابقه تمام شد. قهرمان: {tournament.champion.name}')
+            else:
+                messages.success(request, 'برنده بازی ثبت شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'update_participant':
+            participant_id = request.POST.get('participant_id')
+            participant = get_object_or_404(TournamentParticipant, pk=participant_id, tournament=tournament)
+            rank_raw = _normalize_digits(request.POST.get('rank', ''))
+            paid = request.POST.get('paid', '0') in ('1', 'true', 'True', 'on')
+
+            rank_value = None
+            if rank_raw:
+                try:
+                    parsed_rank = int(rank_raw)
+                    if parsed_rank <= 0:
+                        raise ValueError
+                    rank_value = parsed_rank
+                except ValueError:
+                    messages.error(request, f'رتبه برای {participant.name} معتبر نیست.')
+                    return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            participant.paid = paid
+            participant.rank = rank_value
+            participant.save(update_fields=['paid', 'rank'])
+            messages.success(request, f'اطلاعات {participant.name} ذخیره شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'delete_participant':
+            if has_matches:
+                messages.error(request, 'بعد از شروع مسابقه حذف شرکت‌کننده مجاز نیست.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+            participant_id = request.POST.get('participant_id')
+            participant = get_object_or_404(TournamentParticipant, pk=participant_id, tournament=tournament)
+            participant_name = participant.name
+            participant.delete()
+            messages.success(request, f'{participant_name} از مسابقه حذف شد.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+        if action == 'delete_tournament':
+            tournament_name = tournament.name
+            tournament.delete()
+            messages.success(request, f'مسابقه «{tournament_name}» حذف شد.')
+            return redirect('gamenet:tournament_list')
+
+        messages.error(request, 'عملیات نامعتبر است.')
+        return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+    participants = list(
+        TournamentParticipant.objects
+        .filter(tournament=tournament)
+        .order_by('registered_at', 'id')
+    )
+    participants.sort(key=lambda participant: (participant.rank is None, participant.rank or 10**9, participant.registered_at))
+
+    matches = list(
+        TournamentMatch.objects.filter(tournament=tournament)
+        .select_related('participant1', 'participant2', 'winner')
+        .order_by('round_number', 'match_number', 'id')
+    )
+    matches_by_round = OrderedDict()
+    for match in matches:
+        matches_by_round.setdefault(match.round_number, []).append(match)
+
+    champion = tournament.champion
+    if champion is None and tournament.status == 'completed':
+        champion = next((match.winner for match in reversed(matches) if match.winner_id), None)
+
+    participants_count = len(participants)
+    paid_count = sum(1 for p in participants if p.paid)
+    ranked_count = sum(1 for p in participants if p.rank)
+    remaining_capacity = max(tournament.max_participants - participants_count, 0)
+
+    return render(request, 'gamenet/tournament_manage.html', {
+        'gamenet': gamenet,
+        'tournament': tournament,
+        'participants': participants,
+        'participants_count': participants_count,
+        'paid_count': paid_count,
+        'ranked_count': ranked_count,
+        'remaining_capacity': remaining_capacity,
+        'status_choices': Tournament.STATUS_CHOICES,
+        'matches_by_round': matches_by_round,
+        'has_matches': bool(matches),
+        'champion': champion,
+        'can_add_participant': not bool(matches) and participants_count < tournament.max_participants,
     })
 
 
@@ -713,6 +1072,9 @@ def tournament_register(request, pk):
 
     if tournament.status != 'upcoming':
         messages.error(request, 'ثبت‌نام فقط برای مسابقات در انتظار امکان‌پذیر است.')
+        return redirect('gamenet:tournament_detail', pk=tournament.pk)
+    if not tournament.registration_open:
+        messages.error(request, 'ثبت‌نام این مسابقه بسته شده است.')
         return redirect('gamenet:tournament_detail', pk=tournament.pk)
     if tournament.participants_count >= tournament.max_participants:
         messages.error(request, 'ظرفیت مسابقه تکمیل شده است.')

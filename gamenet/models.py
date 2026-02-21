@@ -247,12 +247,22 @@ class Tournament(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, verbose_name="بازی")
     description = models.TextField(blank=True, verbose_name="توضیحات")
     start_date = models.DateTimeField(verbose_name="تاریخ شروع")
-    end_date = models.DateTimeField(verbose_name="تاریخ پایان")
+    end_date = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پایان")
     entry_fee = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name="هزینه ورودی")
     prize_pool = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name="جایزه کل")
     max_participants = models.PositiveIntegerField(default=16, verbose_name="حداکثر شرکت‌کنندگان")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='upcoming', verbose_name="وضعیت")
     visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='public', verbose_name="نوع دسترسی")
+    registration_open = models.BooleanField(default=True, verbose_name="ثبت‌نام باز است")
+    show_participants_public = models.BooleanField(default=True, verbose_name="نمایش عمومی شرکت‌کنندگان")
+    champion = models.ForeignKey(
+        'TournamentParticipant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='champion_in_tournaments',
+        verbose_name="قهرمان",
+    )
     image = models.ImageField(upload_to='tournaments/', blank=True, null=True, verbose_name="تصویر")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -286,6 +296,54 @@ class TournamentParticipant(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.tournament.name}"
+
+
+class TournamentMatch(models.Model):
+    """مسابقات مرحله‌ای تورنومنت"""
+    STATUS_CHOICES = [
+        ('pending', 'در انتظار'),
+        ('completed', 'پایان یافته'),
+        ('bye', 'استراحت'),
+    ]
+
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='matches', verbose_name="مسابقه")
+    round_number = models.PositiveIntegerField(verbose_name="شماره دور")
+    match_number = models.PositiveIntegerField(verbose_name="شماره بازی")
+    participant1 = models.ForeignKey(
+        TournamentParticipant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='matches_as_participant1',
+        verbose_name="شرکت‌کننده 1",
+    )
+    participant2 = models.ForeignKey(
+        TournamentParticipant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='matches_as_participant2',
+        verbose_name="شرکت‌کننده 2",
+    )
+    winner = models.ForeignKey(
+        TournamentParticipant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='won_tournament_matches',
+        verbose_name="برنده",
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="وضعیت")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "بازی تورنومنت"
+        verbose_name_plural = "بازی‌های تورنومنت"
+        ordering = ['round_number', 'match_number', 'id']
+        unique_together = ['tournament', 'round_number', 'match_number']
+
+    def __str__(self):
+        return f"{self.tournament.name} | دور {self.round_number} | بازی {self.match_number}"
 
 
 class DailyReport(models.Model):

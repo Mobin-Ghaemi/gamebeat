@@ -1,0 +1,924 @@
+{% extends 'gamenet/base_panel.html' %}
+{% load humanize %}
+
+{% block title %}مدیریت مسابقه{% endblock %}
+
+{% block extra_css %}
+<style>
+    .manage-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .manage-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .manage-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 20px;
+        background: linear-gradient(135deg, #f59e0b, #ec4899);
+        box-shadow: 0 10px 24px rgba(236, 72, 153, 0.25);
+    }
+
+    .manage-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .manage-subtitle {
+        margin-top: 3px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 13px;
+    }
+
+    .manage-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .manage-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .manage-btn-primary {
+        color: #fff;
+        border: 1px solid rgba(59, 130, 246, 0.34);
+        background: rgba(59, 130, 246, 0.2);
+    }
+
+    .manage-btn-accent {
+        color: #d1fae5;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.2);
+    }
+
+    .manage-btn-warning {
+        color: #fde68a;
+        border: 1px solid rgba(245, 158, 11, 0.36);
+        background: rgba(245, 158, 11, 0.18);
+    }
+
+    .manage-btn-soft {
+        color: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .manage-btn-danger {
+        color: #fecaca;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        background: rgba(239, 68, 68, 0.16);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .stat-card {
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(16, 16, 24, 0.96));
+        padding: 12px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.62);
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 23px;
+        line-height: 1;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 14px;
+        align-items: start;
+    }
+
+    .stack {
+        display: grid;
+        gap: 14px;
+    }
+
+    .panel {
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(16, 16, 24, 0.96));
+        padding: 14px;
+    }
+
+    .panel-title {
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .status-upcoming { color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.35); background: rgba(59, 130, 246, 0.18); }
+    .status-ongoing { color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.18); }
+    .status-completed { color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.18); }
+    .status-cancelled { color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.16); }
+
+    .status-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .status-select {
+        width: 100%;
+        height: 42px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        padding: 0 10px;
+        font-family: inherit;
+    }
+
+    .status-btn {
+        height: 40px;
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        border-radius: 10px;
+        padding: 0 14px;
+        color: #d1fae5;
+        background: rgba(16, 185, 129, 0.22);
+        font-weight: 800;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .toggle-title {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .toggle-help {
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 11px;
+    }
+
+    .participants-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .participants-table-wrap {
+        overflow-x: auto;
+    }
+
+    .participants-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 930px;
+    }
+
+    .participants-table th,
+    .participants-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: right;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .participants-table th {
+        color: rgba(255, 255, 255, 0.68);
+        font-weight: 700;
+    }
+
+    .participants-table td {
+        color: #fff;
+    }
+
+    .participant-form {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .rank-input {
+        width: 74px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        text-align: center;
+        font-family: inherit;
+    }
+
+    .pay-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+    }
+
+    .row-btn {
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .row-btn-save {
+        border-color: rgba(16, 185, 129, 0.36);
+        color: #d1fae5;
+        background: rgba(16, 185, 129, 0.18);
+    }
+
+    .row-btn-delete {
+        border-color: rgba(239, 68, 68, 0.33);
+        color: #fecaca;
+        background: rgba(239, 68, 68, 0.14);
+    }
+
+    .meta-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .meta-item {
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px;
+    }
+
+    .meta-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+
+    .meta-value {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .champion-box {
+        border-radius: 11px;
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        background: rgba(16, 185, 129, 0.16);
+        padding: 11px;
+        margin-top: 10px;
+    }
+
+    .champion-label {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+
+    .champion-name {
+        color: #d1fae5;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .bracket-round {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .round-title {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .round-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 10px;
+    }
+
+    .match-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(12, 12, 20, 0.96));
+        border-radius: 11px;
+        padding: 10px;
+    }
+
+    .match-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 8px;
+    }
+
+    .match-no {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .match-status {
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .ms-pending { color: #fde68a; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .ms-completed { color: #d1fae5; background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .ms-bye { color: #bfdbfe; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); }
+
+    .fighter {
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.04);
+        margin-bottom: 6px;
+    }
+
+    .fighter-winner {
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #d1fae5;
+        background: rgba(16, 185, 129, 0.15);
+    }
+
+    .vs-text {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+
+    .winner-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .winner-btn {
+        width: 100%;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .winner-btn:hover {
+        border-color: rgba(16, 185, 129, 0.5);
+        color: #d1fae5;
+        background: rgba(16, 185, 129, 0.18);
+    }
+
+    .empty-box {
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 22px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.74);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 5, 10, 0.68);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 1200;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: 520px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: linear-gradient(135deg, rgba(24, 24, 36, 0.95), rgba(14, 14, 24, 0.98));
+        padding: 14px;
+        transform: translateY(-24px);
+        opacity: 0;
+        transition: all 0.25s ease;
+    }
+
+    .modal-overlay.show .modal-card {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .modal-title {
+        margin: 0;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .modal-close {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .form-group {
+        display: grid;
+        gap: 5px;
+    }
+
+    .form-group label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .form-input {
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        padding: 0 10px;
+        font-family: inherit;
+        width: 100%;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 1100px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="manage-header">
+    <div class="manage-title-wrap">
+        <div class="manage-icon"><i class="fas fa-trophy"></i></div>
+        <div>
+            <h1 class="manage-title">مدیریت مسابقه</h1>
+            <div class="manage-subtitle">{{ tournament.name }} | {{ tournament.game.name }}</div>
+        </div>
+    </div>
+    <div class="manage-actions">
+        {% if can_add_participant %}
+        <button type="button" id="openAddParticipantModal" class="manage-btn manage-btn-accent">
+            <i class="fas fa-user-plus"></i>
+            افزودن دستی شرکت‌کننده
+        </button>
+        {% endif %}
+        {% if not has_matches and participants_count >= 2 %}
+        <form method="post" onsubmit="return confirm('مسابقه شروع شود و قرعه‌کشی انجام شود؟');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="start_tournament">
+            <button type="submit" class="manage-btn manage-btn-warning">
+                <i class="fas fa-random"></i>
+                شروع مسابقه و قرعه‌کشی
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'gamenet:tournament_edit' tournament.id %}" class="manage-btn manage-btn-soft">
+            <i class="fas fa-edit"></i>
+            ویرایش مسابقه
+        </a>
+        <a href="{% url 'gamenet:tournament_list' %}" class="manage-btn manage-btn-soft">
+            <i class="fas fa-arrow-right"></i>
+            بازگشت
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">شرکت‌کننده‌ها</div>
+        <div class="stat-value">{{ participants_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">پرداخت‌شده</div>
+        <div class="stat-value">{{ paid_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">رتبه‌دهی‌شده</div>
+        <div class="stat-value">{{ ranked_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">ظرفیت باقی‌مانده</div>
+        <div class="stat-value">{{ remaining_capacity }}</div>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="stack">
+        <section class="panel">
+            <div class="participants-toolbar">
+                <h3 class="panel-title" style="margin:0;"><i class="fas fa-users"></i> مدیریت شرکت‌کننده‌ها</h3>
+                <div class="manage-subtitle" style="margin-top:0;">اگر پرداخت یا رتبه خواستی، در همان ردیف ذخیره کن.</div>
+            </div>
+            {% if participants %}
+            <div class="participants-table-wrap">
+                <table class="participants-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام</th>
+                            <th>شماره</th>
+                            <th>آیدی</th>
+                            <th>پرداخت</th>
+                            <th>رتبه</th>
+                            <th>ذخیره</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participant in participants %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ participant.name }}</strong></td>
+                            <td>{{ participant.phone }}</td>
+                            <td>{{ participant.gamer_tag|default:'-' }}</td>
+                            <td>
+                                <form method="post" class="participant-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_participant">
+                                    <input type="hidden" name="participant_id" value="{{ participant.id }}">
+                                    <input type="hidden" name="paid" value="0">
+                                    <label class="pay-toggle">
+                                        <input type="checkbox" name="paid" value="1" {% if participant.paid %}checked{% endif %}>
+                                        پرداخت شده
+                                    </label>
+                            </td>
+                            <td>
+                                    <input type="text" name="rank" class="rank-input" value="{{ participant.rank|default:'' }}" placeholder="مثال: 1">
+                            </td>
+                            <td>
+                                    <button type="submit" class="row-btn row-btn-save"><i class="fas fa-check"></i> ذخیره</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="post" onsubmit="return confirm('این شرکت‌کننده حذف شود؟');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_participant">
+                                    <input type="hidden" name="participant_id" value="{{ participant.id }}">
+                                    <button type="submit" class="row-btn row-btn-delete" {% if has_matches %}disabled title="بعد از شروع مسابقه حذف غیرفعال است"{% endif %}><i class="fas fa-trash"></i> حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">هنوز شرکت‌کننده‌ای ثبت نشده است.</div>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <h3 class="panel-title"><i class="fas fa-sitemap"></i> مدیریت مراحل مسابقه</h3>
+            {% if has_matches %}
+                {% for round_number, round_matches in matches_by_round.items %}
+                <div class="bracket-round">
+                    <h4 class="round-title"><i class="fas fa-layer-group"></i> دور {{ round_number }}</h4>
+                    <div class="round-grid">
+                        {% for match in round_matches %}
+                        <article class="match-card">
+                            <div class="match-head">
+                                <div class="match-no">بازی {{ match.match_number }}</div>
+                                {% if match.status == 'pending' %}
+                                <span class="match-status ms-pending">در انتظار نتیجه</span>
+                                {% elif match.status == 'bye' %}
+                                <span class="match-status ms-bye">استراحت (BYE)</span>
+                                {% else %}
+                                <span class="match-status ms-completed">نتیجه ثبت شده</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="fighter {% if match.winner_id and match.participant1_id == match.winner_id %}fighter-winner{% endif %}">
+                                {{ match.participant1.name|default:'---' }}
+                            </div>
+                            <div class="vs-text">VS</div>
+                            <div class="fighter {% if match.winner_id and match.participant2_id == match.winner_id %}fighter-winner{% endif %}">
+                                {{ match.participant2.name|default:'استراحت' }}
+                            </div>
+
+                            {% if match.status == 'pending' %}
+                            <form method="post" class="winner-actions">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="set_match_winner">
+                                <input type="hidden" name="match_id" value="{{ match.id }}">
+                                {% if match.participant1 %}
+                                <button type="submit" class="winner-btn" name="winner_id" value="{{ match.participant1.id }}">برنده: {{ match.participant1.name }}</button>
+                                {% endif %}
+                                {% if match.participant2 %}
+                                <button type="submit" class="winner-btn" name="winner_id" value="{{ match.participant2.id }}">برنده: {{ match.participant2.name }}</button>
+                                {% endif %}
+                            </form>
+                            {% elif match.winner %}
+                            <div class="manage-subtitle" style="margin-top:8px;">برنده: <strong style="color:#d1fae5;">{{ match.winner.name }}</strong></div>
+                            {% endif %}
+                        </article>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-box">
+                هنوز مسابقه شروع نشده است. بعد از کامل شدن نفرات، دکمه «شروع مسابقه و قرعه‌کشی» را بزن.
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <aside class="panel">
+        <h3 class="panel-title"><i class="fas fa-cog"></i> تنظیمات مسابقه</h3>
+        <div class="status-chip status-{{ tournament.status }}">
+            <i class="fas fa-circle"></i>
+            وضعیت فعلی: {{ tournament.get_status_display }}
+        </div>
+
+        <form method="post" class="status-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_status">
+            <select name="status" class="status-select">
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if tournament.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="status-btn">ذخیره وضعیت</button>
+        </form>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_registration">
+            <input type="hidden" name="registration_open" value="0">
+            <div class="toggle-wrap">
+                <div>
+                    <div class="toggle-title">باز بودن ثبت‌نام</div>
+                    <div class="toggle-help">هر زمان خواستی ثبت‌نام را ببند یا باز کن.</div>
+                </div>
+                <label class="pay-toggle">
+                    <input type="checkbox" name="registration_open" value="1" {% if tournament.registration_open %}checked{% endif %}>
+                    فعال
+                </label>
+            </div>
+            <button type="submit" class="status-btn" style="width:100%;">ذخیره ثبت‌نام</button>
+        </form>
+
+        <form method="post" style="margin-top:10px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_public_participants">
+            <input type="hidden" name="show_participants_public" value="0">
+            <div class="toggle-wrap">
+                <div>
+                    <div class="toggle-title">نمایش عمومی شرکت‌کنندگان</div>
+                    <div class="toggle-help">در صفحه جزئیات مسابقه قابل مشاهده باشد یا مخفی شود.</div>
+                </div>
+                <label class="pay-toggle">
+                    <input type="checkbox" name="show_participants_public" value="1" {% if tournament.show_participants_public %}checked{% endif %}>
+                    نمایش
+                </label>
+            </div>
+            <button type="submit" class="status-btn" style="width:100%;">ذخیره نمایش عمومی</button>
+        </form>
+
+        <div class="meta-list">
+            <div class="meta-item">
+                <div class="meta-label">زمان شروع</div>
+                <div class="meta-value">{{ tournament.start_date|date:'Y/m/d H:i' }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">زمان پایان</div>
+                <div class="meta-value">{{ tournament.end_date|date:'Y/m/d H:i'|default:'---' }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">نوع دسترسی</div>
+                <div class="meta-value">{% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">هزینه ورودی</div>
+                <div class="meta-value">{{ tournament.entry_fee|floatformat:0|intcomma }} تومان</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">جایزه کل</div>
+                <div class="meta-value">{{ tournament.prize_pool|floatformat:0|intcomma }} تومان</div>
+            </div>
+        </div>
+
+        {% if champion %}
+        <div class="champion-box">
+            <div class="champion-label">قهرمان مسابقه</div>
+            <div class="champion-name"><i class="fas fa-crown"></i> {{ champion.name }}</div>
+        </div>
+        {% endif %}
+
+        <form method="post" onsubmit="return confirm('مسابقه کامل حذف شود؟ این عملیات قابل بازگشت نیست.');" style="margin-top:12px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_tournament">
+            <button type="submit" class="manage-btn manage-btn-danger" style="width:100%;justify-content:center;">
+                <i class="fas fa-trash"></i>
+                حذف مسابقه
+            </button>
+        </form>
+    </aside>
+</div>
+
+<div class="modal-overlay" id="addParticipantModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="addParticipantTitle">
+        <div class="modal-head">
+            <h3 id="addParticipantTitle" class="modal-title">افزودن دستی شرکت‌کننده</h3>
+            <button type="button" class="modal-close" id="closeAddParticipantModal">✕</button>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_participant">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column:1 / -1;">
+                    <label>نام / نام تیم *</label>
+                    <input type="text" name="name" class="form-input" placeholder="مثال: تیم آلفا" required>
+                </div>
+                <div class="form-group">
+                    <label>شماره تماس (اختیاری)</label>
+                    <input type="text" name="phone" class="form-input" placeholder="مثال: 0912...">
+                </div>
+                <div class="form-group">
+                    <label>آیدی گیمری (اختیاری)</label>
+                    <input type="text" name="gamer_tag" class="form-input" placeholder="مثال: Alpha#123">
+                </div>
+                <div class="form-group" style="grid-column:1 / -1;">
+                    <label class="pay-toggle">
+                        <input type="checkbox" name="paid" value="1">
+                        پرداخت ورودی انجام شده است
+                    </label>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="manage-btn manage-btn-soft" id="cancelAddParticipantModal">انصراف</button>
+                <button type="submit" class="manage-btn manage-btn-accent">ثبت شرکت‌کننده</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const modal = document.getElementById('addParticipantModal');
+        const openBtn = document.getElementById('openAddParticipantModal');
+        const closeBtn = document.getElementById('closeAddParticipantModal');
+        const cancelBtn = document.getElementById('cancelAddParticipantModal');
+
+        if (!modal) return;
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+        };
+
+        const openModal = () => {
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+        };
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('show')) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+{% endblock %}

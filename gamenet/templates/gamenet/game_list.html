@@ -2,69 +2,593 @@
 
 {% block title %}بازی‌ها{% endblock %}
 
+{% block extra_css %}
+<style>
+    .games-hero {
+        position: relative;
+        border-radius: 20px;
+        padding: 22px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background:
+            radial-gradient(circle at 12% 16%, rgba(16, 185, 129, 0.25), transparent 38%),
+            radial-gradient(circle at 88% 20%, rgba(245, 158, 11, 0.22), transparent 45%),
+            linear-gradient(135deg, rgba(20, 20, 31, 0.94), rgba(13, 13, 22, 0.98));
+        overflow: hidden;
+    }
+
+    .games-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(120deg, rgba(16, 185, 129, 0.08), transparent 35%, rgba(245, 158, 11, 0.08));
+    }
+
+    .games-hero-head {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .hero-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #fff;
+        background: linear-gradient(135deg, #10b981, #f59e0b);
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .hero-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .hero-subtitle {
+        margin-top: 4px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+    }
+
+    .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        padding: 10px 14px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .hero-btn-add {
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #d1fae5;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(5, 150, 105, 0.2));
+    }
+
+    .hero-btn-add:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(16, 185, 129, 0.2);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .stat-card {
+        border-radius: 14px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, rgba(26, 26, 37, 0.86), rgba(18, 18, 27, 0.95));
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        color: #fff;
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .stat-value-accent-1 { color: #34d399; }
+    .stat-value-accent-2 { color: #fbbf24; }
+    .stat-value-accent-3 { color: #60a5fa; }
+
+    .games-toolbar {
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, rgba(24, 24, 34, 0.92), rgba(16, 16, 24, 0.95));
+        padding: 12px;
+        margin-bottom: 14px;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 10px;
+        align-items: start;
+    }
+
+    .search-wrap {
+        position: relative;
+    }
+
+    .search-wrap i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 13px;
+    }
+
+    .search-input {
+        width: 100%;
+        height: 42px;
+        border-radius: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        padding: 0 38px 0 12px;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(16, 185, 129, 0.6);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .genre-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+    }
+
+    .genre-chip {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 7px 11px;
+        color: rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .genre-chip.active {
+        border-color: rgba(16, 185, 129, 0.55);
+        background: rgba(16, 185, 129, 0.2);
+        color: #d1fae5;
+    }
+
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+        gap: 14px;
+    }
+
+    .game-card {
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: linear-gradient(145deg, rgba(24, 24, 35, 0.92), rgba(13, 13, 22, 0.98));
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        min-height: 330px;
+    }
+
+    .game-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(16, 185, 129, 0.5);
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .game-media {
+        position: relative;
+        height: 158px;
+        background:
+            radial-gradient(circle at 18% 20%, rgba(16, 185, 129, 0.2), transparent 40%),
+            linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(16, 185, 129, 0.18));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .game-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .game-media-fallback {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 48px;
+    }
+
+    .game-rank {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        height: 28px;
+        min-width: 28px;
+        border-radius: 999px;
+        padding: 0 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 800;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(10, 10, 16, 0.45);
+        backdrop-filter: blur(6px);
+    }
+
+    .game-content {
+        padding: 13px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .game-name {
+        margin: 0 0 8px;
+        font-size: 19px;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .game-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .game-genre {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #d1fae5;
+        border-radius: 999px;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        background: rgba(16, 185, 129, 0.15);
+        padding: 5px 10px;
+        white-space: nowrap;
+    }
+
+    .game-date {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.56);
+        white-space: nowrap;
+    }
+
+    .game-description {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 13px;
+        line-height: 1.8;
+        margin-bottom: 12px;
+        min-height: 48px;
+    }
+
+    .game-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    .action-btn {
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        text-decoration: none;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .action-btn-edit:hover {
+        border-color: rgba(96, 165, 250, 0.6);
+        color: #bfdbfe;
+    }
+
+    .action-btn-delete {
+        width: 40px;
+        color: #fca5a5;
+    }
+
+    .action-btn-delete:hover {
+        border-color: rgba(239, 68, 68, 0.55);
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .search-empty {
+        margin-top: 14px;
+        border-radius: 14px;
+        border: 1px dashed rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.72);
+    }
+
+    .search-empty i {
+        color: #f59e0b;
+        margin-left: 6px;
+    }
+
+    .empty-wrapper {
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(25, 25, 35, 0.9), rgba(12, 12, 20, 0.96));
+        padding: 28px;
+        text-align: center;
+    }
+
+    .empty-wrapper i {
+        font-size: 42px;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 10px;
+    }
+
+    .empty-wrapper h3 {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: 19px;
+    }
+
+    .empty-wrapper p {
+        color: rgba(255, 255, 255, 0.66);
+        margin-bottom: 14px;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .games-toolbar {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .hero-title {
+            font-size: 23px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <div>
-        <h1 class="page-title">مدیریت بازی‌ها</h1>
-        <p class="page-subtitle">{{ games.count }} بازی ثبت شده</p>
+<section class="games-hero fade-in">
+    <div class="games-hero-head">
+        <div class="hero-title-wrap">
+            <div class="hero-icon"><i class="fas fa-gamepad"></i></div>
+            <div>
+                <h1 class="hero-title">مدیریت بازی‌ها</h1>
+                <p class="hero-subtitle">کتابخانه بازی‌های گیم‌نت را سریع مدیریت و دسته‌بندی کن</p>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'gamenet:game_create' %}" class="hero-btn hero-btn-add">
+                <i class="fas fa-plus"></i>
+                افزودن بازی
+            </a>
+        </div>
     </div>
-    <a href="{% url 'gamenet:game_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
-        افزودن بازی
-    </a>
-</div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card fade-in" style="animation-delay: 60ms;">
+        <div class="stat-label">کل بازی‌ها</div>
+        <div class="stat-value">{{ total_games|default:0 }}</div>
+    </article>
+    <article class="stat-card fade-in" style="animation-delay: 120ms;">
+        <div class="stat-label">دارای تصویر</div>
+        <div class="stat-value stat-value-accent-1">{{ games_with_image|default:0 }}</div>
+    </article>
+    <article class="stat-card fade-in" style="animation-delay: 180ms;">
+        <div class="stat-label">دارای ژانر</div>
+        <div class="stat-value stat-value-accent-2">{{ games_with_genre|default:0 }}</div>
+    </article>
+    <article class="stat-card fade-in" style="animation-delay: 240ms;">
+        <div class="stat-label">افزوده‌شده امروز</div>
+        <div class="stat-value stat-value-accent-3">{{ added_today|default:0 }}</div>
+    </article>
+</section>
+
+<section class="games-toolbar fade-in" style="animation-delay: 120ms;">
+    <div>
+        <div class="search-wrap">
+            <i class="fas fa-search"></i>
+            <input id="gameSearchInput" class="search-input" type="text" placeholder="جستجو بر اساس نام، ژانر یا توضیح">
+        </div>
+        <div class="hero-subtitle" style="margin-top:8px;">
+            نمایش <span id="visibleGamesCount">{{ total_games|default:0 }}</span> از {{ total_games|default:0 }} بازی
+        </div>
+    </div>
+    <div class="genre-chips" id="genreFilters">
+        <button type="button" class="genre-chip active" data-genre-filter="">همه</button>
+        {% for item in genre_counts %}
+        <button type="button" class="genre-chip" data-genre-filter="{{ item.genre|lower }}">
+            {{ item.genre }} ({{ item.total }})
+        </button>
+        {% endfor %}
+    </div>
+</section>
 
 {% if games %}
-<div class="device-grid">
+<section id="gamesGrid" class="games-grid">
     {% for game in games %}
-    <div class="card fade-in" style="animation-delay: {{ forloop.counter0 }}00ms; padding: 0; overflow: hidden;">
-        <div style="height: 140px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center;">
+    <article class="game-card fade-in"
+             style="animation-delay: {{ forloop.counter0 }}0ms;"
+             data-name="{{ game.name|lower }}"
+             data-genre="{{ game.genre|default:''|lower }}"
+             data-description="{{ game.description|default:''|lower }}">
+        <div class="game-media">
+            <span class="game-rank">#{{ forloop.counter }}</span>
             {% if game.image %}
-            <img src="{{ game.image.url }}" alt="{{ game.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="{{ game.image.url }}" alt="{{ game.name }}">
             {% else %}
-            <i class="fas fa-gamepad" style="font-size: 48px;"></i>
+            <i class="fas fa-gamepad game-media-fallback"></i>
             {% endif %}
         </div>
-        
-        <div style="padding: 20px;">
-            <h3 style="margin-bottom: 8px;">{{ game.name }}</h3>
-            {% if game.genre %}
-            <div style="color: var(--accent-secondary); font-size: 14px; margin-bottom: 12px;">
-                <i class="fas fa-tag"></i>
-                {{ game.genre }}
+
+        <div class="game-content">
+            <h3 class="game-name">{{ game.name }}</h3>
+            <div class="game-meta-row">
+                {% if game.genre %}
+                <span class="game-genre">
+                    <i class="fas fa-tag"></i>
+                    {{ game.genre }}
+                </span>
+                {% else %}
+                <span class="game-date">بدون ژانر</span>
+                {% endif %}
+                <span class="game-date">{{ game.created_at|date:"Y/m/d" }}</span>
             </div>
-            {% endif %}
-            
-            {% if game.description %}
-            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
-                {{ game.description|truncatewords:15 }}
+
+            <p class="game-description">
+                {% if game.description %}
+                    {{ game.description|truncatechars:110 }}
+                {% else %}
+                    برای این بازی توضیحی ثبت نشده است.
+                {% endif %}
             </p>
-            {% endif %}
-            
-            <div style="display: flex; gap: 8px;">
-                <a href="{% url 'gamenet:game_edit' game.id %}" class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;">
+
+            <div class="game-actions">
+                <a href="{% url 'gamenet:game_edit' game.id %}" class="action-btn action-btn-edit">
                     <i class="fas fa-edit"></i>
                     ویرایش
                 </a>
-                <a href="{% url 'gamenet:game_delete' game.id %}" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                <a href="{% url 'gamenet:game_delete' game.id %}" class="action-btn action-btn-delete" title="حذف بازی">
                     <i class="fas fa-trash"></i>
                 </a>
             </div>
         </div>
-    </div>
+    </article>
     {% endfor %}
+</section>
+
+<div id="searchEmptyState" class="search-empty" hidden>
+    <i class="fas fa-circle-exclamation"></i>
+    بازی‌ای با این جستجو یا ژانر پیدا نشد.
 </div>
 {% else %}
-<div class="card">
+<div class="empty-wrapper fade-in">
     <div class="empty-state">
         <i class="fas fa-dice"></i>
         <h3>هیچ بازی‌ای ثبت نشده</h3>
-        <p>بازی‌های موجود در گیم‌نت را اضافه کنید</p>
-        <a href="{% url 'gamenet:game_create' %}" class="btn btn-primary">
+        <p>برای شروع، اولین بازی گیم‌نت را ثبت کن.</p>
+        <a href="{% url 'gamenet:game_create' %}" class="hero-btn hero-btn-add" style="display:inline-flex;">
             <i class="fas fa-plus"></i>
             افزودن بازی
         </a>
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const searchInput = document.getElementById('gameSearchInput');
+        const cards = Array.from(document.querySelectorAll('#gamesGrid .game-card'));
+        const countEl = document.getElementById('visibleGamesCount');
+        const emptyEl = document.getElementById('searchEmptyState');
+        const filterButtons = Array.from(document.querySelectorAll('[data-genre-filter]'));
+        if (!searchInput || !cards.length) return;
+
+        let activeGenre = '';
+
+        function normalizeText(value) {
+            return (value || '')
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/ي/g, 'ی')
+                .replace(/ك/g, 'ک')
+                .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728))
+                .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1584));
+        }
+
+        function applyFilters() {
+            const query = normalizeText(searchInput.value);
+            let visible = 0;
+
+            cards.forEach((card) => {
+                const name = normalizeText(card.dataset.name || '');
+                const genre = normalizeText(card.dataset.genre || '');
+                const description = normalizeText(card.dataset.description || '');
+                const searchHaystack = `${name} ${genre} ${description}`;
+                const matchesSearch = !query || searchHaystack.includes(query);
+                const matchesGenre = !activeGenre || genre === activeGenre;
+                const show = matchesSearch && matchesGenre;
+                card.style.display = show ? '' : 'none';
+                if (show) visible += 1;
+            });
+
+            if (countEl) countEl.textContent = visible.toLocaleString('fa-IR');
+            if (emptyEl) emptyEl.hidden = visible !== 0;
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach((btn) => btn.classList.remove('active'));
+                button.classList.add('active');
+                activeGenre = normalizeText(button.dataset.genreFilter || '');
+                applyFilters();
+            });
+        });
+
+        applyFilters();
+    })();
+</script>
 {% endblock %}
