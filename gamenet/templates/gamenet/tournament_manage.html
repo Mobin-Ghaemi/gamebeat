@@ -637,7 +637,7 @@
         <section class="panel">
             <div class="participants-toolbar">
                 <h3 class="panel-title" style="margin:0;"><i class="fas fa-users"></i> مدیریت شرکت‌کننده‌ها</h3>
-                <div class="manage-subtitle" style="margin-top:0;">اگر پرداخت یا رتبه خواستی، در همان ردیف ذخیره کن.</div>
+                <div class="manage-subtitle" style="margin-top:0;">تغییرات پرداخت و رتبه به صورت خودکار ذخیره می‌شود.</div>
             </div>
             {% if participants %}
             <div class="participants-table-wrap">
@@ -650,7 +650,6 @@
                             <th>آیدی</th>
                             <th>پرداخت</th>
                             <th>رتبه</th>
-                            <th>ذخیره</th>
                             <th>حذف</th>
                         </tr>
                     </thead>
@@ -662,7 +661,7 @@
                             <td>{{ participant.phone }}</td>
                             <td>{{ participant.gamer_tag|default:'-' }}</td>
                             <td>
-                                <form method="post" class="participant-form">
+                                <form method="post" class="participant-form js-auto-save-participant">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="update_participant">
                                     <input type="hidden" name="participant_id" value="{{ participant.id }}">
@@ -675,10 +674,7 @@
                             <td>
                                     <input type="text" name="rank" class="rank-input" value="{{ participant.rank|default:'' }}" placeholder="مثال: 1">
                             </td>
-                            <td>
-                                    <button type="submit" class="row-btn row-btn-save"><i class="fas fa-check"></i> ذخیره</button>
                                 </form>
-                            </td>
                             <td>
                                 <form method="post" onsubmit="return confirm('این شرکت‌کننده حذف شود؟');">
                                     {% csrf_token %}
