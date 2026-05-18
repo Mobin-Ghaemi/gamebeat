@@ -52,6 +52,11 @@ class GameNet(models.Model):
         default=0,
         verbose_name="قیمت دسته PS5 اضافی (تومان/ساعت)",
     )
+
+    require_tournament_participant_image = models.BooleanField(
+        default=False,
+        verbose_name="اجباری بودن تصویر شرکت‌کننده در مسابقات",
+    )
     
     is_active = models.BooleanField(default=False, verbose_name="فعال")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -285,6 +290,7 @@ class TournamentParticipant(models.Model):
     name = models.CharField(max_length=100, verbose_name="نام")
     phone = models.CharField(max_length=15, verbose_name="شماره تلفن")
     gamer_tag = models.CharField(max_length=50, blank=True, verbose_name="آیدی گیمری")
+    image = models.ImageField(upload_to='tournament_participants/', blank=True, null=True, verbose_name="تصویر")
     registered_at = models.DateTimeField(auto_now_add=True)
     paid = models.BooleanField(default=False, verbose_name="پرداخت شده")
     rank = models.PositiveIntegerField(null=True, blank=True, verbose_name="رتبه")

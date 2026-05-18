@@ -1,0 +1,604 @@
+{% extends 'community/base.html' %}
+{% load community_tags %}
+{% block title %}فید | GameBeat{% endblock %}
+{% block nav_feed %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ══════════════ LAYOUT ══════════════ */
+.feed-wrap {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+    display: grid;
+    grid-template-columns: 248px 1fr 272px;
+    gap: 24px;
+    align-items: start;
+}
+.sidebar-l { position: sticky; top: 80px; }
+.sidebar-r { position: sticky; top: 80px; }
+
+/* ══════════════ MINI CARD ══════════════ */
+.mini-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+.mini-banner {
+    height: 72px;
+    background: linear-gradient(135deg, #1a0a30 0%, #1e1040 50%, #0e0e25 100%);
+    position: relative;
+}
+.mini-banner::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.35) 0%, transparent 70%);
+}
+.mini-banner img { width:100%; height:100%; object-fit:cover; }
+.mini-body { padding: 0 14px 16px; }
+.mini-av {
+    width:56px; height:56px; border-radius:50%;
+    border:3px solid var(--bg-card); margin-top:-28px; position:relative; z-index:1;
+    object-fit:cover; display:block;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+}
+.mini-av-ph {
+    width:56px; height:56px; border-radius:50%;
+    border:3px solid var(--bg-card); background: linear-gradient(135deg,#4c1d95,#6d28d9);
+    margin-top:-28px; position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.25rem; font-weight:900; color:#fff;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+}
+.mini-stats {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:1px; background:var(--border);
+    border-radius:12px; overflow:hidden; margin:12px 0;
+}
+.mini-stat { background:var(--bg-card2); padding:10px 4px; text-align:center; }
+.mini-stat .v { font-size:1.05rem; font-weight:800; color:var(--text-white); }
+.mini-stat .l { font-size:0.68rem; color:var(--text-dim); margin-top:2px; }
+.xp-mini { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:10px; }
+.xp-mini-fill { height:100%; background:linear-gradient(90deg,#7c3aed,#a855f7,#c084fc); border-radius:2px; transition:width 1s ease; }
+
+.side-link {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:12px;
+    color:var(--text-muted); text-decoration:none; font-size:0.88rem;
+    transition:all 0.18s; font-weight:500;
+}
+.side-link:hover { background:rgba(139,92,246,0.1); color:var(--text-white); }
+.side-link i { font-size:1rem; width:18px; text-align:center; }
+
+/* ══════════════ QUICK COMPOSE ══════════════ */
+.quick-compose {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.quick-compose:hover { border-color: rgba(139,92,246,0.3); }
+.qc-top { display:flex; align-items:center; gap:12px; }
+.qc-fake-input {
+    flex: 1;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 10px 18px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.qc-fake-input:hover {
+    background: rgba(139,92,246,0.07);
+    border-color: rgba(139,92,246,0.4);
+    color: var(--text-muted);
+}
+.qc-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
+.qc-actions { display:flex; align-items:center; gap:6px; }
+.qc-action-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:7px 14px; border-radius:10px;
+    color:var(--text-muted); text-decoration:none; font-size:0.82rem; font-weight:600;
+    background:none; border:none; cursor:pointer; font-family:'Vazirmatn',sans-serif;
+    transition:all 0.15s;
+}
+.qc-action-btn:hover { background:rgba(139,92,246,0.1); color:#a78bfa; }
+.qc-action-btn i { font-size:1rem; }
+.qc-post-btn {
+    margin-right:auto;
+    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    color:white !important;
+    border-radius:10px; padding:7px 18px;
+    font-size:0.85rem; font-weight:700;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.3);
+}
+.qc-post-btn:hover { box-shadow:0 6px 20px rgba(139,92,246,0.5); transform:translateY(-1px); background:rgba(0,0,0,0) !important; background: linear-gradient(135deg,#6d28d9,#9333ea) !important; }
+
+/* ══════════════ POST CARD ══════════════ */
+.post-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    position: relative;
+}
+.post-card:hover {
+    border-color: rgba(139,92,246,0.25);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+
+/* Type banners */
+.post-card.t-achievement {
+    border-top: 2px solid #fbbf24;
+}
+.post-card.t-achievement::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a, #f59e0b);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+}
+.post-card.t-highlight {
+    border-top: 2px solid #a855f7;
+}
+.post-card.t-highlight::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc, #7c3aed);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* Type badge in header */
+.post-type-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;
+}
+.ptb-achievement { background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+.ptb-highlight   { background:rgba(168,85,247,0.12);  color:#c084fc;  border:1px solid rgba(168,85,247,0.25); }
+
+.post-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 10px;
+    gap:10px;
+}
+.post-author { display:flex; align-items:center; gap:11px; text-decoration:none; flex:1; min-width:0; }
+.pa-name { color:var(--text-white); font-weight:700; font-size:0.93rem; line-height:1.2; }
+.pa-meta {
+    color:var(--text-dim); font-size:0.75rem; margin-top:2px;
+    display:flex; align-items:center; gap:5px; flex-wrap:wrap;
+}
+
+.post-body { padding:0 18px 14px; }
+.post-text {
+    color: var(--text-white);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    opacity: 0.9;
+}
+.post-img {
+    width:100%; max-height:500px; object-fit:cover;
+    border-radius:14px; margin-top:12px; cursor:pointer;
+    transition: transform 0.2s;
+}
+.post-img:hover { transform: scale(1.005); }
+
+.post-foot {
+    border-top:1px solid var(--border); padding:10px 14px;
+    display:flex; align-items:center; gap:2px;
+}
+.pf-btn {
+    display:flex; align-items:center; gap:6px;
+    background:none; border:none; color:var(--text-muted);
+    padding:7px 13px; border-radius:10px; font-size:0.85rem;
+    cursor:pointer; font-family:'Vazirmatn',sans-serif; transition:all 0.15s;
+    position: relative;
+}
+.pf-btn:hover { background:rgba(139,92,246,0.09); color:#a78bfa; }
+.pf-btn.liked { color:#f87171; }
+.pf-btn.liked i { color:#f87171; }
+.pf-btn .btn-icon { display:inline-flex; }
+
+/* ══════════════ COMMENTS ══════════════ */
+.comment-box {
+    background: var(--bg-card2);
+    border-top:1px solid var(--border);
+    padding:14px 18px; display:none;
+}
+.comment-box.show { display:block; }
+.c-item { display:flex; gap:9px; margin-bottom:12px; }
+.c-bubble {
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:12px; padding:9px 13px; flex:1;
+}
+.c-author { font-size:0.8rem; font-weight:700; color:#a78bfa; margin-bottom:3px; }
+.c-text { font-size:0.86rem; color:var(--text-white); line-height:1.6; }
+.c-input-row { display:flex; gap:8px; margin-top:10px; }
+
+/* ══════════════ IMAGE LIGHTBOX ══════════════ */
+.lightbox-overlay {
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,0.9); align-items:center; justify-content:center;
+    cursor:pointer;
+}
+.lightbox-overlay.open { display:flex; }
+.lightbox-overlay img { max-width:92vw; max-height:90vh; border-radius:12px; }
+.lightbox-close {
+    position:absolute; top:20px; right:20px;
+    width:40px; height:40px; border-radius:50%;
+    background:rgba(255,255,255,0.1); border:none; color:white;
+    font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+
+/* ══════════════ SUGGESTIONS ══════════════ */
+.sug-card { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.sug-card:last-child { border:none; }
+.sug-info { flex:1; min-width:0; }
+.sug-name { font-size:0.86rem; font-weight:700; color:var(--text-white); text-decoration:none; }
+.sug-name:hover { color:#a78bfa; }
+.sug-meta { font-size:0.73rem; color:var(--text-dim); margin-top:2px; }
+.follow-btn {
+    background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3);
+    color:#a78bfa; border-radius:8px; padding:5px 13px; font-size:0.78rem;
+    cursor:pointer; font-family:'Vazirmatn',sans-serif; font-weight:700;
+    transition:all 0.15s; white-space:nowrap;
+}
+.follow-btn:hover { background:rgba(139,92,246,0.22); color:white; }
+.follow-btn.following { background:var(--bg-card2); color:var(--text-dim); border-color:var(--border); }
+
+/* ══════════════ LFG ══════════════ */
+.lfg-row { padding:9px 0; border-bottom:1px solid var(--border); }
+.lfg-row:last-child { border:none; }
+.lfg-game { font-size:0.86rem; font-weight:700; color:var(--text-white); }
+.lfg-meta { font-size:0.73rem; color:var(--text-dim); margin-top:2px; }
+
+/* ══════════════ EMPTY ══════════════ */
+.empty-feed {
+    text-align:center; padding:64px 20px;
+    border:1px dashed var(--border); border-radius:20px;
+}
+.empty-feed .ef-icon { font-size:3.5rem; color:var(--border); display:block; margin-bottom:14px; line-height:1; }
+
+/* ══════════════ HASHTAG ══════════════ */
+.hashtag-link {
+    color:#a78bfa; text-decoration:none; font-weight:600;
+    background:rgba(139,92,246,0.08); padding:1px 6px; border-radius:6px;
+    transition: background 0.15s;
+}
+.hashtag-link:hover { background:rgba(139,92,246,0.18); }
+
+/* ══════════════ SIDEBAR CARD ══════════════ */
+.sb-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+.sb-panel-title {
+    font-size:0.85rem; font-weight:800; color:var(--text-white);
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+
+/* ══════════════ RESPONSIVE ══════════════ */
+@media(max-width:1060px) { .feed-wrap{ grid-template-columns:220px 1fr; } .sidebar-r{ display:none; } }
+@media(max-width:720px)  { .feed-wrap{ grid-template-columns:1fr; padding:12px 12px 80px; } .sidebar-l{ display:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feed-wrap">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-l">
+        <!-- Mini Profile Card -->
+        <div class="mini-card">
+            <div class="mini-banner">
+                {% if my_profile.banner %}<img src="{{ my_profile.banner.url }}" alt="">{% endif %}
+            </div>
+            <div class="mini-body">
+                <a href="{% url 'community:profile' username=user.username %}">
+                    {% if my_profile.avatar %}
+                        <img src="{{ my_profile.avatar.url }}" class="mini-av" alt="avatar">
+                    {% else %}
+                        <div class="mini-av-ph">{{ user.username|first|upper }}</div>
+                    {% endif %}
+                </a>
+                <div style="margin-top:10px;">
+                    <a href="{% url 'community:profile' username=user.username %}" style="color:var(--text-white); font-weight:800; font-size:0.98rem; text-decoration:none;">{{ user.get_full_name|default:user.username }}</a>
+                    <div style="color:var(--text-dim); font-size:0.78rem; margin-top:2px;">@{{ user.username }}</div>
+                </div>
+                <div class="mini-stats">
+                    <div class="mini-stat"><div class="v">{{ my_profile.posts_count }}</div><div class="l">پست</div></div>
+                    <div class="mini-stat"><div class="v">{{ my_profile.followers_count }}</div><div class="l">فالوور</div></div>
+                    <div class="mini-stat"><div class="v">{{ my_profile.following_count }}</div><div class="l">دنبال</div></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.73rem; color:var(--text-dim); margin-bottom:5px;">
+                    <span style="color:#a78bfa; font-weight:600;">⚡ Level {{ my_profile.level }}</span>
+                    <span style="color:#c084fc;">{{ my_profile.xp }} XP</span>
+                </div>
+                <div class="xp-mini"><div class="xp-mini-fill" style="width:{{ my_profile.level_progress }}%;"></div></div>
+            </div>
+        </div>
+
+        <!-- Nav Links -->
+        <div class="mini-card" style="padding:10px;">
+            <a href="{% url 'community:create_post_page' %}" class="side-link" style="color:#a78bfa; font-weight:700; background:rgba(139,92,246,0.07); margin-bottom:4px;">
+                <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> پست جدید
+            </a>
+            <a href="{% url 'community:search' %}" class="side-link"><i class="bi bi-search"></i> جستجوی گیمر</a>
+            <a href="{% url 'community:lfg' %}" class="side-link"><i class="bi bi-people-fill"></i> تابلوی LFG</a>
+            <a href="{% url 'community:leaderboard' %}" class="side-link"><i class="bi bi-trophy-fill"></i> لیدربورد</a>
+        </div>
+    </aside>
+
+    <!-- CENTER: Posts Feed -->
+    <main>
+
+        {% if posts %}
+            {% for post in posts %}
+            <div class="post-card t-{{ post.post_type }}">
+
+                <div class="post-head">
+                    <a href="{% url 'community:profile' username=post.author.username %}" class="post-author">
+                        {% if post.author.gamer_profile.avatar %}
+                            <img src="{{ post.author.gamer_profile.avatar.url }}" class="avatar avatar-md">
+                        {% else %}
+                            <div class="avatar-placeholder avatar-md" style="font-size:1rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ post.author.username|first|upper }}</div>
+                        {% endif %}
+                        <div>
+                            <div class="pa-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+                            <div class="pa-meta">
+                                @{{ post.author.username }}
+                                {% if post.author.gamer_profile.platform %}
+                                <span class="platform-badge" style="font-size:0.68rem; padding:1px 7px;">{{ post.author.gamer_profile.get_platform_display }}</span>
+                                {% endif %}
+                                · {{ post.created_at|timesince }} پیش
+                            </div>
+                        </div>
+                    </a>
+                    {% if post.post_type == 'achievement' %}
+                        <span class="post-type-badge ptb-achievement"><i class="bi bi-trophy-fill"></i> دستاورد</span>
+                    {% elif post.post_type == 'highlight' %}
+                        <span class="post-type-badge ptb-highlight"><i class="bi bi-lightning-fill"></i> هایلایت</span>
+                    {% endif %}
+                </div>
+
+                <div class="post-body">
+                    {% if post.game_tag %}<span class="game-tag" style="margin-bottom:10px; display:inline-block;">🎮 {{ post.game_tag }}</span>{% endif %}
+                    <p class="post-text">{{ post.content|hashtagify }}</p>
+                    {% if post.image %}<img src="{{ post.image.url }}" class="post-img" onclick="openLightbox(this.src)" alt="post image">{% endif %}
+                    {% if post.video %}
+                    <video src="{{ post.video.url }}" class="post-img" controls preload="metadata"
+                           style="max-height:480px; background:#111; border-radius:14px; margin-top:12px;"></video>
+                    {% endif %}
+                </div>
+
+                <!-- Reaction chips -->
+                <div class="post-reactions" id="rxn-chips-{{ post.id }}">
+                    {% for rxn, cnt in post.reactions_summary.items %}
+                    <span class="rxn-chip {% if rxn == post.my_reaction %}mine{% endif %}"
+                          onclick="sendReaction({{ post.id }}, '{{ rxn }}')" title="{{ rxn }}">
+                        {{ cnt.emoji }} <span class="rxn-count">{{ cnt.count }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <div class="post-foot">
+                    <!-- Reaction button -->
+                    <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
+                        <button class="pf-btn" id="rxn-main-{{ post.id }}"
+                            onclick="toggleReactionPicker({{ post.id }}); buildReactionPicker({{ post.id }}, '{{ post.my_reaction }}')">
+                            {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.8rem;">خفن</span>
+                            {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.8rem;">GG</span>
+                            {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.8rem;">Tryhard</span>
+                            {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.8rem;">لجند</span>
+                            {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.8rem;">GG EZ</span>
+                            {% else %}<i class="bi bi-hand-thumbs-up"></i> واکنش{% endif %}
+                        </button>
+                        <div class="reaction-picker"></div>
+                    </div>
+
+                    <button class="pf-btn" onclick="toggleComments({{ post.id }})">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>{{ post.comments_count }}</span>
+                    </button>
+                    <button class="pf-btn" onclick="sharePost({{ post.id }})">
+                        <i class="bi bi-share"></i>
+                    </button>
+                </div>
+
+                <div class="comment-box" id="c-{{ post.id }}">
+                    {% for comment in post.comments.all %}
+                    <div class="c-item">
+                        {% if comment.author.gamer_profile.avatar %}
+                            <img src="{{ comment.author.gamer_profile.avatar.url }}" class="avatar avatar-sm">
+                        {% else %}
+                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ comment.author.username|first|upper }}</div>
+                        {% endif %}
+                        <div class="c-bubble">
+                            <div class="c-author">@{{ comment.author.username }}</div>
+                            <div class="c-text">{{ comment.content }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <form method="post" action="{% url 'community:add_comment' post.id %}" class="c-input-row">
+                        {% csrf_token %}
+                        {% if my_profile.avatar %}
+                            <img src="{{ my_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
+                        {% else %}
+                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; flex-shrink:0; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ user.username|first|upper }}</div>
+                        {% endif %}
+                        <input type="text" name="content" class="g-input" style="padding:8px 14px; border-radius:50px;" placeholder="کامنت بذار...">
+                        <button type="submit" class="btn-red" style="padding:8px 16px; flex-shrink:0; border-radius:50px;"><i class="bi bi-send-fill"></i></button>
+                    </form>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        {% else %}
+            <div class="empty-feed">
+                <span class="ef-icon">🎮</span>
+                <div style="color:var(--text-white); font-size:1.15rem; font-weight:800; margin-bottom:10px;">فید خالیه!</div>
+                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:22px; line-height:1.7;">گیمرهایی رو دنبال کن یا اولین پستت رو بنویس</div>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <a href="{% url 'community:search' %}" class="btn-ghost">جستجوی گیمر</a>
+                    <a href="{% url 'community:create_post_page' %}" class="btn-red"><i class="bi bi-plus"></i> پست جدید</a>
+                </div>
+            </div>
+        {% endif %}
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-r">
+
+        {% if suggested_gamers %}
+        <div class="sb-panel">
+            <div class="sb-panel-title">
+                <i class="bi bi-people-fill" style="color:#8b5cf6;"></i> گیمرها رو بشناس
+                <a href="{% url 'community:search' %}" style="font-size:0.75rem; color:#8b5cf6; margin-right:auto; text-decoration:none;">همه →</a>
+            </div>
+            {% for gamer in suggested_gamers %}
+            <div class="sug-card">
+                {% if gamer.gamer_profile.avatar %}
+                    <img src="{{ gamer.gamer_profile.avatar.url }}" class="avatar avatar-sm">
+                {% else %}
+                    <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ gamer.username|first|upper }}</div>
+                {% endif %}
+                <div class="sug-info">
+                    <a href="{% url 'community:profile' username=gamer.username %}" class="sug-name">{{ gamer.username }}</a>
+                    <div class="sug-meta">{{ gamer.gamer_profile.get_platform_display }}</div>
+                </div>
+                <button class="follow-btn" onclick="followUser('{{ gamer.username }}', this)">دنبال</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if active_lfg %}
+        <div class="sb-panel">
+            <div class="sb-panel-title">
+                <i class="bi bi-people-fill" style="color:#00d4ff;"></i>
+                <span style="color:#00d4ff;">LFG فعال</span>
+                <a href="{% url 'community:lfg' %}" style="font-size:0.75rem; color:#00d4ff; margin-right:auto; text-decoration:none;">همه →</a>
+            </div>
+            {% for lfg in active_lfg %}
+            <div class="lfg-row">
+                <div class="lfg-game">{{ lfg.game_name }}</div>
+                <div class="lfg-meta"><i class="bi bi-person"></i> {{ lfg.author.username }} · {{ lfg.current_players }}/{{ lfg.max_players }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Trending hashtags placeholder -->
+        <div class="sb-panel">
+            <div class="sb-panel-title"><i class="bi bi-fire" style="color:#f97316;"></i> ترند هشتگ‌ها</div>
+            <div style="color:var(--text-dim); font-size:0.82rem; text-align:center; padding:12px 0;">به زودی ...</div>
+        </div>
+
+    </aside>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <img id="lightbox-img" src="" alt="">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ──── Like with animation ──── */
+function toggleLike(postId, btn) {
+    fetch(`/community/post/${postId}/like/`, {
+        method:'POST', headers:{'X-CSRFToken':csrfToken}
+    }).then(r=>r.json()).then(data=>{
+        const icon   = btn.querySelector('i');
+        const count  = btn.querySelector('.like-count');
+        const wrap   = btn.querySelector('.like-ripple-wrap');
+
+        btn.classList.toggle('liked', data.liked);
+        icon.className = data.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+        if (typeof data.count !== 'undefined') count.textContent = data.count;
+
+        /* pop animation */
+        icon.classList.remove('like-pop');
+        void icon.offsetWidth; /* reflow */
+        icon.classList.add('like-pop');
+
+        /* ripple only on like */
+        if (data.liked && wrap) {
+            wrap.classList.remove('ripple');
+            void wrap.offsetWidth;
+            wrap.classList.add('ripple');
+            setTimeout(()=>wrap.classList.remove('ripple'), 520);
+        }
+    });
+}
+
+/* ──── Comments ──── */
+function toggleComments(id) {
+    document.getElementById('c-'+id).classList.toggle('show');
+}
+
+/* ──── Share ──── */
+function sharePost(postId) {
+    const url = window.location.origin + '/community/post/' + postId + '/';
+    navigator.clipboard.writeText(url).then(()=> showToast('لینک کپی شد ✓'));
+}
+
+/* ──── Toast ──── */
+function showToast(msg, color='#7c3aed') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+        background:${color};color:white;padding:10px 22px;border-radius:50px;font-size:0.88rem;
+        z-index:9999;opacity:0;transition:all 0.25s;box-shadow:0 8px 24px rgba(0,0,0,0.4);font-family:'Vazirmatn',sans-serif;font-weight:600;`;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(10px)'; setTimeout(()=>t.remove(),260); }, 2200);
+}
+
+/* ──── Follow ──── */
+function followUser(username, btn) {
+    fetch(`/community/follow/${username}/`, {
+        method:'POST', headers:{'X-CSRFToken':csrfToken}
+    }).then(r=>r.json()).then(data=>{
+        btn.textContent = data.following ? '✓ دنبال' : 'دنبال';
+        btn.classList.toggle('following', data.following);
+    });
+}
+
+/* ──── Lightbox ──── */
+function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+</script>
+{% endblock %}

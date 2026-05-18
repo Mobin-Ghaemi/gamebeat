@@ -1,0 +1,127 @@
+{% extends 'community/base.html' %}
+{% block title %}پیام‌ها | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.inbox-page { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+
+.inbox-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+}
+.inbox-header h1 {
+    font-size: 1.4rem; font-weight: 900; color: var(--text-white);
+    display: flex; align-items: center; gap: 10px;
+}
+.inbox-header h1 i { color: #8b5cf6; }
+
+.conv-list {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.conv-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    transition: background 0.15s;
+    position: relative;
+}
+.conv-item:last-child { border-bottom: none; }
+.conv-item:hover { background: rgba(139,92,246,0.06); }
+.conv-item.has-unread { background: rgba(139,92,246,0.04); }
+.conv-item.has-unread::before {
+    content:''; position:absolute; right:0; top:0; bottom:0;
+    width:3px; background:linear-gradient(to bottom,#8b5cf6,#a855f7);
+    border-radius:0 3px 3px 0;
+}
+
+.conv-av-img {
+    width:52px; height:52px; border-radius:50%;
+    object-fit:cover; border:2px solid var(--border); flex-shrink:0;
+}
+.conv-av-ph {
+    width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(135deg,#4c1d95,#6d28d9);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; font-weight:900; color:#fff; flex-shrink:0;
+}
+.conv-body { flex:1; min-width:0; }
+.conv-name { font-size:0.93rem; font-weight:700; color:var(--text-white); margin-bottom:3px; }
+.conv-preview {
+    font-size:0.8rem; color:var(--text-dim);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.conv-meta { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
+.conv-time { font-size:0.72rem; color:var(--text-dim); }
+.conv-unread-badge {
+    background:#8b5cf6; color:white;
+    border-radius:50%; min-width:20px; height:20px;
+    font-size:0.68rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center; padding:0 4px;
+}
+
+.empty-inbox {
+    text-align:center; padding:64px 20px; color:var(--text-dim);
+}
+.empty-inbox i { font-size:3.5rem; opacity:0.2; display:block; margin-bottom:16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-page">
+    <div class="inbox-header">
+        <h1><i class="bi bi-chat-dots-fill"></i> پیام‌ها</h1>
+        <span style="font-size:0.82rem; color:var(--text-dim);">{{ conv_data|length }} مکالمه</span>
+    </div>
+
+    {% if conv_data %}
+    <div class="conv-list">
+        {% for item in conv_data %}
+        <a href="{% url 'community:conversation' username=item.other.username %}"
+           class="conv-item {% if item.unread %}has-unread{% endif %}">
+
+            {% if item.other.gamer_profile.avatar %}
+                <img src="{{ item.other.gamer_profile.avatar.url }}" class="conv-av-img">
+            {% else %}
+                <div class="conv-av-ph">{{ item.other.username|first|upper }}</div>
+            {% endif %}
+
+            <div class="conv-body">
+                <div class="conv-name">{{ item.other.get_full_name|default:item.other.username }}</div>
+                <div class="conv-preview">
+                    {% if item.last %}
+                        {% if item.last.sender == request.user %}شما: {% endif %}
+                        {{ item.last.content|truncatechars:55 }}
+                    {% else %}
+                        مکالمه جدید
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="conv-meta">
+                {% if item.last %}
+                <span class="conv-time">{{ item.last.created_at|timesince }}</span>
+                {% endif %}
+                {% if item.unread %}
+                <span class="conv-unread-badge">{{ item.unread }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-inbox">
+        <i class="bi bi-chat-dots"></i>
+        <p>هنوز مکالمه‌ای نداری</p>
+        <p style="margin-top:6px; font-size:0.82rem;">از پروفایل هر گیمری می‌تونی بهش پیام بدی</p>
+        <a href="{% url 'community:search' %}" class="btn-red" style="display:inline-flex; gap:7px; margin-top:18px; text-decoration:none; padding:10px 22px; border-radius:12px;">
+            <i class="bi bi-search"></i> جستجوی گیمر
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

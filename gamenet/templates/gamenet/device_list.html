@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load custom_filters %}
 
 {% block title %}دستگاه‌ها{% endblock %}
 
@@ -298,19 +299,19 @@
             </div>
             {% endif %}
             
-            {% if device.games.exists %}
+            {% if device.games_count %}
             <div class="device-games">
                 <div class="device-games-title">
                     <i class="fas fa-gamepad"></i>
-                    بازی‌های موجود ({{ device.games.count }})
+                    بازی‌های موجود ({{ device.games_count }})
                 </div>
                 <div class="device-games-list">
                     {% for game in device.games.all|slice:":4" %}
                     <span class="game-badge">{{ game.name }}</span>
                     {% endfor %}
-                    {% if device.games.count > 4 %}
+                    {% if device.games_count > 4 %}
                     <span class="game-badge" style="background: rgba(160, 160, 176, 0.1); color: var(--text-muted);">
-                        +{{ device.games.count|add:"-4" }} بازی دیگر
+                        +{{ device.games_count|add:"-4" }} بازی دیگر
                     </span>
                     {% endif %}
                 </div>
@@ -327,14 +328,14 @@
         
         <div class="device-actions">
             {% if device.status == 'occupied' %}
-            {% for session in device.sessions.all %}
-            {% if session.status == 'active' %}
-            <a href="{% url 'gamenet:stop_session' session.id %}" class="btn btn-danger btn-sm">
+            {% with session_id=active_session_id_by_device|get_item:device.id %}
+            {% if session_id %}
+            <a href="{% url 'gamenet:stop_session' session_id %}" class="btn btn-danger btn-sm">
                 <i class="fas fa-stop"></i>
                 پایان
             </a>
             {% endif %}
-            {% endfor %}
+            {% endwith %}
             {% endif %}
             <a href="{% url 'gamenet:device_edit' device.id %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-edit"></i>

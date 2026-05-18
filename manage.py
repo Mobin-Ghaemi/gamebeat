@@ -7,15 +7,21 @@ from pathlib import Path
 
 def main():
     """Run administrative tasks."""
-    # اگر کاربر با پایتون اشتباه manage.py را اجرا کند،
+    # اگر کاربر بیرون از هر virtualenv باشد،
     # به‌صورت خودکار با وِنوِ پروژه اجرا شود.
-    project_root = Path(__file__).resolve().parent.parent
+    # اما اگر از قبل یک virtualenv فعال باشد (مثل env/)،
+    # همان محیط فعلی حفظ شود.
+    project_root = Path(__file__).resolve().parent
     preferred_python = project_root / '.venv' / 'bin' / 'python'
-    if preferred_python.exists():
-        current = Path(sys.executable).resolve()
-        preferred = preferred_python.resolve()
-        if current != preferred:
-            os.execv(str(preferred), [str(preferred), str(Path(__file__).resolve()), *sys.argv[1:]])
+    in_virtualenv = getattr(sys, "base_prefix", sys.prefix) != sys.prefix
+    if preferred_python.exists() and not in_virtualenv:
+        preferred_venv = (project_root / '.venv').resolve()
+        current_prefix = Path(getattr(sys, "prefix", "")).resolve()
+        if current_prefix != preferred_venv:
+            os.execv(
+                str(preferred_python),
+                [str(preferred_python), str(Path(__file__).resolve()), *sys.argv[1:]],
+            )
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gamebeat.settings')
 

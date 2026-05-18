@@ -38,3 +38,11 @@ def round_thousands(value):
         return f"{rounded:,}"
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def get_item(mapping, key):
+    try:
+        return mapping.get(key)
+    except Exception:
+        return None

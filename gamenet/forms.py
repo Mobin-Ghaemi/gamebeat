@@ -37,7 +37,7 @@ class GameNetSettingsForm(forms.ModelForm):
     """فرم تنظیمات گیم‌نت"""
     class Meta:
         model = GameNet
-        fields = ['name', 'description', 'address', 'phone', 'logo', 'extra_controller_price']
+        fields = ['name', 'description', 'address', 'phone', 'logo', 'extra_controller_price', 'require_tournament_participant_image']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-input', 
@@ -65,6 +65,9 @@ class GameNetSettingsForm(forms.ModelForm):
                 'class': 'form-input', 
                 'placeholder': 'قیمت دسته اضافی (تومان در ساعت)'
             }),
+            'require_tournament_participant_image': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox',
+            }),
         }
         labels = {
             'name': 'نام گیم‌نت',
@@ -73,6 +76,7 @@ class GameNetSettingsForm(forms.ModelForm):
             'phone': 'شماره تماس',
             'logo': 'لوگو / تصویر',
             'extra_controller_price': 'قیمت دسته اضافی (تومان/ساعت)',
+            'require_tournament_participant_image': 'اجباری بودن عکس شرکت‌کننده در مسابقات',
         }
 
 
@@ -292,12 +296,19 @@ class TournamentForm(forms.ModelForm):
 class ParticipantForm(forms.ModelForm):
     class Meta:
         model = TournamentParticipant
-        fields = ['name', 'phone', 'gamer_tag']
+        fields = ['name', 'phone', 'gamer_tag', 'image']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'نام و نام خانوادگی'}),
             'phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'شماره تلفن'}),
             'gamer_tag': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'آیدی گیمری (اختیاری)'}),
+            'image': forms.FileInput(attrs={'class': 'form-file', 'accept': 'image/*'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        require_image = kwargs.pop('require_image', False)
+        super().__init__(*args, **kwargs)
+        if require_image:
+            self.fields['image'].required = True
 
 
 # ==================== Buffet Forms ====================

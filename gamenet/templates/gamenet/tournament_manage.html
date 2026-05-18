@@ -5,6 +5,22 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --tm-border: rgba(255, 255, 255, 0.1);
+        --tm-surface: rgba(26, 26, 37, 0.9);
+        --tm-surface-2: rgba(16, 16, 24, 0.96);
+        --tm-accent: rgba(124, 58, 237, 1);
+        --tm-accent-2: rgba(236, 72, 153, 1);
+        --tm-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    .tm-page {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: grid;
+        gap: 14px;
+    }
+
     .manage-header {
         display: flex;
         align-items: center;
@@ -12,6 +28,13 @@
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--tm-border);
+        background: radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.18), transparent 45%),
+                    radial-gradient(circle at 85% 55%, rgba(236, 72, 153, 0.14), transparent 50%),
+                    linear-gradient(135deg, var(--tm-surface), var(--tm-surface-2));
+        box-shadow: var(--tm-shadow);
     }
 
     .manage-title-wrap {
@@ -29,7 +52,7 @@
         justify-content: center;
         color: #fff;
         font-size: 20px;
-        background: linear-gradient(135deg, #f59e0b, #ec4899);
+        background: linear-gradient(135deg, var(--tm-accent), var(--tm-accent-2));
         box-shadow: 0 10px 24px rgba(236, 72, 153, 0.25);
     }
 
@@ -63,6 +86,12 @@
         text-decoration: none;
         border: none;
         cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .manage-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
     }
 
     .manage-btn-primary {
@@ -104,9 +133,10 @@
 
     .stat-card {
         border-radius: 13px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(16, 16, 24, 0.96));
+        border: 1px solid var(--tm-border);
+        background: linear-gradient(135deg, var(--tm-surface), var(--tm-surface-2));
         padding: 12px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
     }
 
     .stat-label {
@@ -124,9 +154,10 @@
 
     .layout {
         display: grid;
-        grid-template-columns: 1fr 320px;
+        grid-template-columns: 1fr 340px;
         gap: 14px;
         align-items: start;
+        direction: rtl; /* sidebar on the left (RTL layout) */
     }
 
     .stack {
@@ -134,11 +165,136 @@
         gap: 14px;
     }
 
+    .manage-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.78);
+        font-weight: 900;
+        cursor: pointer;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .tab-btn[aria-selected="true"] {
+        color: #fff;
+        border-color: rgba(124, 58, 237, 0.6);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.20), rgba(236, 72, 153, 0.12));
+        box-shadow: 0 12px 28px rgba(124, 58, 237, 0.18);
+    }
+
+    .tab-panel[hidden] {
+        display: none !important;
+    }
+
     .panel {
         border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(26, 26, 37, 0.9), rgba(16, 16, 24, 0.96));
+        border: 1px solid var(--tm-border);
+        background: linear-gradient(135deg, var(--tm-surface), var(--tm-surface-2));
         padding: 14px;
+        box-shadow: var(--tm-shadow);
+    }
+
+    .panel-aside {
+        position: sticky;
+        top: 86px;
+        max-height: calc(100vh - 110px);
+        overflow: auto;
+        scrollbar-width: thin;
+        background: radial-gradient(circle at 15% 5%, rgba(124, 58, 237, 0.14), transparent 45%),
+                    radial-gradient(circle at 85% 65%, rgba(236, 72, 153, 0.10), transparent 52%),
+                    linear-gradient(135deg, var(--tm-surface), var(--tm-surface-2));
+    }
+
+    .aside-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .aside-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        cursor: pointer;
+        transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .aside-toggle:hover {
+        transform: translateY(-1px);
+        border-color: rgba(124, 58, 237, 0.5);
+        background: rgba(124, 58, 237, 0.12);
+    }
+
+    .aside-body[hidden] {
+        display: none !important;
+    }
+
+    .aside-section {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+	    .aside-section summary {
+	        list-style: none;
+	        cursor: pointer;
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 10px;
+	        color: #fff;
+	        font-weight: 900;
+	        font-size: 13px;
+	        padding: 10px 10px;
+	        border-radius: 10px;
+	        background: rgba(255, 255, 255, 0.02);
+	        transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+	    }
+	
+	    .aside-section summary:hover {
+	        background: rgba(255, 255, 255, 0.04);
+	    }
+	
+	    .aside-section summary:focus-visible {
+	        outline: 2px solid rgba(124, 58, 237, 0.55);
+	        outline-offset: 2px;
+	    }
+	
+	    .aside-section summary span {
+	        transition: transform 0.18s ease;
+	    }
+	
+	    .aside-section[open] summary span {
+	        transform: rotate(180deg);
+	    }
+
+    .aside-section summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .aside-section .manage-subtitle {
+        margin-top: 8px;
     }
 
     .panel-title {
@@ -251,10 +407,19 @@
     .participants-table th {
         color: rgba(255, 255, 255, 0.68);
         font-weight: 700;
+        position: sticky;
+        top: 0;
+        background: rgba(12, 12, 20, 0.95);
+        backdrop-filter: blur(6px);
+        z-index: 2;
     }
 
     .participants-table td {
         color: #fff;
+    }
+
+    .participants-table tbody tr:hover td {
+        background: rgba(124, 58, 237, 0.06);
     }
 
     .participant-form {
@@ -344,6 +509,407 @@
         color: #d1fae5;
         font-size: 15px;
         font-weight: 800;
+    }
+
+    /* Bracket (Knockout) */
+    .bracket-shell {
+        display: grid;
+        gap: 10px;
+    }
+
+    .bracket-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .bracket-help {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .bracket-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .bracket-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .bracket-wrap {
+        position: relative;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: radial-gradient(circle at 20% 10%, rgba(124, 58, 237, 0.18), transparent 45%),
+                    radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.14), transparent 48%),
+                    linear-gradient(180deg, rgba(10, 10, 18, 0.30), rgba(10, 10, 18, 0.05));
+        overflow: auto;
+        padding: 14px;
+        scrollbar-width: thin;
+    }
+
+	    .bracket {
+	        position: relative;
+	        display: grid;
+	        --bracket-col-width: 290px;
+	        --bracket-unit: 100px;
+	        grid-template-columns: 1fr var(--bracket-col-width) 1fr;
+	        align-items: start;
+	        gap: 18px;
+	        min-height: 260px;
+	        padding: 6px;
+	    }
+
+    .bracket-mirrored {
+        direction: ltr;
+    }
+
+    .bracket-lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .bracket-side {
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+        position: relative;
+        z-index: 2;
+    }
+
+    .bracket-side-right {
+        flex-direction: row-reverse;
+    }
+
+    .bracket-center {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding-top: 6px;
+    }
+
+	    .final-card {
+	        width: 100%;
+	        max-width: var(--bracket-col-width);
+	        border-radius: 16px;
+	        border: 1px solid rgba(255, 255, 255, 0.14);
+	        background: linear-gradient(135deg, rgba(24, 24, 40, 0.9), rgba(10, 10, 18, 0.96));
+	        padding: 12px;
+	        text-align: center;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .final-card::before {
+        content: '';
+        position: absolute;
+        inset: -80px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.22), transparent 55%);
+        filter: blur(8px);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    .final-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 1000;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .final-sub {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .match-final {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+	    .round-col {
+	        width: var(--bracket-col-width);
+	        flex: 0 0 auto;
+	        position: relative;
+	        z-index: 2;
+	        display: grid;
+	        gap: 10px;
+	    }
+
+    .round-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .round-name {
+        margin: 0;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .round-chip {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 11px;
+        font-weight: 800;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.03);
+        white-space: nowrap;
+    }
+
+	    .match-node {
+	        border-radius: 14px;
+	        border: 1px solid rgba(255, 255, 255, 0.12);
+	        background: linear-gradient(135deg, rgba(22, 22, 34, 0.92), rgba(10, 10, 18, 0.96));
+	        padding: 10px;
+	        display: grid;
+	        gap: 8px;
+	        position: relative;
+	        overflow: hidden;
+	        transform: translateY(8px);
+	        opacity: 0;
+	        animation: nodeIn 0.35s ease forwards;
+	        direction: rtl;
+	        grid-row: var(--row);
+	        align-self: center;
+	        min-height: 176px;
+	    }
+
+    @keyframes nodeIn {
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .match-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .match-title {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .match-pill {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+	    .pill-pending { color: #fde68a; background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.35); }
+	    .pill-completed { color: #d1fae5; background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.35); }
+	    .pill-bye { color: #bfdbfe; background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); }
+	    .pill-placeholder { color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.06); border: 1px dashed rgba(255, 255, 255, 0.18); }
+
+    .slots {
+        display: grid;
+        gap: 8px;
+    }
+
+	    .slot {
+	        border-radius: 12px;
+	        border: 1px solid rgba(255, 255, 255, 0.1);
+	        background: rgba(255, 255, 255, 0.04);
+	        padding: 10px;
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 10px;
+	    }
+	
+	    .slot.unknown {
+	        opacity: 0.75;
+	        border-style: dashed;
+	    }
+
+    .slot-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .slot-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 1000;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .slot-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .slot-name {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 210px;
+    }
+
+    .slot-tag {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        font-weight: 900;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.03);
+        white-space: nowrap;
+    }
+
+    .slot.winner {
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.12);
+        box-shadow: 0 12px 26px rgba(16, 185, 129, 0.08);
+    }
+
+    .slot.winner .slot-tag {
+        color: #d1fae5;
+        border-color: rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.16);
+    }
+
+	    .match-actions {
+	        display: grid;
+	        grid-template-columns: 1fr 1fr;
+	        gap: 8px;
+	    }
+	
+	    .match-footer {
+	        min-height: 44px;
+	        display: grid;
+	        align-items: center;
+	    }
+	
+	    .match-note {
+	        margin: 0;
+	        text-align: center;
+	    }
+
+	    .round-grid-slot {
+	        display: grid;
+	        grid-template-rows: repeat(var(--rows), var(--bracket-unit, 56px));
+	        gap: 0;
+	        position: relative;
+	    }
+
+    .pick-btn {
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        padding: 0 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pick-btn:hover {
+        border-color: rgba(16, 185, 129, 0.55);
+        background: rgba(16, 185, 129, 0.14);
+        color: #d1fae5;
+        transform: translateY(-1px);
+    }
+
+    .pick-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        transform: none;
+    }
+
+	    .bracket-only-pending .match-node[data-status="completed"],
+	    .bracket-only-pending .match-node[data-status="bye"],
+	    .bracket-only-pending .match-node[data-status="placeholder"] {
+	        display: none;
+	    }
+
+    @media (max-width: 1100px) {
+        .bracket {
+            grid-template-columns: 1fr;
+        }
+        .bracket-center {
+            order: -1;
+        }
+        .bracket-side {
+            overflow: auto;
+            padding-bottom: 8px;
+        }
+        .bracket-lines {
+            display: none;
+        }
     }
 
     .bracket-round {
@@ -557,6 +1123,10 @@
         .layout {
             grid-template-columns: 1fr;
         }
+        .panel-aside {
+            position: static;
+            max-height: none;
+        }
     }
 
     @media (max-width: 768px) {
@@ -566,11 +1136,48 @@
         .form-grid {
             grid-template-columns: 1fr;
         }
+        .round-col {
+            width: 260px;
+        }
+    }
+
+    .tm-toast {
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        z-index: 2000;
+        display: grid;
+        gap: 8px;
+        max-width: min(420px, calc(100vw - 40px));
+    }
+
+    .tm-toast-item {
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(18, 18, 28, 0.92);
+        backdrop-filter: blur(10px);
+        padding: 12px 14px;
+        color: #fff;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: toastIn 220ms ease both;
+    }
+
+    .tm-toast-item.success { border-color: rgba(16, 185, 129, 0.35); }
+    .tm-toast-item.error { border-color: rgba(239, 68, 68, 0.35); }
+    .tm-toast-item.info { border-color: rgba(124, 58, 237, 0.35); }
+
+    @keyframes toastIn {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="tm-page">
 <div class="manage-header">
     <div class="manage-title-wrap">
         <div class="manage-icon"><i class="fas fa-trophy"></i></div>
@@ -628,7 +1235,18 @@
 
 <div class="layout">
     <div class="stack">
-        <section class="panel">
+        <div class="manage-tabs" id="manageTabs" data-default-tab="{% if has_matches %}bracket{% else %}participants{% endif %}">
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="bracket">
+                <i class="fas fa-sitemap"></i>
+                براکت حذفی
+            </button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="participants">
+                <i class="fas fa-users"></i>
+                شرکت‌کننده‌ها
+            </button>
+        </div>
+
+        <section class="panel tab-panel" data-panel="participants">
             <div class="participants-toolbar">
                 <h3 class="panel-title" style="margin:0;"><i class="fas fa-users"></i> مدیریت شرکت‌کننده‌ها</h3>
                 <div class="manage-subtitle" style="margin-top:0;">تغییرات پرداخت و رتبه به صورت خودکار ذخیره می‌شود.</div>
@@ -687,143 +1305,129 @@
             {% endif %}
         </section>
 
-        <section class="panel">
+        <section class="panel tab-panel" data-panel="bracket">
             <h3 class="panel-title"><i class="fas fa-sitemap"></i> مدیریت مراحل مسابقه</h3>
-            {% if has_matches %}
-                {% for round_number, round_matches in matches_by_round.items %}
-                <div class="bracket-round">
-                    <h4 class="round-title"><i class="fas fa-layer-group"></i> دور {{ round_number }}</h4>
-                    <div class="round-grid">
-                        {% for match in round_matches %}
-                        <article class="match-card">
-                            <div class="match-head">
-                                <div class="match-no">بازی {{ match.match_number }}</div>
-                                {% if match.status == 'pending' %}
-                                <span class="match-status ms-pending">در انتظار نتیجه</span>
-                                {% elif match.status == 'bye' %}
-                                <span class="match-status ms-bye">استراحت (BYE)</span>
-                                {% else %}
-                                <span class="match-status ms-completed">نتیجه ثبت شده</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="fighter {% if match.winner_id and match.participant1_id == match.winner_id %}fighter-winner{% endif %}">
-                                {{ match.participant1.name|default:'---' }}
-                            </div>
-                            <div class="vs-text">VS</div>
-                            <div class="fighter {% if match.winner_id and match.participant2_id == match.winner_id %}fighter-winner{% endif %}">
-                                {{ match.participant2.name|default:'استراحت' }}
-                            </div>
-
-                            {% if match.status == 'pending' %}
-                            <form method="post" class="winner-actions">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="set_match_winner">
-                                <input type="hidden" name="match_id" value="{{ match.id }}">
-                                {% if match.participant1 %}
-                                <button type="submit" class="winner-btn" name="winner_id" value="{{ match.participant1.id }}">برنده: {{ match.participant1.name }}</button>
-                                {% endif %}
-                                {% if match.participant2 %}
-                                <button type="submit" class="winner-btn" name="winner_id" value="{{ match.participant2.id }}">برنده: {{ match.participant2.name }}</button>
-                                {% endif %}
-                            </form>
-                            {% elif match.winner %}
-                            <div class="manage-subtitle" style="margin-top:8px;">برنده: <strong style="color:#d1fae5;">{{ match.winner.name }}</strong></div>
-                            {% endif %}
-                        </article>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-            <div class="empty-box">
-                هنوز مسابقه شروع نشده است. بعد از کامل شدن نفرات، دکمه «شروع مسابقه و قرعه‌کشی» را بزن.
+            <div id="bracketPanelInner">
+                {% include 'gamenet/partials/tournament_bracket.html' with bracket=bracket tournament=tournament %}
             </div>
-            {% endif %}
         </section>
     </div>
 
-    <aside class="panel">
-        <h3 class="panel-title"><i class="fas fa-cog"></i> تنظیمات مسابقه</h3>
-        <div class="status-chip status-{{ tournament.status }}">
+    <aside class="panel panel-aside" id="tournamentAside">
+        <div class="aside-head">
+            <h3 class="panel-title" style="margin:0;"><i class="fas fa-cog"></i> تنظیمات مسابقه</h3>
+            <button type="button" class="aside-toggle" id="asideToggle" title="باز/بسته کردن">
+                <i class="fas fa-sliders-h"></i>
+            </button>
+        </div>
+
+        <div class="aside-body" id="asideBody">
+        <div class="status-chip status-{{ tournament.status }}" id="tournamentStatusChip">
             <i class="fas fa-circle"></i>
-            وضعیت فعلی: {{ tournament.get_status_display }}
+            وضعیت فعلی: <span id="tournamentStatusLabel">{{ tournament.get_status_display }}</span>
         </div>
 
-        <form method="post" class="status-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_status">
-            <select name="status" class="status-select">
-                {% for value, label in status_choices %}
-                <option value="{{ value }}" {% if tournament.status == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="status-btn">ذخیره وضعیت</button>
-        </form>
+        <details class="aside-section" open>
+            <summary>
+                وضعیت و اتمام
+                <span style="color:rgba(255,255,255,0.6);font-weight:900;font-size:12px;">▾</span>
+            </summary>
+            <form method="post" class="status-form" style="margin-top:10px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <select name="status" class="status-select">
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if tournament.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="status-btn">ذخیره وضعیت</button>
+            </form>
 
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="toggle_registration">
-            <input type="hidden" name="registration_open" value="0">
-            <div class="toggle-wrap">
-                <div>
-                    <div class="toggle-title">باز بودن ثبت‌نام</div>
-                    <div class="toggle-help">هر زمان خواستی ثبت‌نام را ببند یا باز کن.</div>
+            {% if tournament.status != 'completed' and tournament.status != 'cancelled' %}
+            <form method="post" style="margin-top:8px;" onsubmit="return confirm('مسابقه پایان یابد؟');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="finish_tournament">
+                <button type="submit" class="manage-btn manage-btn-accent" style="width:100%;justify-content:center;">
+                    <i class="fas fa-flag-checkered"></i>
+                    اتمام مسابقه
+                </button>
+            </form>
+            {% endif %}
+        </details>
+
+        <details class="aside-section">
+            <summary>
+                دسترسی و نمایش
+                <span style="color:rgba(255,255,255,0.6);font-weight:900;font-size:12px;">▾</span>
+            </summary>
+            <form method="post" style="margin-top:10px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_registration">
+                <input type="hidden" name="registration_open" value="0">
+                <div class="toggle-wrap">
+                    <div>
+                        <div class="toggle-title">باز بودن ثبت‌نام</div>
+                        <div class="toggle-help">هر زمان خواستی ثبت‌نام را ببند یا باز کن.</div>
+                    </div>
+                    <label class="pay-toggle">
+                        <input type="checkbox" name="registration_open" value="1" {% if tournament.registration_open %}checked{% endif %}>
+                        فعال
+                    </label>
                 </div>
-                <label class="pay-toggle">
-                    <input type="checkbox" name="registration_open" value="1" {% if tournament.registration_open %}checked{% endif %}>
-                    فعال
-                </label>
-            </div>
-            <button type="submit" class="status-btn" style="width:100%;">ذخیره ثبت‌نام</button>
-        </form>
+                <button type="submit" class="status-btn" style="width:100%;">ذخیره ثبت‌نام</button>
+            </form>
 
-        <form method="post" style="margin-top:10px;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="toggle_public_participants">
-            <input type="hidden" name="show_participants_public" value="0">
-            <div class="toggle-wrap">
-                <div>
-                    <div class="toggle-title">نمایش عمومی شرکت‌کنندگان</div>
-                    <div class="toggle-help">در صفحه جزئیات مسابقه قابل مشاهده باشد یا مخفی شود.</div>
+            <form method="post" style="margin-top:10px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_public_participants">
+                <input type="hidden" name="show_participants_public" value="0">
+                <div class="toggle-wrap">
+                    <div>
+                        <div class="toggle-title">نمایش عمومی شرکت‌کنندگان</div>
+                        <div class="toggle-help">در صفحه جزئیات مسابقه قابل مشاهده باشد یا مخفی شود.</div>
+                    </div>
+                    <label class="pay-toggle">
+                        <input type="checkbox" name="show_participants_public" value="1" {% if tournament.show_participants_public %}checked{% endif %}>
+                        نمایش
+                    </label>
                 </div>
-                <label class="pay-toggle">
-                    <input type="checkbox" name="show_participants_public" value="1" {% if tournament.show_participants_public %}checked{% endif %}>
-                    نمایش
-                </label>
-            </div>
-            <button type="submit" class="status-btn" style="width:100%;">ذخیره نمایش عمومی</button>
-        </form>
+                <button type="submit" class="status-btn" style="width:100%;">ذخیره نمایش عمومی</button>
+            </form>
+        </details>
 
-        <div class="meta-list">
-            <div class="meta-item">
-                <div class="meta-label">زمان شروع</div>
-                <div class="meta-value">{{ tournament.start_date|date:'Y/m/d H:i' }}</div>
+        <details class="aside-section">
+            <summary>
+                اطلاعات مسابقه
+                <span style="color:rgba(255,255,255,0.6);font-weight:900;font-size:12px;">▾</span>
+            </summary>
+            <div class="meta-list">
+                <div class="meta-item">
+                    <div class="meta-label">زمان شروع</div>
+                    <div class="meta-value">{{ tournament.start_date|date:'Y/m/d H:i' }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">زمان پایان</div>
+                    <div class="meta-value">{{ tournament.end_date|date:'Y/m/d H:i'|default:'---' }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">نوع دسترسی</div>
+                    <div class="meta-value">{% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">هزینه ورودی</div>
+                    <div class="meta-value">{{ tournament.entry_fee|floatformat:0|intcomma }} تومان</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">جایزه کل</div>
+                    <div class="meta-value">{{ tournament.prize_pool|floatformat:0|intcomma }} تومان</div>
+                </div>
             </div>
-            <div class="meta-item">
-                <div class="meta-label">زمان پایان</div>
-                <div class="meta-value">{{ tournament.end_date|date:'Y/m/d H:i'|default:'---' }}</div>
-            </div>
-            <div class="meta-item">
-                <div class="meta-label">نوع دسترسی</div>
-                <div class="meta-value">{% if tournament.visibility == 'public' %}پابلیک{% else %}خصوصی{% endif %}</div>
-            </div>
-            <div class="meta-item">
-                <div class="meta-label">هزینه ورودی</div>
-                <div class="meta-value">{{ tournament.entry_fee|floatformat:0|intcomma }} تومان</div>
-            </div>
-            <div class="meta-item">
-                <div class="meta-label">جایزه کل</div>
-                <div class="meta-value">{{ tournament.prize_pool|floatformat:0|intcomma }} تومان</div>
-            </div>
-        </div>
+        </details>
 
-        {% if champion %}
-        <div class="champion-box">
+        <div class="champion-box" id="championBox" {% if not champion %}style="display:none;"{% endif %}>
             <div class="champion-label">قهرمان مسابقه</div>
-            <div class="champion-name"><i class="fas fa-crown"></i> {{ champion.name }}</div>
+            <div class="champion-name" id="championName"><i class="fas fa-crown"></i> {{ champion.name|default:'' }}</div>
         </div>
-        {% endif %}
 
         <form method="post" onsubmit="return confirm('مسابقه کامل حذف شود؟ این عملیات قابل بازگشت نیست.');" style="margin-top:12px;">
             {% csrf_token %}
@@ -833,6 +1437,7 @@
                 حذف مسابقه
             </button>
         </form>
+        </div>
     </aside>
 </div>
 
@@ -842,7 +1447,7 @@
             <h3 id="addParticipantTitle" class="modal-title">افزودن دستی شرکت‌کننده</h3>
             <button type="button" class="modal-close" id="closeAddParticipantModal">✕</button>
         </div>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="action" value="create_participant">
             <div class="form-grid">
@@ -864,7 +1469,14 @@
                         پرداخت ورودی انجام شده است
                     </label>
                 </div>
-            </div>
+                <div class="form-group" style="grid-column:1 / -1;">
+                    <label>تصویر {% if gamenet.require_tournament_participant_image %}*{% else %}(اختیاری){% endif %}</label>
+                    <input type="file" name="image" class="form-input" accept="image/*" {% if gamenet.require_tournament_participant_image %}required{% endif %}>
+                    {% if gamenet.require_tournament_participant_image %}
+                        <div class="manage-subtitle" style="margin-top:6px;color:rgba(255,255,255,0.68);">طبق تنظیمات گیم‌نت، تصویر اجباری است.</div>
+                    {% endif %}
+                </div>
+	            </div>
             <div class="form-actions">
                 <button type="button" class="manage-btn manage-btn-soft" id="cancelAddParticipantModal">انصراف</button>
                 <button type="submit" class="manage-btn manage-btn-accent">ثبت شرکت‌کننده</button>
@@ -872,10 +1484,76 @@
         </form>
     </div>
 </div>
+
+<div class="tm-toast" id="tmToast" aria-live="polite"></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    function tmToast(message, type = 'info') {
+        const root = document.getElementById('tmToast');
+        if (!root) return;
+
+        const item = document.createElement('div');
+        item.className = `tm-toast-item ${type}`;
+        item.innerHTML = `
+            <span style="width:10px;height:10px;border-radius:999px;background:${type === 'success' ? 'rgba(16,185,129,1)' : type === 'error' ? 'rgba(239,68,68,1)' : 'rgba(124,58,237,1)'};"></span>
+            <div style="font-weight:900;font-size:13px;line-height:1.4;">${String(message || '')}</div>
+        `;
+        root.appendChild(item);
+
+        setTimeout(() => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(6px)';
+            item.style.transition = 'all 180ms ease';
+            setTimeout(() => item.remove(), 220);
+        }, 2400);
+    }
+
+    (function () {
+        const tabsRoot = document.getElementById('manageTabs');
+        if (!tabsRoot) return;
+
+        const buttons = Array.from(tabsRoot.querySelectorAll('[data-tab]'));
+        const panels = Array.from(document.querySelectorAll('.tab-panel[data-panel]'));
+        const defaultTab = tabsRoot.getAttribute('data-default-tab') || 'participants';
+
+        const setActive = (tabName) => {
+            buttons.forEach((btn) => {
+                const selected = btn.getAttribute('data-tab') === tabName;
+                btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+            panels.forEach((panel) => {
+                const isActive = panel.getAttribute('data-panel') === tabName;
+                if (isActive) panel.removeAttribute('hidden');
+                else panel.setAttribute('hidden', '');
+            });
+
+            // Trigger bracket init/redraw when it becomes visible
+            if (tabName === 'bracket' && typeof window.GameBeatInitBracket === 'function') {
+                window.GameBeatInitBracket();
+            }
+        };
+
+        setActive(defaultTab);
+
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.getAttribute('data-tab');
+                setActive(tabName);
+                try { localStorage.setItem('tournament_manage_tab', tabName); } catch (e) {}
+            });
+        });
+
+        try {
+            const saved = localStorage.getItem('tournament_manage_tab');
+            if (saved && buttons.some((b) => b.getAttribute('data-tab') === saved)) {
+                setActive(saved);
+            }
+        } catch (e) {}
+    })();
+
     (function () {
         const modal = document.getElementById('addParticipantModal');
         const openBtn = document.getElementById('openAddParticipantModal');
@@ -941,5 +1619,243 @@
             }
         });
     })();
+
+    window.GameBeatInitBracket = function GameBeatInitBracket() {
+        if (typeof window.__gbBracketCleanup === 'function') {
+            try { window.__gbBracketCleanup(); } catch (e) {}
+        }
+
+        const bracket = document.getElementById('bracket');
+        const svg = document.getElementById('bracketLines');
+        const onlyPendingToggle = document.getElementById('onlyPendingToggle');
+        if (!bracket || !svg) return;
+
+        let rafId = 0;
+        const clearSvg = () => {
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+        };
+
+        const setSvgSize = () => {
+            const w = bracket.scrollWidth;
+            const h = bracket.scrollHeight;
+            svg.setAttribute('width', String(w));
+            svg.setAttribute('height', String(h));
+            svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+            svg.style.width = `${w}px`;
+            svg.style.height = `${h}px`;
+        };
+
+        const drawPath = (x1, y1, x2, y2) => {
+            const midX = (x1 + x2) / 2;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', 'rgba(255, 255, 255, 0.88)');
+            path.setAttribute('stroke-width', '2.5');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+            path.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,0.22))';
+
+            const length = path.getTotalLength();
+            path.style.strokeDasharray = String(length);
+            path.style.strokeDashoffset = String(length);
+            path.style.animation = 'lineDraw 520ms ease forwards';
+            svg.appendChild(path);
+
+            const dot = (x, y) => {
+                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                c.setAttribute('cx', String(x));
+                c.setAttribute('cy', String(y));
+                c.setAttribute('r', '3');
+                c.setAttribute('fill', 'rgba(255,255,255,0.92)');
+                c.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,0.25))';
+                svg.appendChild(c);
+            };
+            dot(x1, y1);
+            dot(x2, y2);
+        };
+
+        const draw = () => {
+            clearSvg();
+            setSvgSize();
+
+            const bracketRect = bracket.getBoundingClientRect();
+            const finalEl = bracket.querySelector('.match-final[data-side="C"]');
+            const finalRound = finalEl ? Number(finalEl.getAttribute('data-round')) : NaN;
+
+            const matches = Array.from(bracket.querySelectorAll('.match-node[data-side="L"], .match-node[data-side="R"]'));
+            for (const matchEl of matches) {
+                if (matchEl.offsetParent === null) continue;
+
+                const side = matchEl.getAttribute('data-side');
+                const round = Number(matchEl.getAttribute('data-round'));
+                const sideIndex = Number(matchEl.getAttribute('data-side-index'));
+                if (!side || !Number.isFinite(round) || !Number.isFinite(sideIndex)) continue;
+
+                const nextRound = round + 1;
+                const nextSideIndex = Math.ceil(sideIndex / 2);
+                const nextEl = bracket.querySelector(
+                    `.match-node[data-side="${side}"][data-round="${nextRound}"][data-side-index="${nextSideIndex}"]`
+                );
+
+                const fromRect = matchEl.getBoundingClientRect();
+                let toEl = nextEl;
+                if ((!toEl || toEl.offsetParent === null) && finalEl && Number.isFinite(finalRound) && nextRound === finalRound) {
+                    toEl = finalEl;
+                }
+                if (!toEl || toEl.offsetParent === null) continue;
+                const toRect = toEl.getBoundingClientRect();
+
+                const y1 = (fromRect.top - bracketRect.top) + fromRect.height / 2;
+                const y2 = (toRect.top - bracketRect.top) + toRect.height / 2;
+
+                let x1;
+                let x2;
+                if (side === 'L') {
+                    x1 = (fromRect.right - bracketRect.left);
+                    x2 = (toRect.left - bracketRect.left);
+                } else {
+                    x1 = (fromRect.left - bracketRect.left);
+                    x2 = (toRect.right - bracketRect.left);
+                }
+                drawPath(x1, y1, x2, y2);
+            }
+        };
+
+        window.GameBeatDrawBracket = () => {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                rafId = 0;
+                draw();
+            });
+        };
+
+        const ro = new ResizeObserver(() => window.GameBeatDrawBracket());
+        ro.observe(bracket);
+        const onResize = () => window.GameBeatDrawBracket();
+        window.addEventListener('resize', onResize, { passive: true });
+
+        if (onlyPendingToggle) {
+            try {
+                const saved = localStorage.getItem('tournament_only_pending');
+                if (saved === '1') {
+                    onlyPendingToggle.checked = true;
+                    bracket.classList.add('bracket-only-pending');
+                }
+            } catch (e) {}
+
+            onlyPendingToggle.addEventListener('change', () => {
+                bracket.classList.toggle('bracket-only-pending', onlyPendingToggle.checked);
+                try { localStorage.setItem('tournament_only_pending', onlyPendingToggle.checked ? '1' : '0'); } catch (e) {}
+                window.GameBeatDrawBracket();
+            });
+        }
+
+        window.__gbBracketCleanup = () => {
+            try { ro.disconnect(); } catch (e) {}
+            window.removeEventListener('resize', onResize);
+        };
+
+        window.GameBeatDrawBracket();
+    };
+
+    const refreshBracketPanel = (html) => {
+        const container = document.getElementById('bracketPanelInner');
+        if (!container) return;
+        container.innerHTML = html;
+        if (typeof window.GameBeatInitBracket === 'function') window.GameBeatInitBracket();
+    };
+
+    // AJAX submit for winner selection (no full page refresh)
+    document.addEventListener('submit', async (event) => {
+        const formEl = event.target;
+        if (!(formEl instanceof HTMLFormElement)) return;
+        if (!formEl.classList.contains('js-match-form')) return;
+
+        event.preventDefault();
+
+        const submitter = event.submitter instanceof HTMLElement ? event.submitter : null;
+        if (formEl.dataset.locked === '1') return;
+        formEl.dataset.locked = '1';
+        formEl.querySelectorAll('button').forEach((btn) => (btn.disabled = true));
+
+        try {
+            const body = new URLSearchParams(new FormData(formEl));
+            // Ensure clicked button value (winner_id) is sent in AJAX submits.
+            if (submitter && submitter instanceof HTMLButtonElement && submitter.name) {
+                body.append(submitter.name, submitter.value);
+            }
+            const resp = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-CSRFToken': (typeof csrftoken !== 'undefined' ? csrftoken : ''),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body,
+            });
+
+            const data = await resp.json();
+            if (!resp.ok || !data.ok) {
+                throw new Error(data && data.message ? data.message : 'خطا در ثبت نتیجه');
+            }
+
+            if (data.bracket_html) {
+                refreshBracketPanel(data.bracket_html);
+            }
+            if (data.message) tmToast(data.message, 'success');
+
+            // Update status + champion (if changed)
+            const statusChip = document.getElementById('tournamentStatusChip');
+            const statusLabel = document.getElementById('tournamentStatusLabel');
+            if (statusChip && data.tournament_status) {
+                statusChip.className = `status-chip status-${data.tournament_status}`;
+            }
+            if (statusLabel && data.tournament_status_display) {
+                statusLabel.textContent = data.tournament_status_display;
+            }
+            const championBox = document.getElementById('championBox');
+            const championName = document.getElementById('championName');
+            if (championBox && championName && data.champion_name) {
+                championBox.style.display = '';
+                championName.innerHTML = `<i class="fas fa-crown"></i> ${data.champion_name}`;
+            }
+        } catch (err) {
+            tmToast(err && err.message ? err.message : 'خطا', 'error');
+        } finally {
+            // If we did not replace DOM, unlock form so user can retry
+            if (formEl.isConnected) {
+                formEl.dataset.locked = '0';
+                formEl.querySelectorAll('button').forEach((btn) => (btn.disabled = false));
+            }
+        }
+    }, true);
+
+    (function () {
+        const toggle = document.getElementById('asideToggle');
+        const body = document.getElementById('asideBody');
+        if (!toggle || !body) return;
+
+        const key = 'tournament_manage_aside_collapsed';
+        const applyState = (collapsed) => {
+            if (collapsed) body.setAttribute('hidden', '');
+            else body.removeAttribute('hidden');
+        };
+
+        try {
+            applyState(localStorage.getItem(key) === '1');
+        } catch (e) {}
+
+        toggle.addEventListener('click', () => {
+            const collapsed = !body.hasAttribute('hidden');
+            applyState(collapsed);
+            try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch (e) {}
+        });
+    })();
+
+    if (typeof window.GameBeatInitBracket === 'function') window.GameBeatInitBracket();
 </script>
+<style>
+    @keyframes lineDraw { to { stroke-dashoffset: 0; } }
+</style>
 {% endblock %}

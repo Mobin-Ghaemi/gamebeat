@@ -1,0 +1,436 @@
+{% extends 'community/base.html' %}
+{% block title %}LFG - جستجوی تیم | GameBeat Community{% endblock %}
+{% block nav_lfg %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.lfg-wrapper { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+.lfg-hero {
+    background: linear-gradient(135deg, #050510, #0d0520, #050510);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 20px;
+    padding: 36px 28px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+}
+
+.lfg-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(0,212,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(139,92,246,0.06) 0%, transparent 50%);
+}
+
+.lfg-hero-content { position: relative; z-index: 1; }
+
+.lfg-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--text-white);
+    margin-bottom: 6px;
+}
+
+.lfg-title span { color: var(--blue-accent); }
+
+.lfg-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+}
+
+/* Create LFG form */
+.create-lfg-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.create-lfg-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--blue-accent);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+/* LFG post card */
+.lfg-post-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.lfg-post-card::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--blue-accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.lfg-post-card:hover {
+    border-color: rgba(0,212,255,0.3);
+    box-shadow: 0 4px 24px rgba(0,212,255,0.08);
+}
+
+.lfg-post-card:hover::before { opacity: 1; }
+
+.lfg-post-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.lfg-game-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lfg-badges { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 10px; }
+
+.lfg-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.lfg-badge-platform {
+    background: rgba(139,92,246,0.1);
+    color: var(--red-glow);
+    border: 1px solid rgba(139,92,246,0.2);
+}
+
+.lfg-badge-mode {
+    background: rgba(0,212,255,0.1);
+    color: var(--blue-accent);
+    border: 1px solid rgba(0,212,255,0.2);
+}
+
+.lfg-badge-skill {
+    background: rgba(255,215,0,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(255,215,0,0.2);
+}
+
+.lfg-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.lfg-author-info { display: flex; flex-direction: column; }
+.lfg-author-name { font-weight: 700; font-size: 0.9rem; color: var(--text-white); }
+.lfg-author-meta { font-size: 0.75rem; color: var(--text-dim); }
+
+.lfg-players-bar {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.players-dots { display: flex; gap: 6px; }
+
+.player-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+}
+
+.player-dot.filled {
+    background: var(--blue-accent);
+    border-color: var(--blue-accent);
+    box-shadow: 0 0 8px rgba(0,212,255,0.5);
+}
+
+.player-dot.open {
+    background: transparent;
+    border-color: rgba(0,212,255,0.3);
+    border-style: dashed;
+}
+
+.spots-text { font-size: 0.8rem; color: var(--text-muted); }
+.spots-text .spots-count { color: var(--blue-accent); font-weight: 700; }
+
+.lfg-desc {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+.lfg-time { font-size: 0.75rem; color: var(--text-dim); margin-top: 8px; }
+
+/* Filters */
+.lfg-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.filter-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.83rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.filter-pill:hover, .filter-pill.active {
+    border-color: var(--blue-accent);
+    color: var(--blue-accent);
+    background: rgba(0,212,255,0.06);
+}
+
+/* Sidebar */
+.lfg-sidebar { position: sticky; top: 88px; height: fit-content; }
+
+.lfg-tip-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.tip-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--blue-accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.tip-item:last-child { border-bottom: none; }
+.tip-item i { color: var(--blue-accent); margin-top: 2px; flex-shrink: 0; }
+
+@media (max-width: 900px) {
+    .lfg-layout { grid-template-columns: 1fr; }
+    .lfg-sidebar { position: static; }
+    .form-grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lfg-wrapper">
+
+    <!-- Hero -->
+    <div class="lfg-hero">
+        <div class="lfg-hero-content">
+            <div class="lfg-title"><i class="bi bi-people-fill" style="color: var(--blue-accent);"></i> <span>LFG</span> — دنبال تیم می‌گردی؟</div>
+            <p style="color: var(--text-muted); font-size: 0.93rem; margin: 0;">پست بذار، تیم پیدا کن، بزن بریم!</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" id="lfgFilterForm">
+        <div class="lfg-filters">
+            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><i class="bi bi-funnel-fill" style="color:var(--blue-accent);"></i> پلتفرم:</span>
+            <a href="{% url 'community:lfg' %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
+            {% for val, label in platform_choices %}
+                <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter }}{% endif %}"
+                   class="filter-pill {% if platform_filter == val %}active{% endif %}">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </form>
+
+    <div class="lfg-layout">
+        <!-- Main -->
+        <div>
+            <!-- Create Post -->
+            <div class="create-lfg-card">
+                <div class="create-lfg-title">
+                    <i class="bi bi-plus-circle-fill"></i> پست LFG جدید
+                </div>
+                <form method="post" action="{% url 'community:create_lfg' %}">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 12px;">
+                        <label class="g-label">نام بازی *</label>
+                        <input type="text" name="game_name" class="g-input" placeholder="مثلاً: Valorant, FIFA 25, Call of Duty" required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label class="g-label">پلتفرم</label>
+                            <select name="platform" class="g-input">
+                                {% for val, label in platform_choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="g-label">مود بازی</label>
+                            <select name="game_mode" class="g-input">
+                                <option value="ranked">رنکد</option>
+                                <option value="normal" selected>نرمال</option>
+                                <option value="tournament">تورنمنت</option>
+                                <option value="custom">کاستوم</option>
+                                <option value="coop">Co-op</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="g-label">سطح مهارت</label>
+                            <select name="skill_level" class="g-input">
+                                <option value="any" selected>همه سطوح</option>
+                                <option value="beginner">تازه‌کار</option>
+                                <option value="intermediate">متوسط</option>
+                                <option value="advanced">پیشرفته</option>
+                                <option value="pro">حرفه‌ای</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="g-label">حداکثر بازیکن</label>
+                            <select name="max_players" class="g-input">
+                                <option value="2">۲ نفر</option>
+                                <option value="3">۳ نفر</option>
+                                <option value="4" selected>۴ نفر</option>
+                                <option value="5">۵ نفر</option>
+                                <option value="6">۶ نفر</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label class="g-label">توضیحات (اختیاری)</label>
+                        <textarea name="description" class="g-input" style="min-height: 70px;" placeholder="رنک، ساعت بازی، یا هر چیزی که بخوای بگی..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-red w-100" style="padding: 12px;">
+                        <i class="bi bi-people-fill"></i> پست LFG بده
+                    </button>
+                </form>
+            </div>
+
+            <!-- LFG Posts -->
+            {% if lfg_posts %}
+                {% for post in lfg_posts %}
+                <div class="lfg-post-card">
+                    <div class="lfg-post-header">
+                        <div>
+                            <div class="lfg-game-name">
+                                <i class="bi bi-controller" style="color: var(--blue-accent);"></i>
+                                {{ post.game_name }}
+                            </div>
+                            <div class="lfg-badges">
+                                <span class="lfg-badge lfg-badge-platform">{{ post.get_platform_display }}</span>
+                                <span class="lfg-badge lfg-badge-mode">{{ post.get_game_mode_display }}</span>
+                                <span class="lfg-badge lfg-badge-skill">{{ post.get_skill_level_display }}</span>
+                            </div>
+                        </div>
+                        <a href="{% url 'community:profile' username=post.author.username %}" class="lfg-author">
+                            {% if post.author.gamer_profile.avatar %}
+                                <img src="{{ post.author.gamer_profile.avatar.url }}" class="avatar avatar-sm">
+                            {% else %}
+                                <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem;">{{ post.author.username|first|upper }}</div>
+                            {% endif %}
+                            <div class="lfg-author-info">
+                                <span class="lfg-author-name">{{ post.author.username }}</span>
+                                <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    {% if post.description %}
+                        <div class="lfg-desc">{{ post.description }}</div>
+                    {% endif %}
+
+                    <div class="lfg-players-bar">
+                        <div class="players-dots">
+                            {% for i in "123456" %}
+                                {% if forloop.counter <= post.current_players %}
+                                    <div class="player-dot filled"></div>
+                                {% elif forloop.counter <= post.max_players %}
+                                    <div class="player-dot open"></div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="spots-text">
+                            <span class="spots-count">{{ post.spots_left }}</span> جای خالی از {{ post.max_players }}
+                        </span>
+                    </div>
+
+                    <div class="lfg-time"><i class="bi bi-clock"></i> {{ post.created_at|timesince }} پیش</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align:center; padding:60px 20px; color: var(--text-muted);">
+                    <i class="bi bi-people" style="font-size:4rem; color:var(--blue-accent); opacity:0.3; display:block; margin-bottom:16px;"></i>
+                    <h5 style="color: var(--text-white);">هیچ LFG فعالی نیست</h5>
+                    <p>اولین نفر باش و پست بذار!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="lfg-sidebar">
+            <div class="lfg-tip-card">
+                <div class="tip-title"><i class="bi bi-lightbulb-fill"></i> راهنمای LFG</div>
+                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> رنک و سطح مهارتت رو دقیق بنویس</div>
+                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> ساعت‌هایی که آنلاینی رو بذار</div>
+                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> پلتفرم رو درست انتخاب کن</div>
+                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> اگه سرور خاصی بازی می‌کنی بنویس</div>
+                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> استایل بازیت رو توضیح بده</div>
+            </div>
+
+            <div class="lfg-tip-card">
+                <div class="tip-title"><i class="bi bi-fire" style="color:var(--red-primary);"></i> داغ‌ترین بازی‌ها</div>
+                {% for game in popular_games %}
+                <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="bi bi-controller" style="color:var(--red-primary);"></i> {{ game }}
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

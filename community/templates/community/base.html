@@ -1,0 +1,887 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GameBeat Community{% endblock %}</title>
+    <link href="{% static 'vendor/css/bootstrap.rtl.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/css/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/css/vazirmatn-font-face.css' %}" rel="stylesheet">
+    <style>
+
+        :root {
+            --bg-void: #16161e;
+            --bg-dark: #1c1c26;
+            --bg-card: #22222e;
+            --bg-card2: #2a2a38;
+            --border: #35354a;
+            --border-glow: #8b5cf6;
+            --red-primary: #8b5cf6;
+            --red-glow: #c084fc;
+            --red-dark: #5b21b6;
+            --orange-accent: #a855f7;
+            --text-white: #eeeef5;
+            --text-muted: #8888aa;
+            --text-dim: #55556e;
+            --success: #00ff88;
+            --gold: #ffd700;
+            --blue-accent: #00d4ff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-white);
+            font-family: 'Vazirmatn', 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--red-primary); border-radius: 3px; }
+
+        /* Navbar */
+        .community-nav {
+            background: rgba(18, 18, 28, 0.96);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 0;
+        }
+
+        .community-nav .container-fluid {
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-brand {
+            font-weight: 900;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, var(--red-primary), var(--orange-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand i {
+            background: linear-gradient(135deg, var(--red-primary), var(--orange-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-link-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link-item:hover, .nav-link-item.active {
+            color: var(--text-white);
+            background: rgba(139, 92, 246, 0.12);
+        }
+
+        .nav-link-item.active {
+            color: var(--red-primary);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--red-primary);
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .nav-avatar-placeholder {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--red-primary);
+            background: var(--bg-card2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--red-primary);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Cards */
+        .g-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .g-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .g-card-glow {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+
+        /* Buttons */
+        .btn-red {
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-family: 'Vazirmatn', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-red:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 500;
+            font-family: 'Vazirmatn', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--red-primary);
+            color: var(--red-primary);
+        }
+
+        .btn-follow {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-follow.following {
+            background: var(--bg-card2);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-follow.following:hover {
+            border-color: var(--red-primary);
+            color: var(--red-primary);
+        }
+
+        /* Platform Badge */
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--red-glow);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .rank-bronze { background: rgba(205, 127, 50, 0.15); color: #cd7f32; border: 1px solid rgba(205, 127, 50, 0.3); }
+        .rank-silver { background: rgba(192, 192, 192, 0.15); color: #c0c0c0; border: 1px solid rgba(192, 192, 192, 0.3); }
+        .rank-gold { background: rgba(255, 215, 0, 0.15); color: var(--gold); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .rank-platinum { background: rgba(0, 212, 255, 0.15); color: var(--blue-accent); border: 1px solid rgba(0, 212, 255, 0.3); }
+        .rank-diamond { background: rgba(185, 242, 255, 0.15); color: #b9f2ff; border: 1px solid rgba(185, 242, 255, 0.3); }
+        .rank-master { background: rgba(139, 92, 246, 0.15); color: var(--red-primary); border: 1px solid rgba(139, 92, 246, 0.3); }
+        .rank-grandmaster { background: rgba(168, 85, 247, 0.15); color: var(--orange-accent); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .rank-challenger { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(255, 215, 0, 0.2)); color: var(--gold); border: 1px solid var(--gold); }
+
+        /* Level XP Bar */
+        .xp-bar-wrapper {
+            background: var(--border);
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--red-primary), var(--orange-accent));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Post types */
+        .post-type-achievement { border-right: 3px solid var(--gold) !important; }
+        .post-type-lfg { border-right: 3px solid var(--blue-accent) !important; }
+        .post-type-highlight { border-right: 3px solid var(--orange-accent) !important; }
+
+        /* Tag */
+        .game-tag {
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--blue-accent);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+        }
+
+        /* LFG Card */
+        .lfg-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .lfg-card:hover {
+            border-color: var(--blue-accent);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .alert-danger, .alert-error {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--red-glow);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* Forms */
+        .g-input {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            color: var(--text-white);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            font-family: 'Vazirmatn', sans-serif;
+            transition: border-color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .g-input:focus {
+            outline: none;
+            border-color: var(--red-primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .g-input::placeholder { color: var(--text-dim); }
+
+        textarea.g-input { resize: vertical; min-height: 80px; }
+
+        select.g-input option {
+            background: var(--bg-card2);
+            color: var(--text-white);
+        }
+
+        label.g-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Separator */
+        .g-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 16px 0;
+        }
+
+        /* Glow text */
+        .text-red { color: var(--red-primary); }
+        .text-orange { color: var(--orange-accent); }
+        .text-blue { color: var(--blue-accent); }
+        .text-gold { color: var(--gold); }
+        .text-green { color: var(--success); }
+        .text-muted-custom { color: var(--text-muted); }
+        .text-dim { color: var(--text-dim); }
+
+        /* Avatar */
+        .avatar {
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        .avatar-sm { width: 36px; height: 36px; }
+        .avatar-md { width: 48px; height: 48px; }
+        .avatar-lg { width: 80px; height: 80px; border-width: 3px; }
+        .avatar-xl { width: 120px; height: 120px; border-width: 3px; border-color: var(--red-primary); }
+
+        .avatar-placeholder {
+            border-radius: 50%;
+            background: var(--bg-card2);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--red-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Dropdown */
+        .g-dropdown {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 180px;
+        }
+
+        .g-dropdown-item {
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+
+        .g-dropdown-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--text-white);
+        }
+
+        /* Gamer card (search results) */
+        .gamer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+
+        .gamer-card:hover {
+            border-color: var(--red-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15);
+        }
+
+        /* Shimmer animation */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, var(--red-primary), var(--orange-accent), var(--red-primary));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        /* Pulse */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
+        }
+
+        .pulse-red { animation: pulse-red 2s ease-in-out infinite; }
+
+        /* Online dot */
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+        }
+
+        /* Nav new post button */
+        .nav-new-post-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 7px 16px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+        }
+        .nav-new-post-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(139,92,246,0.5);
+            color: white;
+        }
+
+        /* Nav icon buttons (bell, dm) */
+        .nav-icon-btn {
+            position: relative;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .nav-icon-btn:hover {
+            border-color: rgba(139,92,246,0.5);
+            color: #a78bfa;
+            background: rgba(139,92,246,0.1);
+        }
+        .nav-icon-btn.has-notif { color: #a78bfa; border-color: rgba(139,92,246,0.4); }
+        .nav-badge {
+            position: absolute;
+            top: -4px; left: -4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px; height: 18px;
+            font-size: 0.65rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--bg-void);
+            padding: 0 3px;
+        }
+
+        /* Nav account button */
+        .nav-account-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 5px 14px 5px 5px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-account-btn:hover {
+            border-color: rgba(139,92,246,0.5);
+            background: rgba(139,92,246,0.08);
+        }
+        .nav-account-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-white);
+            white-space: nowrap;
+        }
+
+        /* Nav Profile Button */
+        .nav-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 5px 14px 5px 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+            min-width: 0;
+        }
+
+        .nav-profile-btn:hover {
+            border-color: rgba(139,92,246,0.5);
+            background: rgba(139,92,246,0.07);
+        }
+
+        .nav-profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+        }
+
+        .nav-profile-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .nav-profile-tag {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        /* ═══ Reaction Picker ═══ */
+        .reaction-wrap { position: relative; display: inline-flex; }
+        .reaction-picker {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 10px;
+            display: flex; gap: 4px;
+            white-space: nowrap;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            opacity: 0; pointer-events: none;
+            transform: translateY(8px) scale(0.9);
+            transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+            z-index: 200;
+        }
+        .reaction-picker.open {
+            opacity: 1; pointer-events: all;
+            transform: translateY(0) scale(1);
+        }
+        .rp-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.35rem; padding: 4px 5px; border-radius: 10px;
+            transition: transform 0.15s;
+            line-height: 1;
+        }
+        .rp-btn:hover { transform: scale(1.35); }
+        .rp-btn.active { background: rgba(139,92,246,0.15); }
+
+        /* reaction summary on post */
+        .post-reactions {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            padding: 4px 18px 8px;
+        }
+        .rxn-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--bg-card2); border: 1px solid var(--border);
+            border-radius: 20px; padding: 3px 10px;
+            font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .rxn-chip:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); }
+        .rxn-chip.mine  { border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.1); color: #a78bfa; }
+        .rxn-chip .rxn-count { color: var(--text-muted); font-size: 0.75rem; }
+        .rxn-chip.mine .rxn-count { color: #a78bfa; }
+
+        /* ═══ Global Like Animation ═══ */
+        @keyframes likePop {
+            0%   { transform: scale(1); }
+            30%  { transform: scale(1.5); }
+            55%  { transform: scale(0.88); }
+            75%  { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        @keyframes likeRipple {
+            0%   { transform: scale(0); opacity: .6; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .like-pop { animation: likePop 0.42s cubic-bezier(.36,.07,.19,.97) both; }
+        .like-ripple-wrap { position: relative; display: inline-flex; align-items: center; }
+        .like-ripple-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(248,113,113,0.4);
+            transform: scale(0);
+            pointer-events: none;
+        }
+        .like-ripple-wrap.ripple::after { animation: likeRipple 0.5s ease-out forwards; }
+
+        /* ═══ Skeleton Loader ═══ */
+        @keyframes skeletonShimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card2) 25%, var(--border) 50%, var(--bg-card2) 75%);
+            background-size: 800px 100%;
+            animation: skeletonShimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .community-nav .container-fluid { padding: 0 16px; }
+            .nav-profile-name, .nav-profile-tag { display: none; }
+            .nav-profile-btn { padding: 5px; border-radius: 50%; }
+        }
+
+        /* Bootstrap overrides */
+        .dropdown-menu {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .dropdown-item { color: var(--text-muted); padding: 8px 14px; }
+        .dropdown-item:hover { background: rgba(139,92,246,0.1); color: var(--text-white); }
+        .dropdown-divider { border-color: var(--border); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="community-nav">
+    <div class="container-fluid">
+        <a href="{% url 'community:feed' %}" class="nav-brand">
+            <i class="bi bi-controller"></i>
+            GameBeat
+            <span style="font-size: 0.7rem; color: var(--red-primary); background: rgba(139,92,246,0.12); padding: 2px 8px; border-radius: 6px; font-weight: 700; -webkit-text-fill-color: var(--red-primary);">COMMUNITY</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="{% url 'community:feed' %}" class="nav-link-item {% block nav_feed %}{% endblock %}">
+                <i class="bi bi-house-fill"></i> خانه
+            </a>
+            <a href="{% url 'community:search' %}" class="nav-link-item {% block nav_search %}{% endblock %}">
+                <i class="bi bi-search"></i> جستجوی گیمر
+            </a>
+            <a href="{% url 'community:lfg' %}" class="nav-link-item {% block nav_lfg %}{% endblock %}">
+                <i class="bi bi-people-fill"></i> LFG
+            </a>
+            <a href="{% url 'community:leaderboard' %}" class="nav-link-item {% block nav_lb %}{% endblock %}">
+                <i class="bi bi-trophy-fill"></i> لیدربورد
+            </a>
+            <a href="{% url 'community:games_ranking' %}" class="nav-link-item {% block nav_games %}{% endblock %}">
+                <i class="bi bi-joystick"></i> بازی‌ها
+            </a>
+        </div>
+
+        <div class="nav-actions">
+            {% if user.is_authenticated %}
+                <!-- DM Button -->
+                <a href="{% url 'community:inbox' %}" class="nav-icon-btn" id="navDmBtn" title="پیام‌ها">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span class="nav-badge" id="dmBadge" style="display:none;">0</span>
+                </a>
+                <!-- Notifications Bell -->
+                <a href="{% url 'community:notifications' %}" class="nav-icon-btn" id="navBellBtn" title="اعلان‌ها">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="nav-badge" id="notifBadge" style="display:none;">0</span>
+                </a>
+                <!-- Account Button -->
+                <a href="{% url 'community:profile' username=user.username %}" class="nav-account-btn">
+                    {% if user.gamer_profile.avatar %}
+                        <img src="{{ user.gamer_profile.avatar.url }}" class="nav-avatar" alt="avatar">
+                    {% else %}
+                        <div class="nav-avatar-placeholder">{{ user.username|first|upper }}</div>
+                    {% endif %}
+                    <span class="nav-account-label">حساب کاربری</span>
+                </a>
+            {% else %}
+                <a href="{% url 'account:login' %}" class="btn-ghost">ورود</a>
+                <a href="{% url 'account:register' %}" class="btn-red">ثبت نام</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Messages -->
+{% if messages %}
+<div style="position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 999; min-width: 320px;">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-bottom: 8px;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter: invert(1);"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Content -->
+{% block content %}{% endblock %}
+
+<script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    // Auto dismiss alerts
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => {
+            try { new bootstrap.Alert(a).close(); } catch(e) {}
+        });
+    }, 4000);
+
+    // CSRF helper for fetch calls
+    function getCookie(name) {
+        let v = null;
+        document.cookie.split(';').forEach(c => {
+            const [k, val] = c.trim().split('=');
+            if (k === name) v = decodeURIComponent(val);
+        });
+        return v;
+    }
+    window.csrfToken = getCookie('csrftoken');
+
+    // ── Reaction Picker ──
+    const REACTIONS = [
+        {type:'fire',    emoji:'🔥', label:'خفن'},
+        {type:'dead',    emoji:'💀', label:'GG'},
+        {type:'tryhard', emoji:'😤', label:'Tryhard'},
+        {type:'legend',  emoji:'👑', label:'لجند'},
+        {type:'ggez',    emoji:'😂', label:'GG EZ'},
+    ];
+
+    function buildReactionPicker(postId, activeType) {
+        const wrap = document.getElementById('rxn-wrap-' + postId);
+        if (!wrap) return;
+        const picker = wrap.querySelector('.reaction-picker');
+        picker.innerHTML = '';
+        REACTIONS.forEach(r => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rp-btn' + (r.type === activeType ? ' active' : '');
+            btn.title = r.label;
+            btn.textContent = r.emoji;
+            btn.onclick = (e) => { e.stopPropagation(); sendReaction(postId, r.type); };
+            picker.appendChild(btn);
+        });
+    }
+
+    function toggleReactionPicker(postId) {
+        const wrap = document.getElementById('rxn-wrap-' + postId);
+        if (!wrap) return;
+        const picker = wrap.querySelector('.reaction-picker');
+        const isOpen = picker.classList.contains('open');
+        // close all others
+        document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) picker.classList.add('open');
+    }
+
+    function sendReaction(postId, rtype) {
+        const wrap = document.getElementById('rxn-wrap-' + postId);
+        if (wrap) wrap.querySelector('.reaction-picker').classList.remove('open');
+        fetch('/community/post/' + postId + '/react/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': window.csrfToken, 'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'reaction=' + rtype
+        }).then(r => r.json()).then(data => {
+            renderReactions(postId, data.counts, data.active);
+            buildReactionPicker(postId, data.active);
+            // update main btn emoji
+            const mainBtn = document.getElementById('rxn-main-' + postId);
+            if (mainBtn) {
+                const r = REACTIONS.find(x => x.type === data.active);
+                mainBtn.innerHTML = r
+                    ? `${r.emoji} <span style="font-size:.8rem;">${r.label}</span>`
+                    : `<i class="bi bi-hand-thumbs-up"></i> واکنش`;
+                mainBtn.style.color = data.active ? '#a78bfa' : '';
+            }
+        });
+    }
+
+    function renderReactions(postId, counts, activeType) {
+        const container = document.getElementById('rxn-chips-' + postId);
+        if (!container) return;
+        container.innerHTML = '';
+        REACTIONS.forEach(r => {
+            if (!counts[r.type]) return;
+            const chip = document.createElement('span');
+            chip.className = 'rxn-chip' + (r.type === activeType ? ' mine' : '');
+            chip.onclick = () => sendReaction(postId, r.type);
+            chip.innerHTML = `${r.emoji} <span class="rxn-count">${counts[r.type]}</span>`;
+            chip.title = r.label;
+            container.appendChild(chip);
+        });
+    }
+
+    // close pickers on outside click
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+    });
+
+    // ── Notification + DM badge polling ──
+    {% if user.is_authenticated %}
+    function updateBadge(url, badgeId, btnId) {
+        fetch(url).then(r => r.json()).then(d => {
+            const badge = document.getElementById(badgeId);
+            const btn   = document.getElementById(btnId);
+            if (!badge) return;
+            if (d.count > 0) {
+                badge.textContent = d.count > 99 ? '99+' : d.count;
+                badge.style.display = 'flex';
+                btn && btn.classList.add('has-notif');
+            } else {
+                badge.style.display = 'none';
+                btn && btn.classList.remove('has-notif');
+            }
+        }).catch(() => {});
+    }
+    function pollBadges() {
+        updateBadge('/community/api/notifications/count/', 'notifBadge', 'navBellBtn');
+        updateBadge('/community/api/inbox/count/', 'dmBadge', 'navDmBtn');
+    }
+    pollBadges();
+    setInterval(pollBadges, 30000); // every 30 sec
+    {% endif %}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

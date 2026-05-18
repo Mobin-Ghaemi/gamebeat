@@ -9,6 +9,7 @@ from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper, Pre
 from django.db import models, transaction
 from django.db.models.functions import Coalesce
 from django.utils.text import slugify
+from django.template.loader import render_to_string
 from contextlib import nullcontext
 from decimal import Decimal
 from datetime import timedelta
@@ -29,6 +30,144 @@ from account.models import Subscription
 
 
 # ==================== GameNet Dashboard ====================
+
+def _build_knockout_bracket(tournament, matches_by_round):
+    from types import SimpleNamespace
+
+    def _ceil_log2(n):
+        # 최소 1 round
+        if n <= 1:
+            return 0
+        return (n - 1).bit_length()
+
+    if not matches_by_round:
+        return {
+            'has_matches': False,
+            'rows': 2,
+            'total_rounds': 1,
+            'rounds': [],
+            'final_match': None,
+            'tournament': tournament,
+        }
+
+    # Determine tournament bracket size from current entrants (preferred) or round-1 match count.
+    round1_count = len(matches_by_round.get(1, []))
+    entrants = max(getattr(tournament, 'participants_count', 0) or 0, round1_count * 2, 2)
+    total_rounds = max(_ceil_log2(entrants), max(matches_by_round.keys(), default=1))
+    rows = 2 ** total_rounds  # grid rows used for spacing
+    rounds = []
+
+    stage_name_by_teams = {
+        2: 'فینال',
+        4: 'نیمه‌نهایی',
+        8: 'یک‌چهارم نهایی',
+        16: 'یک‌هشتم نهایی',
+        32: 'یک‌شانزدهم نهایی',
+        64: 'یک‌سی‌ودوم نهایی',
+    }
+
+    def _placeholder_match(round_number, match_number):
+        # Template expects attributes similar to TournamentMatch.
+        return SimpleNamespace(
+            id=f"ph-{round_number}-{match_number}",
+            is_real=False,
+            round_number=round_number,
+            match_number=match_number,
+            status='placeholder',
+            participant1=None,
+            participant2=None,
+            participant1_id=None,
+            participant2_id=None,
+            winner=None,
+            winner_id=None,
+        )
+
+    # Build quick lookup: previous-round match winners by (round_number, match_number).
+    winner_by_round_match = {}
+    for rn, round_matches in matches_by_round.items():
+        by_no = {}
+        for m in round_matches:
+            if getattr(m, 'winner_id', None):
+                by_no[getattr(m, 'match_number', None)] = m.winner
+        winner_by_round_match[rn] = by_no
+
+    def _progressive_seed(target_match):
+        """Fill target participant slots from previous-round winners (for placeholder rounds)."""
+        rn = getattr(target_match, 'round_number', None)
+        mn = getattr(target_match, 'match_number', None)
+        if not rn or rn <= 1 or not mn:
+            return
+        prev = rn - 1
+        prev_winners = winner_by_round_match.get(prev, {})
+        p1 = prev_winners.get(mn * 2 - 1)
+        p2 = prev_winners.get(mn * 2)
+
+        if getattr(target_match, 'participant1', None) is None and p1 is not None:
+            target_match.participant1 = p1
+            target_match.participant1_id = p1.id
+        if getattr(target_match, 'participant2', None) is None and p2 is not None:
+            target_match.participant2 = p2
+            target_match.participant2_id = p2.id
+
+    # Build all rounds except the final, padding with placeholders for a consistent "UCL-style" shape.
+    for round_number in range(1, total_rounds):
+        expected_matches = 2 ** (total_rounds - round_number)
+        round_matches = list(matches_by_round.get(round_number, []))
+        by_no = {m.match_number: m for m in round_matches}
+        ordered = []
+        for match_no in range(1, expected_matches + 1):
+            m = by_no.get(match_no) or _placeholder_match(round_number, match_no)
+            if not hasattr(m, 'is_real'):
+                setattr(m, 'is_real', not isinstance(m, SimpleNamespace))
+            _progressive_seed(m)
+            ordered.append(m)
+
+        teams_this_round = 2 ** (total_rounds - round_number + 1)
+        round_label = stage_name_by_teams.get(teams_this_round, f'دور {round_number}')
+        half = expected_matches // 2
+
+        left = []
+        right = []
+        for match in ordered:
+            match.grid_row = (2 * match.match_number - 1) * (2 ** (round_number - 1))
+            if match.match_number <= half:
+                match.side_index = match.match_number
+                left.append(match)
+            else:
+                match.side_index = match.match_number - half
+                right.append(match)
+
+        rounds.append(
+            {
+                'round_number': round_number,
+                'label': round_label,
+                'left': left,
+                'right': right,
+            }
+        )
+
+    # Final match (real or placeholder so connectors can always target center).
+    final_round = total_rounds
+    final_matches = list(matches_by_round.get(final_round, []))
+    final_matches.sort(key=lambda m: (m.match_number, m.id))
+    if final_matches:
+        final_match = final_matches[0]
+        setattr(final_match, 'is_real', True)
+    else:
+        final_match = _placeholder_match(final_round, 1)
+    final_match.grid_row = (2 * 1 - 1) * (2 ** (final_round - 1))
+    final_match.side_index = 1
+
+    _progressive_seed(final_match)
+
+    return {
+        'has_matches': True,
+        'rows': rows,
+        'total_rounds': total_rounds,
+        'rounds': rounds,
+        'final_match': final_match,
+        'tournament': tournament,
+    }
 
 @gamenet_subscription_required
 def dashboard(request):
@@ -62,14 +201,19 @@ def dashboard(request):
     active_sessions_list = Session.objects.filter(
         device__gamenet=gamenet, 
         is_active=True
-    ).order_by('start_time')
+    ).order_by('start_time').only(
+        'id',
+        'device_id',
+        'start_time',
+        'hourly_rate',
+        'extra_controllers',
+        'extra_controller_rate',
+    )
     
-    # دستگاه‌ها
-    devices = Device.objects.filter(gamenet=gamenet).prefetch_related('sessions')
-    
-    # ساخت دیتای جلسات فعال برای جاوااسکریپت
     active_sessions_data = {}
+    active_session_id_by_device = {}
     for session in active_sessions_list:
+        active_session_id_by_device[session.device_id] = session.id
         active_sessions_data[session.device_id] = {
             'session_id': session.id,
             'start_time': session.start_time.isoformat(),
@@ -77,6 +221,17 @@ def dashboard(request):
             'extra_controllers': session.extra_controllers,
             'controller_rate': float(session.extra_controller_rate),
         }
+
+    # دستگاه‌ها (بدون prefetch sessions: روی دیتای زیاد باعث کندی می‌شود)
+    devices = Device.objects.filter(gamenet=gamenet).only(
+        'id',
+        'gamenet_id',
+        'number',
+        'name',
+        'device_type',
+        'hourly_rate',
+        'status',
+    )
     
     context = {
         'gamenet': gamenet,
@@ -86,7 +241,8 @@ def dashboard(request):
         'today_sessions': today_sessions,
         'today_income': today_income,
         'active_sessions_list': active_sessions_list,
-        'active_sessions_json': json.dumps(active_sessions_data),
+        'active_sessions_data': active_sessions_data,
+        'active_session_id_by_device': active_session_id_by_device,
         'devices': devices,
         'subscription': request.gamenet_subscription
     }
@@ -166,10 +322,20 @@ def delete_gamenet_image(request, image_id):
 def device_list(request):
     """لیست دستگاه‌ها"""
     gamenet = get_object_or_404(GameNet, owner=request.user)
-    devices = Device.objects.filter(gamenet=gamenet)
+
+    active_session_id_by_device = dict(
+        Session.objects.filter(device__gamenet=gamenet, is_active=True).values_list('device_id', 'id')
+    )
+
+    devices = (
+        Device.objects.filter(gamenet=gamenet)
+        .annotate(games_count=Count('games', distinct=True))
+        .prefetch_related('games')
+    )
     return render(request, 'gamenet/device_list.html', {
         'gamenet': gamenet,
-        'devices': devices
+        'devices': devices,
+        'active_session_id_by_device': active_session_id_by_device,
     })
 
 
@@ -667,22 +833,38 @@ def reports(request):
 def tournament_list(request):
     """لیست تورنومنت‌ها"""
     gamenet = get_object_or_404(GameNet, owner=request.user)
-    visibility_filter = request.GET.get('visibility', '').strip()
-    tournaments = Tournament.objects.filter(gamenet=gamenet).select_related('game')
-    if visibility_filter in ('public', 'private'):
-        tournaments = tournaments.filter(visibility=visibility_filter)
+    tournaments = (
+        Tournament.objects
+        .filter(gamenet=gamenet)
+        .select_related('game')
+        .annotate(participants_total=Count('participants'))
+        .order_by('-start_date', '-id')
+    )
+
+    active_statuses = ('upcoming', 'ongoing')
+    finished_statuses = ('completed', 'cancelled')
+
+    tournaments_active = tournaments.filter(status__in=active_statuses)
+    tournaments_finished = tournaments.filter(status__in=finished_statuses)
+
+    tournaments_active_public = tournaments_active.filter(visibility='public')
+    tournaments_active_private = tournaments_active.filter(visibility='private')
+    tournaments_finished_public = tournaments_finished.filter(visibility='public')
+    tournaments_finished_private = tournaments_finished.filter(visibility='private')
 
     total_tournaments = tournaments.count()
-    public_count = Tournament.objects.filter(gamenet=gamenet, visibility='public').count()
-    private_count = Tournament.objects.filter(gamenet=gamenet, visibility='private').count()
+    public_count = tournaments.filter(visibility='public').count()
+    private_count = tournaments.filter(visibility='private').count()
 
     return render(request, 'gamenet/tournament_list.html', {
         'gamenet': gamenet,
-        'tournaments': tournaments,
-        'selected_visibility': visibility_filter,
         'total_tournaments': total_tournaments,
         'public_count': public_count,
         'private_count': private_count,
+        'tournaments_active_public': tournaments_active_public,
+        'tournaments_active_private': tournaments_active_private,
+        'tournaments_finished_public': tournaments_finished_public,
+        'tournaments_finished_private': tournaments_finished_private,
     })
 
 
@@ -724,6 +906,8 @@ def tournament_detail(request, pk):
     for match in matches:
         matches_by_round.setdefault(match.round_number, []).append(match)
 
+    bracket = _build_knockout_bracket(tournament, matches_by_round)
+
     champion = tournament.champion
     if champion is None and tournament.status == 'completed':
         champion = next((match.winner for match in reversed(matches) if match.winner_id), None)
@@ -737,6 +921,7 @@ def tournament_detail(request, pk):
         'participants': participants,
         'participants_count': len(participants),
         'matches_by_round': matches_by_round,
+        'bracket': bracket,
         'show_results': show_results,
         'champion': champion,
         'show_participants_public': tournament.show_participants_public,
@@ -880,6 +1065,34 @@ def tournament_manage(request, pk):
                 messages.success(request, 'وضعیت مسابقه با موفقیت به‌روزرسانی شد.')
             return redirect('gamenet:tournament_manage', pk=tournament.pk)
 
+        if action == 'finish_tournament':
+            if tournament.status in ('completed', 'cancelled'):
+                messages.info(request, 'این مسابقه قبلا پایان یافته یا لغو شده است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
+            with transaction.atomic():
+                champion_id = tournament.champion_id
+                if champion_id is None:
+                    champion_id = (
+                        TournamentMatch.objects
+                        .filter(tournament=tournament, winner__isnull=False)
+                        .order_by('-round_number', '-match_number', '-id')
+                        .values_list('winner_id', flat=True)
+                        .first()
+                    )
+
+                tournament.status = 'completed'
+                tournament.registration_open = False
+                if tournament.end_date is None:
+                    tournament.end_date = timezone.now()
+                if champion_id and tournament.champion_id != champion_id:
+                    tournament.champion_id = champion_id
+
+                tournament.save(update_fields=['status', 'registration_open', 'end_date', 'champion'])
+
+            messages.success(request, 'مسابقه با موفقیت پایان یافت.')
+            return redirect('gamenet:tournament_manage', pk=tournament.pk)
+
         if action == 'toggle_registration':
             registration_open = request.POST.get('registration_open', '0') in ('1', 'true', 'True', 'on')
             if registration_open and has_matches:
@@ -909,9 +1122,13 @@ def tournament_manage(request, pk):
             phone = _normalize_digits(request.POST.get('phone', ''))
             gamer_tag = request.POST.get('gamer_tag', '').strip()
             paid = request.POST.get('paid', '0') in ('1', 'true', 'True', 'on')
+            image = request.FILES.get('image')
 
             if not name:
                 messages.error(request, 'نام شرکت‌کننده الزامی است.')
+                return redirect('gamenet:tournament_manage', pk=tournament.pk)
+            if getattr(gamenet, 'require_tournament_participant_image', False) and not image:
+                messages.error(request, 'آپلود تصویر شرکت‌کننده اجباری است (طبق تنظیمات گیم‌نت).')
                 return redirect('gamenet:tournament_manage', pk=tournament.pk)
 
             if not phone:
@@ -927,6 +1144,7 @@ def tournament_manage(request, pk):
                 phone=phone,
                 gamer_tag=gamer_tag,
                 paid=paid,
+                image=image,
             )
             messages.success(request, f'{name} به مسابقه اضافه شد.')
             return redirect('gamenet:tournament_manage', pk=tournament.pk)
@@ -957,14 +1175,20 @@ def tournament_manage(request, pk):
             match = get_object_or_404(TournamentMatch, id=match_id, tournament=tournament)
             if match.status == 'bye':
                 messages.info(request, 'این بازی حالت استراحت دارد و برنده آن مشخص است.')
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'ok': False, 'message': 'این بازی حالت استراحت دارد.'}, status=400)
                 return redirect('gamenet:tournament_manage', pk=tournament.pk)
 
             winner = TournamentParticipant.objects.filter(id=winner_id, tournament=tournament).first() if winner_id else None
             if winner is None:
                 messages.error(request, 'برنده انتخاب‌شده معتبر نیست.')
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'ok': False, 'message': 'برنده انتخاب‌شده معتبر نیست.'}, status=400)
                 return redirect('gamenet:tournament_manage', pk=tournament.pk)
             if winner.id not in {match.participant1_id, match.participant2_id}:
                 messages.error(request, 'برنده باید یکی از دو طرف بازی باشد.')
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'ok': False, 'message': 'برنده باید یکی از دو طرف بازی باشد.'}, status=400)
                 return redirect('gamenet:tournament_manage', pk=tournament.pk)
 
             with transaction.atomic():
@@ -974,10 +1198,46 @@ def tournament_manage(request, pk):
                 _advance_tournament_bracket(tournament)
 
             tournament.refresh_from_db(fields=['status', 'champion'])
+            completed_message = 'برنده بازی ثبت شد.'
             if tournament.status == 'completed' and tournament.champion:
-                messages.success(request, f'مسابقه تمام شد. قهرمان: {tournament.champion.name}')
-            else:
-                messages.success(request, 'برنده بازی ثبت شد.')
+                completed_message = f'مسابقه تمام شد. قهرمان: {tournament.champion.name}'
+            messages.success(request, completed_message)
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                # Rebuild bracket fragment and return without reloading the whole page.
+                matches = list(
+                    TournamentMatch.objects.filter(tournament=tournament)
+                    .select_related('participant1', 'participant2', 'winner')
+                    .order_by('round_number', 'match_number', 'id')
+                )
+                matches_by_round = OrderedDict()
+                for m in matches:
+                    matches_by_round.setdefault(m.round_number, []).append(m)
+
+                champion = tournament.champion
+                if champion is None and tournament.status == 'completed':
+                    champion = next((m.winner for m in reversed(matches) if m.winner_id), None)
+
+                bracket = _build_knockout_bracket(tournament, matches_by_round)
+                bracket_html = render_to_string(
+                    'gamenet/partials/tournament_bracket.html',
+                    {
+                        'tournament': tournament,
+                        'bracket': bracket,
+                    },
+                    request=request,
+                )
+                return JsonResponse(
+                    {
+                        'ok': True,
+                        'message': completed_message,
+                        'bracket_html': bracket_html,
+                        'tournament_status': tournament.status,
+                        'tournament_status_display': tournament.get_status_display(),
+                        'champion_name': champion.name if champion else None,
+                    }
+                )
+
             return redirect('gamenet:tournament_manage', pk=tournament.pk)
 
         if action == 'update_participant':
@@ -1039,6 +1299,8 @@ def tournament_manage(request, pk):
     for match in matches:
         matches_by_round.setdefault(match.round_number, []).append(match)
 
+    bracket = _build_knockout_bracket(tournament, matches_by_round)
+
     champion = tournament.champion
     if champion is None and tournament.status == 'completed':
         champion = next((match.winner for match in reversed(matches) if match.winner_id), None)
@@ -1058,6 +1320,7 @@ def tournament_manage(request, pk):
         'remaining_capacity': remaining_capacity,
         'status_choices': Tournament.STATUS_CHOICES,
         'matches_by_round': matches_by_round,
+        'bracket': bracket,
         'has_matches': bool(matches),
         'champion': champion,
         'can_add_participant': not bool(matches) and participants_count < tournament.max_participants,
@@ -1081,7 +1344,11 @@ def tournament_register(request, pk):
         return redirect('gamenet:tournament_detail', pk=tournament.pk)
     
     if request.method == 'POST':
-        form = ParticipantForm(request.POST)
+        form = ParticipantForm(
+            request.POST,
+            request.FILES,
+            require_image=getattr(gamenet, 'require_tournament_participant_image', False),
+        )
         if form.is_valid():
             participant = form.save(commit=False)
             participant.tournament = tournament
@@ -1090,7 +1357,7 @@ def tournament_register(request, pk):
             return redirect('gamenet:tournament_detail', pk=tournament.pk)
         messages.error(request, 'لطفا اطلاعات شرکت‌کننده را صحیح وارد کنید.')
     else:
-        form = ParticipantForm()
+        form = ParticipantForm(require_image=getattr(gamenet, 'require_tournament_participant_image', False))
     
     return render(request, 'gamenet/tournament_register.html', {
         'gamenet': gamenet,

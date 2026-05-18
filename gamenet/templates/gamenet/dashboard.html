@@ -1293,13 +1293,13 @@
                         <i class="fas fa-play"></i> شروع
                     </button>
                     {% else %}
-                    {% for session in device.sessions.all %}
-                    {% if session.is_active %}
-                    <button class="btn btn-danger" onclick="handleStop({{ session.id }}, {{ device.id }})">
-                        <i class="fas fa-stop"></i> پایان
-                    </button>
+                    {% with session_id=active_session_id_by_device|get_item:device.id %}
+                    {% if session_id %}
+                        <button class="btn btn-danger" onclick="handleStop({{ session_id }}, {{ device.id }})">
+                            <i class="fas fa-stop"></i> پایان
+                        </button>
                     {% endif %}
-                    {% endfor %}
+                    {% endwith %}
                     {% endif %}
                 </div>
             </div>
@@ -1492,6 +1492,8 @@
     </div>
 </div>
 {% endblock %}
+
+{{ active_sessions_data|json_script:"active-sessions-data" }}
 
 {% block extra_js %}
 <script>
@@ -1783,17 +1785,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // تأخیر کوچک برای اطمینان از آمادگی DOM
     setTimeout(() => {
-        // شروع تایمرهای فعال
-        {% for device in devices %}
-        {% if device.status == 'occupied' %}
-        {% for session in device.sessions.all %}
-        {% if session.is_active %}
-        console.log('🟢 Loading active session: Device {{ device.id }}, Session {{ session.id }}, Start: {{ session.start_time|date:"U" }}');
-        startTimer({{ device.id }}, {{ session.id }}, {{ session.start_time|date:"U" }}, {{ session.hourly_rate }});
-        {% endif %}
-        {% endfor %}
-        {% endif %}
-        {% endfor %}
+        // شروع تایمرهای فعال (بدون loop روی sessions در template)
+        const activeSessionsEl = document.getElementById('active-sessions-data');
+        const activeSessions = activeSessionsEl ? JSON.parse(activeSessionsEl.textContent || '{}') : {};
+        for (const [deviceId, session] of Object.entries(activeSessions)) {
+            startTimer(Number(deviceId), session.session_id, session.start_time, session.hourly_rate);
+        }
         
         // بازیابی جلسات از localStorage با پاکسازی خودکار آیتم‌های قدیمی
         console.log('🔍 Restoring sessions from localStorage...');

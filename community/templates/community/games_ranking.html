@@ -1,0 +1,190 @@
+{% extends 'community/base.html' %}
+{% block title %}رتبه‌بندی بازی‌ها | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.gr-page { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+
+.gr-hero {
+    background: linear-gradient(135deg, #0d0022 0%, #1e0035 40%, #0a001e 100%);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 22px; padding: 32px 28px; margin-bottom: 28px;
+    position: relative; overflow: hidden;
+}
+.gr-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.2) 0%, transparent 60%);
+}
+.gr-hero-inner { position:relative; z-index:1; }
+.gr-hero h1 { font-size:1.8rem; font-weight:900; color:#fff; margin:0 0 6px; }
+.gr-hero p  { color:rgba(255,255,255,0.5); font-size:0.9rem; margin:0; }
+
+.gr-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+}
+.gr-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.gr-row:last-child { border-bottom: none; }
+.gr-row:hover { background: rgba(139,92,246,0.04); }
+
+.gr-rank {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; font-weight: 900; flex-shrink: 0;
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-dim);
+}
+.gr-rank.r1 { background: rgba(255,215,0,0.15); border-color: rgba(255,215,0,0.4); color: #ffd700; }
+.gr-rank.r2 { background: rgba(192,192,192,0.15); border-color: rgba(192,192,192,0.4); color: #c0c0c0; }
+.gr-rank.r3 { background: rgba(205,127,50,0.15); border-color: rgba(205,127,50,0.4); color: #cd7f32; }
+
+.gr-game-name { flex:1; font-size:0.95rem; font-weight:700; color:var(--text-white); }
+.gr-meta { display:flex; align-items:center; gap:14px; flex-shrink:0; }
+
+.gr-score {
+    font-size: 1.2rem; font-weight: 900;
+    background: linear-gradient(135deg,#fbbf24,#f59e0b);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.gr-count { font-size: 0.75rem; color: var(--text-dim); }
+
+.gr-stars {
+    display:flex; gap:2px;
+}
+.gr-star { font-size:0.75rem; line-height:1; }
+
+.gr-add-btn {
+    background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3);
+    color: #a78bfa; border-radius: 8px; padding: 5px 12px;
+    font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif; transition: all .15s;
+    white-space: nowrap;
+}
+.gr-add-btn:hover { background: rgba(139,92,246,0.2); color: white; }
+.gr-add-btn.added { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.3); color: #4ade80; }
+
+.gr-add-form {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 20px; margin-bottom: 20px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+.gr-add-form input {
+    flex:1; min-width:180px; background:var(--bg-card); border:1px solid var(--border);
+    color:var(--text-white); border-radius:10px; padding:9px 14px;
+    font-family:'Vazirmatn',sans-serif; outline:none;
+}
+.gr-add-form input:focus { border-color:#8b5cf6; }
+
+.empty-gr {
+    text-align:center; padding:64px 20px; color:var(--text-dim);
+}
+.empty-gr i { font-size:3rem; opacity:.2; display:block; margin-bottom:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gr-page">
+
+    <div class="gr-hero">
+        <div class="gr-hero-inner">
+            <h1>🏆 بهترین بازی‌ها</h1>
+            <p>رتبه‌بندی بر اساس امتیاز گیمرهای GameBeat</p>
+        </div>
+    </div>
+
+    <!-- Add to my backlog quick form -->
+    <div class="gr-add-form">
+        <input type="text" id="grGameInput" placeholder="نام بازی رو بنویس و به بک‌لاگت اضافه کن...">
+        <select id="grStatus" style="background:var(--bg-card); border:1px solid var(--border); color:var(--text-white); border-radius:10px; padding:9px 14px; font-family:'Vazirmatn',sans-serif; outline:none;">
+            <option value="want">می‌خوام بازی کنم</option>
+            <option value="playing">دارم بازی می‌کنم</option>
+            <option value="completed">تموم کردم</option>
+        </select>
+        <button onclick="grAddGame()" class="btn-red" style="padding:9px 20px; border-radius:10px;">
+            <i class="bi bi-plus-lg"></i> اضافه به بک‌لاگ
+        </button>
+    </div>
+
+    {% if top %}
+    <div class="gr-table">
+        {% for game in top %}
+        <div class="gr-row">
+            <div class="gr-rank {% if forloop.counter == 1 %}r1{% elif forloop.counter == 2 %}r2{% elif forloop.counter == 3 %}r3{% endif %}">
+                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+            </div>
+
+            <div class="gr-game-name">{{ game.game_name }}</div>
+
+            <div class="gr-meta">
+                <div class="gr-stars">
+                    {% for i in "12345678910" %}
+                    {% endfor %}
+                </div>
+                <div style="text-align:center;">
+                    <div class="gr-score">{{ game.avg|floatformat:1 }}</div>
+                    <div class="gr-count">{{ game.cnt }} نفر</div>
+                </div>
+                <button class="gr-add-btn {% if game.game_name in my_backlog %}added{% endif %}"
+                    onclick="grQuickAdd('{{ game.game_name }}', this)">
+                    {% if game.game_name in my_backlog %}✓ در بک‌لاگ{% else %}+ بک‌لاگ{% endif %}
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-gr">
+        <i class="bi bi-joystick"></i>
+        <p>هنوز هیچ بازی‌ای امتیاز نگرفته</p>
+        <p style="font-size:0.82rem; margin-top:6px;">بازی‌هایی که تموم کردی رو امتیاز بده تا اینجا نشون داده بشن</p>
+        <a href="{% url 'community:profile' username=request.user.username %}" class="btn-red" style="display:inline-flex; gap:7px; margin-top:18px; text-decoration:none; padding:10px 22px; border-radius:12px;">
+            <i class="bi bi-collection-play-fill"></i> رفتن به بک‌لاگ
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = typeof csrfToken !== 'undefined' ? csrfToken : '{{ csrf_token }}';
+
+function grAddGame() {
+    const name   = document.getElementById('grGameInput').value.trim();
+    const status = document.getElementById('grStatus').value;
+    if (!name) return;
+    fetch('/community/backlog/add/', {
+        method:'POST', headers:{'X-CSRFToken':CSRF, 'Content-Type':'application/x-www-form-urlencoded'},
+        body:`game_name=${encodeURIComponent(name)}&status=${status}`
+    }).then(r=>r.json()).then(()=>{
+        document.getElementById('grGameInput').value = '';
+        showToast('اضافه شد به بک‌لاگ ✓', '#4ade80');
+    });
+}
+
+function grQuickAdd(name, btn) {
+    fetch('/community/backlog/add/', {
+        method:'POST', headers:{'X-CSRFToken':CSRF, 'Content-Type':'application/x-www-form-urlencoded'},
+        body:`game_name=${encodeURIComponent(name)}&status=want`
+    }).then(r=>r.json()).then(()=>{
+        btn.textContent = '✓ در بک‌لاگ';
+        btn.classList.add('added');
+    });
+}
+
+function showToast(msg, color='#7c3aed') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:${color};color:white;padding:10px 22px;border-radius:50px;font-size:.88rem;z-index:9999;opacity:0;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'Vazirmatn',sans-serif;font-weight:600;`;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(10px)'; setTimeout(()=>t.remove(),260); }, 2200);
+}
+</script>
+{% endblock %}

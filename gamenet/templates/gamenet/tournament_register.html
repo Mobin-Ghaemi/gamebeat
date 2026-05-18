@@ -21,7 +21,7 @@
             اطلاعات شرکت‌کننده
         </h3>
         
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
             <div class="form-group">
@@ -39,6 +39,20 @@
                 {{ form.gamer_tag }}
                 <small style="color: var(--text-muted); display: block; margin-top: 6px;">
                     آیدی شما در بازی (اختیاری)
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    تصویر {% if gamenet.require_tournament_participant_image %}*{% else %}(اختیاری){% endif %}
+                </label>
+                {{ form.image }}
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                    {% if gamenet.require_tournament_participant_image %}
+                        طبق تنظیمات گیم‌نت، تصویر اجباری است و در براکت کنار نام نمایش داده می‌شود.
+                    {% else %}
+                        اگر تصویر پروفایل دارید، برای نمایش در براکت آپلود کنید.
+                    {% endif %}
                 </small>
             </div>
             

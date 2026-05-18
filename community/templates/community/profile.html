@@ -1,0 +1,1990 @@
+{% extends 'community/base.html' %}
+{% load community_tags %}
+{% block title %}{{ profile_user.username }} | GameBeat Community{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --bg-void: #16161e;
+    --bg-card: #22222e;
+    --bg-card2: #2a2a38;
+    --border: #35354a;
+    --purple: #8b5cf6;
+    --purple-glow: rgba(139,92,246,0.4);
+    --purple-soft: rgba(139,92,246,0.12);
+    --purple-mid: rgba(139,92,246,0.25);
+}
+
+/* ===== LAYOUT ===== */
+.profile-page { background: var(--bg-void); min-height: 100vh; }
+
+.profile-banner {
+    height: 240px;
+    background: linear-gradient(135deg, #0d0022 0%, #1e0035 30%, #12002a 55%, #080018 80%, #04000e 100%);
+    position: relative;
+    overflow: hidden;
+}
+.profile-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 15% 60%, rgba(139,92,246,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 25%, rgba(168,85,247,0.2) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 90%, rgba(109,40,217,0.15) 0%, transparent 40%);
+}
+.profile-banner-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: absolute; inset: 0;
+    opacity: 0.7;
+}
+.banner-edit-btn {
+    position: absolute; bottom: 14px; right: 14px;
+    background: rgba(0,0,0,0.55);
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+}
+.banner-edit-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+/* ===== BODY LAYOUT ===== */
+.profile-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 860px) {
+    .profile-layout { grid-template-columns: 1fr; }
+    .profile-sidebar { display: none; }
+}
+
+/* ===== HEADER CARD ===== */
+.profile-header-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 0 28px 24px;
+    margin-top: -50px;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+
+.profile-top-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.profile-avatar-wrap { margin-top: -55px; flex-shrink: 0; }
+
+.profile-avatar-img {
+    width: 115px; height: 115px;
+    border-radius: 50%;
+    border: 4px solid var(--purple);
+    object-fit: cover;
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.2), 0 0 30px rgba(139,92,246,0.5);
+    display: block;
+}
+.profile-avatar-placeholder {
+    width: 115px; height: 115px;
+    border-radius: 50%;
+    border: 4px solid var(--purple);
+    background: linear-gradient(135deg, #1a0a2e, #2d1154);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem; font-weight: 900;
+    color: var(--purple);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.2), 0 0 30px rgba(139,92,246,0.4);
+}
+
+.profile-actions {
+    display: flex; gap: 10px; padding-bottom: 10px; flex-wrap: wrap;
+}
+
+.btn-follow {
+    background: linear-gradient(135deg, var(--purple), #7c3aed);
+    color: white; border: none;
+    padding: 9px 22px; border-radius: 10px;
+    font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.25s;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.35);
+}
+.btn-follow:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(139,92,246,0.5); }
+.btn-follow.following {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+.btn-follow.following:hover { border-color: #ef4444; color: #ef4444; }
+
+.btn-edit-profile {
+    background: var(--bg-card2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 9px 18px; border-radius: 10px;
+    font-size: 0.88rem; font-weight: 600;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+}
+.btn-edit-profile:hover { border-color: var(--purple); color: var(--purple); }
+
+.btn-gamenet {
+    background: linear-gradient(135deg, #110820, #200840);
+    border: 1px solid rgba(139,92,246,0.4);
+    color: rgba(168,85,247,0.9);
+    padding: 9px 18px; border-radius: 10px;
+    font-size: 0.88rem; font-weight: 600;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 0 14px rgba(139,92,246,0.15);
+}
+.btn-gamenet:hover { border-color: var(--purple); box-shadow: 0 0 22px rgba(139,92,246,0.3); color: white; }
+
+/* Profile info */
+.profile-name-section { margin-top: 16px; }
+
+.profile-display-name {
+    font-size: 1.5rem; font-weight: 900;
+    color: #fff; line-height: 1.2;
+}
+.profile-username {
+    color: var(--text-muted); font-size: 0.9rem; margin-top: 3px;
+}
+.profile-bio {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.93rem; line-height: 1.7;
+    margin-top: 10px; max-width: 580px;
+}
+
+/* Badges */
+.profile-badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+
+.badge-item {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 700;
+    border: 1px solid;
+}
+.badge-level {
+    background: rgba(168,85,247,0.1);
+    border-color: rgba(168,85,247,0.3);
+    color: #c084fc;
+}
+.badge-platform {
+    background: rgba(139,92,246,0.08);
+    border-color: rgba(139,92,246,0.25);
+    color: var(--purple);
+}
+.badge-rank {
+    background: rgba(251,191,36,0.08);
+    border-color: rgba(251,191,36,0.25);
+    color: #fbbf24;
+}
+.badge-city {
+    background: rgba(52,211,153,0.08);
+    border-color: rgba(52,211,153,0.2);
+    color: #34d399;
+}
+.badge-style {
+    background: rgba(251,113,133,0.08);
+    border-color: rgba(251,113,133,0.2);
+    color: #fb7185;
+}
+
+/* XP bar */
+.xp-bar-section { margin-top: 16px; max-width: 340px; }
+.xp-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 0.77rem; margin-bottom: 5px;
+    color: var(--text-muted);
+}
+.xp-bar-label span:last-child { color: #c084fc; font-weight: 700; }
+.xp-bar-track {
+    background: var(--border); border-radius: 99px;
+    height: 7px; overflow: hidden;
+}
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), #c084fc);
+    border-radius: 99px;
+    transition: width 0.6s ease;
+}
+
+/* Stats bar */
+.profile-stats-bar {
+    display: flex; gap: 1px;
+    background: var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-top: 22px;
+}
+.profile-stat {
+    background: var(--bg-card2);
+    flex: 1; padding: 15px 8px;
+    text-align: center; cursor: pointer;
+    transition: background 0.2s;
+}
+.profile-stat:hover { background: var(--purple-soft); }
+.profile-stat-val {
+    font-size: 1.35rem; font-weight: 900;
+    color: #fff;
+}
+.profile-stat-lbl {
+    font-size: 0.73rem; color: var(--text-dim);
+    margin-top: 2px;
+}
+
+/* ===== TABS ===== */
+.profile-tabs {
+    display: flex; gap: 2px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 22px;
+    overflow-x: auto;
+}
+.profile-tab {
+    padding: 12px 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none; border-bottom: 2px solid transparent;
+    font-weight: 600; font-size: 0.88rem;
+    transition: all 0.2s;
+    background: none;
+    font-family: 'Vazirmatn', sans-serif;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+}
+.profile-tab:hover { color: #fff; }
+.profile-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+/* ===== TAB PANELS ===== */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== POST CARDS ===== */
+.post-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    position: relative;
+}
+.post-card:hover {
+    border-color: var(--purple-mid);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+.post-card.post-type-achievement {
+    border-top: 2px solid #fbbf24;
+}
+.post-card.post-type-highlight {
+    border-top: 2px solid #a855f7;
+}
+.post-card-header {
+    padding: 14px 20px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.post-card-body { padding: 0 20px 12px; }
+.post-content {
+    color: rgba(255,255,255,0.88);
+    font-size: 0.93rem; line-height: 1.75;
+    white-space: pre-wrap;
+}
+.post-card-footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 12px;
+}
+.post-action-btn {
+    background: none; border: none;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.83rem; cursor: pointer;
+    padding: 5px 10px; border-radius: 8px;
+    transition: all 0.2s;
+    font-family: 'Vazirmatn', sans-serif;
+    position: relative;
+}
+.post-action-btn:hover { background: var(--purple-soft); color: var(--purple); }
+.post-action-btn.liked { color: #f87171; }
+.post-action-btn.liked i { color: #f87171; }
+.game-tag-chip {
+    background: var(--purple-soft);
+    border: 1px solid var(--purple-mid);
+    color: var(--purple);
+    padding: 2px 10px; border-radius: 12px;
+    font-size: 0.75rem; font-weight: 700;
+}
+.post-time { color: var(--text-dim); font-size: 0.75rem; }
+
+/* ===== GAMES TAB ===== */
+.games-chip-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.game-chip {
+    background: var(--purple-soft);
+    border: 1px solid var(--purple-mid);
+    color: #c084fc;
+    padding: 7px 16px; border-radius: 22px;
+    font-size: 0.85rem; font-weight: 600;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.2s;
+}
+.game-chip:hover {
+    background: rgba(139,92,246,0.2);
+    transform: translateY(-1px);
+}
+
+/* ===== GAMING ACCOUNTS TAB ===== */
+.ga-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.ga-card {
+    border-radius: 16px;
+    border: 1px solid;
+    padding: 20px 16px;
+    text-align: center;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+}
+.ga-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+.ga-card:hover::before { opacity: 1; }
+.ga-card:hover { transform: translateY(-3px); }
+
+.ga-steam { background: rgba(102,192,244,0.06); border-color: rgba(102,192,244,0.25); }
+.ga-steam:hover { box-shadow: 0 8px 30px rgba(102,192,244,0.15); border-color: rgba(102,192,244,0.5); }
+
+.ga-xbox { background: rgba(16,124,16,0.06); border-color: rgba(16,124,16,0.25); }
+.ga-xbox:hover { box-shadow: 0 8px 30px rgba(16,124,16,0.15); border-color: rgba(16,124,16,0.5); }
+
+.ga-psn { background: rgba(0,112,209,0.06); border-color: rgba(0,112,209,0.25); }
+.ga-psn:hover { box-shadow: 0 8px 30px rgba(0,112,209,0.15); border-color: rgba(0,112,209,0.5); }
+
+.ga-ea { background: rgba(255,69,0,0.06); border-color: rgba(255,69,0,0.25); }
+.ga-ea:hover { box-shadow: 0 8px 30px rgba(255,69,0,0.15); border-color: rgba(255,69,0,0.5); }
+
+.ga-epic { background: rgba(49,49,49,0.2); border-color: rgba(120,120,120,0.3); }
+.ga-epic:hover { box-shadow: 0 8px 30px rgba(120,120,120,0.1); border-color: rgba(200,200,200,0.4); }
+
+.ga-icon { font-size: 2.4rem; margin-bottom: 10px; display: block; }
+.ga-steam .ga-icon { color: #66c0f4; }
+.ga-xbox .ga-icon { color: #52b043; }
+.ga-psn .ga-icon { color: #0070d1; }
+.ga-ea .ga-icon { color: #ff6b35; }
+.ga-epic .ga-icon { color: #c8c8c8; }
+
+.ga-platform-name {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; margin-bottom: 5px;
+    opacity: 0.6;
+}
+.ga-steam .ga-platform-name { color: #66c0f4; }
+.ga-xbox .ga-platform-name { color: #52b043; }
+.ga-psn .ga-platform-name { color: #0070d1; }
+.ga-ea .ga-platform-name { color: #ff6b35; }
+.ga-epic .ga-platform-name { color: #c8c8c8; }
+
+.ga-username {
+    font-size: 1rem; font-weight: 800; color: #fff;
+    margin-bottom: 8px; word-break: break-all;
+}
+.ga-link-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 5px 14px; border-radius: 8px;
+    text-decoration: none; transition: all 0.2s;
+    border: 1px solid;
+    margin-bottom: 6px;
+}
+.ga-steam .ga-link-btn { color: #66c0f4; border-color: rgba(102,192,244,0.3); background: rgba(102,192,244,0.07); }
+.ga-steam .ga-link-btn:hover { background: rgba(102,192,244,0.18); }
+.ga-xbox .ga-link-btn { color: #52b043; border-color: rgba(82,176,67,0.3); background: rgba(82,176,67,0.07); }
+.ga-xbox .ga-link-btn:hover { background: rgba(82,176,67,0.18); }
+.ga-psn .ga-link-btn { color: #4d9ff5; border-color: rgba(0,112,209,0.3); background: rgba(0,112,209,0.07); }
+.ga-psn .ga-link-btn:hover { background: rgba(0,112,209,0.18); }
+.ga-ea .ga-link-btn { color: #ff6b35; border-color: rgba(255,69,0,0.3); background: rgba(255,69,0,0.07); }
+.ga-ea .ga-link-btn:hover { background: rgba(255,69,0,0.18); }
+.ga-epic .ga-link-btn { color: #c8c8c8; border-color: rgba(200,200,200,0.25); background: rgba(200,200,200,0.05); }
+.ga-epic .ga-link-btn:hover { background: rgba(200,200,200,0.12); }
+
+.ga-last-sync { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+
+.ga-disconnect-btn {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: rgba(239,68,68,0.6);
+    border-radius: 8px; padding: 3px 8px;
+    font-size: 0.7rem; cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.ga-disconnect-btn:hover { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.4); }
+
+/* Connect form */
+.ga-connect-section { margin-top: 24px; }
+.ga-connect-title {
+    font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.ga-connect-form {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+}
+.ga-connect-form select,
+.ga-connect-form input {
+    background: var(--bg-void);
+    border: 1px solid var(--border);
+    color: #fff; border-radius: 10px;
+    padding: 9px 14px; font-size: 0.88rem;
+    font-family: 'Vazirmatn', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.ga-connect-form select:focus,
+.ga-connect-form input:focus { border-color: var(--purple); }
+.ga-connect-form select { min-width: 160px; }
+.ga-connect-form input { flex: 1; min-width: 150px; }
+.ga-connect-btn {
+    background: linear-gradient(135deg, var(--purple), #7c3aed);
+    color: #fff; border: none;
+    padding: 9px 20px; border-radius: 10px;
+    font-weight: 700; font-size: 0.88rem;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.ga-connect-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
+.ga-connect-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ga-connect-status {
+    width: 100%; font-size: 0.83rem; padding: 8px 12px;
+    border-radius: 8px; display: none; margin-top: 6px;
+}
+.ga-connect-status.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: #34d399; }
+.ga-connect-status.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; }
+
+/* ===== ACHIEVEMENTS ===== */
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 12px;
+}
+.achievement-card {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 14px;
+    text-align: center;
+    transition: all 0.25s;
+}
+.achievement-card:hover {
+    border-color: rgba(251,191,36,0.4);
+    box-shadow: 0 4px 24px rgba(251,191,36,0.1);
+    transform: translateY(-2px);
+}
+.ach-icon { font-size: 2.2rem; color: #fbbf24; margin-bottom: 10px; }
+.ach-title { font-size: 0.85rem; font-weight: 800; color: #fff; }
+.ach-desc { font-size: 0.74rem; color: var(--text-dim); margin-top: 4px; }
+.ach-date { font-size: 0.68rem; color: var(--text-dim); margin-top: 8px; }
+
+/* ===== FOLLOWERS GRID ===== */
+.followers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    gap: 12px;
+}
+.follower-card {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    transition: all 0.22s;
+}
+.follower-card:hover {
+    border-color: var(--purple-mid);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(139,92,246,0.12);
+}
+.follower-avatar-img {
+    width: 52px; height: 52px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--border);
+    margin: 0 auto 8px;
+    display: block;
+}
+.follower-avatar-ph {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a0a2e, #2d1154);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 800; color: var(--purple);
+    margin: 0 auto 8px;
+}
+.follower-name { font-size: 0.83rem; font-weight: 700; color: #fff; }
+.follower-platform { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    text-align: center; padding: 50px 20px;
+    color: var(--text-muted);
+}
+.empty-state i { font-size: 3rem; opacity: 0.25; color: var(--purple); margin-bottom: 14px; display: block; }
+.empty-state p { font-size: 0.93rem; }
+
+/* ===== SIDEBAR ===== */
+.profile-sidebar { position: sticky; top: 80px; }
+
+.sidebar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+.sidebar-card-title {
+    font-size: 0.8rem; font-weight: 800;
+    color: var(--text-muted); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.sidebar-card-title i { color: var(--purple); }
+
+.sidebar-info-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+    font-size: 0.85rem;
+}
+.sidebar-info-row:last-child { border-bottom: none; }
+.sidebar-info-row i { color: var(--purple); width: 18px; text-align: center; flex-shrink: 0; }
+.sidebar-info-row span { color: rgba(255,255,255,0.75); }
+
+/* XP level card */
+.level-visual {
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(109,40,217,0.06));
+    border: 1px solid var(--purple-mid);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.level-num {
+    font-size: 3rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--purple), #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+.level-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+.level-xp-bar { margin-top: 12px; }
+
+/* Quick gaming IDs */
+.quick-ga-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+}
+.quick-ga-row:last-child { border-bottom: none; }
+.quick-ga-icon { font-size: 1.2rem; flex-shrink: 0; }
+.quick-ga-info { flex: 1; min-width: 0; }
+.quick-ga-platform { font-size: 0.7rem; color: var(--text-dim); }
+.quick-ga-name { font-size: 0.83rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quick-ga-link { font-size: 0.75rem; color: var(--purple); text-decoration: none; flex-shrink: 0; }
+.quick-ga-link:hover { color: #c084fc; }
+/* ===== NEW POST BUTTON ===== */
+.new-post-btn-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(168,85,247,0.06) 100%);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 16px;
+    margin-bottom: 18px;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.new-post-btn-row:hover {
+    background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(168,85,247,0.12) 100%);
+    border-color: rgba(139,92,246,0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(139,92,246,0.18);
+}
+.new-post-btn-inner { display: flex; align-items: center; gap: 14px; }
+.new-post-btn-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: #fff;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.4);
+    flex-shrink: 0;
+}
+.new-post-btn-title { font-size: 0.95rem; font-weight: 800; color: #f2f2f2; margin-bottom: 2px; }
+.new-post-btn-sub { font-size: 0.75rem; color: rgba(139,92,246,0.8); }
+.new-post-btn-arrow { font-size: 1.4rem; color: rgba(139,92,246,0.5); transition: color 0.2s, transform 0.2s; }
+.new-post-btn-row:hover .new-post-btn-arrow { color: #8b5cf6; transform: translateX(-3px); }
+
+/* ===== CREATE POST BOX ===== */
+.create-post-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+}
+.create-post-box:focus-within {
+    border-color: var(--purple);
+}
+.cp-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: text;
+}
+.cp-avatar {
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--purple); flex-shrink: 0;
+}
+.cp-avatar-ph {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #a855f7);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1rem; color: #fff; flex-shrink: 0;
+}
+.cp-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-white);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.95rem;
+    resize: none;
+    min-height: 40px;
+    max-height: 200px;
+    line-height: 1.6;
+    padding-top: 8px;
+}
+.cp-input::placeholder { color: var(--text-dim); }
+
+.cp-expanded {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    animation: fadeIn 0.18s ease;
+}
+.cp-expanded.show { display: block; }
+
+.cp-type-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.cp-type-btn {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-family: 'Vazirmatn', sans-serif;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+}
+.cp-type-btn.active, .cp-type-btn:hover {
+    background: rgba(139,92,246,0.15);
+    border-color: var(--purple);
+    color: var(--purple);
+}
+.cp-game-tag {
+    width: 100%;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text-white);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    margin-bottom: 12px;
+}
+.cp-game-tag:focus { border-color: var(--purple); }
+.cp-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+}
+.cp-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 10px;
+    padding: 7px 18px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.cp-cancel-btn:hover { border-color: var(--text-muted); color: var(--text-white); }
+.cp-submit-btn {
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    border: none;
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 22px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity 0.15s;
+}
+.cp-submit-btn:hover { opacity: 0.88; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ===== GAMING SHOWCASE ===== */
+.gaming-showcase {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+}
+.showcase-row {
+    margin-bottom: 16px;
+}
+.showcase-row:last-child { margin-bottom: 0; }
+.showcase-label {
+    font-size: 0.77rem; font-weight: 800; letter-spacing: 0.04em;
+    text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 7px;
+}
+.showcase-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.showcase-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 600;
+    border: 1px solid; transition: all 0.15s; cursor: default;
+}
+.showcase-chip.fav {
+    background: rgba(251,113,133,0.08);
+    border-color: rgba(251,113,133,0.3);
+    color: #fb7185;
+}
+.showcase-chip.fav:hover { background: rgba(251,113,133,0.16); }
+.showcase-chip.playing {
+    background: rgba(74,222,128,0.08);
+    border-color: rgba(74,222,128,0.3);
+    color: #4ade80;
+}
+.showcase-chip.playing:hover { background: rgba(74,222,128,0.16); }
+.showcase-chip.done {
+    background: rgba(251,191,36,0.08);
+    border-color: rgba(251,191,36,0.3);
+    color: #fbbf24;
+}
+.showcase-chip.done:hover { background: rgba(251,191,36,0.16); }
+.showcase-empty {
+    font-size: 0.78rem; color: var(--text-dim); font-style: italic;
+}
+
+/* ===== BACKLOG DATA TABLE ===== */
+.bl-add-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 14px;
+}
+.bl-add-title {
+    font-size: 0.82rem; font-weight: 700; color: var(--text-muted);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 7px;
+}
+.bl-add-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.bl-add-input { flex: 1; min-width: 160px; }
+
+.bl-toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;
+}
+.bl-status-tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.bl-filter-btn {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: 20px; padding: 5px 13px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.bl-filter-btn:hover { border-color: var(--purple); color: var(--purple); }
+.bl-filter-btn.active { background: rgba(139,92,246,0.15); border-color: var(--purple); color: #c084fc; }
+.bl-filter-cnt {
+    background: rgba(255,255,255,0.07); border-radius: 20px;
+    padding: 0 6px; font-size: 0.68rem; min-width: 16px; text-align: center;
+}
+
+.bl-search-input {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-white); border-radius: 10px; padding: 7px 13px;
+    font-family: 'Vazirmatn', sans-serif; font-size: 0.83rem; outline: none;
+    width: 180px; transition: border-color 0.2s;
+}
+.bl-search-input:focus { border-color: var(--purple); }
+
+.bl-table-wrap {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+}
+.bl-table { width: 100%; border-collapse: collapse; font-family: 'Vazirmatn', sans-serif; }
+.bl-table th {
+    padding: 11px 16px; text-align: right;
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em;
+    color: var(--text-dim); background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--border);
+}
+.bl-row { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+.bl-row:last-child { border-bottom: none; }
+.bl-row:hover { background: rgba(139,92,246,0.04); }
+.bl-table td { padding: 10px 16px; vertical-align: middle; }
+
+.bl-status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.73rem; font-weight: 700; border: 1px solid; white-space: nowrap;
+}
+.bl-status-want     { background:rgba(96,165,250,0.1); border-color:rgba(96,165,250,0.3); color:#60a5fa; }
+.bl-status-playing  { background:rgba(74,222,128,0.1); border-color:rgba(74,222,128,0.3); color:#4ade80; }
+.bl-status-completed{ background:rgba(251,191,36,0.1); border-color:rgba(251,191,36,0.3); color:#fbbf24; }
+.bl-status-dropped  { background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#f87171; }
+
+.bl-inline-select {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-white); border-radius: 8px; padding: 4px 8px;
+    font-size: 0.73rem; font-family: 'Vazirmatn', sans-serif; cursor: pointer; outline: none;
+}
+.bl-inline-select:focus { border-color: var(--purple); }
+.bl-del-btn {
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+    color: #f87171; border-radius: 50%; width: 26px; height: 26px;
+    cursor: pointer; font-size: 1rem; font-weight: 700; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; padding: 0;
+}
+.bl-del-btn:hover { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.5); transform: scale(1.1); }
+
+.bl-pag-wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; margin-top: 14px; padding: 0 2px;
+}
+.bl-pag-info { font-size: 0.75rem; color: var(--text-dim); }
+.bl-page-btn {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: 8px;
+    width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.82rem; font-family: 'Vazirmatn', sans-serif; transition: all 0.15s;
+}
+.bl-page-btn:hover { border-color: var(--purple); color: var(--purple); }
+.bl-page-btn.active { background: rgba(139,92,246,0.2); border-color: var(--purple); color: #c084fc; font-weight: 800; }
+
+/* fav star in backlog */
+.bl-fav-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 1rem; line-height: 1; padding: 2px 5px;
+    border-radius: 6px; transition: all 0.15s;
+    color: #444;
+}
+.bl-fav-btn.active { color: #fb7185; }
+.bl-fav-btn:hover { background: rgba(251,113,133,0.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <!-- Banner -->
+    <div class="profile-banner">
+        {% if profile.banner %}
+            <img src="{{ profile.banner.url }}" class="profile-banner-img">
+        {% endif %}
+        {% if is_own_profile %}
+            <a href="{% url 'community:edit_profile' %}" class="banner-edit-btn">
+                <i class="bi bi-camera"></i> ویرایش بنر
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="profile-body">
+
+        <!-- Header Card -->
+        <div class="profile-header-card">
+            <div class="profile-top-row">
+                <div class="profile-avatar-wrap">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="profile-avatar-img" alt="{{ profile_user.username }}">
+                    {% else %}
+                        <div class="profile-avatar-placeholder">{{ profile_user.username|first|upper }}</div>
+                    {% endif %}
+                </div>
+                <div class="profile-actions">
+                    {% if is_own_profile %}
+                        <a href="{% url 'community:edit_profile' %}" class="btn-edit-profile">
+                            <i class="bi bi-pencil-square"></i> ویرایش پروفایل
+                        </a>
+                        <a href="{% url 'account:dashboard' %}" class="btn-gamenet">
+                            <i class="bi bi-joystick"></i> مدیریت گیم‌نت
+                        </a>
+                    {% else %}
+                        <button class="btn-follow {% if is_following %}following{% endif %}"
+                            id="followBtn"
+                            onclick="handleFollow('{{ profile_user.username }}')">
+                            {% if is_following %}
+                                <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                            {% else %}
+                                <i class="bi bi-plus-lg"></i> دنبال کن
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'community:conversation' username=profile_user.username %}" class="btn-edit-profile">
+                            <i class="bi bi-chat-dots-fill"></i> پیام
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="profile-name-section">
+                <div class="profile-display-name">
+                    {% if profile_user.get_full_name %}{{ profile_user.get_full_name }}{% else %}{{ profile_user.username }}{% endif %}
+                </div>
+                <div class="profile-username">@{{ profile_user.username }}</div>
+
+                {% if profile.bio %}
+                    <p class="profile-bio">{{ profile.bio }}</p>
+                {% endif %}
+
+                <div class="profile-badges">
+                    <span class="badge-item badge-level">
+                        <i class="bi bi-lightning-fill"></i> لول {{ profile.level }}
+                    </span>
+                    {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
+                        <span class="badge-item badge-platform">
+                            <i class="bi {{ plt_icon }}"></i> {{ plt_label }}
+                        </span>
+                    {% endfor %}
+                    {% if profile.rank %}
+                        <span class="badge-item badge-rank">
+                            <i class="bi bi-star-fill"></i> {{ profile.get_rank_display }}
+                        </span>
+                    {% endif %}
+                    {% if profile.city %}
+                        <span class="badge-item badge-city">
+                            <i class="bi bi-geo-alt-fill"></i> {{ profile.get_city_display }}
+                        </span>
+                    {% endif %}
+                    {% if profile.gaming_style %}
+                        <span class="badge-item badge-style">
+                            <i class="bi bi-controller"></i> {{ profile.get_gaming_style_display }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="xp-bar-section">
+                    <div class="xp-bar-label">
+                        <span>پیشرفت XP</span>
+                        <span>{{ profile.xp }} XP</span>
+                    </div>
+                    <div class="xp-bar-track">
+                        <div class="xp-bar-fill" style="width: {{ profile.level_progress }}%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="profile-stats-bar">
+                <div class="profile-stat" onclick="switchTab('posts')">
+                    <div class="profile-stat-val">{{ profile.posts_count }}</div>
+                    <div class="profile-stat-lbl">پست</div>
+                </div>
+                <div class="profile-stat" onclick="switchTab('followers')">
+                    <div class="profile-stat-val" id="followersCountDisplay">{{ profile.followers_count }}</div>
+                    <div class="profile-stat-lbl">فالوور</div>
+                </div>
+                <div class="profile-stat" onclick="switchTab('following')">
+                    <div class="profile-stat-val">{{ profile.following_count }}</div>
+                    <div class="profile-stat-lbl">دنبال‌شده</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-val">{{ profile.total_hours_played }}</div>
+                    <div class="profile-stat-lbl">ساعت بازی</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ GAMING SHOWCASE ═══ -->
+        <div class="gaming-showcase" id="gamingShowcase">
+
+            <!-- Two-column grid for playing + completed -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+                <!-- Currently Playing -->
+                <div class="showcase-row" style="margin-bottom:0;">
+                    <div class="showcase-label" style="color:#4ade80;">
+                        🎮 الان بازی می‌کنه
+                        {% if showcase_playing %}
+                        <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; margin-right:auto; background:rgba(74,222,128,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_playing|length }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="showcase-chips" id="sc-playing">
+                        {% if showcase_playing %}
+                            {% for item in showcase_playing %}
+                            <span class="showcase-chip playing">
+                                <i class="bi bi-play-circle-fill" style="font-size:0.72rem;"></i>
+                                {{ item.game_name }}
+                                {% if item.platform %}<span style="opacity:0.5; font-size:0.68rem;">· {{ item.platform }}</span>{% endif %}
+                            </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="showcase-empty">در حال حاضر بازی فعال ندارد</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Games Played / Completed -->
+                <div class="showcase-row" style="margin-bottom:0;">
+                    <div class="showcase-label" style="color:#fbbf24;">
+                        ✅ بازی کرده
+                        {% if showcase_completed %}
+                        <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; margin-right:auto; background:rgba(251,191,36,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_completed|length }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="showcase-chips" id="sc-done">
+                        {% if showcase_completed %}
+                            {% for item in showcase_completed %}
+                            <span class="showcase-chip done">
+                                {% if item.rating %}⭐{{ item.rating }} · {% endif %}{{ item.game_name }}
+                            </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="showcase-empty">هنوز بازی تموم نشده</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            {% if showcase_favorites %}
+            <!-- Favorites row — below the 2 main sections -->
+            <div class="showcase-row" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border); margin-bottom:0;">
+                <div class="showcase-label" style="color:#fb7185;">
+                    ❤️ مورد علاقه
+                    <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; background:rgba(251,113,133,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_favorites|length }}</span>
+                </div>
+                <div class="showcase-chips" id="sc-fav">
+                    {% for item in showcase_favorites %}
+                    <span class="showcase-chip fav">
+                        <i class="bi bi-joystick" style="font-size:0.72rem;"></i>
+                        {{ item.game_name }}
+                        {% if item.platform %}<span style="opacity:0.5; font-size:0.68rem;">· {{ item.platform }}</span>{% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div id="sc-fav" style="display:none;"></div>
+            {% endif %}
+
+            {% if is_own_profile %}
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:0.77rem; color:var(--text-dim);">
+                <i class="bi bi-info-circle" style="color:var(--purple);"></i>
+                برای تغییر وضعیت بازی‌ها به تب <strong style="color:var(--purple);">بک‌لاگ</strong> برو — ❤️ = مورد علاقه، وضعیت بازی = «دارم بازی می‌کنم» یا «تموم کردم»
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Tabs -->
+        <div class="profile-tabs">
+            <button class="profile-tab active" id="tab-posts" onclick="switchTab('posts')">
+                <i class="bi bi-grid-3x3-gap-fill"></i> پست‌ها
+            </button>
+            <button class="profile-tab" id="tab-backlog" onclick="switchTab('backlog')">
+                <i class="bi bi-collection-play-fill"></i> بازی‌ها
+            </button>
+            <button class="profile-tab" id="tab-ga" onclick="switchTab('ga')">
+                <i class="bi bi-plug-fill"></i> اکانت‌های گیمینگ
+            </button>
+            <button class="profile-tab" id="tab-achievements" onclick="switchTab('achievements')">
+                <i class="bi bi-trophy-fill"></i> دستاوردها
+            </button>
+            <button class="profile-tab" id="tab-followers" onclick="switchTab('followers')">
+                <i class="bi bi-people-fill"></i> فالوورها
+            </button>
+            <button class="profile-tab" id="tab-following" onclick="switchTab('following')">
+                <i class="bi bi-person-check-fill"></i> دنبال‌شده‌ها
+            </button>
+        </div>
+
+        <div class="profile-layout">
+            <!-- MAIN COLUMN -->
+            <div>
+
+                <!-- Posts Panel -->
+                <div class="tab-panel active" id="panel-posts">
+
+                    {% if is_own_profile %}
+                    <!-- New Post Button -->
+                    <a href="{% url 'community:create_post_page' %}" class="new-post-btn-row">
+                        <div class="new-post-btn-inner">
+                            <div class="new-post-btn-icon"><i class="bi bi-plus-lg"></i></div>
+                            <div>
+                                <div class="new-post-btn-title">افزودن پست جدید</div>
+                                <div class="new-post-btn-sub">متن · تصویر · لینک · هشتگ</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-left-circle-fill new-post-btn-arrow"></i>
+                    </a>
+                    {% endif %}
+
+                    {% if posts %}
+                        {% for post in posts %}
+                        <div class="post-card post-type-{{ post.post_type }}">
+                            <div class="post-card-header">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    {% if post.game_tag %}
+                                        <span class="game-tag-chip"># {{ post.game_tag }}</span>
+                                    {% endif %}
+                                    {% if post.post_type == 'achievement' %}
+                                        <span style="color:#fbbf24; font-size:0.78rem; font-weight:700;">
+                                            <i class="bi bi-trophy-fill"></i> دستاورد
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <span class="post-time">{{ post.created_at|timesince }} پیش</span>
+                            </div>
+                            <div class="post-card-body">
+                                <p class="post-content">{{ post.content|hashtagify }}</p>
+                                {% if post.image %}
+                                    <img src="{{ post.image.url }}"
+                                         style="width:100%; border-radius:14px; margin-top:12px; max-height:340px; object-fit:cover; cursor:pointer; transition:transform 0.2s;"
+                                         onclick="openLightbox(this.src)"
+                                         onmouseover="this.style.transform='scale(1.005)'"
+                                         onmouseout="this.style.transform='scale(1)'">
+                                {% endif %}
+                                {% if post.video %}
+                                    <video src="{{ post.video.url }}" controls preload="metadata"
+                                           style="width:100%; border-radius:14px; margin-top:12px; max-height:340px; background:#111; display:block;"></video>
+                                {% endif %}
+                            </div>
+                            <!-- Reaction chips -->
+                            <div class="post-reactions" id="rxn-chips-{{ post.id }}">
+                                {% for rxn, cnt in post.reactions_summary.items %}
+                                <span class="rxn-chip {% if rxn == post.my_reaction %}mine{% endif %}"
+                                      onclick="sendReaction({{ post.id }}, '{{ rxn }}')" title="{{ rxn }}">
+                                    {{ cnt.emoji }} <span class="rxn-count">{{ cnt.count }}</span>
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <div class="post-card-footer">
+                                <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
+                                    <button class="post-action-btn" id="rxn-main-{{ post.id }}"
+                                        onclick="toggleReactionPicker({{ post.id }}); buildReactionPicker({{ post.id }}, '{{ post.my_reaction }}')">
+                                        {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.75rem;">خفن</span>
+                                        {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.75rem;">GG</span>
+                                        {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.75rem;">Tryhard</span>
+                                        {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.75rem;">لجند</span>
+                                        {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.75rem;">GG EZ</span>
+                                        {% else %}<i class="bi bi-hand-thumbs-up"></i> واکنش{% endif %}
+                                    </button>
+                                    <div class="reaction-picker"></div>
+                                </div>
+                                <span class="post-action-btn">
+                                    <i class="bi bi-chat-dots"></i> {{ post.comments_count }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-camera-reels"></i>
+                            <p>هنوز پستی منتشر نشده</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- ══ BACKLOG PANEL ══ -->
+                <div class="tab-panel" id="panel-backlog">
+
+                    {% if is_own_profile %}
+                    <div class="bl-add-card">
+                        <div class="bl-add-title">
+                            <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> اضافه کردن بازی
+                        </div>
+                        <div class="bl-add-row">
+                            <input type="text" id="blGameName" placeholder="نام بازی..." class="g-input bl-add-input"
+                                onkeydown="if(event.key==='Enter') blAdd()">
+                            <select id="blStatus" class="g-input" style="min-width:145px;">
+                                <option value="want">🎯 می‌خوام</option>
+                                <option value="playing">🎮 بازی می‌کنم</option>
+                                <option value="completed">🏆 تموم کردم</option>
+                                <option value="dropped">💔 رها کردم</option>
+                            </select>
+                            <select id="blPlatform" class="g-input" style="min-width:130px;">
+                                <option value="">پلتفرم</option>
+                                {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
+                                <option value="{{ plt_code }}">{{ plt_label }}</option>
+                                {% endfor %}
+                                {% if not profile.get_platforms_list %}
+                                <option value="pc">PC</option>
+                                <option value="ps5">PlayStation 5</option>
+                                <option value="ps4">PlayStation 4</option>
+                                <option value="xbox">Xbox</option>
+                                <option value="switch">Nintendo Switch</option>
+                                <option value="mobile">موبایل</option>
+                                {% endif %}
+                            </select>
+                            <button onclick="blAdd()" class="btn-red" style="padding:9px 18px; border-radius:10px; white-space:nowrap;">
+                                <i class="bi bi-plus-lg"></i> اضافه
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Filter toolbar -->
+                    <div class="bl-toolbar">
+                        <div class="bl-status-tabs">
+                            <button class="bl-filter-btn active" onclick="blSetFilter('all',this)">همه <span class="bl-filter-cnt" id="bfc-all">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('playing',this)">🎮 بازی می‌کنم <span class="bl-filter-cnt" id="bfc-playing">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('want',this)">🎯 می‌خوام <span class="bl-filter-cnt" id="bfc-want">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('completed',this)">🏆 تموم کردم <span class="bl-filter-cnt" id="bfc-completed">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('dropped',this)">💔 رها کردم <span class="bl-filter-cnt" id="bfc-dropped">0</span></button>
+                        </div>
+                        <input type="text" id="blSearch" class="bl-search-input" placeholder="🔍 جستجو در بازی‌ها..." oninput="blFilterRender()">
+                    </div>
+
+                    <!-- Data Table -->
+                    <div class="bl-table-wrap">
+                        <table class="bl-table">
+                            <thead>
+                                <tr>
+                                    <th>نام بازی</th>
+                                    <th>وضعیت</th>
+                                    <th>پلتفرم</th>
+                                    <th>امتیاز ★</th>
+                                    <th>❤️</th>
+                                    {% if is_own_profile %}<th>ویرایش</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="blTableBody">
+                                <tr><td colspan="6" style="text-align:center;padding:36px;color:var(--text-dim);">در حال بارگذاری...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="blPagination"></div>
+
+                    <div id="blEmpty" style="display:none; text-align:center; padding:48px 20px; color:var(--text-dim);">
+                        <i class="bi bi-collection-play" style="font-size:3rem; opacity:.2; display:block; margin-bottom:14px;"></i>
+                        <p>هنوز بازی‌ای به بک‌لاگ اضافه نشده</p>
+                    </div>
+                </div>
+
+                <!-- Gaming Accounts Panel -->
+                <div class="tab-panel" id="panel-ga">
+                    {% if gaming_accounts %}
+                        <div class="ga-grid" id="gaGrid">
+                            {% for ga in gaming_accounts %}
+                            <div class="ga-card ga-{{ ga.platform }}" id="ga-card-{{ ga.platform }}">
+                                {% if is_own_profile %}
+                                    <button class="ga-disconnect-btn" onclick="disconnectAccount('{{ ga.platform }}')">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                {% endif %}
+                                <span class="ga-icon">
+                                    {% if ga.platform == 'steam' %}<i class="bi bi-steam"></i>
+                                    {% elif ga.platform == 'xbox' %}<i class="bi bi-xbox"></i>
+                                    {% elif ga.platform == 'psn' %}<i class="bi bi-playstation"></i>
+                                    {% elif ga.platform == 'ea' %}<i class="bi bi-controller"></i>
+                                    {% elif ga.platform == 'epic' %}<i class="bi bi-joystick"></i>
+                                    {% endif %}
+                                </span>
+                                <div class="ga-platform-name">{{ ga.get_platform_display }}</div>
+                                {% if ga.avatar_url %}
+                                    <img src="{{ ga.avatar_url }}" style="width:48px; height:48px; border-radius:50%; margin:6px auto; display:block; object-fit:cover;">
+                                {% endif %}
+                                <div class="ga-username">{{ ga.display_name|default:ga.username }}</div>
+                                {% if ga.profile_url %}
+                                    <a href="{{ ga.profile_url }}" target="_blank" rel="noopener" class="ga-link-btn">
+                                        <i class="bi bi-box-arrow-up-right"></i> مشاهده پروفایل
+                                    </a>
+                                {% endif %}
+                                {% if ga.last_synced %}
+                                    <div class="ga-last-sync">آخرین همگام‌سازی: {{ ga.last_synced|timesince }} پیش</div>
+                                {% endif %}
+                                {% if ga.extra_data %}
+                                    <div style="margin-top:8px; font-size:0.72rem; color:var(--text-dim);">
+                                        {% if ga.extra_data.gamerscore %}
+                                            <span>🏆 {{ ga.extra_data.gamerscore }} امتیاز</span>
+                                        {% endif %}
+                                        {% if ga.extra_data.country %}
+                                            <span>{{ ga.extra_data.country }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if not is_own_profile %}
+                            <div class="empty-state">
+                                <i class="bi bi-plug"></i>
+                                <p>هنوز اکانتی متصل نشده</p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if is_own_profile %}
+                        <div class="ga-connect-section">
+                            <div class="ga-connect-title">
+                                <i class="bi bi-plus-circle-fill" style="color:var(--purple);"></i>
+                                اتصال اکانت جدید
+                            </div>
+                            <div class="ga-connect-form" id="gaConnectForm">
+                                <select id="gaPlatform" name="platform">
+                                    <option value="steam">🎮 Steam</option>
+                                    <option value="xbox">🎮 Xbox Live</option>
+                                    <option value="psn">🎮 PlayStation Network</option>
+                                    <option value="ea">🎮 EA / Origin</option>
+                                    <option value="epic">🎮 Epic Games</option>
+                                </select>
+                                <input type="text" id="gaUsername" placeholder="نام کاربری یا ID">
+                                <button class="ga-connect-btn" id="gaConnectBtn" onclick="connectGamingAccount()">
+                                    <i class="bi bi-link-45deg"></i> اتصال
+                                </button>
+                                <div class="ga-connect-status" id="gaStatus"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Achievements Panel -->
+                <div class="tab-panel" id="panel-achievements">
+                    {% if achievements %}
+                        <div class="achievement-grid">
+                            {% for ach in achievements %}
+                            <div class="achievement-card">
+                                <div class="ach-icon"><i class="bi {{ ach.icon }}"></i></div>
+                                <div class="ach-title">{{ ach.title }}</div>
+                                {% if ach.description %}
+                                    <div class="ach-desc">{{ ach.description }}</div>
+                                {% endif %}
+                                <div class="ach-date">{{ ach.earned_at|date:"Y/m/d" }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-trophy"></i>
+                            <p>هنوز دستاوردی کسب نشده — بازی کن و به دست بیار!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Followers Panel -->
+                <div class="tab-panel" id="panel-followers">
+                    {% if followers %}
+                        <div class="followers-grid">
+                            {% for f in followers %}
+                            <a href="{% url 'community:profile' username=f.follower.username %}" class="follower-card">
+                                {% if f.follower.gamer_profile.avatar %}
+                                    <img src="{{ f.follower.gamer_profile.avatar.url }}" class="follower-avatar-img">
+                                {% else %}
+                                    <div class="follower-avatar-ph">{{ f.follower.username|first|upper }}</div>
+                                {% endif %}
+                                <div class="follower-name">{{ f.follower.username }}</div>
+                                <div class="follower-platform">{{ f.follower.gamer_profile.get_platform_display }}</div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-people"></i>
+                            <p>هنوز فالووری ندارد</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Following Panel -->
+                <div class="tab-panel" id="panel-following">
+                    {% if following %}
+                        <div class="followers-grid">
+                            {% for f in following %}
+                            <a href="{% url 'community:profile' username=f.following.username %}" class="follower-card">
+                                {% if f.following.gamer_profile.avatar %}
+                                    <img src="{{ f.following.gamer_profile.avatar.url }}" class="follower-avatar-img">
+                                {% else %}
+                                    <div class="follower-avatar-ph">{{ f.following.username|first|upper }}</div>
+                                {% endif %}
+                                <div class="follower-name">{{ f.following.username }}</div>
+                                <div class="follower-platform">{{ f.following.gamer_profile.get_platform_display }}</div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-person-check"></i>
+                            <p>هنوز کسی دنبال نشده</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div><!-- end main col -->
+
+            <!-- SIDEBAR -->
+            <div class="profile-sidebar">
+
+                <!-- Level card -->
+                <div class="sidebar-card">
+                    <div class="sidebar-card-title">
+                        <i class="bi bi-lightning-fill"></i> لول و XP
+                    </div>
+                    <div class="level-visual">
+                        <div class="level-num">{{ profile.level }}</div>
+                        <div class="level-label">لول گیمر</div>
+                        <div class="level-xp-bar">
+                            <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-bottom:5px;">
+                                <span>{{ profile.level_progress }}%</span>
+                                <span>{{ profile.xp }} XP</span>
+                            </div>
+                            <div class="xp-bar-track">
+                                <div class="xp-bar-fill" style="width:{{ profile.level_progress }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info card -->
+                <div class="sidebar-card">
+                    <div class="sidebar-card-title">
+                        <i class="bi bi-info-circle-fill"></i> اطلاعات
+                    </div>
+                    {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
+                    <div class="sidebar-info-row">
+                        <i class="bi {{ plt_icon }}"></i>
+                        <span>{{ plt_label }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if profile.rank %}
+                    <div class="sidebar-info-row">
+                        <i class="bi bi-star-fill"></i>
+                        <span>{{ profile.get_rank_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.gaming_style %}
+                    <div class="sidebar-info-row">
+                        <i class="bi bi-joystick"></i>
+                        <span>{{ profile.get_gaming_style_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.city %}
+                    <div class="sidebar-info-row">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>{{ profile.get_city_display }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="sidebar-info-row">
+                        <i class="bi bi-calendar3"></i>
+                        <span>عضو از {{ profile.created_at|date:"Y" }}</span>
+                    </div>
+                </div>
+
+                <!-- Quick Gaming IDs -->
+                {% if gaming_accounts %}
+                <div class="sidebar-card">
+                    <div class="sidebar-card-title">
+                        <i class="bi bi-plug-fill"></i> آی‌دی‌های گیمینگ
+                    </div>
+                    {% for ga in gaming_accounts %}
+                    <div class="quick-ga-row">
+                        <span class="quick-ga-icon">
+                            {% if ga.platform == 'steam' %}<i class="bi bi-steam" style="color:#66c0f4;"></i>
+                            {% elif ga.platform == 'xbox' %}<i class="bi bi-xbox" style="color:#52b043;"></i>
+                            {% elif ga.platform == 'psn' %}<i class="bi bi-playstation" style="color:#4d9ff5;"></i>
+                            {% elif ga.platform == 'ea' %}<i class="bi bi-controller" style="color:#ff6b35;"></i>
+                            {% elif ga.platform == 'epic' %}<i class="bi bi-joystick" style="color:#c8c8c8;"></i>
+                            {% endif %}
+                        </span>
+                        <div class="quick-ga-info">
+                            <div class="quick-ga-platform">{{ ga.get_platform_display }}</div>
+                            <div class="quick-ga-name">{{ ga.display_name|default:ga.username }}</div>
+                        </div>
+                        {% if ga.profile_url %}
+                            <a href="{{ ga.profile_url }}" target="_blank" class="quick-ga-link">
+                                <i class="bi bi-arrow-up-right-square"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Suggest follow (for other profiles) -->
+                {% if not is_own_profile %}
+                <div class="sidebar-card" style="text-align:center; padding:22px 18px;">
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
+                        <i class="bi bi-person-plus-fill" style="color:var(--purple); font-size:1.5rem; display:block; margin-bottom:8px;"></i>
+                        این گیمر رو دنبال کن تا از پست‌هاش باخبر بشی
+                    </div>
+                    <button class="btn-follow {% if is_following %}following{% endif %}"
+                        style="width:100%; justify-content:center;"
+                        onclick="handleFollow('{{ profile_user.username }}')">
+                        {% if is_following %}
+                            <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                        {% else %}
+                            <i class="bi bi-plus-lg"></i> دنبال کن
+                        {% endif %}
+                    </button>
+                </div>
+                {% endif %}
+
+            </div><!-- end sidebar -->
+        </div><!-- end profile-layout -->
+    </div><!-- end profile-body -->
+</div><!-- end profile-page -->
+
+<!-- Image Lightbox -->
+<div id="profile-lightbox" onclick="closeLightbox()"
+     style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92);
+            align-items:center; justify-content:center; cursor:pointer;">
+    <button onclick="closeLightbox()"
+            style="position:absolute; top:20px; right:20px; width:42px; height:42px; border-radius:50%;
+                   background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+                   color:white; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    <img id="profile-lightbox-img" src="" alt=""
+         style="max-width:92vw; max-height:90vh; border-radius:14px; object-fit:contain;">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = typeof csrfToken !== 'undefined' ? csrfToken : '{{ csrf_token }}';
+
+/* ── Create Post Box ── */
+function expandPost() {
+    document.getElementById('cpExpanded').classList.add('show');
+}
+function collapsePost() {
+    document.getElementById('cpExpanded').classList.remove('show');
+    const ta = document.getElementById('cpContent');
+    if (ta) { ta.value = ''; ta.style.height = '40px'; }
+    document.getElementById('cpImagePreview').style.display = 'none';
+    // reset type buttons
+    document.querySelectorAll('.cp-type-btn').forEach(b => b.classList.remove('active'));
+    const first = document.querySelector('.cp-type-btn');
+    if (first) first.classList.add('active');
+    document.getElementById('cpPostType').value = 'text';
+}
+function autoResizeCp(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+function setPostType(btn, type) {
+    document.querySelectorAll('.cp-type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('cpPostType').value = type;
+}
+function previewCpImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('cpPreviewImg').src = e.target.result;
+            document.getElementById('cpImagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+        expandPost();
+    }
+}
+
+let blLoaded = false;
+function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    const tab   = document.getElementById('tab-' + name);
+    if (panel) panel.classList.add('active');
+    if (tab)   tab.classList.add('active');
+    if (name === 'backlog' && !blLoaded) { blLoaded = true; blLoad(); }
+}
+
+function handleFollow(username) {
+    fetch('/community/follow/' + username + '/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF}
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.querySelectorAll('#followBtn, .btn-follow').forEach(btn => {
+            if (data.following) {
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> دنبال می‌کنی';
+                btn.classList.add('following');
+            } else {
+                btn.innerHTML = '<i class="bi bi-plus-lg"></i> دنبال کن';
+                btn.classList.remove('following');
+            }
+        });
+        const counter = document.getElementById('followersCountDisplay');
+        if (counter) counter.textContent = data.followers_count;
+    });
+}
+
+function toggleLike(postId, btn) {
+    fetch('/community/post/' + postId + '/like/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF}
+    })
+    .then(r => r.json())
+    .then(data => {
+        const icon  = btn.querySelector('i');
+        const count = btn.querySelector('.like-count');
+        if (data.liked) { btn.classList.add('liked'); icon.className = 'bi bi-heart-fill'; }
+        else            { btn.classList.remove('liked'); icon.className = 'bi bi-heart'; }
+        if (count) count.textContent = data.count;
+
+        /* pop animation */
+        icon.classList.remove('like-pop');
+        void icon.offsetWidth;
+        icon.classList.add('like-pop');
+    });
+}
+
+function connectGamingAccount() {
+    const platform = document.getElementById('gaPlatform').value;
+    const username = document.getElementById('gaUsername').value.trim();
+    const btn = document.getElementById('gaConnectBtn');
+    const status = document.getElementById('gaStatus');
+
+    if (!username) { showStatus('نام کاربری را وارد کنید', 'error'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> در حال اتصال...';
+    status.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('platform', platform);
+    fd.append('username', username);
+
+    fetch('/community/gaming/connect/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-link-45deg"></i> اتصال';
+        if (data.ok) {
+            showStatus('اکانت با موفقیت متصل شد! صفحه را رفرش کنید.', 'success');
+            document.getElementById('gaUsername').value = '';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showStatus(data.error || 'خطا در اتصال', 'error');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-link-45deg"></i> اتصال';
+        showStatus('خطای شبکه', 'error');
+    });
+}
+
+function showStatus(msg, type) {
+    const el = document.getElementById('gaStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'ga-connect-status ' + type;
+    el.style.display = 'block';
+}
+
+function disconnectAccount(platform) {
+    if (!confirm('این اکانت قطع شود؟')) return;
+    const fd = new FormData();
+    fd.append('platform', platform);
+    fetch('/community/gaming/disconnect/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const card = document.getElementById('ga-card-' + platform);
+            if (card) card.remove();
+        }
+    });
+}
+
+/* ── BACKLOG ── */
+const BL_USERNAME = '{{ profile_user.username }}';
+const IS_OWN = {{ is_own_profile|yesno:"true,false" }};
+const BL_STATUS_LABELS = {want:'می‌خوام بازی کنم', playing:'دارم بازی می‌کنم', completed:'تموم کردم', dropped:'رها کردم'};
+const BL_STATUS_EMOJI  = {want:'🎯', playing:'🎮', completed:'🏆', dropped:'💔'};
+let blItems  = [];
+let blFilter = 'all';
+let blPage   = 1;
+const BL_PG  = 15;
+
+function blLoad() {
+    fetch('/community/backlog/' + BL_USERNAME + '/')
+        .then(r => r.json()).then(d => {
+            blItems = d.items;
+            blPage  = 1;
+            blFilterRender();
+        });
+}
+
+function blGetFiltered() {
+    const q = (document.getElementById('blSearch')?.value || '').toLowerCase();
+    return blItems.filter(i =>
+        (blFilter === 'all' || i.status === blFilter) &&
+        (!q || i.game_name.toLowerCase().includes(q))
+    );
+}
+
+function blFilterRender() {
+    ['all','playing','want','completed','dropped'].forEach(s => {
+        const el = document.getElementById('bfc-' + s);
+        if (el) el.textContent = s==='all' ? blItems.length : blItems.filter(i=>i.status===s).length;
+    });
+    blPage = 1;
+    blRender();
+}
+
+function blSetFilter(f, btn) {
+    blFilter = f;
+    document.querySelectorAll('.bl-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    blFilterRender();
+}
+
+function blRender() {
+    const filtered = blGetFiltered();
+    const total    = filtered.length;
+    const pages    = Math.max(1, Math.ceil(total / BL_PG));
+    if (blPage > pages) blPage = pages;
+    const slice    = filtered.slice((blPage-1)*BL_PG, blPage*BL_PG);
+
+    const empty = document.getElementById('blEmpty');
+    const tbody = document.getElementById('blTableBody');
+    if (!tbody) return;
+
+    if (!blItems.length) {
+        if (empty) empty.style.display = 'block';
+        tbody.innerHTML = '';
+        document.getElementById('blPagination').innerHTML = '';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    if (!slice.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-dim);">نتیجه‌ای پیدا نشد</td></tr>`;
+    } else {
+        tbody.innerHTML = slice.map(item => `
+<tr class="bl-row" id="bli-${item.id}">
+  <td><div style="font-weight:700;color:var(--text-white);font-size:0.88rem;">${escH(item.game_name)}</div>${item.notes?`<div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;">${escH(item.notes)}</div>`:''}</td>
+  <td><span class="bl-status-badge bl-status-${item.status}">${BL_STATUS_EMOJI[item.status]} ${BL_STATUS_LABELS[item.status]}</span></td>
+  <td><span style="color:var(--text-dim);font-size:0.78rem;text-transform:uppercase;">${item.platform?escH(item.platform):'—'}</span></td>
+  <td style="min-width:100px;">${blStarsHtml(item)}</td>
+  <td>${IS_OWN?`<button class="bl-fav-btn ${item.is_favorite?'active':''}" onclick="blToggleFav(${item.id},this)" title="${item.is_favorite?'حذف از علاقه‌مندی':'افزودن به علاقه‌مندی'}">${item.is_favorite?'❤️':'🤍'}</button>`:(item.is_favorite?'❤️':'<span style="color:var(--text-dim);">—</span>')}</td>
+  ${IS_OWN?`<td><div style="display:flex;gap:5px;align-items:center;"><select onchange="blChangeStatus(${item.id},this.value)" class="bl-inline-select">${['want','playing','completed','dropped'].map(st=>`<option value="${st}" ${st===item.status?'selected':''}>${BL_STATUS_EMOJI[st]} ${BL_STATUS_LABELS[st]}</option>`).join('')}</select><button onclick="blRemove(${item.id})" class="bl-del-btn" title="حذف">×</button></div></td>`:''}
+</tr>`).join('');
+    }
+    blRenderPagination(pages, total);
+    if (IS_OWN) updateShowcase();
+}
+
+function blStarsHtml(item) {
+    const canRate = item.status === 'completed' || item.status === 'dropped';
+    if (!canRate) return '<span style="color:var(--text-dim);font-size:.8rem;">—</span>';
+    if (!IS_OWN) {
+        if (!item.rating) return '<span style="color:var(--text-dim);">—</span>';
+        return Array.from({length:5},(_,i)=>`<span style="color:${item.rating>i?'#fbbf24':'#333'};font-size:.95rem;">★</span>`).join('');
+    }
+    return Array.from({length:5},(_,i) => {
+        const n = i+1, col = item.rating>=n?'#fbbf24':'#3a3a4a';
+        return `<span onclick="blRate(${item.id},${n})" data-rid="${item.id}" data-rn="${n}"
+            style="cursor:pointer;color:${col};font-size:1.15rem;transition:color .1s;line-height:1;"
+            onmouseover="blSHover(${item.id},${n})" onmouseout="blSOut(${item.id},${item.rating||0})">★</span>`;
+    }).join('') + `<span style="font-size:.72rem;color:var(--text-dim);margin-right:4px;">${item.rating?item.rating+'/5':''}</span>`;
+}
+
+function blSHover(id, n) {
+    document.querySelectorAll(`[data-rid="${id}"]`).forEach(s=>{ s.style.color = +s.dataset.rn<=n?'#fbbf24':'#3a3a4a'; });
+}
+function blSOut(id, r) {
+    document.querySelectorAll(`[data-rid="${id}"]`).forEach(s=>{ s.style.color = +s.dataset.rn<=r?'#fbbf24':'#3a3a4a'; });
+}
+
+function blRenderPagination(pages, total) {
+    const pag = document.getElementById('blPagination');
+    if (!pag || pages <= 1) { if(pag) pag.innerHTML=''; return; }
+    let h = `<div class="bl-pag-wrap"><span class="bl-pag-info">${total} بازی | صفحه ${blPage} از ${pages}</span><div style="display:flex;gap:4px;align-items:center;">`;
+    if (blPage > 1) h += `<button class="bl-page-btn" onclick="blGoPage(${blPage-1})">‹</button>`;
+    let s = Math.max(1, blPage-3), e = Math.min(pages, s+6);
+    if (e-s<6) s = Math.max(1, e-6);
+    if (s>1) h += `<button class="bl-page-btn" onclick="blGoPage(1)">1</button>${s>2?'<span style="color:var(--text-dim);padding:0 2px;">…</span>':''}`;
+    for (let p=s;p<=e;p++) h += `<button class="bl-page-btn ${p===blPage?'active':''}" onclick="blGoPage(${p})">${p}</button>`;
+    if (e<pages) h += `${e<pages-1?'<span style="color:var(--text-dim);padding:0 2px;">…</span>':''}<button class="bl-page-btn" onclick="blGoPage(${pages})">${pages}</button>`;
+    if (blPage < pages) h += `<button class="bl-page-btn" onclick="blGoPage(${blPage+1})">›</button>`;
+    h += `</div></div>`;
+    pag.innerHTML = h;
+}
+
+function blGoPage(p) {
+    blPage = p; blRender();
+    document.getElementById('panel-backlog')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function blAdd() {
+    const name = document.getElementById('blGameName').value.trim();
+    const status = document.getElementById('blStatus').value;
+    const platEl = document.getElementById('blPlatform');
+    const platform = platEl ? platEl.value : '';
+    if (!name) return;
+    fetch('/community/backlog/add/', {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},
+        body:`game_name=${encodeURIComponent(name)}&status=${status}&platform=${encodeURIComponent(platform)}`
+    }).then(r=>r.json()).then(()=>{
+        document.getElementById('blGameName').value='';
+        blLoad();
+    });
+}
+
+function blChangeStatus(id, status) {
+    fetch(`/community/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`status=${status}`})
+    .then(d=>d.json()).then(d=>{ const it=blItems.find(i=>i.id===id); if(it) it.status=d.status; blFilterRender(); });
+}
+
+function blRate(id, rating) {
+    fetch(`/community/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`rating=${rating}`})
+    .then(r=>r.json()).then(d=>{ const it=blItems.find(i=>i.id===id); if(it) it.rating=d.rating; blRender(); });
+}
+
+function blRemove(id) {
+    fetch(`/community/backlog/${id}/remove/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
+    .then(()=>{ blItems=blItems.filter(i=>i.id!==id); blFilterRender(); });
+}
+
+function blToggleFav(id, btn) {
+    fetch(`/community/backlog/${id}/favorite/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
+    .then(r=>r.json()).then(d=>{
+        const it=blItems.find(i=>i.id===id);
+        if(it) it.is_favorite=d.is_favorite;
+        btn.textContent = d.is_favorite?'❤️':'🤍';
+        btn.title = d.is_favorite?'حذف از علاقه‌مندی':'افزودن به علاقه‌مندی';
+        d.is_favorite?btn.classList.add('active'):btn.classList.remove('active');
+        updateShowcase();
+    });
+}
+
+function updateShowcase() {
+    const favSection   = document.getElementById('sc-fav');
+    const playSection  = document.getElementById('sc-playing');
+    const doneSection  = document.getElementById('sc-done');
+
+    const favItems  = blItems.filter(i => i.is_favorite);
+    const playItems = blItems.filter(i => i.status === 'playing');
+    const doneItems = blItems.filter(i => i.status === 'completed');
+
+    function chip(item, cls, icon) {
+        return `<span class="showcase-chip ${cls}"><i class="bi ${icon}" style="font-size:.72rem;"></i> ${escH(item.game_name)}${item.platform ? ` <span style="opacity:.5;font-size:.68rem;">· ${escH(item.platform)}</span>` : ''}</span>`;
+    }
+    function doneChip(item) {
+        return `<span class="showcase-chip done">${item.rating ? '⭐' + item.rating + ' · ' : ''}${escH(item.game_name)}</span>`;
+    }
+
+    if (playSection) playSection.innerHTML = playItems.length
+        ? playItems.map(i => chip(i, 'playing', 'bi-play-circle-fill')).join('')
+        : '<span class="showcase-empty">در حال حاضر بازی فعال ندارد</span>';
+
+    if (doneSection) doneSection.innerHTML = doneItems.length
+        ? doneItems.map(i => doneChip(i)).join('')
+        : '<span class="showcase-empty">هنوز بازی تموم نشده</span>';
+
+    /* favorites row: show/hide based on data */
+    if (favSection) {
+        const favRow = favSection.closest ? favSection.closest('.showcase-row') : null;
+        if (favItems.length) {
+            favSection.innerHTML = favItems.map(i => chip(i, 'fav', 'bi-joystick')).join('');
+            favSection.style.display = '';
+            if (favRow) favRow.style.display = '';
+        } else {
+            favSection.style.display = 'none';
+            if (favRow) favRow.style.display = 'none';
+        }
+    }
+}
+
+// load backlog when tab opens
+const _origSwitch = typeof switchTab === 'function' ? switchTab : null;
+
+/* ── Lightbox ── */
+function openLightbox(src) {
+    const lb = document.getElementById('profile-lightbox');
+    document.getElementById('profile-lightbox-img').src = src;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('profile-lightbox').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+{% endblock %}

@@ -1,0 +1,319 @@
+{# Knockout bracket (single elimination) — UEFA/football-style mirrored layout #}
+{% if bracket and bracket.has_matches %}
+<div class="bracket-shell">
+    <div class="bracket-toolbar">
+        <div class="bracket-help">
+            <i class="fas fa-mouse-pointer"></i>
+            {% if bracket_readonly %}
+                نمودار مراحل مسابقه (فقط نمایش)
+            {% else %}
+                روی نام یکی از دو طرف بزن تا برنده ثبت شود (بدون رفرش).
+            {% endif %}
+        </div>
+        <div class="bracket-controls">
+            <label class="bracket-toggle">
+                <input type="checkbox" id="onlyPendingToggle">
+                فقط بازی‌های در انتظار
+            </label>
+        </div>
+    </div>
+
+    <div class="bracket-wrap" id="bracketWrap" aria-label="براکت حذفی">
+        <div class="bracket bracket-mirrored" id="bracket" style="--bracket-rows: {{ bracket.rows }};">
+            <svg class="bracket-lines" id="bracketLines" aria-hidden="true"></svg>
+
+            <div class="bracket-side bracket-side-left" aria-label="سمت چپ براکت">
+                {% for r in bracket.rounds %}
+                <section class="round-col" data-round="{{ r.round_number }}" aria-label="دور {{ r.round_number }} (چپ)">
+                    <div class="round-head">
+                        <h4 class="round-name"><i class="fas fa-layer-group"></i> {{ r.label }}</h4>
+                        <span class="round-chip">{{ r.left|length }} بازی</span>
+                    </div>
+
+                    <div class="round-grid-slot" style="--rows: {{ bracket.rows }};">
+                        {% for match in r.left %}
+                        <article
+                            class="match-node"
+                            id="match-{{ match.id }}"
+                            data-side="L"
+                            data-round="{{ r.round_number }}"
+                            data-side-index="{{ match.side_index }}"
+                            data-status="{{ match.status }}"
+                            style="--row: {{ match.grid_row }}; animation-delay: {{ forloop.counter0|add:1 }}0ms;"
+                        >
+                            <div class="match-meta">
+                                <div class="match-title">بازی {{ match.match_number }}</div>
+                                {% if match.status == 'pending' %}
+                                    <span class="match-pill pill-pending">در انتظار</span>
+                                {% elif match.status == 'bye' %}
+                                    <span class="match-pill pill-bye">BYE</span>
+                                {% elif match.status == 'placeholder' %}
+                                    <span class="match-pill pill-placeholder">—</span>
+                                {% else %}
+                                    <span class="match-pill pill-completed">تمام</span>
+                                {% endif %}
+                            </div>
+
+                    <div class="slots">
+                        <div class="slot {% if match.winner_id and match.participant1_id == match.winner_id %}winner{% endif %}">
+                            <span class="slot-left">
+                                <span class="slot-avatar">
+                                    {% if match.participant1 and match.participant1.image %}
+                                        <img src="{{ match.participant1.image.url }}" alt="{{ match.participant1.name }}">
+                                    {% else %}
+                                        {{ match.participant1.name|default:'-'|slice:":1" }}
+                                    {% endif %}
+                                </span>
+                                <span class="slot-name">{{ match.participant1.name|default:'---' }}</span>
+                            </span>
+                            {% if match.winner_id and match.participant1_id == match.winner_id %}
+                                <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                            {% endif %}
+                        </div>
+                        <div class="slot {% if match.winner_id and match.participant2_id == match.winner_id %}winner{% endif %}">
+                            <span class="slot-left">
+                                <span class="slot-avatar">
+                                    {% if match.participant2 and match.participant2.image %}
+                                        <img src="{{ match.participant2.image.url }}" alt="{{ match.participant2.name }}">
+                                    {% else %}
+                                        {{ match.participant2.name|default:'-'|slice:":1" }}
+                                    {% endif %}
+                                </span>
+                                <span class="slot-name">{{ match.participant2.name|default:'استراحت' }}</span>
+                            </span>
+                            {% if match.winner_id and match.participant2_id == match.winner_id %}
+                                <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                            <div class="match-footer">
+                                {% if not bracket_readonly and match.is_real and match.status == 'pending' %}
+                                <form method="post" class="match-actions js-match-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="set_match_winner">
+                                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                                    <button type="submit" class="pick-btn" name="winner_id" value="{{ match.participant1_id }}" {% if not match.participant1 %}disabled{% endif %} title="ثبت برنده">
+                                        <i class="fas fa-check"></i>
+                                        {{ match.participant1.name|default:'---' }}
+                                    </button>
+                                    <button type="submit" class="pick-btn" name="winner_id" value="{{ match.participant2_id }}" {% if not match.participant2 %}disabled{% endif %} title="ثبت برنده">
+                                        <i class="fas fa-check"></i>
+                                        {{ match.participant2.name|default:'استراحت' }}
+                                    </button>
+                                </form>
+                                {% elif match.is_real and match.winner %}
+                                <div class="manage-subtitle match-note">
+                                    برنده: <strong style="color:#d1fae5;">{{ match.winner.name }}</strong>
+                                </div>
+                                {% else %}
+                                <div class="manage-subtitle match-note" style="color:rgba(255,255,255,0.62);">
+                                    منتظر مشخص شدن تیم‌ها
+                                </div>
+                                {% endif %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endfor %}
+            </div>
+
+            <div class="bracket-center" aria-label="فینال">
+                <div class="final-card">
+                    <div class="final-title">
+                        <i class="fas fa-trophy"></i>
+                        فینال
+                    </div>
+                    <div class="final-sub">{{ tournament.name }}</div>
+                    {% if bracket.final_match %}
+                    <article
+                        class="match-node match-final"
+                        id="match-final-{{ bracket.final_match.id }}"
+                        data-side="C"
+                        data-round="{{ bracket.total_rounds }}"
+                        data-status="{{ bracket.final_match.status }}"
+                        style="--row: {{ bracket.final_match.grid_row }};"
+                    >
+                        <div class="match-meta">
+                            <div class="match-title">بازی نهایی</div>
+                            {% if bracket.final_match.status == 'pending' %}
+                                <span class="match-pill pill-pending">در انتظار</span>
+                            {% elif bracket.final_match.status == 'placeholder' %}
+                                <span class="match-pill pill-placeholder">—</span>
+                            {% else %}
+                                <span class="match-pill pill-completed">تمام</span>
+                            {% endif %}
+                        </div>
+                        <div class="slots">
+                            <div class="slot {% if bracket.final_match.winner_id and bracket.final_match.participant1_id == bracket.final_match.winner_id %}winner{% elif not bracket.final_match.participant1 %}unknown{% endif %}">
+                                <span class="slot-left">
+                                    <span class="slot-avatar">
+                                        {% if bracket.final_match.participant1 and bracket.final_match.participant1.image %}
+                                            <img src="{{ bracket.final_match.participant1.image.url }}" alt="{{ bracket.final_match.participant1.name }}">
+                                        {% else %}
+                                            {{ bracket.final_match.participant1.name|default:'-'|slice:":1" }}
+                                        {% endif %}
+                                    </span>
+                                    <span class="slot-name">{{ bracket.final_match.participant1.name|default:'در انتظار' }}</span>
+                                </span>
+                                {% if bracket.final_match.winner_id and bracket.final_match.participant1_id == bracket.final_match.winner_id %}
+                                    <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                                {% endif %}
+                            </div>
+                            <div class="slot {% if bracket.final_match.winner_id and bracket.final_match.participant2_id == bracket.final_match.winner_id %}winner{% elif not bracket.final_match.participant2 %}unknown{% endif %}">
+                                <span class="slot-left">
+                                    <span class="slot-avatar">
+                                        {% if bracket.final_match.participant2 and bracket.final_match.participant2.image %}
+                                            <img src="{{ bracket.final_match.participant2.image.url }}" alt="{{ bracket.final_match.participant2.name }}">
+                                        {% else %}
+                                            {{ bracket.final_match.participant2.name|default:'-'|slice:":1" }}
+                                        {% endif %}
+                                    </span>
+                                    <span class="slot-name">{{ bracket.final_match.participant2.name|default:'در انتظار' }}</span>
+                                </span>
+                                {% if bracket.final_match.winner_id and bracket.final_match.participant2_id == bracket.final_match.winner_id %}
+                                    <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="match-footer">
+                            {% if not bracket_readonly and bracket.final_match.is_real and bracket.final_match.status == 'pending' %}
+                            <form method="post" class="match-actions js-match-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="set_match_winner">
+                                <input type="hidden" name="match_id" value="{{ bracket.final_match.id }}">
+                                <button type="submit" class="pick-btn" name="winner_id" value="{{ bracket.final_match.participant1_id }}" {% if not bracket.final_match.participant1 %}disabled{% endif %} title="ثبت برنده">
+                                    <i class="fas fa-check"></i>
+                                    {{ bracket.final_match.participant1.name|default:'---' }}
+                                </button>
+                                <button type="submit" class="pick-btn" name="winner_id" value="{{ bracket.final_match.participant2_id }}" {% if not bracket.final_match.participant2 %}disabled{% endif %} title="ثبت برنده">
+                                    <i class="fas fa-check"></i>
+                                    {{ bracket.final_match.participant2.name|default:'---' }}
+                                </button>
+                            </form>
+                            {% elif bracket.final_match.is_real and bracket.final_match.winner %}
+                            <div class="manage-subtitle match-note">
+                                قهرمان: <strong style="color:#d1fae5;">{{ bracket.final_match.winner.name }}</strong>
+                            </div>
+                            {% else %}
+                            <div class="manage-subtitle match-note" style="color:rgba(255,255,255,0.68);">
+                                {% if bracket.final_match.participant1 or bracket.final_match.participant2 %}
+                                    منتظر مشخص شدن طرف دیگر فینال
+                                {% else %}
+                                    فینال بعد از ثبت ۲ برنده ساخته می‌شود
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% else %}
+                    <div class="empty-box">فینال هنوز ساخته نشده است.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bracket-side bracket-side-right" aria-label="سمت راست براکت">
+                {% for r in bracket.rounds %}
+                <section class="round-col" data-round="{{ r.round_number }}" aria-label="دور {{ r.round_number }} (راست)">
+                    <div class="round-head">
+                        <h4 class="round-name"><i class="fas fa-layer-group"></i> {{ r.label }}</h4>
+                        <span class="round-chip">{{ r.right|length }} بازی</span>
+                    </div>
+
+                    <div class="round-grid-slot" style="--rows: {{ bracket.rows }};">
+                        {% for match in r.right %}
+                        <article
+                            class="match-node"
+                            id="match-{{ match.id }}"
+                            data-side="R"
+                            data-round="{{ r.round_number }}"
+                            data-side-index="{{ match.side_index }}"
+                            data-status="{{ match.status }}"
+                            style="--row: {{ match.grid_row }}; animation-delay: {{ forloop.counter0|add:1 }}0ms;"
+                        >
+                            <div class="match-meta">
+                                <div class="match-title">بازی {{ match.match_number }}</div>
+                                {% if match.status == 'pending' %}
+                                    <span class="match-pill pill-pending">در انتظار</span>
+                                {% elif match.status == 'bye' %}
+                                    <span class="match-pill pill-bye">BYE</span>
+                                {% elif match.status == 'placeholder' %}
+                                    <span class="match-pill pill-placeholder">—</span>
+                                {% else %}
+                                    <span class="match-pill pill-completed">تمام</span>
+                                {% endif %}
+                            </div>
+
+                    <div class="slots">
+                        <div class="slot {% if match.winner_id and match.participant1_id == match.winner_id %}winner{% endif %}">
+                            <span class="slot-left">
+                                <span class="slot-avatar">
+                                    {% if match.participant1 and match.participant1.image %}
+                                        <img src="{{ match.participant1.image.url }}" alt="{{ match.participant1.name }}">
+                                    {% else %}
+                                        {{ match.participant1.name|default:'-'|slice:":1" }}
+                                    {% endif %}
+                                </span>
+                                <span class="slot-name">{{ match.participant1.name|default:'---' }}</span>
+                            </span>
+                            {% if match.winner_id and match.participant1_id == match.winner_id %}
+                                <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                            {% endif %}
+                        </div>
+                        <div class="slot {% if match.winner_id and match.participant2_id == match.winner_id %}winner{% endif %}">
+                            <span class="slot-left">
+                                <span class="slot-avatar">
+                                    {% if match.participant2 and match.participant2.image %}
+                                        <img src="{{ match.participant2.image.url }}" alt="{{ match.participant2.name }}">
+                                    {% else %}
+                                        {{ match.participant2.name|default:'-'|slice:":1" }}
+                                    {% endif %}
+                                </span>
+                                <span class="slot-name">{{ match.participant2.name|default:'استراحت' }}</span>
+                            </span>
+                            {% if match.winner_id and match.participant2_id == match.winner_id %}
+                                <span class="slot-tag"><i class="fas fa-crown"></i> برنده</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                            <div class="match-footer">
+                                {% if not bracket_readonly and match.is_real and match.status == 'pending' %}
+                                <form method="post" class="match-actions js-match-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="set_match_winner">
+                                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                                    <button type="submit" class="pick-btn" name="winner_id" value="{{ match.participant1_id }}" {% if not match.participant1 %}disabled{% endif %} title="ثبت برنده">
+                                        <i class="fas fa-check"></i>
+                                        {{ match.participant1.name|default:'---' }}
+                                    </button>
+                                    <button type="submit" class="pick-btn" name="winner_id" value="{{ match.participant2_id }}" {% if not match.participant2 %}disabled{% endif %} title="ثبت برنده">
+                                        <i class="fas fa-check"></i>
+                                        {{ match.participant2.name|default:'استراحت' }}
+                                    </button>
+                                </form>
+                                {% elif match.is_real and match.winner %}
+                                <div class="manage-subtitle match-note">
+                                    برنده: <strong style="color:#d1fae5;">{{ match.winner.name }}</strong>
+                                </div>
+                                {% else %}
+                                <div class="manage-subtitle match-note" style="color:rgba(255,255,255,0.62);">
+                                    منتظر مشخص شدن تیم‌ها
+                                </div>
+                                {% endif %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="empty-box">
+    هنوز مسابقه شروع نشده است. بعد از کامل شدن نفرات، دکمه «شروع مسابقه و قرعه‌کشی» را بزن.
+</div>
+{% endif %}

@@ -1,0 +1,334 @@
+{% extends 'community/base.html' %}
+{% block title %}لیدربورد | GameBeat Community{% endblock %}
+{% block nav_lb %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.lb-wrapper { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+
+.lb-hero {
+    text-align: center;
+    padding: 40px 20px 32px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    background: linear-gradient(135deg, #120004, #200008, #0a000e);
+    border: 1px solid rgba(139,92,246,0.2);
+}
+
+.lb-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, rgba(139,92,246,0.12) 0%, transparent 60%);
+}
+
+.lb-hero-content { position: relative; z-index: 1; }
+
+.lb-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+/* Top 3 podium */
+.podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding: 0 20px;
+}
+
+.podium-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 200px;
+}
+
+.podium-avatar-wrap { position: relative; margin-bottom: 12px; }
+
+.podium-rank-badge {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 900;
+    border: 2px solid var(--bg-card);
+}
+
+.rank-1-badge { background: var(--gold); color: #000; }
+.rank-2-badge { background: #c0c0c0; color: #000; }
+.rank-3-badge { background: #cd7f32; color: #000; }
+
+.podium-platform {
+    background: var(--bg-card2);
+    border-radius: 0 0 12px 12px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+    padding-top: 12px;
+}
+
+.podium-1 { order: 2; }
+.podium-2 { order: 1; }
+.podium-3 { order: 3; }
+
+.podium-1 .podium-platform { height: 100px; background: linear-gradient(180deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.3); }
+.podium-2 .podium-platform { height: 76px; background: linear-gradient(180deg, rgba(192,192,192,0.1), transparent); border: 1px solid rgba(192,192,192,0.2); }
+.podium-3 .podium-platform { height: 60px; background: linear-gradient(180deg, rgba(205,127,50,0.1), transparent); border: 1px solid rgba(205,127,50,0.2); }
+
+.podium-name {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--text-white);
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.podium-xp {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.podium-1 .podium-xp { color: var(--gold); }
+.podium-2 .podium-xp { color: #c0c0c0; }
+.podium-3 .podium-xp { color: #cd7f32; }
+
+/* List */
+.lb-list { display: flex; flex-direction: column; gap: 8px; }
+
+.lb-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.lb-row:hover {
+    border-color: rgba(139,92,246,0.3);
+    background: var(--bg-card2);
+    transform: translateX(-3px);
+}
+
+.lb-row.my-row {
+    border-color: var(--red-primary);
+    background: rgba(139,92,246,0.05);
+}
+
+.lb-rank-num {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--text-dim);
+    min-width: 36px;
+    text-align: center;
+}
+
+.lb-rank-num.top-10 { color: var(--red-primary); }
+.lb-rank-num.rank-1 { color: var(--gold); font-size: 1.4rem; }
+.lb-rank-num.rank-2 { color: #c0c0c0; font-size: 1.3rem; }
+.lb-rank-num.rank-3 { color: #cd7f32; font-size: 1.2rem; }
+
+.lb-info { flex: 1; min-width: 0; }
+
+.lb-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lb-meta {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+.lb-xp {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--orange-accent);
+}
+
+.lb-level {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+/* XP bar mini */
+.lb-xp-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.lb-xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red-primary), var(--orange-accent));
+    border-radius: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lb-wrapper">
+
+    <!-- Hero -->
+    <div class="lb-hero">
+        <div class="lb-hero-content">
+            <div class="lb-title">
+                <i class="bi bi-trophy-fill" style="color: var(--gold);"></i>
+                <span class="shimmer-text">لیدربورد</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.93rem; margin: 0;">برترین گیمرهای GameBeat Community</p>
+        </div>
+    </div>
+
+    {% if top_gamers %}
+
+    <!-- Top 3 Podium -->
+    {% if top_gamers|length >= 3 %}
+    <div class="podium">
+        <!-- #2 -->
+        {% with gamer=top_gamers.1 %}
+        <div class="podium-slot podium-2">
+            <div style="margin-bottom: 8px;">
+                <div class="podium-name">{{ gamer.user.username }}</div>
+                <div class="podium-xp">{{ gamer.xp }} XP</div>
+            </div>
+            <div class="podium-avatar-wrap">
+                {% if gamer.avatar %}
+                    <img src="{{ gamer.avatar.url }}" class="avatar avatar-lg" style="border-color: #c0c0c0;">
+                {% else %}
+                    <div class="avatar-placeholder avatar-lg" style="font-size:1.8rem; border-color:#c0c0c0;">{{ gamer.user.username|first|upper }}</div>
+                {% endif %}
+                <div class="podium-rank-badge rank-2-badge">2</div>
+            </div>
+            <div class="podium-platform"><span style="font-size:1.5rem; color:#c0c0c0;">🥈</span></div>
+        </div>
+        {% endwith %}
+
+        <!-- #1 -->
+        {% with gamer=top_gamers.0 %}
+        <div class="podium-slot podium-1">
+            <div style="margin-bottom: 8px;">
+                <div class="podium-name" style="font-size:1rem;">{{ gamer.user.username }}</div>
+                <div class="podium-xp" style="font-size:0.9rem;">{{ gamer.xp }} XP</div>
+            </div>
+            <div class="podium-avatar-wrap">
+                {% if gamer.avatar %}
+                    <img src="{{ gamer.avatar.url }}" class="avatar" style="width:96px; height:96px; border-color: var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.4);">
+                {% else %}
+                    <div class="avatar-placeholder" style="width:96px; height:96px; font-size:2.2rem; border-color:var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.3);">{{ gamer.user.username|first|upper }}</div>
+                {% endif %}
+                <div class="podium-rank-badge rank-1-badge">👑</div>
+            </div>
+            <div class="podium-platform"><span style="font-size:1.8rem;">🥇</span></div>
+        </div>
+        {% endwith %}
+
+        <!-- #3 -->
+        {% with gamer=top_gamers.2 %}
+        <div class="podium-slot podium-3">
+            <div style="margin-bottom: 8px;">
+                <div class="podium-name">{{ gamer.user.username }}</div>
+                <div class="podium-xp">{{ gamer.xp }} XP</div>
+            </div>
+            <div class="podium-avatar-wrap">
+                {% if gamer.avatar %}
+                    <img src="{{ gamer.avatar.url }}" class="avatar avatar-lg" style="border-color: #cd7f32;">
+                {% else %}
+                    <div class="avatar-placeholder avatar-lg" style="font-size:1.8rem; border-color:#cd7f32;">{{ gamer.user.username|first|upper }}</div>
+                {% endif %}
+                <div class="podium-rank-badge rank-3-badge">3</div>
+            </div>
+            <div class="podium-platform"><span style="font-size:1.4rem; color:#cd7f32;">🥉</span></div>
+        </div>
+        {% endwith %}
+    </div>
+    {% endif %}
+
+    <!-- Full List -->
+    <div class="lb-list">
+        {% for gamer in top_gamers %}
+        <a href="{% url 'community:profile' username=gamer.user.username %}" class="lb-row {% if gamer.user == request.user %}my-row{% endif %}">
+            <div class="lb-rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% elif forloop.counter <= 10 %}top-10{% endif %}">
+                {% if forloop.counter == 1 %}👑
+                {% elif forloop.counter == 2 %}🥈
+                {% elif forloop.counter == 3 %}🥉
+                {% else %}#{{ forloop.counter }}{% endif %}
+            </div>
+
+            {% if gamer.avatar %}
+                <img src="{{ gamer.avatar.url }}" class="avatar avatar-md">
+            {% else %}
+                <div class="avatar-placeholder avatar-md" style="font-size:1rem;">{{ gamer.user.username|first|upper }}</div>
+            {% endif %}
+
+            <div class="lb-info">
+                <div class="lb-name">
+                    {{ gamer.user.username }}
+                    {% if gamer.user == request.user %}
+                        <span style="font-size:0.72rem; background:rgba(139,92,246,0.15); color:var(--red-primary); border:1px solid rgba(139,92,246,0.3); padding:1px 7px; border-radius:10px;">شما</span>
+                    {% endif %}
+                    {% if gamer.rank %}
+                        <span class="rank-badge rank-{{ gamer.rank }}" style="font-size:0.7rem;">{{ gamer.get_rank_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="lb-meta">
+                    {% if gamer.platform %}<span class="platform-badge" style="font-size:0.7rem; padding:1px 7px;">{{ gamer.get_platform_display }}</span>{% endif %}
+                    {% if gamer.city %}<span><i class="bi bi-geo-alt"></i> {{ gamer.get_city_display }}</span>{% endif %}
+                    <span>{{ gamer.posts_count }} پست</span>
+                </div>
+            </div>
+
+            <div class="lb-right">
+                <div class="lb-xp">{{ gamer.xp }} XP</div>
+                <div class="lb-level">لول {{ gamer.level }}</div>
+                <div class="lb-xp-bar">
+                    <div class="lb-xp-fill" style="width: {{ gamer.level_progress }}%;"></div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+        <div style="text-align:center; padding:60px 20px; color: var(--text-muted);">
+            <i class="bi bi-trophy" style="font-size:4rem; color:var(--gold); opacity:0.3; display:block; margin-bottom:16px;"></i>
+            <h5 style="color: var(--text-white);">لیدربورد خالیه</h5>
+            <p>اولین نفری باش که XP جمع می‌کنه!</p>
+            <a href="{% url 'community:feed' %}" class="btn-red" style="margin-top:16px; display:inline-block;">پست بذار، XP بگیر</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

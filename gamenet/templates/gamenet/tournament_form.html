@@ -1,9 +1,10 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+<link rel="stylesheet" href="{% static 'vendor/css/persian-datepicker.min.css' %}">
 <style>
     .hero {
         position: relative;
@@ -589,11 +590,11 @@
     bindMoneyHint(prizePoolInput, prizePoolHint);
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script defer src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script defer src="{% static 'vendor/js/persian-date.min.js' %}"></script>
+<script defer src="{% static 'vendor/js/persian-datepicker.min.js' %}"></script>
 <script>
-    (function () {
+    document.addEventListener('DOMContentLoaded', function () {
         const startJalali = document.getElementById('start_date_jalali');
         const endJalali = document.getElementById('end_date_jalali');
         const startGregorian = document.getElementById('start_date_gregorian');
@@ -606,14 +607,19 @@
         const formEl = startJalali ? startJalali.closest('form') : null;
 
         if (!(startJalali && endJalali && startGregorian && endGregorian && formEl)) return;
-        if (!(window.jQuery && typeof window.jQuery.fn.pDatepicker === 'function')) {
-            // fallback: اگر دیت‌پیکر لود نشود، کاربر مقدار میلادی را مستقیم ببیند
+
+        function fallbackToPlainInputs() {
             startJalali.readOnly = false;
             endJalali.readOnly = false;
             startJalali.value = startGregorian.value || '';
             endJalali.value = endGregorian.value || '';
-            return;
         }
+
+        function run() {
+            if (!(window.jQuery && typeof window.jQuery.fn.pDatepicker === 'function' && window.persianDate)) {
+                fallbackToPlainInputs();
+                return;
+            }
 
         // normalize existing values for edit form
         if (startGregorian.value && startGregorian.value.includes(' ')) {
@@ -822,6 +828,20 @@
 
             endGregorian.value = endDatePart ? `${endDatePart} 23:59:00` : '';
         });
-    })();
+        }
+
+        (function waitForPicker(tries) {
+            if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.pDatepicker === 'function' && window.persianDate) {
+                run();
+                return;
+            }
+            if (tries <= 0) {
+                fallbackToPlainInputs();
+                return;
+            }
+            setTimeout(function () { waitForPicker(tries - 1); }, 120);
+        })(25);
+
+    });
 </script>
 {% endblock %}

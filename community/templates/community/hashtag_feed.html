@@ -1,0 +1,236 @@
+{% extends 'community/base.html' %}
+{% load community_tags %}
+{% block title %}#{{ hashtag.name }} | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.hf-page { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+.hf-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 22px;
+    align-items: start;
+}
+@media (max-width: 860px) { .hf-layout { grid-template-columns: 1fr; } .hf-sidebar { display: none; } }
+
+.hf-hero {
+    background: linear-gradient(135deg, #0d0022 0%, #1e0035 40%, #0a001e 100%);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 22px;
+    padding: 32px 28px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+    grid-column: 1 / -1;
+}
+.hf-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.15) 0%, transparent 50%);
+}
+.hf-hero-inner { position: relative; z-index: 1; }
+.hf-tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(139,92,246,0.18);
+    border: 1px solid rgba(139,92,246,0.4);
+    border-radius: 30px;
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    color: #c4b5fd;
+    margin-bottom: 14px;
+}
+.hf-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 0 0 8px;
+}
+.hf-title span { color: #a78bfa; }
+.hf-meta { font-size: 0.9rem; color: rgba(255,255,255,0.5); }
+.hf-meta b { color: #c4b5fd; }
+
+/* Post cards */
+.post-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s, transform 0.15s;
+}
+.post-card:hover { border-color: rgba(139,92,246,0.4); transform: translateY(-1px); }
+.post-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.post-avatar-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #8b5cf6; }
+.post-avatar-ph {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg,#8b5cf6,#a855f7);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:#fff; font-size:1rem;
+}
+.post-author-name { font-size: 0.9rem; font-weight: 700; color: var(--text-white); }
+.post-author-sub { font-size: 0.75rem; color: var(--text-dim); }
+.post-time { margin-right: auto; font-size: 0.75rem; color: var(--text-dim); }
+.post-content { font-size: 0.95rem; line-height: 1.75; color: rgba(240,240,255,0.9); margin-bottom: 10px; }
+.hashtag-link { color: #a78bfa; text-decoration: none; font-weight: 600; }
+.hashtag-link:hover { text-decoration: underline; }
+.post-image { width: 100%; border-radius: 14px; max-height: 360px; object-fit: cover; margin-bottom: 12px; }
+.post-footer { display: flex; align-items: center; gap: 14px; }
+.post-action-btn {
+    background: none; border: none; color: var(--text-dim);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; cursor: pointer; padding: 6px 10px;
+    border-radius: 10px; transition: all 0.15s;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.post-action-btn:hover { background: rgba(139,92,246,0.1); color: #a78bfa; }
+.post-action-btn.liked { color: #f87171; }
+.game-tag-chip {
+    background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+    color: #a78bfa; border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-dim);
+    border: 1px dashed var(--border); border-radius: 18px;
+}
+.empty-state i { font-size: 3rem; display: block; margin-bottom: 14px; color: var(--border); }
+
+/* Sidebar */
+.hf-sidebar { position: sticky; top: 80px; }
+.sb-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+.sb-title {
+    font-size: 0.85rem; font-weight: 800;
+    color: #8b5cf6;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 7px;
+}
+.trend-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border-radius: 10px;
+    text-decoration: none; transition: background 0.15s; margin-bottom: 2px;
+}
+.trend-item:hover { background: rgba(139,92,246,0.1); }
+.trend-name { font-size: 0.88rem; font-weight: 700; color: #a78bfa; }
+.trend-count { font-size: 0.72rem; color: var(--text-dim); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hf-page">
+    <div class="hf-layout">
+
+        <!-- Hero -->
+        <div class="hf-hero">
+            <div class="hf-hero-inner">
+                <div class="hf-tag-badge"><i class="bi bi-hash"></i> هشتگ</div>
+                <h1 class="hf-title">#<span>{{ hashtag.name }}</span></h1>
+                <p class="hf-meta"><b>{{ hashtag.post_count }}</b> پست با این هشتگ منتشر شده</p>
+            </div>
+        </div>
+
+        <!-- Posts -->
+        <div>
+            {% if posts %}
+                {% for post in posts %}
+                <div class="post-card">
+                    <div class="post-card-top">
+                        <a href="{% url 'community:profile' username=post.author.username %}">
+                            {% if post.author.gamer_profile.avatar %}
+                                <img src="{{ post.author.gamer_profile.avatar.url }}" class="post-avatar-img">
+                            {% else %}
+                                <div class="post-avatar-ph">{{ post.author.username|first|upper }}</div>
+                            {% endif %}
+                        </a>
+                        <div>
+                            <a href="{% url 'community:profile' username=post.author.username %}" style="text-decoration:none;">
+                                <div class="post-author-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+                            </a>
+                            <div class="post-author-sub">@{{ post.author.username }}</div>
+                        </div>
+                        {% if post.game_tag %}
+                            <span class="game-tag-chip">🎮 {{ post.game_tag }}</span>
+                        {% endif %}
+                        <span class="post-time">{{ post.created_at|timesince }} پیش</span>
+                    </div>
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" class="post-image">
+                    {% endif %}
+                    {% if post.video %}
+                        <video src="{{ post.video.url }}" controls preload="metadata"
+                               style="width:100%; border-radius:14px; margin-bottom:12px; max-height:400px; background:#111; display:block;"></video>
+                    {% endif %}
+                    <p class="post-content">{{ post.content|hashtagify }}</p>
+                    <div class="post-footer">
+                        <button class="post-action-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                            onclick="toggleLike({{ post.id }}, this)">
+                            <i class="bi {% if post.id in liked_post_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            {{ post.likes_count }}
+                        </button>
+                        <span class="post-action-btn">
+                            <i class="bi bi-chat-dots"></i> {{ post.comments_count }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-hash"></i>
+                    <p>هنوز پستی با هشتگ <b>#{{ hashtag.name }}</b> منتشر نشده</p>
+                    <a href="{% url 'community:create_post_page' %}" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;border-radius:12px;padding:9px 22px;text-decoration:none;font-weight:700;">
+                        <i class="bi bi-plus-lg"></i> اولین پست رو بذار
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="hf-sidebar">
+            {% if trending %}
+            <div class="sb-card">
+                <div class="sb-title"><i class="bi bi-fire"></i> هشتگ‌های پرطرفدار</div>
+                {% for tag in trending %}
+                <a href="{% url 'community:hashtag_feed' tag_name=tag.name %}" class="trend-item">
+                    <span class="trend-name">#{{ tag.name }}</span>
+                    <span class="trend-count">{{ tag.post_count }} پست</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="sb-card" style="text-align:center;">
+                <a href="{% url 'community:create_post_page' %}"
+                   style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;border-radius:14px;padding:11px 24px;text-decoration:none;font-weight:800;font-size:0.95rem;width:100%;justify-content:center;">
+                    <i class="bi bi-plus-lg"></i> پست جدید با این هشتگ
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+function toggleLike(postId, btn) {
+    fetch('/community/post/' + postId + '/like/', {
+        method: 'POST', headers: {'X-CSRFToken': CSRF}
+    }).then(r => r.json()).then(data => {
+        const icon = btn.querySelector('i');
+        if (data.liked) { btn.classList.add('liked'); icon.className = 'bi bi-heart-fill'; }
+        else { btn.classList.remove('liked'); icon.className = 'bi bi-heart'; }
+    });
+}
+</script>
+{% endblock %}

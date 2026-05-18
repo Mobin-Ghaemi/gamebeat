@@ -1,0 +1,533 @@
+{% extends 'community/base.html' %}
+{% block title %}ویرایش پروفایل | GameBeat Community{% endblock %}
+
+{% block extra_css %}
+<style>
+.edit-wrapper { max-width: 780px; margin: 0 auto; padding: 32px 20px 60px; }
+
+.edit-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.edit-header h1 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-white);
+    margin: 0;
+}
+
+.section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--red-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+
+/* Avatar upload */
+.avatar-upload-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px;
+    background: var(--bg-card2);
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.avatar-upload-area:hover {
+    border-color: var(--red-primary);
+    background: rgba(139,92,246,0.04);
+}
+
+.avatar-upload-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.avatar-upload-hint strong { color: var(--red-primary); }
+
+/* Game tags input */
+.games-input-wrap { position: relative; }
+
+.games-suggestions {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    z-index: 10;
+    display: none;
+}
+
+.game-suggest-item {
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: all 0.15s;
+}
+
+.game-suggest-item:hover {
+    background: rgba(139,92,246,0.1);
+    color: var(--text-white);
+}
+
+.popular-games {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.popular-game-tag {
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    color: var(--text-muted);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.popular-game-tag:hover {
+    background: rgba(139,92,246,0.15);
+    color: var(--red-primary);
+    border-color: var(--red-primary);
+}
+
+/* Favorite games chip selector */
+.fav-chips-wrap {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    min-height: 42px;
+    padding: 10px 12px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+}
+.fav-chips-wrap:focus-within { border-color: #8b5cf6; }
+
+.fav-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.4);
+    color: #c084fc;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    font-size: 0.82rem; font-weight: 600;
+    animation: chipIn 0.18s ease;
+}
+@keyframes chipIn { from { transform: scale(0.8); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+.fav-chip-x {
+    background: none; border: none; cursor: pointer;
+    color: rgba(192,132,252,0.6); font-size: 0.85rem; line-height:1;
+    padding: 0 2px; border-radius: 4px;
+    transition: color 0.15s;
+}
+.fav-chip-x:hover { color: #f87171; }
+
+.fav-add-row {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 12px;
+}
+.fav-add-row .g-input { flex: 1; }
+
+.fav-add-btn {
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    color: #c084fc;
+    padding: 9px 18px; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: all 0.15s;
+}
+.fav-add-btn:hover { background: rgba(139,92,246,0.25); color: #fff; }
+
+.popular-game-tag.selected {
+    background: rgba(139,92,246,0.2);
+    border-color: rgba(139,92,246,0.55);
+    color: #c084fc;
+}
+.popular-game-tag.selected::before { content: '✓ '; }
+
+.fav-empty-hint {
+    font-size: 0.78rem; color: var(--text-dim);
+    font-style: italic; align-self: center;
+}
+
+/* Platform checkbox multi-select */
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+}
+
+.platform-option { display: none; }
+
+.platform-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 10px;
+    background: var(--bg-card2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+}
+
+.platform-label i { font-size: 1.6rem; color: var(--text-muted); }
+.platform-label span { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+.platform-option:checked + .platform-label {
+    border-color: var(--purple, #8b5cf6);
+    background: rgba(139,92,246,0.12);
+    box-shadow: 0 0 0 1px rgba(139,92,246,0.3);
+}
+
+.platform-option:checked + .platform-label i,
+.platform-option:checked + .platform-label span { color: #c084fc; }
+
+.platform-option:checked + .platform-label::after {
+    content: '✓';
+    position: absolute; top: 6px; left: 8px;
+    font-size: 0.72rem; font-weight: 900;
+    color: #c084fc;
+    background: rgba(139,92,246,0.2);
+    border-radius: 50%; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+}
+
+/* Save bar */
+.save-bar {
+    position: sticky;
+    bottom: 0;
+    background: rgba(13,13,24,0.95);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin: 0 -20px -60px;
+}
+
+@media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .platform-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-wrapper">
+    <div class="edit-header">
+        <a href="{% url 'community:profile' username=request.user.username %}" class="btn-ghost" style="padding: 8px 12px;">
+            <i class="bi bi-arrow-right"></i>
+        </a>
+        <h1><i class="bi bi-pencil-square text-red"></i> ویرایش پروفایل گیمر</h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Avatar & Banner -->
+        <div class="section-card">
+            <div class="section-title"><i class="bi bi-image"></i> آواتار و بنر</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="g-label">آواتار پروفایل</label>
+                    <label class="avatar-upload-area">
+                        <div>
+                            {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" class="avatar avatar-lg" style="border-color:var(--red-primary);">
+                            {% else %}
+                                <div class="avatar-placeholder avatar-lg" style="font-size:1.8rem;">{{ request.user.username|first|upper }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="avatar-upload-hint">
+                            <strong>کلیک کن</strong> تا عکس آپلود کنی<br>
+                            <small>PNG, JPG تا ۵ مگابایت</small>
+                        </div>
+                        <input type="file" name="avatar" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="g-label">بنر پروفایل</label>
+                    <label class="avatar-upload-area" style="min-height: 100px; background: {% if profile.banner %}url({{ profile.banner.url }}) center/cover{% else %}var(--bg-card2){% endif %};">
+                        <div class="avatar-upload-hint" style="text-align:center; width:100%;">
+                            <i class="bi bi-image" style="font-size:2rem; color:var(--text-dim); display:block; margin-bottom:6px;"></i>
+                            <strong>کلیک کن</strong> برای تغییر بنر
+                        </div>
+                        <input type="file" name="banner" accept="image/*" style="display:none;">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="section-card">
+            <div class="section-title"><i class="bi bi-person"></i> اطلاعات شخصی</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="g-label">نام</label>
+                    <input type="text" name="first_name" class="g-input" value="{{ request.user.first_name }}" placeholder="نامت رو بنویس">
+                </div>
+                <div class="form-group">
+                    <label class="g-label">نام خانوادگی</label>
+                    <input type="text" name="last_name" class="g-input" value="{{ request.user.last_name }}" placeholder="نام خانوادگی">
+                </div>
+                <div class="form-group">
+                    <label class="g-label">شهر</label>
+                    <select name="city" class="g-input">
+                        <option value="">انتخاب شهر</option>
+                        {% for val, label in city_choices %}
+                            <option value="{{ val }}" {% if profile.city == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="g-label">سبک بازی</label>
+                    <select name="gaming_style" class="g-input">
+                        <option value="">انتخاب سبک</option>
+                        <option value="competitive" {% if profile.gaming_style == 'competitive' %}selected{% endif %}>رقابتی / Competitive</option>
+                        <option value="casual" {% if profile.gaming_style == 'casual' %}selected{% endif %}>تفریحی / Casual</option>
+                        <option value="streamer" {% if profile.gaming_style == 'streamer' %}selected{% endif %}>استریمر</option>
+                        <option value="pro" {% if profile.gaming_style == 'pro' %}selected{% endif %}>حرفه‌ای / Pro</option>
+                        <option value="collector" {% if profile.gaming_style == 'collector' %}selected{% endif %}>کالکتور</option>
+                        <option value="rpg_lover" {% if profile.gaming_style == 'rpg_lover' %}selected{% endif %}>دوستدار RPG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="g-label">رنک</label>
+                    <select name="rank" class="g-input">
+                        <option value="">بدون رنک</option>
+                        <option value="bronze" {% if profile.rank == 'bronze' %}selected{% endif %}>برنز</option>
+                        <option value="silver" {% if profile.rank == 'silver' %}selected{% endif %}>نقره</option>
+                        <option value="gold" {% if profile.rank == 'gold' %}selected{% endif %}>طلا</option>
+                        <option value="platinum" {% if profile.rank == 'platinum' %}selected{% endif %}>پلاتینیوم</option>
+                        <option value="diamond" {% if profile.rank == 'diamond' %}selected{% endif %}>الماس</option>
+                        <option value="master" {% if profile.rank == 'master' %}selected{% endif %}>مستر</option>
+                        <option value="grandmaster" {% if profile.rank == 'grandmaster' %}selected{% endif %}>گرندمستر</option>
+                        <option value="challenger" {% if profile.rank == 'challenger' %}selected{% endif %}>چلنجر</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label class="g-label">بیو / درباره من</label>
+                    <textarea name="bio" class="g-input" style="min-height: 90px;" placeholder="یه چیزی درباره خودت بنویس... گیمر چند ساله‌ای؟ چی بازی می‌کنی؟">{{ profile.bio }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platform — multi select -->
+        <div class="section-card">
+            <div class="section-title"><i class="bi bi-controller"></i> پلتفرم‌های بازی</div>
+            <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:14px;">می‌تونی چند پلتفرم رو با هم انتخاب کنی</div>
+            <div class="platform-grid">
+                {% for val, label in platform_choices %}
+                <div>
+                    <input type="checkbox" name="platforms" id="plt_{{ val }}" value="{{ val }}" class="platform-option"
+                        {% if val in profile.get_platforms_list %}checked{% endif %}>
+                    <label for="plt_{{ val }}" class="platform-label">
+                        <i class="bi {% if val == 'pc' %}bi-pc-display{% elif val == 'ps4' or val == 'ps5' %}bi-playstation{% elif val == 'xbox' %}bi-xbox{% elif val == 'mobile' %}bi-phone{% elif val == 'switch' %}bi-nintendo-switch{% else %}bi-controller{% endif %}"></i>
+                        <span>{{ label }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Favorite Games -->
+        <div class="section-card">
+            <div class="section-title"><i class="bi bi-joystick"></i> بازی‌های مورد علاقه</div>
+
+            <!-- Hidden input — actual form value -->
+            <input type="hidden" name="favorite_games" id="favHidden" value="{{ profile.favorite_games }}">
+
+            <!-- Chips display -->
+            <label class="g-label" style="margin-bottom:8px;">بازی‌های انتخاب شده</label>
+            <div class="fav-chips-wrap" id="favChips">
+                <span class="fav-empty-hint" id="favEmptyHint">هنوز بازی‌ای اضافه نشده...</span>
+            </div>
+
+            <!-- Add new game -->
+            <div class="fav-add-row">
+                <input type="text" id="favAddInput" class="g-input" placeholder="نام بازی رو بنویس و اضافه کن..."
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();favAdd();}">
+                <button type="button" class="fav-add-btn" onclick="favAdd()">
+                    <i class="bi bi-plus-lg"></i> اضافه
+                </button>
+            </div>
+
+            <!-- Popular games — toggle style -->
+            <div style="font-size:0.78rem; color:var(--text-dim); margin-bottom:8px;">بازی‌های پرطرفدار — کلیک کن تا انتخاب/حذف کنی:</div>
+            <div class="popular-games" id="popularGameTags">
+                {% for g in popular_games %}
+                <span class="popular-game-tag" data-game="{{ g }}" onclick="favToggle('{{ g }}', this)">{{ g }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Social / Platform IDs -->
+        <div class="section-card">
+            <div class="section-title"><i class="bi bi-link-45deg"></i> آیدی‌های پلتفرم</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="g-label"><i class="bi bi-steam"></i> Steam ID</label>
+                    <input type="text" name="steam_id" class="g-input" value="{{ profile.steam_id }}" placeholder="Steam username یا ID">
+                </div>
+                <div class="form-group">
+                    <label class="g-label"><i class="bi bi-playstation"></i> PSN ID</label>
+                    <input type="text" name="psn_id" class="g-input" value="{{ profile.psn_id }}" placeholder="PSN Online ID">
+                </div>
+                <div class="form-group">
+                    <label class="g-label"><i class="bi bi-xbox"></i> Xbox Gamertag</label>
+                    <input type="text" name="xbox_gamertag" class="g-input" value="{{ profile.xbox_gamertag }}" placeholder="Xbox Gamertag">
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Bar -->
+        <div class="save-bar">
+            <a href="{% url 'community:profile' username=request.user.username %}" class="btn-ghost">انصراف</a>
+            <button type="submit" class="btn-primary" style="padding: 10px 32px; background: linear-gradient(135deg, #8b5cf6, #a855f7); border: none; color: #fff; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-check-lg"></i> ذخیره پروفایل
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── Avatar preview ── */
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const wrap = input.closest('.avatar-upload-area');
+            const img = wrap.querySelector('img, .avatar-placeholder');
+            if (img) {
+                const newImg = document.createElement('img');
+                newImg.src = e.target.result;
+                newImg.className = 'avatar avatar-lg';
+                newImg.style.borderColor = 'var(--red-primary)';
+                img.replaceWith(newImg);
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+/* ── Favorite Games Chip Selector ── */
+let favGames = [];
+
+function favInit() {
+    const raw = document.getElementById('favHidden').value;
+    favGames = raw ? raw.split(',').map(g => g.trim()).filter(Boolean) : [];
+    favRender();
+}
+
+function favRender() {
+    const wrap    = document.getElementById('favChips');
+    const hint    = document.getElementById('favEmptyHint');
+    const hidden  = document.getElementById('favHidden');
+
+    /* chips */
+    const chips = favGames.map(g => `
+        <span class="fav-chip">
+            <i class="bi bi-joystick" style="font-size:0.72rem;"></i>
+            ${escH(g)}
+            <button type="button" class="fav-chip-x" onclick="favRemove('${escAttr(g)}')" title="حذف">×</button>
+        </span>
+    `).join('');
+    wrap.innerHTML = chips || '';
+    if (!favGames.length) {
+        if (!hint.parentNode) wrap.appendChild(hint);
+        hint.style.display = 'inline';
+    } else {
+        hint.style.display = 'none';
+    }
+
+    /* update hidden input */
+    hidden.value = favGames.join(', ');
+
+    /* update popular tag selected states */
+    document.querySelectorAll('.popular-game-tag').forEach(tag => {
+        const g = tag.dataset.game;
+        tag.classList.toggle('selected', favGames.includes(g));
+    });
+}
+
+function favAdd() {
+    const input = document.getElementById('favAddInput');
+    const name  = input.value.trim();
+    if (!name) return;
+    if (!favGames.includes(name)) {
+        favGames.push(name);
+        favRender();
+    }
+    input.value = '';
+    input.focus();
+}
+
+function favRemove(name) {
+    favGames = favGames.filter(g => g !== name);
+    favRender();
+}
+
+function favToggle(name, el) {
+    if (favGames.includes(name)) {
+        favRemove(name);
+    } else {
+        favGames.push(name);
+        favRender();
+    }
+}
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'"); }
+
+/* init on load */
+document.addEventListener('DOMContentLoaded', favInit);
+</script>
+{% endblock %}

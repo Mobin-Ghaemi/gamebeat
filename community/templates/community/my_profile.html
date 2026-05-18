@@ -1,0 +1,735 @@
+{% extends 'community/base.html' %}
+{% block title %}حساب کاربری | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─── Page ───────────────────────────────────────────── */
+.account-page { background:#07070f; min-height:calc(100vh - 64px); padding-bottom:80px; }
+
+/* ─── Banner ─────────────────────────────────────────── */
+.acct-banner {
+    height:220px; position:relative; overflow:hidden; cursor:pointer;
+    background:linear-gradient(135deg,#0d0020 0%,#0a0a1e 50%,#0d0020 100%);
+}
+.acct-banner::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+        radial-gradient(ellipse at 15% 50%, rgba(139,92,246,.28) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 20%, rgba(168,85,247,.18) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(91,33,182,.2) 0%, transparent 40%);
+}
+.acct-banner::after {
+    content:''; position:absolute; inset:0;
+    background-image:linear-gradient(rgba(139,92,246,.04) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(139,92,246,.04) 1px,transparent 1px);
+    background-size:50px 50px;
+}
+.acct-banner img { width:100%; height:100%; object-fit:cover; position:relative; z-index:1; }
+.banner-overlay {
+    position:absolute; inset:0; z-index:2;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+    background:rgba(0,0,0,.45); opacity:0; transition:opacity .25s;
+    color:#fff; font-size:.9rem;
+}
+.acct-banner:hover .banner-overlay { opacity:1; }
+.banner-overlay i { font-size:1.8rem; }
+
+/* ─── Main Layout ────────────────────────────────────── */
+.acct-body {
+    max-width:1080px; margin:0 auto; padding:24px 16px;
+    display:grid; grid-template-columns:1fr 300px; gap:20px; align-items:start;
+}
+@media(max-width:900px){ .acct-body{grid-template-columns:1fr;} }
+
+/* ─── Card base ──────────────────────────────────────── */
+.acct-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:20px; overflow:hidden; margin-bottom:16px;
+    transition:border-color .2s;
+}
+.acct-card:hover { border-color:rgba(139,92,246,.25); }
+.card-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 14px; border-bottom:1px solid var(--border);
+}
+.card-title { font-size:.95rem; font-weight:800; color:var(--text-white); display:flex; align-items:center; gap:8px; }
+.card-icon {
+    width:32px; height:32px; border-radius:9px;
+    background:rgba(139,92,246,.13); border:1px solid rgba(139,92,246,.25);
+    display:flex; align-items:center; justify-content:center; font-size:.9rem; color:#8b5cf6;
+    flex-shrink:0;
+}
+.card-body { padding:20px; }
+
+/* ─── Profile Header Card ────────────────────────────── */
+.profile-hdr-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:20px; overflow:hidden; margin-bottom:16px;
+    position:relative;
+}
+.ph-inner { padding:0 22px 20px; }
+.av-zone { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; }
+.av-click {
+    position:relative; display:inline-block; cursor:pointer; margin-top:-46px;
+}
+.av-click img, .av-click .av-init {
+    width:92px; height:92px; border-radius:50%;
+    border:4px solid var(--bg-card); object-fit:cover; display:block;
+}
+.av-init {
+    background:linear-gradient(135deg,#8b5cf6,#5b21b6);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem; font-weight:900; color:#fff;
+}
+.av-lens {
+    position:absolute; inset:0; border-radius:50%;
+    background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .2s; color:#fff; font-size:1.2rem;
+}
+.av-click:hover .av-lens { opacity:1; }
+
+.ph-name { font-size:1.35rem; font-weight:900; color:var(--text-white); margin-top:10px; line-height:1.2; }
+.ph-tag  { font-size:.82rem; color:var(--text-dim); margin-top:3px; }
+.ph-bio  { font-size:.88rem; color:var(--text-muted); margin-top:8px; line-height:1.6; }
+
+.badges-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+.lv-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(168,85,247,.2));
+    border:1px solid rgba(168,85,247,.4); color:#c084fc;
+    padding:3px 12px; border-radius:20px; font-size:.75rem; font-weight:800;
+}
+
+/* stat strip */
+.stat-strip { display:flex; border-top:1px solid var(--border); margin-top:16px; }
+.stat-cell {
+    flex:1; text-align:center; padding:14px 8px;
+    border-left:1px solid var(--border); cursor:default;
+    transition:background .15s;
+}
+.stat-cell:last-child { border-left:none; }
+.stat-cell:hover { background:rgba(139,92,246,.06); }
+.stat-n { font-size:1.2rem; font-weight:900; color:#fff; }
+.stat-l { font-size:.68rem; color:var(--text-dim); margin-top:2px; }
+.stat-n.xp { color:#a855f7; }
+
+/* xp bar */
+.xp-strip { padding:0 22px 16px; }
+.xp-meta { display:flex; justify-content:space-between; font-size:.73rem; color:var(--text-dim); margin-bottom:5px; }
+.xp-track { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.xp-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#a855f7); border-radius:3px; transition:width .7s ease; }
+
+/* action buttons */
+.ph-actions { display:flex; gap:8px; flex-wrap:wrap; padding-bottom:4px; }
+.btn-outline-purple {
+    display:inline-flex; align-items:center; gap:6px;
+    background:transparent; border:1px solid rgba(139,92,246,.35);
+    color:#a78bfa; border-radius:10px; padding:7px 16px;
+    font-size:.82rem; font-weight:700; font-family:'Vazirmatn',sans-serif;
+    cursor:pointer; text-decoration:none; transition:all .2s;
+}
+.btn-outline-purple:hover { background:rgba(139,92,246,.12); border-color:#8b5cf6; color:#fff; }
+
+/* ─── Create Post ────────────────────────────────────── */
+.post-create-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:20px; padding:18px 20px; margin-bottom:16px;
+}
+.post-create-top { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.post-create-av {
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    border:2px solid rgba(139,92,246,.4); object-fit:cover;
+}
+.post-create-av-ph {
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#8b5cf6,#5b21b6);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem; font-weight:900; color:#fff; border:2px solid rgba(139,92,246,.4);
+}
+.post-create-trigger {
+    flex:1; background:var(--bg-card2); border:1px solid var(--border);
+    border-radius:24px; padding:10px 18px; color:var(--text-dim);
+    font-size:.9rem; cursor:text; transition:all .2s;
+    font-family:'Vazirmatn',sans-serif;
+}
+.post-create-trigger:focus { outline:none; border-color:#8b5cf6; color:var(--text-white); box-shadow:0 0 0 3px rgba(139,92,246,.1); }
+
+.type-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.type-tab {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:5px 14px; border-radius:20px; border:1px solid var(--border);
+    background:none; color:var(--text-muted); font-size:.8rem; font-weight:700;
+    cursor:pointer; font-family:'Vazirmatn',sans-serif; transition:all .2s;
+}
+.type-tab:hover { border-color:#8b5cf6; color:#a78bfa; }
+.type-tab.on { border-color:#8b5cf6; color:#fff; background:rgba(139,92,246,.18); }
+
+.post-expanded { display:none; }
+.post-expanded.open { display:block; }
+.post-foot-row { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.attach-btn {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:7px 14px; border-radius:10px; border:1px solid var(--border);
+    background:var(--bg-card2); color:var(--text-muted); font-size:.82rem;
+    cursor:pointer; font-family:'Vazirmatn',sans-serif; transition:all .2s;
+}
+.attach-btn:hover { border-color:#8b5cf6; color:#a78bfa; }
+.post-send-btn {
+    margin-right:auto; display:inline-flex; align-items:center; gap:7px;
+    padding:9px 24px; border-radius:12px; border:none;
+    background:linear-gradient(135deg,#8b5cf6,#5b21b6); color:#fff;
+    font-size:.88rem; font-weight:800; font-family:'Vazirmatn',sans-serif;
+    cursor:pointer; transition:all .2s; box-shadow:0 4px 16px rgba(139,92,246,.35);
+}
+.post-send-btn:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(139,92,246,.5); }
+
+/* ─── Form sections ──────────────────────────────────── */
+.form-sec { padding:20px; }
+.field { margin-bottom:16px; }
+.field:last-child { margin-bottom:0; }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:560px){ .field-row{grid-template-columns:1fr;} }
+
+/* Platform cards */
+.plat-wrap { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+@media(max-width:480px){ .plat-wrap{grid-template-columns:repeat(2,1fr);} }
+.po input { display:none; }
+.po label {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:var(--bg-card2); border:1px solid var(--border);
+    border-radius:14px; padding:14px 8px; cursor:pointer; transition:all .2s;
+    font-size:.78rem; color:var(--text-muted); font-weight:600; text-align:center;
+}
+.po label i { font-size:1.4rem; transition:color .2s; }
+.po input:checked + label {
+    border-color:#8b5cf6; background:rgba(139,92,246,.12);
+    color:#fff; box-shadow:0 0 0 1px rgba(139,92,246,.25), 0 4px 16px rgba(139,92,246,.15);
+}
+.po input:checked + label i { color:#a78bfa; }
+.po label:hover { border-color:rgba(139,92,246,.45); color:var(--text-white); }
+
+/* game chips */
+.game-chips-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.g-chip {
+    padding:4px 12px; border-radius:20px; font-size:.76rem; font-weight:600;
+    background:rgba(139,92,246,.07); border:1px solid rgba(139,92,246,.18);
+    color:#a78bfa; cursor:pointer; transition:all .15s; user-select:none;
+}
+.g-chip:hover { background:rgba(139,92,246,.2); border-color:#8b5cf6; color:#fff; }
+
+/* social inputs */
+.social-field {
+    display:flex; align-items:center; background:var(--bg-card2);
+    border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all .2s;
+}
+.social-field:focus-within { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,.1); }
+.social-prefix {
+    padding:0 14px; font-size:1rem; color:var(--text-dim); flex-shrink:0;
+    border-left:1px solid var(--border);
+}
+.social-field input {
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--text-white); padding:11px 14px; font-size:.88rem;
+    font-family:'Vazirmatn',sans-serif;
+}
+.social-field input::placeholder { color:var(--text-dim); }
+
+/* ─── Sidebar cards ──────────────────────────────────── */
+.sidebar-section { margin-bottom:16px; }
+
+/* XP card */
+.xp-sidebar-card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+.xp-card-top {
+    padding:20px 20px 16px;
+    background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(168,85,247,.06));
+    border-bottom:1px solid var(--border);
+}
+.xp-level-big {
+    font-size:2.8rem; font-weight:900; line-height:1;
+    background:linear-gradient(135deg,#8b5cf6,#a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.xp-level-label { font-size:.75rem; color:var(--text-dim); margin-top:2px; }
+.xp-card-body { padding:16px 20px; }
+.xp-progress-label { display:flex; justify-content:space-between; font-size:.73rem; color:var(--text-dim); margin-bottom:6px; }
+.xp-bar-bg { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+.xp-bar-fg { height:100%; background:linear-gradient(90deg,#8b5cf6,#a855f7); border-radius:4px; transition:width .8s ease; }
+.xp-next { font-size:.72rem; color:var(--text-dim); margin-top:6px; text-align:center; }
+
+/* quick link */
+.quick-link {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-radius:11px; color:var(--text-muted); text-decoration:none;
+    font-size:.86rem; transition:all .15s; font-weight:500;
+}
+.quick-link:hover { background:rgba(139,92,246,.09); color:var(--text-white); }
+.quick-link .ql-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+
+/* social links in sidebar */
+.social-badge {
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-card2); border:1px solid var(--border); border-radius:12px;
+    padding:10px 14px; margin-bottom:8px; transition:border-color .2s;
+}
+.social-badge:hover { border-color:rgba(139,92,246,.4); }
+.sb-label { font-size:.7rem; color:var(--text-dim); }
+.sb-val { font-size:.86rem; color:var(--text-white); font-weight:600; }
+
+/* ─── Save bar ───────────────────────────────────────── */
+.save-bar-fixed {
+    position:sticky; bottom:20px; max-width:1080px; margin:0 auto; padding:0 16px;
+}
+.save-main-btn {
+    width:100%; padding:15px; font-size:.95rem; font-weight:800;
+    background:linear-gradient(135deg,#8b5cf6,#5b21b6); color:#fff;
+    border:none; border-radius:16px; cursor:pointer;
+    font-family:'Vazirmatn',sans-serif; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    box-shadow:0 8px 28px rgba(139,92,246,.4);
+}
+.save-main-btn:hover { transform:translateY(-2px); box-shadow:0 12px 36px rgba(139,92,246,.55); }
+.save-main-btn:active { transform:translateY(0); }
+
+/* saved toast */
+.saved-toast {
+    position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+    background:rgba(139,92,246,.95); color:#fff; padding:10px 24px;
+    border-radius:30px; font-size:.88rem; font-weight:700;
+    box-shadow:0 8px 30px rgba(139,92,246,.5); z-index:9999;
+    display:none; align-items:center; gap:8px;
+    animation:slideUp .25s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translate(-50%,10px)} to{opacity:1;transform:translate(-50%,0)} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="account-page">
+
+<!-- ══ Banner ══ -->
+<div class="acct-banner" onclick="document.getElementById('bannerInput').click()">
+    {% if profile.banner %}<img src="{{ profile.banner.url }}" alt="">{% endif %}
+    <div class="banner-overlay">
+        <i class="bi bi-camera"></i>
+        <span>تغییر بنر</span>
+    </div>
+</div>
+
+<!-- ══ Body ══ -->
+<div class="acct-body">
+
+    <!-- ▌ MAIN COLUMN -->
+    <div>
+
+        <!-- Profile Header Card -->
+        <div class="profile-hdr-card">
+            <div class="ph-inner">
+                <div class="av-zone">
+                    <div class="av-click" onclick="document.getElementById('avatarInput').click()">
+                        {% if profile.avatar %}
+                            <img src="{{ profile.avatar.url }}" alt="avatar">
+                        {% else %}
+                            <div class="av-init">{{ request.user.username|first|upper }}</div>
+                        {% endif %}
+                        <div class="av-lens"><i class="bi bi-camera-fill"></i></div>
+                    </div>
+                    <div class="ph-actions">
+                        <a href="{% url 'community:profile' username=request.user.username %}" class="btn-outline-purple">
+                            <i class="bi bi-eye"></i> مشاهده پروفایل
+                        </a>
+                        <a href="{% url 'account:dashboard' %}" class="btn-outline-purple">
+                            <i class="bi bi-joystick"></i> گیم‌نت
+                        </a>
+                    </div>
+                </div>
+
+                <div class="ph-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="ph-tag">@{{ request.user.username }}</div>
+                {% if profile.bio %}<div class="ph-bio">{{ profile.bio }}</div>{% endif %}
+
+                <div class="badges-row">
+                    <span class="lv-badge"><i class="bi bi-star-fill"></i> Level {{ profile.level }}</span>
+                    {% if profile.platform %}<span class="platform-badge"><i class="{{ profile.platform_icon }}"></i> {{ profile.get_platform_display }}</span>{% endif %}
+                    {% if profile.rank %}<span class="rank-badge rank-{{ profile.rank|lower }}"><i class="bi bi-shield-fill"></i> {{ profile.rank }}</span>{% endif %}
+                    {% if profile.city %}<span style="color:var(--text-dim);font-size:.78rem;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-geo-alt-fill"></i>{{ profile.city }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-strip">
+                <div class="stat-cell">
+                    <div class="stat-n">{{ profile.posts_count }}</div>
+                    <div class="stat-l">پست</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-n">{{ profile.followers_count }}</div>
+                    <div class="stat-l">دنبال‌کننده</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-n">{{ profile.following_count }}</div>
+                    <div class="stat-l">دنبال می‌کنم</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-n xp">{{ profile.xp }}</div>
+                    <div class="stat-l">XP</div>
+                </div>
+            </div>
+
+            <div class="xp-strip">
+                <div class="xp-meta">
+                    <span>{{ profile.xp }} / {{ profile.level|add:1 }}00 XP</span>
+                    <span>{{ profile.level_progress }}% تا Level {{ profile.level|add:1 }}</span>
+                </div>
+                <div class="xp-track"><div class="xp-fill" style="width:{{ profile.level_progress }}%"></div></div>
+            </div>
+        </div>
+
+        <!-- ══ Create Post ══ -->
+        <div class="post-create-card">
+            <form method="post" enctype="multipart/form-data" id="postForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_post">
+                <input type="hidden" name="post_type" id="ptVal" value="text">
+
+                <div class="post-create-top">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="post-create-av">
+                    {% else %}
+                        <div class="post-create-av-ph">{{ request.user.username|first|upper }}</div>
+                    {% endif %}
+                    <textarea name="content" id="postTxt" class="post-create-trigger"
+                        placeholder="چی شد گیمر؟ دستاورد، هایلایت، یا دنبال هم‌تیمی؟"
+                        rows="1" onfocus="openPost()" oninput="autoResize(this)"></textarea>
+                </div>
+
+                <div class="post-expanded" id="postExpanded">
+                    <div class="type-tabs">
+                        <button type="button" class="type-tab on" onclick="setType('text',this)"><i class="bi bi-chat-text"></i> متن</button>
+                        <button type="button" class="type-tab" onclick="setType('achievement',this)"><i class="bi bi-trophy" style="color:#ffd700"></i> دستاورد</button>
+                        <button type="button" class="type-tab" onclick="setType('highlight',this)"><i class="bi bi-lightning" style="color:#a855f7"></i> هایلایت</button>
+                        <button type="button" class="type-tab" onclick="setType('lfg',this)"><i class="bi bi-people" style="color:#00d4ff"></i> LFG</button>
+                    </div>
+                    <div class="post-foot-row">
+                        <input type="text" name="game_tag" class="g-input" placeholder="تگ بازی مثلاً: CS2" style="max-width:160px; padding:7px 12px;">
+                        <label class="attach-btn">
+                            <i class="bi bi-image"></i> <span id="imgTxt">تصویر</span>
+                            <input type="file" name="image" accept="image/*" style="display:none" onchange="document.getElementById('imgTxt').textContent=this.files[0]?.name.slice(0,14)||'تصویر'">
+                        </label>
+                        <button type="submit" class="post-send-btn">
+                            <i class="bi bi-send-fill"></i> ارسال
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ══ Profile Edit Form ══ -->
+        <form method="post" enctype="multipart/form-data" id="profileForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_profile">
+            <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display:none" onchange="this.form.submit()">
+            <input type="file" id="bannerInput" name="banner" accept="image/*" style="display:none" onchange="this.form.submit()">
+
+            <!-- Personal Info -->
+            <div class="acct-card">
+                <div class="card-head">
+                    <div class="card-title"><div class="card-icon"><i class="bi bi-person-fill"></i></div> اطلاعات شخصی</div>
+                </div>
+                <div class="form-sec">
+                    <div class="field-row field">
+                        <div>
+                            <label class="g-label">نام</label>
+                            <input type="text" name="first_name" class="g-input" value="{{ request.user.first_name }}" placeholder="نام">
+                        </div>
+                        <div>
+                            <label class="g-label">نام خانوادگی</label>
+                            <input type="text" name="last_name" class="g-input" value="{{ request.user.last_name }}" placeholder="نام خانوادگی">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="g-label">بیو <span style="color:var(--text-dim);font-size:.72rem;">— خودت رو با یه جمله معرفی کن</span></label>
+                        <textarea name="bio" class="g-input" rows="3" placeholder="مثلاً: گیمر رقابتی، CS2 و Valorant. همیشه دنبال تیم خوب!">{{ profile.bio }}</textarea>
+                    </div>
+                    <div class="field" style="margin-bottom:0">
+                        <label class="g-label">شهر</label>
+                        <select name="city" class="g-input">
+                            <option value="">انتخاب شهر</option>
+                            {% for val, label in city_choices %}
+                                <option value="{{ val }}" {% if profile.city == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform -->
+            <div class="acct-card">
+                <div class="card-head">
+                    <div class="card-title"><div class="card-icon"><i class="bi bi-controller"></i></div> پلتفرم اصلی</div>
+                    <span style="font-size:.75rem; color:var(--text-dim);">روی چی بیشتر بازی می‌کنی؟</span>
+                </div>
+                <div class="form-sec">
+                    <div class="plat-wrap">
+                        {% for val, label in platform_choices %}
+                        <div class="po">
+                            <input type="radio" name="platform" id="p_{{ val }}" value="{{ val }}" {% if profile.platform == val %}checked{% endif %}>
+                            <label for="p_{{ val }}">
+                                {% if val == 'pc' %}<i class="bi bi-pc-display"></i>
+                                {% elif val == 'ps5' or val == 'ps4' %}<i class="bi bi-playstation"></i>
+                                {% elif val == 'xbox' %}<i class="bi bi-xbox"></i>
+                                {% elif val == 'mobile' %}<i class="bi bi-phone"></i>
+                                {% elif val == 'nintendo' %}<i class="bi bi-joystick"></i>
+                                {% else %}<i class="bi bi-controller"></i>{% endif %}
+                                {{ label }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Games & Style -->
+            <div class="acct-card">
+                <div class="card-head">
+                    <div class="card-title"><div class="card-icon"><i class="bi bi-joystick"></i></div> بازی‌ها و سبک</div>
+                </div>
+                <div class="form-sec">
+                    <div class="field">
+                        <label class="g-label">بازی‌های مورد علاقه</label>
+                        <input type="text" name="favorite_games" class="g-input" id="gamesInput"
+                            value="{{ profile.favorite_games }}" placeholder="CS2, Valorant, GTA V ...">
+                        <div class="game-chips-wrap">
+                            <span class="g-chip" onclick="addGame('CS2')">CS2</span>
+                            <span class="g-chip" onclick="addGame('Valorant')">Valorant</span>
+                            <span class="g-chip" onclick="addGame('GTA V')">GTA V</span>
+                            <span class="g-chip" onclick="addGame('COD')">COD</span>
+                            <span class="g-chip" onclick="addGame('FIFA')">FIFA</span>
+                            <span class="g-chip" onclick="addGame('Fortnite')">Fortnite</span>
+                            <span class="g-chip" onclick="addGame('PUBG')">PUBG</span>
+                            <span class="g-chip" onclick="addGame('Dota 2')">Dota 2</span>
+                            <span class="g-chip" onclick="addGame('LoL')">LoL</span>
+                            <span class="g-chip" onclick="addGame('Minecraft')">Minecraft</span>
+                            <span class="g-chip" onclick="addGame('Apex')">Apex</span>
+                            <span class="g-chip" onclick="addGame('Overwatch 2')">Overwatch 2</span>
+                        </div>
+                    </div>
+                    <div class="field-row field" style="margin-bottom:0">
+                        <div>
+                            <label class="g-label">سبک بازی</label>
+                            <select name="gaming_style" class="g-input">
+                                <option value="">انتخاب کن</option>
+                                <option value="competitive" {% if profile.gaming_style == 'competitive' %}selected{% endif %}>رقابتی 🏆</option>
+                                <option value="casual" {% if profile.gaming_style == 'casual' %}selected{% endif %}>کژوال 😎</option>
+                                <option value="rpg" {% if profile.gaming_style == 'rpg' %}selected{% endif %}>RPG ⚔️</option>
+                                <option value="story" {% if profile.gaming_style == 'story' %}selected{% endif %}>داستانی 📖</option>
+                                <option value="coop" {% if profile.gaming_style == 'coop' %}selected{% endif %}>Co-op 🤝</option>
+                                <option value="streamer" {% if profile.gaming_style == 'streamer' %}selected{% endif %}>استریمر 🎥</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="g-label">رنک فعلی</label>
+                            <select name="rank" class="g-input">
+                                <option value="">رنک رو انتخاب کن</option>
+                                <option value="Bronze"      {% if profile.rank == 'Bronze'      %}selected{% endif %}>🥉 Bronze</option>
+                                <option value="Silver"      {% if profile.rank == 'Silver'      %}selected{% endif %}>🥈 Silver</option>
+                                <option value="Gold"        {% if profile.rank == 'Gold'        %}selected{% endif %}>🥇 Gold</option>
+                                <option value="Platinum"    {% if profile.rank == 'Platinum'    %}selected{% endif %}>💎 Platinum</option>
+                                <option value="Diamond"     {% if profile.rank == 'Diamond'     %}selected{% endif %}>💠 Diamond</option>
+                                <option value="Master"      {% if profile.rank == 'Master'      %}selected{% endif %}>🔮 Master</option>
+                                <option value="GrandMaster" {% if profile.rank == 'GrandMaster' %}selected{% endif %}>👑 GrandMaster</option>
+                                <option value="Challenger"  {% if profile.rank == 'Challenger'  %}selected{% endif %}>⚡ Challenger</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gaming IDs -->
+            <div class="acct-card">
+                <div class="card-head">
+                    <div class="card-title"><div class="card-icon"><i class="bi bi-link-45deg"></i></div> آیدی‌های گیمینگ</div>
+                    <span style="font-size:.75rem; color:var(--text-dim);">Steam · PSN · Xbox</span>
+                </div>
+                <div class="form-sec">
+                    <div class="field">
+                        <label class="g-label"><i class="bi bi-steam" style="color:#66c0f4;"></i> Steam</label>
+                        <div class="social-field">
+                            <input type="text" name="steam_id" value="{{ profile.steam_id }}" placeholder="steam username">
+                            <span class="social-prefix"><i class="bi bi-steam" style="color:#66c0f4;"></i></span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="g-label"><i class="bi bi-playstation" style="color:#0070d1;"></i> PlayStation Network</label>
+                        <div class="social-field">
+                            <input type="text" name="psn_id" value="{{ profile.psn_id }}" placeholder="PSN ID">
+                            <span class="social-prefix"><i class="bi bi-playstation" style="color:#0070d1;"></i></span>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:0">
+                        <label class="g-label"><i class="bi bi-xbox" style="color:#107c10;"></i> Xbox</label>
+                        <div class="social-field">
+                            <input type="text" name="xbox_gamertag" value="{{ profile.xbox_gamertag }}" placeholder="Gamertag">
+                            <span class="social-prefix"><i class="bi bi-xbox" style="color:#107c10;"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Bar -->
+            <div class="save-bar-fixed">
+                <button type="submit" class="save-main-btn" onclick="showSavedToast()">
+                    <i class="bi bi-check2-circle"></i> ذخیره تغییرات
+                </button>
+            </div>
+        </form>
+
+    </div><!-- /main -->
+
+    <!-- ▌ SIDEBAR -->
+    <div>
+
+        <!-- XP Level Card -->
+        <div class="xp-sidebar-card sidebar-section">
+            <div class="xp-card-top">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:2px;">سطح فعلی</div>
+                        <div class="xp-level-big">{{ profile.level }}</div>
+                        <div class="xp-level-label">Level {{ profile.level }} · {{ profile.xp }} XP</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.8rem; font-weight:900; color:var(--text-white);">{{ profile.posts_count }}</div>
+                        <div style="font-size:.7rem; color:var(--text-dim);">پست</div>
+                    </div>
+                </div>
+            </div>
+            <div class="xp-card-body">
+                <div class="xp-progress-label">
+                    <span>{{ profile.xp }} XP</span>
+                    <span>{{ profile.level_progress }}%</span>
+                </div>
+                <div class="xp-bar-bg"><div class="xp-bar-fg" style="width:{{ profile.level_progress }}%"></div></div>
+                <div class="xp-next">{{ profile.level_progress }}% تا Level {{ profile.level|add:1 }}</div>
+                <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+                        <div style="font-size:1.1rem;font-weight:800;color:#fff;">{{ profile.followers_count }}</div>
+                        <div style="font-size:.68rem;color:var(--text-dim);">دنبال‌کننده</div>
+                    </div>
+                    <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+                        <div style="font-size:1.1rem;font-weight:800;color:#fff;">{{ profile.following_count }}</div>
+                        <div style="font-size:.68rem;color:var(--text-dim);">دنبال‌شده</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gaming IDs sidebar preview -->
+        {% if profile.steam_id or profile.psn_id or profile.xbox_gamertag %}
+        <div class="acct-card sidebar-section" style="border-radius:16px; padding:16px; margin-bottom:16px;">
+            <div style="font-size:.82rem;font-weight:800;color:var(--text-white);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                <i class="bi bi-controller" style="color:#8b5cf6;"></i> آیدی‌های گیمینگ
+            </div>
+            {% if profile.steam_id %}
+            <div class="social-badge">
+                <i class="bi bi-steam" style="color:#66c0f4; font-size:1.1rem;"></i>
+                <div><div class="sb-label">Steam</div><div class="sb-val">{{ profile.steam_id }}</div></div>
+            </div>
+            {% endif %}
+            {% if profile.psn_id %}
+            <div class="social-badge">
+                <i class="bi bi-playstation" style="color:#0070d1; font-size:1.1rem;"></i>
+                <div><div class="sb-label">PSN</div><div class="sb-val">{{ profile.psn_id }}</div></div>
+            </div>
+            {% endif %}
+            {% if profile.xbox_gamertag %}
+            <div class="social-badge" style="margin-bottom:0">
+                <i class="bi bi-xbox" style="color:#107c10; font-size:1.1rem;"></i>
+                <div><div class="sb-label">Xbox</div><div class="sb-val">{{ profile.xbox_gamertag }}</div></div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Quick Links -->
+        <div class="acct-card sidebar-section" style="border-radius:16px; padding:10px; margin-bottom:0;">
+            <a href="{% url 'community:feed' %}" class="quick-link">
+                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="bi bi-house-fill"></i></div>
+                فید اصلی
+            </a>
+            <a href="{% url 'community:profile' username=request.user.username %}" class="quick-link">
+                <div class="ql-icon" style="background:rgba(168,85,247,.1);color:#a855f7;"><i class="bi bi-person-circle"></i></div>
+                پروفایل عمومی
+            </a>
+            <a href="{% url 'community:search' %}" class="quick-link">
+                <div class="ql-icon" style="background:rgba(0,212,255,.08);color:#00d4ff;"><i class="bi bi-search"></i></div>
+                جستجوی گیمر
+            </a>
+            <a href="{% url 'community:leaderboard' %}" class="quick-link">
+                <div class="ql-icon" style="background:rgba(255,215,0,.1);color:#ffd700;"><i class="bi bi-trophy-fill"></i></div>
+                لیدربورد
+            </a>
+            <a href="{% url 'account:dashboard' %}" class="quick-link">
+                <div class="ql-icon" style="background:rgba(255,107,53,.1);color:#ff6b35;"><i class="bi bi-joystick"></i></div>
+                داشبورد گیم‌نت
+            </a>
+            <div style="border-top:1px solid var(--border); margin:6px 0;"></div>
+            <a href="{% url 'account:logout' %}" class="quick-link" style="color:#8b5cf6;">
+                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="bi bi-box-arrow-right"></i></div>
+                خروج
+            </a>
+        </div>
+
+    </div><!-- /sidebar -->
+
+</div><!-- /acct-body -->
+
+<!-- Toast -->
+<div class="saved-toast" id="savedToast"><i class="bi bi-check-circle-fill"></i> ذخیره شد!</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ─ Post expand ─ */
+function openPost() {
+    document.getElementById('postExpanded').classList.add('open');
+    const ta = document.getElementById('postTxt');
+    ta.rows = 3;
+}
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+document.addEventListener('click', e => {
+    const box = document.querySelector('.post-create-card');
+    if (!box.contains(e.target)) {
+        const expanded = document.getElementById('postExpanded');
+        const txt = document.getElementById('postTxt');
+        if (!txt.value.trim()) {
+            expanded.classList.remove('open');
+            txt.rows = 1; txt.style.height = '';
+        }
+    }
+});
+
+/* ─ Post type ─ */
+function setType(t, btn) {
+    document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('ptVal').value = t;
+}
+
+/* ─ Game chips ─ */
+function addGame(g) {
+    const inp = document.getElementById('gamesInput');
+    const list = inp.value.trim() ? inp.value.split(',').map(s => s.trim()) : [];
+    if (!list.includes(g)) inp.value = list.length ? inp.value + ', ' + g : g;
+}
+
+/* ─ Save toast ─ */
+function showSavedToast() {
+    const t = document.getElementById('savedToast');
+    t.style.display = 'flex';
+    setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+</script>
+{% endblock %}

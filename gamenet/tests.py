@@ -499,6 +499,43 @@ class BuffetAndProductManagementTests(TestCase):
         tournament.refresh_from_db()
         self.assertEqual(tournament.status, 'ongoing')
 
+    def test_tournament_manage_finish_action_marks_completed(self):
+        game = Game.objects.create(gamenet=self.gamenet, name='Tekken', genre='Fighting')
+        tournament = Tournament.objects.create(
+            gamenet=self.gamenet,
+            name='جام پایان',
+            game=game,
+            start_date=timezone.now() - timedelta(hours=2),
+            end_date=None,
+            entry_fee=Decimal('0'),
+            prize_pool=Decimal('0'),
+            max_participants=8,
+            status='ongoing',
+            visibility='public',
+            registration_open=True,
+        )
+        p1 = TournamentParticipant.objects.create(tournament=tournament, name='P1', phone='09120000001')
+        p2 = TournamentParticipant.objects.create(tournament=tournament, name='P2', phone='09120000002')
+        TournamentMatch.objects.create(
+            tournament=tournament,
+            round_number=1,
+            match_number=1,
+            participant1=p1,
+            participant2=p2,
+            winner=p1,
+            status='completed',
+        )
+
+        resp = self.client.post(reverse('gamenet:tournament_manage', args=[tournament.id]), {
+            'action': 'finish_tournament',
+        })
+        self.assertEqual(resp.status_code, 302)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.status, 'completed')
+        self.assertFalse(tournament.registration_open)
+        self.assertIsNotNone(tournament.end_date)
+        self.assertEqual(tournament.champion_id, p1.id)
+
     def test_tournament_manage_updates_and_deletes_participant(self):
         game = Game.objects.create(gamenet=self.gamenet, name='Apex', genre='Battle Royale')
         tournament = Tournament.objects.create(

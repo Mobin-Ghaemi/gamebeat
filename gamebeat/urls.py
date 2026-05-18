@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('account.urls')),
     path('gamenet/', include('gamenet.urls')),
+    path('community/', include('community.urls')),
 ]
 
 if settings.DEBUG:

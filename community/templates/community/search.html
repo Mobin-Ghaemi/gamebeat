@@ -1,0 +1,412 @@
+{% extends 'community/base.html' %}
+{% block title %}جستجوی گیمر | GameBeat Community{% endblock %}
+{% block nav_search %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-wrapper { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+.search-hero {
+    text-align: center;
+    padding: 40px 20px 32px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.05), rgba(168,85,247,0.03));
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 28px;
+}
+
+.search-title {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.search-bar-wrap {
+    position: relative;
+    max-width: 560px;
+    margin: 20px auto 0;
+}
+
+.search-bar {
+    width: 100%;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    color: var(--text-white);
+    border-radius: 14px;
+    padding: 14px 50px 14px 20px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: var(--red-primary);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.1);
+}
+
+.search-bar::placeholder { color: var(--text-dim); }
+
+.search-submit {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--red-primary);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.search-submit:hover { background: var(--red-dark); }
+
+/* Filters */
+.filters-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    align-items: center;
+}
+
+.filter-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-white);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.87rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.filter-select:focus { outline: none; border-color: var(--red-primary); }
+.filter-select option { background: var(--bg-card2); }
+
+.filter-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Gamer grid */
+.gamer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.gamer-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px 16px 18px;
+    text-align: center;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gamer-card:hover {
+    border-color: var(--red-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(139,92,246,0.15);
+}
+
+.gamer-card-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    object-fit: cover;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+}
+
+.gamer-card:hover .gamer-card-avatar { border-color: var(--red-primary); }
+
+.gamer-card-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    background: var(--bg-card2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--red-primary);
+    margin-bottom: 12px;
+}
+
+.gamer-card-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--text-white);
+    margin-bottom: 4px;
+    text-decoration: none;
+    display: block;
+}
+
+.gamer-card-name:hover { color: var(--red-primary); }
+
+.gamer-card-username {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    margin-bottom: 10px;
+}
+
+.gamer-card-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.gamer-card-bio {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.gamer-card-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.gamer-card-stat { text-align: center; }
+.gamer-card-stat-val { font-size: 0.95rem; font-weight: 800; color: var(--text-white); }
+.gamer-card-stat-lbl { font-size: 0.7rem; color: var(--text-dim); }
+
+.games-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.game-mini-tag {
+    background: rgba(0,212,255,0.08);
+    color: var(--blue-accent);
+    border: 1px solid rgba(0,212,255,0.15);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+}
+
+/* Results count */
+.results-meta {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    margin-bottom: 16px;
+}
+
+.results-meta span { color: var(--red-primary); font-weight: 700; }
+
+/* Empty */
+.empty-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-results i {
+    font-size: 4rem;
+    color: var(--red-primary);
+    opacity: 0.3;
+    display: block;
+    margin-bottom: 16px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-wrapper">
+
+    <!-- Hero Search -->
+    <div class="search-hero">
+        <div class="search-title">
+            <span class="shimmer-text">گیمرها</span> رو پیدا کن
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">بر اساس بازی، پلتفرم، شهر یا رنک</p>
+
+        <form method="get" action="{% url 'community:search' %}">
+            <div class="search-bar-wrap">
+                <input type="text" name="q" class="search-bar"
+                    placeholder="یوزرنیم، بازی، شهر..."
+                    value="{{ query }}">
+                <button type="submit" class="search-submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" action="{% url 'community:search' %}" id="filterForm">
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        <div class="filters-row">
+            <span class="filter-label"><i class="bi bi-funnel-fill text-red"></i> فیلتر:</span>
+
+            <select name="platform" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">همه پلتفرم‌ها</option>
+                {% for val, label in platform_choices %}
+                    <option value="{{ val }}" {% if platform_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="city" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">همه شهرها</option>
+                {% for val, label in city_choices %}
+                    <option value="{{ val }}" {% if city_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <input type="text" name="game" class="filter-select"
+                placeholder="نام بازی..."
+                value="{{ game_filter }}"
+                style="min-width: 160px;"
+                onchange="document.getElementById('filterForm').submit()">
+
+            {% if query or platform_filter or city_filter or game_filter %}
+                <a href="{% url 'community:search' %}" style="color: var(--red-primary); font-size: 0.85rem; text-decoration: none;">
+                    <i class="bi bi-x-circle"></i> پاک کردن فیلترها
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Results -->
+    {% if gamers %}
+        <div class="results-meta">
+            <span>{{ gamers|length }}</span> گیمر پیدا شد
+            {% if query %}برای «{{ query }}»{% endif %}
+        </div>
+
+        <div class="gamer-grid">
+            {% for gamer in gamers %}
+            <div class="gamer-card">
+                <a href="{% url 'community:profile' username=gamer.user.username %}">
+                    {% if gamer.avatar %}
+                        <img src="{{ gamer.avatar.url }}" class="gamer-card-avatar">
+                    {% else %}
+                        <div class="gamer-card-placeholder">{{ gamer.user.username|first|upper }}</div>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'community:profile' username=gamer.user.username %}" class="gamer-card-name">
+                    {% if gamer.user.get_full_name %}{{ gamer.user.get_full_name }}{% else %}{{ gamer.user.username }}{% endif %}
+                </a>
+                <div class="gamer-card-username">@{{ gamer.user.username }}</div>
+
+                <div class="gamer-card-badges">
+                    {% if gamer.platform %}
+                        <span class="platform-badge" style="font-size:0.72rem;"><i class="bi bi-controller"></i> {{ gamer.get_platform_display }}</span>
+                    {% endif %}
+                    {% if gamer.rank %}
+                        <span class="rank-badge rank-{{ gamer.rank }}" style="font-size:0.72rem;">{{ gamer.get_rank_display }}</span>
+                    {% endif %}
+                </div>
+
+                {% if gamer.city %}
+                    <div style="color: var(--text-dim); font-size: 0.78rem; margin-bottom: 8px;">
+                        <i class="bi bi-geo-alt"></i> {{ gamer.get_city_display }}
+                    </div>
+                {% endif %}
+
+                {% if gamer.bio %}
+                    <div class="gamer-card-bio">{{ gamer.bio }}</div>
+                {% endif %}
+
+                {% with games=gamer.get_favorite_games_list %}
+                {% if games %}
+                <div class="games-mini">
+                    {% for game in games|slice:":3" %}
+                        <span class="game-mini-tag">{{ game }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <div class="gamer-card-stats">
+                    <div class="gamer-card-stat">
+                        <div class="gamer-card-stat-val">{{ gamer.level }}</div>
+                        <div class="gamer-card-stat-lbl">لول</div>
+                    </div>
+                    <div class="gamer-card-stat">
+                        <div class="gamer-card-stat-val">{{ gamer.followers_count }}</div>
+                        <div class="gamer-card-stat-lbl">فالوور</div>
+                    </div>
+                    <div class="gamer-card-stat">
+                        <div class="gamer-card-stat-val">{{ gamer.posts_count }}</div>
+                        <div class="gamer-card-stat-lbl">پست</div>
+                    </div>
+                </div>
+
+                <button class="btn-red btn-follow w-100 {% if gamer.user.id in following_ids %}following{% endif %}"
+                    onclick="handleFollow('{{ gamer.user.username }}', this)">
+                    {% if gamer.user.id in following_ids %}
+                        <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                    {% else %}
+                        <i class="bi bi-plus-lg"></i> دنبال کن
+                    {% endif %}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% elif query or platform_filter or city_filter or game_filter %}
+        <div class="empty-results">
+            <i class="bi bi-search"></i>
+            <h4 style="color: var(--text-white); margin-bottom: 8px;">نتیجه‌ای پیدا نشد</h4>
+            <p>با کلمات دیگه‌ای سرچ کن یا فیلترها رو پاک کن</p>
+        </div>
+    {% else %}
+        <div class="empty-results">
+            <i class="bi bi-people"></i>
+            <h4 style="color: var(--text-white); margin-bottom: 8px;">دنبال گیمر می‌گردی؟</h4>
+            <p>سرچ کن یا فیلتر بزن تا گیمرهایی که دنبالشونی رو پیدا کنی</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function handleFollow(username, btn) {
+    fetch(`/community/follow/${username}/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrfToken}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.following) {
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> دنبال می‌کنی';
+            btn.classList.add('following');
+        } else {
+            btn.innerHTML = '<i class="bi bi-plus-lg"></i> دنبال کن';
+            btn.classList.remove('following');
+        }
+    });
+}
+</script>
+{% endblock %}
