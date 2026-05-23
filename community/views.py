@@ -51,8 +51,41 @@ def _annotate_reactions(posts, user):
     return posts
 
 
-@login_required
 def feed(request):
+    # Unauthenticated users see the same community feed with public posts
+    if not request.user.is_authenticated:
+        posts = list(Post.objects.filter(is_public=True)
+                    .select_related('author', 'author__gamer_profile')
+                    .prefetch_related('reactions', 'comments')
+                    .order_by('-created_at')[:30])
+        for p in posts:
+            p.my_reaction = ''
+            p.reactions_summary = {}
+
+        suggested_gamers = User.objects.filter(
+            gamer_profile__isnull=False
+        ).annotate(
+            followers_count=Count('followers_set')
+        ).order_by('-followers_count')[:5]
+
+        active_lfg = LFGPost.objects.filter(is_active=True).select_related(
+            'author', 'author__gamer_profile'
+        ).order_by('-created_at')[:5]
+
+        stats = {
+            'users': User.objects.count(),
+            'posts': Post.objects.filter(is_public=True).count(),
+        }
+
+        return render(request, 'community/feed.html', {
+            'posts': posts,
+            'liked_post_ids': set(),
+            'my_profile': None,
+            'suggested_gamers': suggested_gamers,
+            'active_lfg': active_lfg,
+            'stats': stats,
+        })
+
     my_profile = get_or_create_gamer_profile(request.user)
     following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
 
@@ -95,7 +128,10 @@ def gamer_profile(request, username):
     is_following = Follow.objects.filter(follower=request.user, following=profile_user).exists()
     is_own_profile = request.user == profile_user
 
-    posts = list(Post.objects.filter(author=profile_user, is_public=True).prefetch_related('reactions').order_by('-created_at'))
+    posts = list(Post.objects.filter(author=profile_user, is_public=True)
+                 .select_related('author', 'author__gamer_profile')
+                 .prefetch_related('reactions')
+                 .order_by('-created_at')[:30])
     _annotate_reactions(posts, request.user)
     liked_post_ids = set(PostLike.objects.filter(user=request.user).values_list('post_id', flat=True))
     achievements = Achievement.objects.filter(user=profile_user)
@@ -110,11 +146,13 @@ def gamer_profile(request, username):
         ('dropped',   'رها کردم',           '#f87171', '💔'),
     ]
 
-    # Gaming showcase: favorites, currently playing, completed
-    all_backlog = GameBacklog.objects.filter(user=profile_user)
-    showcase_favorites = list(all_backlog.filter(is_favorite=True).order_by('game_name'))
-    showcase_playing   = list(all_backlog.filter(status='playing').order_by('-updated_at'))
-    showcase_completed = list(all_backlog.filter(status='completed').order_by('-rating', '-updated_at')[:20])
+    # Gaming showcase: 1 query → split in Python (instead of 3 separate DB queries)
+    all_backlog = list(GameBacklog.objects.filter(user=profile_user).order_by('game_name'))
+    showcase_favorites = [b for b in all_backlog if b.is_favorite]
+    showcase_playing   = sorted([b for b in all_backlog if b.status == 'playing'],
+                                 key=lambda b: b.updated_at, reverse=True)
+    showcase_completed = sorted([b for b in all_backlog if b.status == 'completed'],
+                                 key=lambda b: (-(b.rating or 0), b.updated_at), reverse=False)[:20]
 
     context = {
         'profile_user': profile_user,

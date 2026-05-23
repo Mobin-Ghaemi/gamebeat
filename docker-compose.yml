@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn gamebeat.wsgi:application
+             --bind 0.0.0.0:8000
+             --workers 2
+             --reload
+             --access-logfile -"
+    volumes:
+      - .:/app          # live reload — code changes apply instantly
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 0.0.0.0
+
+volumes:
+  media_data:

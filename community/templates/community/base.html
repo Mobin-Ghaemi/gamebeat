@@ -728,15 +728,41 @@
                     <i class="bi bi-bell-fill"></i>
                     <span class="nav-badge" id="notifBadge" style="display:none;">0</span>
                 </a>
-                <!-- Account Button -->
-                <a href="{% url 'community:profile' username=user.username %}" class="nav-account-btn">
-                    {% if user.gamer_profile.avatar %}
-                        <img src="{{ user.gamer_profile.avatar.url }}" class="nav-avatar" alt="avatar">
-                    {% else %}
-                        <div class="nav-avatar-placeholder">{{ user.username|first|upper }}</div>
-                    {% endif %}
-                    <span class="nav-account-label">حساب کاربری</span>
-                </a>
+                <!-- Account Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="nav-account-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration:none;">
+                        {% if user.gamer_profile.avatar %}
+                            <img src="{{ user.gamer_profile.avatar.url }}" class="nav-avatar" alt="avatar">
+                        {% else %}
+                            <div class="nav-avatar-placeholder">{{ user.username|first|upper }}</div>
+                        {% endif %}
+                        <span class="nav-account-label">{{ user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end g-dropdown" style="margin-top:8px;">
+                        <li><a class="dropdown-item g-dropdown-item" href="{% url 'community:profile' username=user.username %}">
+                            <i class="bi bi-person-circle"></i> پروفایل گیمری
+                        </a></li>
+                        <li><a class="dropdown-item g-dropdown-item" href="{% url 'community:my_profile' %}">
+                            <i class="bi bi-grid-3x3-gap-fill"></i> داشبورد من
+                        </a></li>
+                        <li><a class="dropdown-item g-dropdown-item" href="{% url 'community:edit_profile' %}">
+                            <i class="bi bi-pencil-square"></i> ویرایش پروفایل
+                        </a></li>
+                        <li><a class="dropdown-item g-dropdown-item" href="{% url 'account:dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> اشتراک‌ها
+                        </a></li>
+                        {% if user.is_staff %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border);"></li>
+                        <li><a class="dropdown-item g-dropdown-item" href="/admin-panel/">
+                            <i class="bi bi-shield-lock-fill" style="color:#a78bfa;"></i> پنل ادمین
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border);"></li>
+                        <li><a class="dropdown-item g-dropdown-item" href="{% url 'account:logout' %}" style="color:#f87171;">
+                            <i class="bi bi-box-arrow-right"></i> خروج
+                        </a></li>
+                    </ul>
+                </div>
             {% else %}
                 <a href="{% url 'account:login' %}" class="btn-ghost">ورود</a>
                 <a href="{% url 'account:register' %}" class="btn-red">ثبت نام</a>

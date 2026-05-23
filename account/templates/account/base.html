@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GameBeat - پلتفرم خدمات گیمینگ{% endblock %}</title>
     
-    <!-- Bootstrap (loaded non-blocking for faster first paint on slow/blocked networks) -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet"></noscript>
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"></noscript>
+    <!-- Bootstrap & Icons (local - no CDN) -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap.rtl.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/css/vazirmatn-font-face.css' %}">
     
     <!-- Custom CSS -->
     <style>
@@ -335,6 +333,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/community/">
+                                <i class="bi bi-people-fill me-1"></i>کامیونیتی
+                            </a>
+                        </li>
+                        {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin-panel/">
+                                <i class="bi bi-speedometer2 me-1"></i>پنل ادمین
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-1"></i>
@@ -343,6 +353,9 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'account:dashboard' %}">
                                     <i class="bi bi-grid me-2"></i>داشبورد
+                                </a></li>
+                                <li><a class="dropdown-item" href="/community/">
+                                    <i class="bi bi-people me-2"></i>کامیونیتی
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'account:logout' %}">
@@ -411,7 +424,7 @@
     </footer>
 
     <!-- Bootstrap Bundle with Popper -->
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
     
     <!-- Custom JavaScript -->
     <script>

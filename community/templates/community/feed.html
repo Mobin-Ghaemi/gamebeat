@@ -308,7 +308,9 @@
 
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar-l">
-        <!-- Mini Profile Card -->
+
+        {% if user.is_authenticated %}
+        <!-- ── Authenticated: Mini Profile Card ── -->
         <div class="mini-card">
             <div class="mini-banner">
                 {% if my_profile.banner %}<img src="{{ my_profile.banner.url }}" alt="">{% endif %}
@@ -338,7 +340,7 @@
             </div>
         </div>
 
-        <!-- Nav Links -->
+        <!-- Nav Links (authenticated) -->
         <div class="mini-card" style="padding:10px;">
             <a href="{% url 'community:create_post_page' %}" class="side-link" style="color:#a78bfa; font-weight:700; background:rgba(139,92,246,0.07); margin-bottom:4px;">
                 <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> پست جدید
@@ -347,6 +349,43 @@
             <a href="{% url 'community:lfg' %}" class="side-link"><i class="bi bi-people-fill"></i> تابلوی LFG</a>
             <a href="{% url 'community:leaderboard' %}" class="side-link"><i class="bi bi-trophy-fill"></i> لیدربورد</a>
         </div>
+
+        {% else %}
+        <!-- ── Guest: Join CTA Card ── -->
+        <div class="mini-card">
+            <div class="mini-banner" style="background: linear-gradient(135deg, #1a0a30 0%, #2d1b6b 50%, #0e0e25 100%);">
+                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-controller" style="font-size:2.2rem; color:rgba(139,92,246,0.6);"></i>
+                </div>
+            </div>
+            <div class="mini-body" style="padding:16px 14px 18px;">
+                <div style="margin-top:8px; text-align:center;">
+                    <div style="color:var(--text-white); font-weight:900; font-size:1rem; margin-bottom:6px;">به GameBeat بپیوند</div>
+                    <div style="color:var(--text-muted); font-size:0.82rem; line-height:1.6; margin-bottom:16px;">پروفایل گیمری بساز، با گیمرها ارتباط بگیر و پیشرفتت رو به نمایش بذار.</div>
+                </div>
+                <div class="mini-stats" style="margin-bottom:14px;">
+                    <div class="mini-stat"><div class="v">{{ stats.users }}</div><div class="l">گیمر</div></div>
+                    <div class="mini-stat"><div class="v">{{ stats.posts }}</div><div class="l">پست</div></div>
+                    <div class="mini-stat"><div class="v">∞</div><div class="l">ماجرا</div></div>
+                </div>
+                <a href="{% url 'account:register' %}" class="btn-red" style="display:block; text-align:center; margin-bottom:8px; text-decoration:none;">
+                    <i class="bi bi-person-plus-fill"></i> ثبت نام رایگان
+                </a>
+                <a href="{% url 'account:login' %}" class="btn-ghost" style="display:block; text-align:center; text-decoration:none;">
+                    ورود به حساب
+                </a>
+            </div>
+        </div>
+
+        <!-- Nav Links (guest) -->
+        <div class="mini-card" style="padding:10px;">
+            <a href="{% url 'community:search' %}" class="side-link"><i class="bi bi-search"></i> جستجوی گیمر</a>
+            <a href="{% url 'community:lfg' %}" class="side-link"><i class="bi bi-people-fill"></i> تابلوی LFG</a>
+            <a href="{% url 'community:leaderboard' %}" class="side-link"><i class="bi bi-trophy-fill"></i> لیدربورد</a>
+            <a href="{% url 'community:games_ranking' %}" class="side-link"><i class="bi bi-joystick"></i> بازی‌ها</a>
+        </div>
+        {% endif %}
+
     </aside>
 
     <!-- CENTER: Posts Feed -->
@@ -402,6 +441,7 @@
                 </div>
 
                 <div class="post-foot">
+                    {% if user.is_authenticated %}
                     <!-- Reaction button -->
                     <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
                         <button class="pf-btn" id="rxn-main-{{ post.id }}"
@@ -415,11 +455,20 @@
                         </button>
                         <div class="reaction-picker"></div>
                     </div>
-
                     <button class="pf-btn" onclick="toggleComments({{ post.id }})">
                         <i class="bi bi-chat-dots"></i>
                         <span>{{ post.comments_count }}</span>
                     </button>
+                    {% else %}
+                    <!-- Guest: show login prompt -->
+                    <a href="{% url 'account:login' %}?next=/" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
+                        <i class="bi bi-hand-thumbs-up"></i> ورود برای واکنش
+                    </a>
+                    <a href="{% url 'account:login' %}?next=/" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>{{ post.comments_count }}</span>
+                    </a>
+                    {% endif %}
                     <button class="pf-btn" onclick="sharePost({{ post.id }})">
                         <i class="bi bi-share"></i>
                     </button>
@@ -439,6 +488,7 @@
                         </div>
                     </div>
                     {% endfor %}
+                    {% if user.is_authenticated %}
                     <form method="post" action="{% url 'community:add_comment' post.id %}" class="c-input-row">
                         {% csrf_token %}
                         {% if my_profile.avatar %}
@@ -449,6 +499,11 @@
                         <input type="text" name="content" class="g-input" style="padding:8px 14px; border-radius:50px;" placeholder="کامنت بذار...">
                         <button type="submit" class="btn-red" style="padding:8px 16px; flex-shrink:0; border-radius:50px;"><i class="bi bi-send-fill"></i></button>
                     </form>
+                    {% else %}
+                    <a href="{% url 'account:login' %}?next=/" class="c-input-row" style="text-decoration:none; padding:10px 14px; justify-content:center; color:var(--text-dim); font-size:0.85rem;">
+                        <i class="bi bi-lock-fill" style="color:#8b5cf6; margin-left:6px;"></i> برای کامنت گذاشتن ورود کن
+                    </a>
+                    {% endif %}
                 </div>
 
             </div>
@@ -457,11 +512,19 @@
         {% else %}
             <div class="empty-feed">
                 <span class="ef-icon">🎮</span>
-                <div style="color:var(--text-white); font-size:1.15rem; font-weight:800; margin-bottom:10px;">فید خالیه!</div>
-                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:22px; line-height:1.7;">گیمرهایی رو دنبال کن یا اولین پستت رو بنویس</div>
+                <div style="color:var(--text-white); font-size:1.15rem; font-weight:800; margin-bottom:10px;">
+                    {% if user.is_authenticated %}فید خالیه!{% else %}به دنیای گیمرها خوش اومدی{% endif %}
+                </div>
+                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:22px; line-height:1.7;">
+                    {% if user.is_authenticated %}گیمرهایی رو دنبال کن یا اولین پستت رو بنویس{% else %}ثبت نام کن، پروفایل بساز و با گیمرها ارتباط بگیر{% endif %}
+                </div>
                 <div style="display:flex; gap:10px; justify-content:center;">
                     <a href="{% url 'community:search' %}" class="btn-ghost">جستجوی گیمر</a>
+                    {% if user.is_authenticated %}
                     <a href="{% url 'community:create_post_page' %}" class="btn-red"><i class="bi bi-plus"></i> پست جدید</a>
+                    {% else %}
+                    <a href="{% url 'account:register' %}" class="btn-red"><i class="bi bi-person-plus-fill"></i> ثبت نام</a>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

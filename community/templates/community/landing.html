@@ -1,0 +1,571 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameBeat — پلتفرم کامیونیتی گیمرها</title>
+    <link href="{% static 'vendor/css/bootstrap.rtl.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/css/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/css/vazirmatn-font-face.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #0e0e16;
+            --bg-dark: #13131e;
+            --bg-card: #1a1a28;
+            --bg-card2: #22223a;
+            --border: #2e2e4a;
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            --purple-dark: #5b21b6;
+            --accent: #a855f7;
+            --gold: #ffd700;
+            --blue: #00d4ff;
+            --green: #00ff88;
+            --text: #eeeef5;
+            --muted: #8888aa;
+            --dim: #55556e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-void);
+            color: var(--text);
+            font-family: 'Vazirmatn', 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
+
+        /* ── Navbar ── */
+        .land-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(14,14,22,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(139,92,246,0.15);
+            padding: 0 32px;
+            height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .land-nav-brand {
+            font-weight: 900; font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .land-nav-brand i {
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .land-nav-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-login {
+            color: var(--muted); text-decoration: none;
+            padding: 8px 20px; border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-login:hover { border-color: var(--purple); color: var(--purple); }
+        .btn-signup {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: white; text-decoration: none;
+            padding: 9px 22px; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700;
+            box-shadow: 0 4px 16px rgba(139,92,246,0.35);
+            transition: all 0.2s;
+        }
+        .btn-signup:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(139,92,246,0.5); color: white; }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            padding: 100px 20px 60px;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139,92,246,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(168,85,247,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 30% at 80% 70%, rgba(0,212,255,0.07) 0%, transparent 50%);
+        }
+        /* grid lines */
+        .hero-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+        .hero-inner {
+            position: relative; z-index: 1;
+            text-align: center; max-width: 860px;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(139,92,246,0.12);
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 50px; padding: 6px 18px;
+            font-size: 0.82rem; font-weight: 700;
+            color: var(--purple-light);
+            margin-bottom: 28px;
+        }
+        .hero-badge span { color: var(--green); font-size: 0.65rem; }
+        .hero-title {
+            font-size: clamp(2.4rem, 6vw, 4.2rem);
+            font-weight: 900; line-height: 1.15;
+            margin-bottom: 24px;
+        }
+        .hero-title .grad {
+            background: linear-gradient(135deg, var(--purple-light) 0%, var(--accent) 50%, var(--blue) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero-sub {
+            font-size: 1.15rem; color: var(--muted); line-height: 1.8;
+            max-width: 620px; margin: 0 auto 40px;
+        }
+        .hero-cta {
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+        .cta-primary {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: white; text-decoration: none;
+            padding: 14px 36px; border-radius: 12px;
+            font-size: 1rem; font-weight: 800;
+            box-shadow: 0 6px 24px rgba(139,92,246,0.45);
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(139,92,246,0.55); color: white; }
+        .cta-secondary {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text); text-decoration: none;
+            padding: 14px 32px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600;
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .cta-secondary:hover { border-color: var(--purple); color: var(--purple-light); }
+
+        /* stats row */
+        .hero-stats {
+            display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-num {
+            font-size: 2rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--purple-light), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+
+        /* ── Section ── */
+        section { padding: 90px 20px; }
+        .sec-title {
+            font-size: 2rem; font-weight: 900; text-align: center;
+            margin-bottom: 12px;
+        }
+        .sec-sub {
+            text-align: center; color: var(--muted); margin-bottom: 60px;
+            font-size: 1rem;
+        }
+
+        /* ── Community Features ── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1100px; margin: 0 auto;
+        }
+        .feat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 32px 24px;
+            transition: all 0.25s;
+            position: relative; overflow: hidden;
+        }
+        .feat-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--purple), var(--accent));
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .feat-card:hover { border-color: rgba(139,92,246,0.4); transform: translateY(-4px); box-shadow: 0 12px 36px rgba(139,92,246,0.12); }
+        .feat-card:hover::before { opacity: 1; }
+        .feat-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: rgba(139,92,246,0.12);
+            border: 1px solid rgba(139,92,246,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 18px;
+            color: var(--purple-light);
+        }
+        .feat-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; }
+        .feat-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+        /* ── GameNet Section ── */
+        .gamenet-section {
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-card));
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .gamenet-inner {
+            max-width: 1100px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+        }
+        @media (max-width: 768px) { .gamenet-inner { grid-template-columns: 1fr; } }
+        .gamenet-text h2 { font-size: 1.9rem; font-weight: 900; margin-bottom: 16px; }
+        .gamenet-text p { color: var(--muted); line-height: 1.8; margin-bottom: 28px; }
+        .gamenet-features { list-style: none; }
+        .gamenet-features li {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+            font-size: 0.95rem; color: var(--muted);
+        }
+        .gamenet-features li:last-child { border-bottom: none; }
+        .gamenet-features li i { color: var(--purple-light); font-size: 1.1rem; width: 20px; }
+        .gamenet-visual {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .gn-stat-row {
+            display: flex; gap: 12px; margin-bottom: 16px;
+        }
+        .gn-stat {
+            flex: 1; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px; text-align: center;
+        }
+        .gn-stat-num { font-size: 1.6rem; font-weight: 900; color: var(--purple-light); }
+        .gn-stat-label { font-size: 0.75rem; color: var(--dim); margin-top: 4px; }
+        .gn-bar-title { font-size: 0.82rem; color: var(--muted); margin-bottom: 8px; }
+        .gn-bar-wrap { background: var(--border); border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 10px; }
+        .gn-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--purple), var(--accent)); }
+        .gn-device-row { display: flex; gap: 8px; margin-top: 16px; }
+        .gn-device {
+            flex: 1; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 6px; text-align: center;
+            font-size: 0.8rem; color: var(--muted);
+        }
+        .gn-device i { display: block; font-size: 1.2rem; color: var(--purple-light); margin-bottom: 4px; }
+        .gn-device.active { border-color: var(--green); color: var(--green); }
+        .gn-device.active i { color: var(--green); }
+
+        /* ── Recent Posts ── */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            max-width: 1100px; margin: 0 auto;
+        }
+        .post-preview {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px;
+            transition: all 0.2s;
+        }
+        .post-preview:hover { border-color: rgba(139,92,246,0.3); }
+        .pp-user { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .pp-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--bg-card2);
+            border: 2px solid var(--purple);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem; color: var(--purple-light);
+            flex-shrink: 0; overflow: hidden;
+        }
+        .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .pp-name { font-weight: 700; font-size: 0.9rem; }
+        .pp-time { font-size: 0.75rem; color: var(--dim); }
+        .pp-content { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .pp-footer { display: flex; gap: 16px; }
+        .pp-stat { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--dim); }
+        .pp-stat i { font-size: 0.9rem; color: var(--purple); }
+
+        /* ── CTA Section ── */
+        .cta-section {
+            padding: 100px 20px;
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(139,92,246,0.12) 0%, transparent 60%);
+        }
+        .cta-section > * { position: relative; z-index: 1; }
+        .cta-title { font-size: 2.4rem; font-weight: 900; margin-bottom: 16px; }
+        .cta-desc { color: var(--muted); margin-bottom: 36px; font-size: 1rem; }
+        .cta-big {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: white; text-decoration: none;
+            padding: 16px 48px; border-radius: 14px;
+            font-size: 1.1rem; font-weight: 800;
+            box-shadow: 0 8px 30px rgba(139,92,246,0.5);
+            transition: all 0.2s;
+        }
+        .cta-big:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(139,92,246,0.6); color: white; }
+
+        /* ── Footer ── */
+        .land-footer {
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border);
+            padding: 40px 32px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 16px;
+        }
+        .land-footer-brand {
+            font-weight: 900; font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .land-footer-copy { font-size: 0.82rem; color: var(--dim); }
+
+        /* ── Anim ── */
+        @keyframes float {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .float-1 { animation: float 4s ease-in-out infinite; }
+        .float-2 { animation: float 4s ease-in-out infinite 1.3s; }
+        .float-3 { animation: float 4s ease-in-out infinite 2.6s; }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, var(--purple-light), var(--accent), var(--blue), var(--accent), var(--purple-light));
+            background-size: 300% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 4s linear infinite;
+        }
+
+        @media (max-width: 600px) {
+            .land-nav { padding: 0 16px; }
+            .hero-stats { gap: 24px; }
+            .stat-num { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="land-nav">
+    <a href="/" class="land-nav-brand">
+        <i class="bi bi-controller"></i>
+        GameBeat
+    </a>
+    <div class="land-nav-actions">
+        <a href="{% url 'account:login' %}" class="btn-login">
+            <i class="bi bi-box-arrow-in-right me-1"></i>ورود
+        </a>
+        <a href="{% url 'account:register' %}" class="btn-signup">
+            <i class="bi bi-person-plus me-1"></i>شروع رایگان
+        </a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-inner">
+        <div class="hero-badge">
+            <i class="bi bi-lightning-charge-fill"></i>
+            پلتفرم کامیونیتی گیمرها در ایران
+            <span>● LIVE</span>
+        </div>
+
+        <h1 class="hero-title">
+            با گیمرهای ایران<br>
+            <span class="shimmer">ارتباط بگیر، رشد کن</span>
+        </h1>
+
+        <p class="hero-sub">
+            پروفایل گیمری بساز، بازی‌هاتو مدیریت کن، با بهترین‌ها رقابت کن
+            و گیم‌نتتو حرفه‌ای اداره کن — همه چیز در یک جا.
+        </p>
+
+        <div class="hero-cta">
+            <a href="{% url 'account:register' %}" class="cta-primary">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+                همین الان شروع کن
+            </a>
+            <a href="{% url 'account:login' %}" class="cta-secondary">
+                <i class="bi bi-box-arrow-in-right"></i>
+                ورود به حساب
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+            <div class="stat-item">
+                <div class="stat-num">{{ stats.users }}+</div>
+                <div class="stat-label">گیمر فعال</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">{{ stats.posts }}+</div>
+                <div class="stat-label">پست منتشر شده</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">{{ stats.games }}+</div>
+                <div class="stat-label">بازی ثبت شده</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Community Features -->
+<section>
+    <p class="hero-badge text-center d-inline-block" style="margin: 0 auto 20px; display:flex !important; width:fit-content; margin: 0 auto 20px;">
+        <i class="bi bi-people-fill"></i> کامیونیتی گیمرها
+    </p>
+    <h2 class="sec-title">همه چیز برای گیمر ایرانی</h2>
+    <p class="sec-sub">از پروفایل گیمری تا LFG، از لیدربورد تا مدیریت بک‌لاگ</p>
+
+    <div class="features-grid">
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="feat-title">پروفایل گیمری</div>
+            <div class="feat-desc">پروفایل اختصاصی با تاریخچه بازی‌ها، دستاوردها، رتبه و اکانت‌های گیمینگت رو نمایش بده.</div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-collection-fill"></i></div>
+            <div class="feat-title">مدیریت بازی‌ها</div>
+            <div class="feat-desc">بازی‌هایی که داری، داری بازی می‌کنی یا تموم کردی رو ثبت کن. امتیاز بده، علاقه‌مندی نشون بده.</div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div class="feat-title">لیدربورد ملی</div>
+            <div class="feat-desc">با بهترین گیمرهای ایران رقابت کن. XP کسب کن و جایگاهت رو در لیدربورد ارتقا بده.</div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="feat-title">LFG — دنبال تیم بگرد</div>
+            <div class="feat-desc">تیم‌پلیر برای بازی موردعلاقه‌ات پیدا کن یا برای تیمت آدم جذب کن.</div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="feat-title">پیام مستقیم</div>
+            <div class="feat-desc">با گیمرها و دوست‌هات مستقیم چت کن، پروژه مشترک بزن، تیم بچین.</div>
+        </div>
+        <div class="feat-card">
+            <div class="feat-icon"><i class="bi bi-fire"></i></div>
+            <div class="feat-title">فید اجتماعی</div>
+            <div class="feat-desc">پست بذار، کلیپ و اسکرین‌شات بازی‌هات رو به اشتراک بذار. ریاکشن بده، کامنت کن.</div>
+        </div>
+    </div>
+</section>
+
+<!-- GameNet Section -->
+<section class="gamenet-section">
+    <div class="gamenet-inner">
+        <div class="gamenet-text">
+            <div class="hero-badge" style="width:fit-content; margin-bottom:20px;">
+                <i class="bi bi-hdd-network-fill"></i> مدیریت گیم‌نت
+            </div>
+            <h2>گیم‌نتت رو<br><span style="background:linear-gradient(135deg,var(--purple-light),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">حرفه‌ای</span> اداره کن</h2>
+            <p>با سیستم مدیریت یکپارچه GameBeat، کنترل کامل گیم‌نتت رو داشته باش. از آمار لحظه‌ای تا مدیریت اشتراک مشتریان.</p>
+            <ul class="gamenet-features">
+                <li><i class="bi bi-graph-up-arrow"></i> آمار لحظه‌ای بازدید و درآمد</li>
+                <li><i class="bi bi-pc-display"></i> مدیریت دستگاه‌ها و سیستم‌ها</li>
+                <li><i class="bi bi-credit-card-2-front-fill"></i> مدیریت اشتراک مشتریان</li>
+                <li><i class="bi bi-bell-fill"></i> اعلان‌های هوشمند</li>
+                <li><i class="bi bi-shield-check-fill"></i> کنترل دسترسی و امنیت</li>
+            </ul>
+        </div>
+        <div class="gamenet-visual">
+            <div class="gn-stat-row">
+                <div class="gn-stat">
+                    <div class="gn-stat-num">24</div>
+                    <div class="gn-stat-label">دستگاه فعال</div>
+                </div>
+                <div class="gn-stat">
+                    <div class="gn-stat-num">18</div>
+                    <div class="gn-stat-label">کاربر آنلاین</div>
+                </div>
+                <div class="gn-stat">
+                    <div class="gn-stat-num">96%</div>
+                    <div class="gn-stat-label">آپ‌تایم</div>
+                </div>
+            </div>
+            <div class="gn-bar-title">اشغال شبکه</div>
+            <div class="gn-bar-wrap"><div class="gn-bar-fill" style="width:72%;"></div></div>
+            <div class="gn-bar-title">CPU میانگین</div>
+            <div class="gn-bar-wrap"><div class="gn-bar-fill" style="width:45%; background:linear-gradient(90deg,#00d4ff,#0ea5e9);"></div></div>
+            <div class="gn-bar-title">حافظه</div>
+            <div class="gn-bar-wrap"><div class="gn-bar-fill" style="width:61%; background:linear-gradient(90deg,#00ff88,#10b981);"></div></div>
+            <div class="gn-device-row">
+                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-01</div>
+                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-02</div>
+                <div class="gn-device"><i class="bi bi-pc-display"></i>PC-03</div>
+                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-04</div>
+                <div class="gn-device"><i class="bi bi-pc-display"></i>PC-05</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if recent_posts %}
+<!-- Recent Posts Preview -->
+<section>
+    <h2 class="sec-title">آخرین پست‌های کامیونیتی</h2>
+    <p class="sec-sub">ببین گیمرها چی به اشتراک گذاشتن</p>
+    <div class="posts-grid">
+        {% for post in recent_posts %}
+        <div class="post-preview">
+            <div class="pp-user">
+                <div class="pp-avatar">
+                    {% if post.author.gamer_profile.avatar %}
+                        <img src="{{ post.author.gamer_profile.avatar.url }}" alt="">
+                    {% else %}
+                        {{ post.author.username|first|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="pp-name">{{ post.author.username }}</div>
+                    <div class="pp-time">{{ post.created_at|timesince }} پیش</div>
+                </div>
+            </div>
+            <div class="pp-content">{{ post.content }}</div>
+            <div class="pp-footer">
+                <span class="pp-stat"><i class="bi bi-heart-fill"></i>{{ post.likes.count }}</span>
+                <span class="pp-stat"><i class="bi bi-chat-fill"></i>{{ post.comments.count }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Bottom -->
+<section class="cta-section">
+    <h2 class="cta-title">آماده‌ای وارد بشی؟</h2>
+    <p class="cta-desc">رایگانه. همیشه بود. همیشه خواهد بود.</p>
+    <a href="{% url 'account:register' %}" class="cta-big">
+        <i class="bi bi-rocket-takeoff-fill"></i>
+        همین الان ثبت نام کن
+    </a>
+</section>
+
+<!-- Footer -->
+<footer class="land-footer">
+    <div class="land-footer-brand">
+        <i class="bi bi-controller"></i> GameBeat
+    </div>
+    <div class="land-footer-copy">© 2025 GameBeat — پلتفرم گیمرهای ایران</div>
+</footer>
+
+<script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

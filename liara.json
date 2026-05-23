@@ -1,0 +1,15 @@
+{
+  "platform": "docker",
+  "app": "gamebeat",
+  "port": 8000,
+  "disks": [
+    {
+      "name": "media",
+      "mountTo": "/app/media"
+    },
+    {
+      "name": "db",
+      "mountTo": "/app/db"
+    }
+  ]
+}
