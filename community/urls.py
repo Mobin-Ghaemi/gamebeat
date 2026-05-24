@@ -26,6 +26,9 @@ urlpatterns = [
     # Reactions
     path('post/<int:post_id>/react/', views.react_post, name='react_post'),
     path('post/<int:post_id>/reactions/', views.get_post_reactions, name='post_reactions'),
+    # Steam
+    path('steam/fetch/', views.steam_fetch, name='steam_fetch'),
+    path('steam/search/', views.steam_search, name='steam_search'),
     # Backlog
     path('backlog/add/', views.backlog_add, name='backlog_add'),
     path('backlog/<int:item_id>/update/', views.backlog_update, name='backlog_update'),

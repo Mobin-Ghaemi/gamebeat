@@ -851,6 +851,38 @@
 .bl-add-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .bl-add-input { flex: 1; min-width: 160px; }
 
+/* ── Add Game Tabs ── */
+.bl-tabs {
+    display: flex; gap: 6px; margin-bottom: 14px;
+    border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.bl-tab {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: 8px;
+    padding: 6px 14px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+}
+.bl-tab:hover { border-color: rgba(139,92,246,0.4); color: var(--text-white); }
+.bl-tab.active {
+    background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.5);
+    color: #a78bfa;
+}
+.bl-steam-row { display: flex; gap: 8px; align-items: center; }
+
+/* Search results */
+.bl-search-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 10px; cursor: pointer;
+    transition: background 0.15s;
+}
+.bl-search-item:hover { background: rgba(139,92,246,0.1); }
+.bl-search-item img { width: 60px; height: 28px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.bl-search-item .bs-name { font-size: 0.88rem; font-weight: 700; color: var(--text-white); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .bl-toolbar {
     display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;
 }
@@ -1263,32 +1295,106 @@
                         <div class="bl-add-title">
                             <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> اضافه کردن بازی
                         </div>
-                        <div class="bl-add-row">
-                            <input type="text" id="blGameName" placeholder="نام بازی..." class="g-input bl-add-input"
-                                onkeydown="if(event.key==='Enter') blAdd()">
-                            <select id="blStatus" class="g-input" style="min-width:145px;">
-                                <option value="want">🎯 می‌خوام</option>
-                                <option value="playing">🎮 بازی می‌کنم</option>
-                                <option value="completed">🏆 تموم کردم</option>
-                                <option value="dropped">💔 رها کردم</option>
-                            </select>
-                            <select id="blPlatform" class="g-input" style="min-width:130px;">
-                                <option value="">پلتفرم</option>
-                                {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
-                                <option value="{{ plt_code }}">{{ plt_label }}</option>
-                                {% endfor %}
-                                {% if not profile.get_platforms_list %}
-                                <option value="pc">PC</option>
-                                <option value="ps5">PlayStation 5</option>
-                                <option value="ps4">PlayStation 4</option>
-                                <option value="xbox">Xbox</option>
-                                <option value="switch">Nintendo Switch</option>
-                                <option value="mobile">موبایل</option>
-                                {% endif %}
-                            </select>
-                            <button onclick="blAdd()" class="btn-red" style="padding:9px 18px; border-radius:10px; white-space:nowrap;">
-                                <i class="bi bi-plus-lg"></i> اضافه
+
+                        <!-- ── Tabs ── -->
+                        <div class="bl-tabs">
+                            <button class="bl-tab active" onclick="blSwitchTab('steam-url',this)">
+                                <i class="bi bi-steam"></i> لینک استیم
                             </button>
+                            <button class="bl-tab" onclick="blSwitchTab('steam-search',this)">
+                                <i class="bi bi-search"></i> جستجو
+                            </button>
+                            <button class="bl-tab" onclick="blSwitchTab('manual',this)">
+                                <i class="bi bi-pencil"></i> دستی
+                            </button>
+                        </div>
+
+                        <!-- Tab 1: Steam URL -->
+                        <div class="bl-tab-panel" id="bl-tab-steam-url">
+                            <div class="bl-steam-row">
+                                <input type="text" id="blSteamUrl"
+                                    class="g-input"
+                                    placeholder="https://store.steampowered.com/app/730/..."
+                                    oninput="blSteamUrlChanged()"
+                                    style="flex:1;">
+                                <button onclick="blFetchSteam()" class="btn-red" style="white-space:nowrap; padding:9px 16px;">
+                                    <i class="bi bi-cloud-download-fill"></i> دریافت
+                                </button>
+                            </div>
+                            <!-- Preview -->
+                            <div id="blSteamPreview" style="display:none; margin-top:12px;">
+                                <div style="display:flex; gap:14px; align-items:flex-start; background:var(--bg-card2); border-radius:12px; padding:12px;">
+                                    <img id="blSteamCover" src="" alt="" style="width:120px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                                    <div style="flex:1; min-width:0;">
+                                        <div id="blSteamName" style="font-weight:800; font-size:0.95rem; color:var(--text-white); margin-bottom:6px;"></div>
+                                        <div id="blSteamDesc" style="font-size:0.78rem; color:var(--text-muted); line-height:1.5;"></div>
+                                    </div>
+                                </div>
+                                <div class="bl-add-row" style="margin-top:10px;">
+                                    <select id="blSteamStatus" class="g-input" style="min-width:145px;">
+                                        <option value="want">🎯 می‌خوام</option>
+                                        <option value="playing">🎮 بازی می‌کنم</option>
+                                        <option value="completed">🏆 تموم کردم</option>
+                                        <option value="dropped">💔 رها کردم</option>
+                                    </select>
+                                    <select id="blSteamPlatform" class="g-input" style="min-width:130px;">
+                                        <option value="pc">PC / Steam</option>
+                                        <option value="ps5">PlayStation 5</option>
+                                        <option value="ps4">PlayStation 4</option>
+                                        <option value="xbox">Xbox</option>
+                                    </select>
+                                    <button onclick="blAddFromSteam()" class="btn-red" style="padding:9px 18px; white-space:nowrap;">
+                                        <i class="bi bi-plus-lg"></i> اضافه به بک‌لاگ
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="blSteamError" style="display:none; color:#f87171; font-size:0.82rem; margin-top:8px; padding:8px 12px; background:rgba(248,113,113,0.08); border-radius:8px;"></div>
+                            <div id="blSteamLoading" style="display:none; color:var(--text-muted); font-size:0.82rem; margin-top:8px;">
+                                <span style="display:inline-block; animation:spin 1s linear infinite;">⚙️</span> در حال دریافت اطلاعات از استیم...
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Steam Search -->
+                        <div class="bl-tab-panel" id="bl-tab-steam-search" style="display:none;">
+                            <div class="bl-steam-row">
+                                <input type="text" id="blSearchInput"
+                                    class="g-input"
+                                    placeholder="نام بازی رو بنویس..."
+                                    oninput="blSearchDebounce()"
+                                    style="flex:1;">
+                            </div>
+                            <div id="blSearchResults" style="margin-top:10px;"></div>
+                        </div>
+
+                        <!-- Tab 3: Manual -->
+                        <div class="bl-tab-panel" id="bl-tab-manual" style="display:none;">
+                            <div class="bl-add-row">
+                                <input type="text" id="blGameName" placeholder="نام بازی..." class="g-input bl-add-input"
+                                    onkeydown="if(event.key==='Enter') blAdd()">
+                                <select id="blStatus" class="g-input" style="min-width:145px;">
+                                    <option value="want">🎯 می‌خوام</option>
+                                    <option value="playing">🎮 بازی می‌کنم</option>
+                                    <option value="completed">🏆 تموم کردم</option>
+                                    <option value="dropped">💔 رها کردم</option>
+                                </select>
+                                <select id="blPlatform" class="g-input" style="min-width:130px;">
+                                    <option value="">پلتفرم</option>
+                                    {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
+                                    <option value="{{ plt_code }}">{{ plt_label }}</option>
+                                    {% endfor %}
+                                    {% if not profile.get_platforms_list %}
+                                    <option value="pc">PC</option>
+                                    <option value="ps5">PlayStation 5</option>
+                                    <option value="ps4">PlayStation 4</option>
+                                    <option value="xbox">Xbox</option>
+                                    <option value="switch">Nintendo Switch</option>
+                                    <option value="mobile">موبایل</option>
+                                    {% endif %}
+                                </select>
+                                <button onclick="blAdd()" class="btn-red" style="padding:9px 18px; border-radius:10px; white-space:nowrap;">
+                                    <i class="bi bi-plus-lg"></i> اضافه
+                                </button>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -1986,5 +2092,166 @@ function closeLightbox() {
     document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* ══════════════ ADD GAME TABS ══════════════ */
+function blSwitchTab(name, btn) {
+    document.querySelectorAll('.bl-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.bl-tab-panel').forEach(p => p.style.display = 'none');
+    btn.classList.add('active');
+    const panel = document.getElementById('bl-tab-' + name);
+    if (panel) panel.style.display = 'block';
+}
+
+// ── Steam URL Tab ──
+let _steamData = null;
+
+function blSteamUrlChanged() {
+    document.getElementById('blSteamPreview').style.display = 'none';
+    document.getElementById('blSteamError').style.display = 'none';
+    _steamData = null;
+}
+
+function blFetchSteam() {
+    const url = document.getElementById('blSteamUrl').value.trim();
+    if (!url) return;
+
+    const preview  = document.getElementById('blSteamPreview');
+    const errorEl  = document.getElementById('blSteamError');
+    const loadEl   = document.getElementById('blSteamLoading');
+
+    preview.style.display = 'none';
+    errorEl.style.display = 'none';
+    loadEl.style.display  = 'block';
+    _steamData = null;
+
+    fetch(`/community/steam/fetch/?q=${encodeURIComponent(url)}`)
+        .then(r => r.json())
+        .then(data => {
+            loadEl.style.display = 'none';
+            if (data.error) {
+                errorEl.textContent = '⚠️ ' + data.error;
+                errorEl.style.display = 'block';
+                return;
+            }
+            _steamData = data;
+            document.getElementById('blSteamCover').src = data.cover_url;
+            document.getElementById('blSteamName').textContent = data.name;
+            document.getElementById('blSteamDesc').textContent = data.description || '';
+            preview.style.display = 'block';
+        })
+        .catch(() => {
+            loadEl.style.display = 'none';
+            errorEl.textContent = '⚠️ خطا در اتصال به سرور';
+            errorEl.style.display = 'block';
+        });
+}
+
+function blAddFromSteam() {
+    if (!_steamData) return;
+    const status   = document.getElementById('blSteamStatus').value;
+    const platform = document.getElementById('blSteamPlatform').value;
+
+    fetch('/community/backlog/add/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `game_name=${encodeURIComponent(_steamData.name)}&status=${status}&platform=${platform}&cover_url=${encodeURIComponent(_steamData.cover_url)}`
+    }).then(r => r.json()).then(() => {
+        document.getElementById('blSteamUrl').value = '';
+        document.getElementById('blSteamPreview').style.display = 'none';
+        _steamData = null;
+        blLoad();
+        showToast('✅ ' + _steamData?.name || 'بازی' + ' اضافه شد');
+    });
+}
+
+// ── Steam Search Tab ──
+let _searchTimer = null;
+
+function blSearchDebounce() {
+    clearTimeout(_searchTimer);
+    const q = document.getElementById('blSearchInput').value.trim();
+    if (q.length < 2) {
+        document.getElementById('blSearchResults').innerHTML = '';
+        return;
+    }
+    _searchTimer = setTimeout(() => blDoSearch(q), 400);
+}
+
+function blDoSearch(q) {
+    const res = document.getElementById('blSearchResults');
+    res.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:8px;">در حال جستجو...</div>';
+
+    fetch(`/community/steam/search/?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.results.length) {
+                res.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:8px;">نتیجه‌ای پیدا نشد</div>';
+                return;
+            }
+            res.innerHTML = data.results.map(g => `
+                <div class="bl-search-item" onclick="blPickSearchResult('${encodeURIComponent(g.name)}','${encodeURIComponent(g.cover_url)}')">
+                    <img src="${g.cover_url}" alt="" onerror="this.style.display='none'">
+                    <div class="bs-name">${g.name}</div>
+                </div>
+            `).join('');
+        })
+        .catch(() => { res.innerHTML = ''; });
+}
+
+function blPickSearchResult(nameEnc, coverEnc) {
+    const name     = decodeURIComponent(nameEnc);
+    const coverUrl = decodeURIComponent(coverEnc);
+
+    // Show a quick confirm card
+    const res = document.getElementById('blSearchResults');
+    res.innerHTML = `
+        <div style="background:var(--bg-card2);border-radius:12px;padding:12px;margin-top:6px;">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                <img src="${coverUrl}" style="width:120px;height:56px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'">
+                <strong style="color:var(--text-white);">${name}</strong>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <select id="blSrStatus" class="g-input" style="min-width:140px;">
+                    <option value="want">🎯 می‌خوام</option>
+                    <option value="playing">🎮 بازی می‌کنم</option>
+                    <option value="completed">🏆 تموم کردم</option>
+                    <option value="dropped">💔 رها کردم</option>
+                </select>
+                <select id="blSrPlatform" class="g-input" style="min-width:120px;">
+                    <option value="pc">PC / Steam</option>
+                    <option value="ps5">PlayStation 5</option>
+                    <option value="ps4">PlayStation 4</option>
+                    <option value="xbox">Xbox</option>
+                    <option value="switch">Nintendo Switch</option>
+                    <option value="mobile">موبایل</option>
+                </select>
+                <button class="btn-red" style="padding:8px 16px;" onclick="blAddFromSearch('${nameEnc}','${coverEnc}')">
+                    <i class="bi bi-plus-lg"></i> اضافه
+                </button>
+                <button class="btn-ghost" style="padding:8px 12px;" onclick="blDoSearch(document.getElementById('blSearchInput').value)">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function blAddFromSearch(nameEnc, coverEnc) {
+    const name     = decodeURIComponent(nameEnc);
+    const coverUrl = decodeURIComponent(coverEnc);
+    const status   = document.getElementById('blSrStatus').value;
+    const platform = document.getElementById('blSrPlatform').value;
+
+    fetch('/community/backlog/add/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `game_name=${encodeURIComponent(name)}&status=${status}&platform=${platform}&cover_url=${encodeURIComponent(coverUrl)}`
+    }).then(r => r.json()).then(() => {
+        document.getElementById('blSearchInput').value = '';
+        document.getElementById('blSearchResults').innerHTML = '';
+        blLoad();
+        showToast('✅ ' + name + ' اضافه شد');
+    });
+}
 </script>
 {% endblock %}

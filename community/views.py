@@ -10,6 +10,9 @@ from .models import Notification, Conversation, Message
 from .models import GameBacklog, PostReaction
 from .models import PLATFORM_CHOICES, CITY_CHOICES
 import re
+import json
+import urllib.request
+import urllib.parse
 
 
 def get_or_create_gamer_profile(user):
@@ -784,18 +787,21 @@ def get_post_reactions(request, post_id):
 @login_required
 @require_POST
 def backlog_add(request):
-    name   = request.POST.get('game_name', '').strip()
-    status = request.POST.get('status', 'want')
-    plat   = request.POST.get('platform', '')
+    name      = request.POST.get('game_name', '').strip()
+    status    = request.POST.get('status', 'want')
+    plat      = request.POST.get('platform', '')
+    cover_url = request.POST.get('cover_url', '').strip()
     if not name:
         return JsonResponse({'error': 'no name'}, status=400)
     obj, created = GameBacklog.objects.get_or_create(
         user=request.user, game_name=name,
-        defaults={'status': status, 'platform': plat}
+        defaults={'status': status, 'platform': plat, 'cover_url': cover_url}
     )
     if not created:
         obj.status   = status
         obj.platform = plat
+        if cover_url:
+            obj.cover_url = cover_url
         obj.save()
     return JsonResponse({'ok': True, 'id': obj.id, 'status': obj.status, 'created': created})
 
@@ -846,6 +852,70 @@ def backlog_list(request, username):
         for i in items
     ]
     return JsonResponse({'items': data})
+
+
+@login_required
+def steam_fetch(request):
+    """Fetch game info from Steam API by URL or AppID"""
+    q = request.GET.get('q', '').strip()
+    if not q:
+        return JsonResponse({'error': 'no query'}, status=400)
+
+    # Extract AppID from URL or use as-is
+    match = re.search(r'/app/(\d+)', q)
+    appid = match.group(1) if match else (q if q.isdigit() else None)
+    if not appid:
+        return JsonResponse({'error': 'invalid Steam URL or AppID'}, status=400)
+
+    try:
+        api_url = f'https://store.steampowered.com/api/appdetails?appids={appid}&cc=ir&l=english'
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read())
+
+        app_data = data.get(str(appid), {})
+        if not app_data.get('success'):
+            return JsonResponse({'error': 'بازی پیدا نشد'}, status=404)
+
+        game = app_data['data']
+        return JsonResponse({
+            'name': game.get('name', ''),
+            'cover_url': game.get('header_image', ''),
+            'description': game.get('short_description', '')[:200],
+            'appid': appid,
+            'release_date': game.get('release_date', {}).get('date', ''),
+            'genres': [g['description'] for g in game.get('genres', [])[:3]],
+        })
+    except urllib.error.URLError:
+        return JsonResponse({'error': 'اتصال به Steam برقرار نشد'}, status=503)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def steam_search(request):
+    """Search games by name using Steam store search"""
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'results': []})
+
+    try:
+        encoded = urllib.parse.quote(q)
+        api_url = f'https://store.steampowered.com/api/storesearch/?term={encoded}&l=english&cc=us'
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read())
+
+        results = []
+        for item in data.get('items', [])[:8]:
+            results.append({
+                'appid': str(item['id']),
+                'name': item['name'],
+                'cover_url': item.get('tiny_image', f"https://cdn.akamai.steamstatic.com/steam/apps/{item['id']}/header.jpg"),
+            })
+        return JsonResponse({'results': results})
+    except Exception:
+        return JsonResponse({'results': []})
 
 
 @login_required
