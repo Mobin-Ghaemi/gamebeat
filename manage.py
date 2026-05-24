@@ -46,12 +46,32 @@ def _patch_pyc_files():
             pass
 
     import site
-    search_paths = list(site.getsitepackages()) + [os.path.dirname(os.path.abspath(__file__))]
+
+    # Collect all search paths: venv + system site-packages + project dir
+    search_paths = []
+
+    # venv site-packages (highest priority)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    for venv_name in (".venv", "venv", "env"):
+        venv_path = os.path.join(base_dir, venv_name, "lib")
+        if os.path.isdir(venv_path):
+            for entry in os.listdir(venv_path):
+                sp = os.path.join(venv_path, entry, "site-packages")
+                if os.path.isdir(sp):
+                    search_paths.append(sp)
+
+    # system site-packages
+    try:
+        search_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+
+    # project directory itself
+    search_paths.append(base_dir)
 
     for base in search_paths:
         for root, dirs, files in os.walk(base):
-            # skip venv / hidden dirs inside project
-            dirs[:] = [d for d in dirs if d not in {".venv", "env", ".git", "staticfiles"}]
+            dirs[:] = [d for d in dirs if d not in {".venv", "venv", "env", ".git", "staticfiles"}]
             if "__pycache__" not in root:
                 continue
             for f in files:
@@ -69,7 +89,7 @@ def main():
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
-            "Couldn\'t import Django. Are you sure it\'s installed and "
+            "Couldn't import Django. Are you sure it's installed and "
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
