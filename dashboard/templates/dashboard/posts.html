@@ -1,0 +1,208 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}پست‌ها - داشبورد GameBeat{% endblock %}
+{% block page_title %}مدیریت پست‌ها{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">پست‌ها</div>
+        <div class="page-subtitle">مشاهده، جستجو و حذف پست‌های کاربران</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:200px;max-width:360px">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="جستجو در محتوا یا نویسنده..."
+                   class="dash-input" style="padding-right:36px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter=all"
+               style="padding:7px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == 'all' %}background:var(--purple);color:white;box-shadow:0 4px 12px var(--purple-glow)
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                همه
+            </a>
+            {% for val, label in post_type_choices %}
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter={{ val }}"
+               style="padding:7px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == val %}background:var(--purple);color:white;box-shadow:0 4px 12px var(--purple-glow)
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn-ghost" style="flex-shrink:0">
+            <i class="bi bi-funnel me-1"></i>اعمال
+        </button>
+    </form>
+</div>
+
+<!-- Bulk Delete Bar -->
+<div id="bulkBar" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:12px">
+    <span id="selectedCount" style="font-size:0.85rem;color:#f87171;font-weight:600"></span>
+    <button type="submit" form="bulkForm" class="btn-danger-ghost" onclick="return confirm('پست‌های انتخابی حذف شوند؟')">
+        <i class="bi bi-trash3 me-1"></i>حذف انتخابی
+    </button>
+</div>
+
+<!-- Posts Table -->
+<form id="bulkForm" method="post" action="{% url 'dashboard:post_bulk_delete' %}">
+{% csrf_token %}
+<div class="dash-card">
+    <div class="dash-card-title" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <i class="bi bi-file-post-fill" style="color:var(--purple-light)"></i>
+        لیست پست‌ها
+        <span style="font-size:0.78rem;color:var(--text-faint);font-weight:400;margin-right:6px">({{ page_obj.paginator.count }} مورد)</span>
+    </div>
+    <div style="overflow-x:auto;margin-top:4px">
+        {% if page_obj %}
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th style="width:40px">
+                        <input type="checkbox" id="selectAll" style="accent-color:var(--purple);width:16px;height:16px;cursor:pointer">
+                    </th>
+                    <th>#</th>
+                    <th>نویسنده</th>
+                    <th>محتوا</th>
+                    <th>نوع</th>
+                    <th>لایک</th>
+                    <th>کامنت</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in page_obj %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="ids" value="{{ post.pk }}" class="row-check"
+                               style="accent-color:var(--purple);width:16px;height:16px;cursor:pointer">
+                    </td>
+                    <td style="color:var(--text-faint);font-size:0.78rem">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div class="avatar-sm" style="width:30px;height:30px;font-size:0.78rem">
+                                {{ post.author.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-size:0.85rem;font-weight:500">{{ post.author.username }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.85rem;color:var(--text-muted)">
+                            {{ post.content|truncatechars:70 }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if post.post_type == 'text' %}
+                            <span style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">متن</span>
+                        {% elif post.post_type == 'achievement' %}
+                            <span style="background:rgba(245,158,11,0.15);color:#fcd34d;border:1px solid rgba(245,158,11,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">دستاورد</span>
+                        {% elif post.post_type == 'lfg' %}
+                            <span style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">جستجوی تیم</span>
+                        {% elif post.post_type == 'highlight' %}
+                            <span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">هایلایت</span>
+                        {% elif post.post_type == 'image' %}
+                            <span style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">تصویر</span>
+                        {% elif post.post_type == 'link' %}
+                            <span style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">لینک</span>
+                        {% else %}
+                            <span style="background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border);padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600">{{ post.get_post_type_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:#f87171;font-size:0.85rem">
+                        <i class="bi bi-heart-fill" style="font-size:0.7rem;margin-left:3px"></i>{{ post.likes_count_ann }}
+                    </td>
+                    <td style="color:#60a5fa;font-size:0.85rem">
+                        <i class="bi bi-chat-fill" style="font-size:0.7rem;margin-left:3px"></i>{{ post.comments_count_ann }}
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ post.created_at|date:"Y/m/d" }}</td>
+                    <td>
+                        <div style="display:flex;gap:5px;align-items:center">
+                            <a href="{% url 'dashboard:post_detail' post.pk %}" class="btn-ghost"
+                               style="padding:4px 9px;text-decoration:none;font-size:0.8rem">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <form method="post" action="{% url 'dashboard:post_delete' post.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger-ghost" style="padding:4px 9px"
+                                        onclick="return confirm('پست حذف شود؟')">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_obj.has_other_pages %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid var(--border)">
+            <div style="font-size:0.8rem;color:var(--text-faint)">
+                نمایش {{ page_obj.start_index }}–{{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+            </div>
+            <div style="display:flex;gap:6px">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_type != 'all' %}filter={{ filter_type }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+                <span style="padding:5px 12px;background:var(--purple);color:white;border-radius:8px;font-size:0.82rem;font-weight:600">
+                    {{ page_obj.number }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_type != 'all' %}filter={{ filter_type }}&{% endif %}page={{ page_obj.next_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div style="text-align:center;padding:60px 20px">
+            <i class="bi bi-file-post" style="font-size:3rem;color:var(--text-faint);display:block;margin-bottom:12px"></i>
+            <div style="font-size:1.1rem;font-weight:600;color:var(--text-muted);margin-bottom:6px">پستی یافت نشد</div>
+            {% if q or filter_type != 'all' %}
+            <a href="{% url 'dashboard:posts' %}" class="btn-ghost d-inline-block mt-4" style="font-size:0.85rem;text-decoration:none">
+                <i class="bi bi-x-circle me-1"></i>پاک کردن فیلترها
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const selectAll = document.getElementById('selectAll');
+const checks = document.querySelectorAll('.row-check');
+const bulkBar = document.getElementById('bulkBar');
+const countSpan = document.getElementById('selectedCount');
+
+function updateBulk() {
+    const cnt = document.querySelectorAll('.row-check:checked').length;
+    bulkBar.style.display = cnt > 0 ? 'flex' : 'none';
+    countSpan.textContent = cnt + ' پست انتخاب شده';
+}
+if (selectAll) {
+    selectAll.addEventListener('change', function () {
+        checks.forEach(c => c.checked = this.checked);
+        updateBulk();
+    });
+}
+checks.forEach(c => c.addEventListener('change', updateBulk));
+</script>
+{% endblock %}

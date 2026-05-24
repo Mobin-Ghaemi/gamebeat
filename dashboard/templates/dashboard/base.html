@@ -1,0 +1,798 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}داشبورد GameBeat{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap.rtl.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/css/vazirmatn-font-face.css' %}">
+    <style>
+        :root {
+            --bg-void: #16161e;
+            --bg-dark: #1c1c26;
+            --bg-card: #22222e;
+            --bg-card2: #2a2a38;
+            --border: #35354a;
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            --purple-dark: #6d28d9;
+            --purple-glow: rgba(139, 92, 246, 0.25);
+            --text-main: #e2e2f0;
+            --text-muted: #9090b0;
+            --text-faint: #5a5a78;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --sidebar-width: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Vazirmatn', system-ui, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ─── Sidebar ─────────────────────────────────────────────── */
+        .dash-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-dark);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .dash-sidebar::-webkit-scrollbar { width: 4px; }
+        .dash-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .dash-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+            box-shadow: 0 4px 15px var(--purple-glow);
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-brand-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px;
+            flex: 1;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-faint);
+            padding: 12px 10px 6px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .sidebar-link:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(109,40,217,0.1));
+            color: var(--purple-light);
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: var(--purple);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .sidebar-link i {
+            font-size: 1.05rem;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .sidebar-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.72rem;
+            color: var(--purple-light);
+        }
+
+        /* ─── Top Navbar ──────────────────────────────────────────── */
+        .dash-topbar {
+            position: fixed;
+            top: 0;
+            right: var(--sidebar-width);
+            left: 0;
+            height: 64px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 900;
+        }
+
+        .topbar-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .topbar-title span {
+            color: var(--purple-light);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .topbar-btn:hover {
+            background: var(--bg-card2);
+            color: var(--text-main);
+            border-color: var(--purple);
+        }
+
+        /* ─── Main Content ────────────────────────────────────────── */
+        .dash-main {
+            margin-right: var(--sidebar-width);
+            margin-top: 64px;
+            padding: 28px;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* ─── Cards ───────────────────────────────────────────────── */
+        .dash-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .dash-card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ─── Stat Cards ──────────────────────────────────────────── */
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 24px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .stat-card.purple::before { background: linear-gradient(90deg, var(--purple), var(--purple-light)); }
+        .stat-card.green::before { background: linear-gradient(90deg, var(--success), #34d399); }
+        .stat-card.blue::before { background: linear-gradient(90deg, var(--info), #60a5fa); }
+        .stat-card.orange::before { background: linear-gradient(90deg, var(--warning), #fcd34d); }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .stat-card.purple .stat-card-icon { background: rgba(139,92,246,0.15); color: var(--purple-light); }
+        .stat-card.green .stat-card-icon { background: rgba(16,185,129,0.15); color: var(--success); }
+        .stat-card.blue .stat-card-icon { background: rgba(59,130,246,0.15); color: var(--info); }
+        .stat-card.orange .stat-card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
+
+        .stat-card-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-card-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .stat-card-sub {
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        /* ─── Tables ──────────────────────────────────────────────── */
+        .dash-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .dash-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-faint);
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .dash-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(53,53,74,0.5);
+            color: var(--text-main);
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .dash-table tbody tr:last-child td { border-bottom: none; }
+
+        .dash-table tbody tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* ─── Badges ──────────────────────────────────────────────── */
+        .badge-active {
+            background: rgba(16,185,129,0.15);
+            color: #34d399;
+            border: 1px solid rgba(16,185,129,0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .badge-banned {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background: rgba(139,92,246,0.15);
+            color: var(--purple-light);
+            border: 1px solid rgba(139,92,246,0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .badge-genre {
+            background: rgba(59,130,246,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59,130,246,0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .badge-featured {
+            background: rgba(245,158,11,0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245,158,11,0.3);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* ─── Buttons ─────────────────────────────────────────────── */
+        .btn-purple {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 8px 18px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--purple-glow);
+        }
+
+        .btn-purple:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(139,92,246,0.4);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 500;
+            border-radius: 10px;
+            padding: 8px 16px;
+            transition: all 0.2s;
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-color: var(--purple);
+        }
+
+        .btn-danger-ghost {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-danger-ghost:hover {
+            background: rgba(239,68,68,0.2);
+            color: #fca5a5;
+        }
+
+        .btn-success-ghost {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #34d399;
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-success-ghost:hover {
+            background: rgba(16,185,129,0.2);
+            color: #6ee7b7;
+        }
+
+        .btn-edit-ghost {
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.3);
+            color: var(--purple-light);
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-edit-ghost:hover {
+            background: rgba(139,92,246,0.2);
+            color: #c4b5fd;
+        }
+
+        /* ─── Form elements ───────────────────────────────────────── */
+        .dash-input {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .dash-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px var(--purple-glow);
+            background: var(--bg-card2);
+            color: var(--text-main);
+        }
+
+        .dash-input::placeholder { color: var(--text-faint); }
+
+        .dash-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* ─── Messages ────────────────────────────────────────────── */
+        .dash-alert {
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .dash-alert-success {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #34d399;
+        }
+
+        .dash-alert-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+        }
+
+        /* ─── Page header ─────────────────────────────────────────── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ─── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 991px) {
+            .dash-sidebar {
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            }
+            .dash-sidebar.open {
+                transform: translateX(0);
+            }
+            .dash-topbar, .dash-main {
+                right: 0 !important;
+                margin-right: 0 !important;
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 999;
+            }
+            .sidebar-overlay.open { display: block; }
+        }
+
+        /* ─── Scrollbar ───────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-void); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+        /* ─── Misc ────────────────────────────────────────────────── */
+        .avatar-sm {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-faint);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .search-wrapper input {
+            padding-right: 36px;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ═══ Sidebar ═══════════════════════════════════════════════════ -->
+<aside class="dash-sidebar" id="dashSidebar">
+
+    <a href="{% url 'dashboard:index' %}" class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+            <i class="bi bi-controller"></i>
+        </div>
+        <div class="sidebar-brand-text">
+            <span class="sidebar-brand-name">GameBeat</span>
+            <span class="sidebar-brand-sub">پنل مدیریت</span>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="sidebar-section-label">اصلی</div>
+
+        <a href="{% url 'dashboard:index' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+            <i class="bi bi-grid-1x2"></i>
+            داشبورد
+        </a>
+
+        <div class="sidebar-section-label" style="margin-top:8px">مدیریت</div>
+
+        <a href="{% url 'dashboard:users' %}"
+           class="sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-people-fill"></i>
+            کاربران
+        </a>
+
+        <a href="{% url 'dashboard:posts' %}"
+           class="sidebar-link {% if 'post' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-file-post-fill"></i>
+            پست‌ها
+        </a>
+
+        <a href="{% url 'dashboard:comments' %}"
+           class="sidebar-link {% if 'comment' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-chat-dots-fill"></i>
+            کامنت‌ها
+        </a>
+
+        <a href="{% url 'dashboard:hashtags' %}"
+           class="sidebar-link {% if 'hashtag' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-hash"></i>
+            هشتگ‌ها
+        </a>
+
+        <a href="{% url 'dashboard:games' %}"
+           class="sidebar-link {% if 'game' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-controller"></i>
+            بازی‌ها
+        </a>
+
+        <div class="sidebar-section-label" style="margin-top:8px">دسترسی سریع</div>
+
+        <a href="/admin/" class="sidebar-link">
+            <i class="bi bi-shield-lock"></i>
+            Django Admin
+        </a>
+
+        <a href="/" class="sidebar-link">
+            <i class="bi bi-house"></i>
+            بازگشت به سایت
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-avatar">
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name">{{ request.user.username }}</div>
+                <div class="sidebar-user-role">
+                    {% if request.user.is_superuser %}سوپر ادمین{% else %}ادمین{% endif %}
+                </div>
+            </div>
+            <a href="/account/logout/" class="topbar-btn" title="خروج" style="width:30px;height:30px;flex-shrink:0">
+                <i class="bi bi-box-arrow-right" style="font-size:0.85rem"></i>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<!-- ═══ Topbar ════════════════════════════════════════════════════ -->
+<header class="dash-topbar">
+    <div class="d-flex align-items-center gap-3">
+        <button class="topbar-btn d-lg-none" onclick="toggleSidebar()" style="background:none;border:1px solid var(--border)">
+            <i class="bi bi-list" style="font-size:1.2rem"></i>
+        </button>
+        <div>
+            <div class="topbar-title">{% block page_title %}داشبورد{% endblock %}</div>
+        </div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{% url 'dashboard:game_add' %}" class="topbar-btn" title="افزودن بازی">
+            <i class="bi bi-plus-circle"></i>
+        </a>
+        <a href="{% url 'dashboard:users' %}" class="topbar-btn" title="کاربران">
+            <i class="bi bi-people"></i>
+        </a>
+        <a href="/" class="topbar-btn" title="سایت اصلی">
+            <i class="bi bi-house"></i>
+        </a>
+    </div>
+</header>
+
+<!-- ═══ Main Content ══════════════════════════════════════════════ -->
+<main class="dash-main">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="dash-alert {% if message.tags == 'success' %}dash-alert-success{% else %}dash-alert-error{% endif %}">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</main>
+
+<script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    function toggleSidebar() {
+        document.getElementById('dashSidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

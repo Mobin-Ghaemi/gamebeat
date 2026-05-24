@@ -1,0 +1,232 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}بازی‌ها - داشبورد GameBeat{% endblock %}
+{% block page_title %}مدیریت بازی‌ها{% endblock %}
+
+{% block content %}
+
+<!-- ─── Page Header ────────────────────────────────────────────── -->
+<div class="page-header">
+    <div>
+        <div class="page-title">بازی‌ها</div>
+        <div class="page-subtitle">افزودن، ویرایش و حذف بازی‌های پلتفرم</div>
+    </div>
+    <a href="{% url 'dashboard:game_add' %}" class="btn-purple" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:12px;text-decoration:none;font-size:0.9rem">
+        <i class="bi bi-plus-lg"></i>
+        افزودن بازی
+    </a>
+</div>
+
+<!-- ─── Filters ────────────────────────────────────────────────── -->
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:200px;max-width:360px">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="جستجوی نام بازی..." class="dash-input" style="padding-right:36px">
+        </div>
+
+        <div style="flex:1;min-width:180px;max-width:240px">
+            <select name="genre" class="dash-input" onchange="this.form.submit()" style="cursor:pointer">
+                <option value="">همه ژانرها</option>
+                {% for val, label in genre_choices %}
+                    <option value="{{ val }}" {% if genre == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn-ghost">
+            <i class="bi bi-funnel me-1"></i>اعمال
+        </button>
+        {% if q or genre %}
+        <a href="{% url 'dashboard:games' %}" class="btn-ghost" style="text-decoration:none">
+            <i class="bi bi-x me-1"></i>پاک کردن
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- ─── Games Grid ─────────────────────────────────────────────── -->
+{% if games %}
+<div class="row g-4">
+    {% for game in games %}
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="game-card" style="
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        ">
+            <!-- Cover Image -->
+            <div style="
+                height: 180px;
+                background: var(--bg-card2);
+                position: relative;
+                overflow: hidden;
+            ">
+                {% if game.cover %}
+                    <img src="{{ game.cover.url }}" alt="{{ game.name }}"
+                         style="width:100%;height:100%;object-fit:cover">
+                {% else %}
+                    <div style="
+                        width:100%;
+                        height:100%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        background: linear-gradient(135deg, var(--bg-card2), var(--bg-void));
+                    ">
+                        <i class="bi bi-controller" style="font-size:3.5rem;color:var(--text-faint)"></i>
+                    </div>
+                {% endif %}
+
+                {% if game.is_featured %}
+                <div style="
+                    position:absolute;
+                    top:10px;
+                    right:10px;
+                ">
+                    <span class="badge-featured"><i class="bi bi-star-fill me-1"></i>ویژه</span>
+                </div>
+                {% endif %}
+
+                <!-- Genre overlay -->
+                {% if game.genre %}
+                <div style="
+                    position:absolute;
+                    bottom:0;
+                    left:0;
+                    right:0;
+                    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+                    padding: 20px 12px 8px;
+                ">
+                    <span class="badge-genre">{{ game.get_genre_display }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-weight:700;font-size:0.95rem;color:var(--text-main);line-height:1.3">
+                    {{ game.name }}
+                </div>
+
+                {% if game.developer %}
+                <div style="font-size:0.78rem;color:var(--text-muted)">
+                    <i class="bi bi-building me-1"></i>{{ game.developer }}
+                </div>
+                {% endif %}
+
+                {% if game.release_year %}
+                <div style="font-size:0.78rem;color:var(--text-muted)">
+                    <i class="bi bi-calendar3 me-1"></i>{{ game.release_year }}
+                </div>
+                {% endif %}
+
+                <!-- Platforms -->
+                {% if game.platforms %}
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
+                    {% for plat in game.get_platform_labels %}
+                    <span style="
+                        font-size:0.68rem;
+                        padding:2px 8px;
+                        border-radius:12px;
+                        background:var(--bg-card2);
+                        border:1px solid var(--border);
+                        color:var(--text-muted);
+                        font-weight:600;
+                    ">{{ plat }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div style="
+                padding:10px 16px 14px;
+                border-top:1px solid var(--border);
+                display:flex;
+                gap:8px;
+                align-items:center;
+            ">
+                <a href="{% url 'dashboard:game_edit' game.pk %}" class="btn-edit-ghost" style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:0.8rem">
+                    <i class="bi bi-pencil me-1"></i>ویرایش
+                </a>
+                <form method="post" action="{% url 'dashboard:game_delete' game.pk %}" style="flex:1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger-ghost" style="width:100%;text-align:center;cursor:pointer"
+                            onclick="return confirm('بازی «{{ game.name }}» حذف شود؟')">
+                        <i class="bi bi-trash3 me-1"></i>حذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div style="
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 20px;
+    padding: 80px 20px;
+    text-align: center;
+">
+    <div style="
+        width:80px;
+        height:80px;
+        background:rgba(139,92,246,0.1);
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin:0 auto 20px;
+    ">
+        <i class="bi bi-joystick" style="font-size:2.5rem;color:var(--purple-light)"></i>
+    </div>
+    <div style="font-size:1.3rem;font-weight:700;color:var(--text-main);margin-bottom:8px">
+        {% if q or genre %}هیچ بازی‌ای یافت نشد{% else %}هنوز بازی‌ای اضافه نشده{% endif %}
+    </div>
+    <div style="font-size:0.875rem;color:var(--text-muted);margin-bottom:24px">
+        {% if q or genre %}
+            فیلترها را تغییر دهید یا جستجوی جدیدی انجام دهید
+        {% else %}
+            اولین بازی را به پایگاه داده GameBeat اضافه کنید
+        {% endif %}
+    </div>
+    {% if q or genre %}
+        <a href="{% url 'dashboard:games' %}" class="btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+            <i class="bi bi-x-circle"></i>پاک کردن فیلترها
+        </a>
+    {% else %}
+        <a href="{% url 'dashboard:game_add' %}" class="btn-purple" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:12px">
+            <i class="bi bi-plus-lg"></i>افزودن اولین بازی
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.game-card').forEach(function(card) {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = '0 12px 35px rgba(0,0,0,0.4)';
+            this.style.borderColor = 'var(--purple)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = '';
+            this.style.boxShadow = '';
+            this.style.borderColor = 'var(--border)';
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}داشبورد - GameBeat{% endblock %}
+{% block page_title %}داشبورد <span style="color:var(--text-faint);font-weight:400;font-size:0.9rem">/ خانه</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── Stat Cards ─────────────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card purple">
+            <div class="stat-card-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-card-value">{{ stats.total_users }}</div>
+            <div class="stat-card-label">کل کاربران</div>
+            <div class="stat-card-sub" style="color:var(--purple-light)">
+                <i class="bi bi-arrow-up-short"></i> +{{ stats.new_users_today }} امروز
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card green">
+            <div class="stat-card-icon"><i class="bi bi-file-post-fill"></i></div>
+            <div class="stat-card-value">{{ stats.total_posts }}</div>
+            <div class="stat-card-label">کل پست‌ها</div>
+            <div class="stat-card-sub" style="color:#34d399">
+                <i class="bi bi-collection"></i> {{ stats.posts_today }} پست امروز
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card blue">
+            <div class="stat-card-icon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="stat-card-value">{{ stats.total_comments }}</div>
+            <div class="stat-card-label">کامنت‌ها</div>
+            <div class="stat-card-sub" style="color:#60a5fa">
+                <i class="bi bi-hash"></i> {{ stats.total_hashtags }} هشتگ
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card orange">
+            <div class="stat-card-icon"><i class="bi bi-controller"></i></div>
+            <div class="stat-card-value">{{ stats.total_games }}</div>
+            <div class="stat-card-label">بازی‌ها</div>
+            <div class="stat-card-sub" style="color:#fcd34d">
+                <i class="bi bi-activity"></i> {{ stats.active_users }} کاربر فعال
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Chart + Top Hashtags ────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="dash-card" style="height:100%">
+            <div class="dash-card-title">
+                <i class="bi bi-bar-chart-fill" style="color:var(--purple-light)"></i>
+                آمار ۳۰ روز گذشته
+            </div>
+            <!-- Dual bar chart: purple=users, cyan=posts -->
+            <div id="dualChart" style="display:flex;align-items:flex-end;gap:3px;height:140px;padding-top:8px">
+                {% for i in chart_users %}
+                    <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%">
+                        <div class="chart-bar-user" data-val="{{ i }}" style="
+                            flex:1;
+                            background:linear-gradient(180deg,var(--purple-light),var(--purple-dark));
+                            border-radius:3px 3px 0 0;
+                            height:2px;
+                            opacity:0.85;
+                        "></div>
+                        <div class="chart-bar-post" data-idx="{{ forloop.counter0 }}" style="
+                            flex:1;
+                            background:linear-gradient(180deg,#06b6d4,#0891b2);
+                            border-radius:3px 3px 0 0;
+                            height:2px;
+                            opacity:0.85;
+                        "></div>
+                    </div>
+                {% endfor %}
+            </div>
+            <!-- Labels every 6 days -->
+            <div style="display:flex;justify-content:space-between;margin-top:6px;padding:0 2px">
+                {% for label in chart_labels %}
+                    {% if forloop.counter0|divisibleby:6 or forloop.last %}
+                        <span style="font-size:0.65rem;color:var(--text-faint)">{{ label }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Legend -->
+            <div style="display:flex;gap:16px;margin-top:10px">
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text-muted)">
+                    <div style="width:12px;height:12px;border-radius:3px;background:var(--purple-light)"></div>
+                    کاربران جدید
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text-muted)">
+                    <div style="width:12px;height:12px;border-radius:3px;background:#06b6d4"></div>
+                    پست‌های جدید
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dash-card" style="height:100%">
+            <div class="dash-card-title">
+                <i class="bi bi-hash" style="color:#fcd34d"></i>
+                هشتگ‌های برتر
+            </div>
+            {% if top_hashtags %}
+            <div style="display:flex;flex-direction:column;gap:12px">
+                {% for ht in top_hashtags %}
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                        <span style="font-size:0.82rem;color:var(--text-main);font-weight:600">#{{ ht.name }}</span>
+                        <span style="font-size:0.78rem;color:var(--text-faint)">{{ ht.post_count }}</span>
+                    </div>
+                    <div style="height:5px;background:var(--bg-card2);border-radius:3px;overflow:hidden">
+                        <div style="
+                            height:100%;
+                            border-radius:3px;
+                            background:linear-gradient(90deg,var(--purple),#06b6d4);
+                            width:{% if top_hashtags.0.post_count > 0 %}{% widthratio ht.post_count top_hashtags.0.post_count 100 %}%{% else %}0%{% endif %};
+                        "></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-faint)">
+                <i class="bi bi-hash" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                هنوز هشتگی ثبت نشده
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ─── Quick Stats Row ─────────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4 col-md-6">
+        <div class="dash-card">
+            <div class="dash-card-title"><i class="bi bi-graph-up-arrow" style="color:#34d399"></i> آمار کلی</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.85rem;color:var(--text-muted)">کاربران جدید (ماه)</span>
+                    <span style="font-weight:700;color:var(--purple-light)">{{ stats.new_users_month }}</span>
+                </div>
+                <div style="height:1px;background:var(--border)"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.85rem;color:var(--text-muted)">کاربران جدید (هفته)</span>
+                    <span style="font-weight:700;color:#34d399">{{ stats.new_users_week }}</span>
+                </div>
+                <div style="height:1px;background:var(--border)"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:0.85rem;color:var(--text-muted)">بک‌لاگ بازی</span>
+                    <span style="font-weight:700;color:#fcd34d">{{ stats.total_backlog }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Recent Tables ──────────────────────────────────────────── -->
+<div class="row g-4">
+    <!-- Recent Users -->
+    <div class="col-lg-6">
+        <div class="dash-card">
+            <div class="dash-card-title d-flex justify-content-between align-items-center" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <span><i class="bi bi-person-lines-fill" style="color:var(--purple-light)"></i> آخرین کاربران</span>
+                <a href="{% url 'dashboard:users' %}" style="font-size:0.78rem;color:var(--purple-light);text-decoration:none">مشاهده همه <i class="bi bi-arrow-left-short"></i></a>
+            </div>
+            <div style="margin-top:12px">
+                {% if recent_users %}
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>کاربر</th>
+                            <th>تاریخ عضویت</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in recent_users %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px">
+                                    <div class="avatar-sm">{{ u.username|slice:":1"|upper }}</div>
+                                    <div>
+                                        <div style="font-weight:600;font-size:0.85rem">{{ u.username }}</div>
+                                        <div style="font-size:0.75rem;color:var(--text-faint)">{{ u.email|default:"—" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-muted);font-size:0.8rem">{{ u.date_joined|date:"Y/m/d" }}</td>
+                            <td>
+                                {% if u.is_superuser %}
+                                    <span class="badge-admin">سوپر</span>
+                                {% elif u.is_staff %}
+                                    <span class="badge-admin">ادمین</span>
+                                {% elif u.is_active %}
+                                    <span class="badge-active">فعال</span>
+                                {% else %}
+                                    <span class="badge-banned">مسدود</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align:center;padding:30px;color:var(--text-faint)">
+                    <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                    هنوز کاربری ثبت نشده
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Posts -->
+    <div class="col-lg-6">
+        <div class="dash-card">
+            <div class="dash-card-title d-flex justify-content-between align-items-center" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <span><i class="bi bi-file-post-fill" style="color:#34d399"></i> آخرین پست‌ها</span>
+                <a href="{% url 'dashboard:posts' %}" style="font-size:0.78rem;color:#34d399;text-decoration:none">مشاهده همه <i class="bi bi-arrow-left-short"></i></a>
+            </div>
+            <div style="margin-top:12px">
+                {% if recent_posts %}
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>محتوا</th>
+                            <th>نویسنده</th>
+                            <th>لایک</th>
+                            <th>تاریخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in recent_posts %}
+                        <tr>
+                            <td>
+                                <div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.85rem">
+                                    {{ post.content|truncatechars:50 }}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <div class="avatar-sm" style="width:28px;height:28px;font-size:0.72rem">{{ post.author.username|slice:":1"|upper }}</div>
+                                    <span style="font-size:0.82rem">{{ post.author.username }}</span>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-muted);font-size:0.8rem">{{ post.likes_count }}</td>
+                            <td style="color:var(--text-muted);font-size:0.8rem">{{ post.created_at|date:"Y/m/d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align:center;padding:30px;color:var(--text-faint)">
+                    <i class="bi bi-chat-square" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                    هنوز پستی ثبت نشده
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var userVals = [{% for v in chart_users %}{{ v }},{% endfor %}];
+    var postVals = [{% for v in chart_posts %}{{ v }},{% endfor %}];
+    var maxVal = Math.max.apply(null, userVals.concat(postVals).concat([1]));
+
+    document.querySelectorAll('.chart-bar-user').forEach(function(bar, i) {
+        var pct = Math.max((userVals[i] / maxVal) * 100, 2);
+        bar.style.height = pct + '%';
+    });
+    document.querySelectorAll('.chart-bar-post').forEach(function(bar) {
+        var idx = parseInt(bar.getAttribute('data-idx'), 10);
+        var pct = Math.max((postVals[idx] / maxVal) * 100, 2);
+        bar.style.height = pct + '%';
+    });
+});
+</script>
+{% endblock %}

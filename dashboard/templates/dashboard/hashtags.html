@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}هشتگ‌ها - داشبورد GameBeat{% endblock %}
+{% block page_title %}مدیریت هشتگ‌ها{% endblock %}
+
+{% block content %}
+
+<!-- ─── Page Header ────────────────────────────────────────────── -->
+<div class="page-header">
+    <div>
+        <div class="page-title">هشتگ‌ها</div>
+        <div class="page-subtitle">مشاهده و حذف هشتگ‌های پلتفرم</div>
+    </div>
+</div>
+
+<!-- ─── Search ─────────────────────────────────────────────────── -->
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:200px;max-width:400px">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="جستجوی نام هشتگ..."
+                   class="dash-input" style="padding-right:36px">
+        </div>
+        <button type="submit" class="btn-ghost" style="flex-shrink:0">
+            <i class="bi bi-funnel me-1"></i>اعمال
+        </button>
+        {% if q %}
+        <a href="{% url 'dashboard:hashtags' %}" class="btn-ghost" style="text-decoration:none">
+            <i class="bi bi-x me-1"></i>پاک کردن
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- ─── Hashtag Cards Grid ─────────────────────────────────────── -->
+{% if hashtags %}
+<div class="row g-3">
+    {% for ht in hashtags %}
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div style="
+            background:var(--bg-card);
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:20px 18px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            transition:transform 0.2s,border-color 0.2s;
+            height:100%;
+        " onmouseenter="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(139,92,246,0.4)'"
+           onmouseleave="this.style.transform='';this.style.borderColor='var(--border)'">
+
+            <!-- Hash name -->
+            <div style="font-size:1.1rem;font-weight:800;color:var(--purple-light)">
+                #{{ ht.name }}
+            </div>
+
+            <!-- Post count big number -->
+            <div>
+                <div style="font-size:2rem;font-weight:800;color:var(--text-main);line-height:1">
+                    {{ ht.post_count }}
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-faint);margin-top:2px">پست</div>
+            </div>
+
+            <!-- Date -->
+            <div style="font-size:0.78rem;color:var(--text-faint)">
+                <i class="bi bi-calendar3 me-1"></i>{{ ht.created_at|date:"Y/m/d" }}
+            </div>
+
+            <!-- Usage bar -->
+            <div>
+                <div style="height:4px;background:var(--bg-card2);border-radius:2px;overflow:hidden">
+                    <div style="
+                        height:100%;
+                        border-radius:2px;
+                        background:linear-gradient(90deg,var(--purple),#06b6d4);
+                        width:{% if hashtags.0.post_count > 0 %}{% widthratio ht.post_count hashtags.0.post_count 100 %}%{% else %}5%{% endif %};
+                        min-width:5%;
+                    "></div>
+                </div>
+            </div>
+
+            <!-- Delete button -->
+            <div style="margin-top:auto">
+                <form method="post" action="{% url 'dashboard:hashtag_delete' ht.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger-ghost" style="width:100%;text-align:center;cursor:pointer"
+                            onclick="return confirm('#{{ ht.name }} حذف شود؟')">
+                        <i class="bi bi-trash3 me-1"></i>حذف هشتگ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="
+    background:var(--bg-card);
+    border:1px dashed var(--border);
+    border-radius:20px;
+    padding:80px 20px;
+    text-align:center;
+">
+    <div style="
+        width:80px;
+        height:80px;
+        background:rgba(139,92,246,0.1);
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin:0 auto 20px;
+    ">
+        <i class="bi bi-hash" style="font-size:2.5rem;color:var(--purple-light)"></i>
+    </div>
+    <div style="font-size:1.3rem;font-weight:700;color:var(--text-main);margin-bottom:8px">
+        {% if q %}هیچ هشتگی با این نام یافت نشد{% else %}هنوز هشتگی ثبت نشده{% endif %}
+    </div>
+    {% if q %}
+    <a href="{% url 'dashboard:hashtags' %}" class="btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-top:16px">
+        <i class="bi bi-x-circle"></i>پاک کردن جستجو
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

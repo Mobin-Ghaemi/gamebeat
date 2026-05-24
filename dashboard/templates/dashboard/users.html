@@ -1,0 +1,192 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}کاربران - داشبورد GameBeat{% endblock %}
+{% block page_title %}مدیریت کاربران{% endblock %}
+
+{% block content %}
+
+<!-- ─── Page Header ────────────────────────────────────────────── -->
+<div class="page-header">
+    <div>
+        <div class="page-title">کاربران</div>
+        <div class="page-subtitle">مدیریت، جستجو و فیلتر کاربران سایت</div>
+    </div>
+</div>
+
+<!-- ─── Filters ────────────────────────────────────────────────── -->
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:200px;max-width:360px">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="جستجوی نام کاربری یا ایمیل..."
+                   class="dash-input" style="padding-right:36px">
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter=all"
+               style="padding:8px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == 'all' or not filter_type %}background:var(--purple);color:white;box-shadow:0 4px 12px var(--purple-glow)
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                همه
+            </a>
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter=active"
+               style="padding:8px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == 'active' %}background:var(--success);color:white
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                <i class="bi bi-check-circle me-1"></i>فعال
+            </a>
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter=banned"
+               style="padding:8px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == 'banned' %}background:var(--danger);color:white
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                <i class="bi bi-slash-circle me-1"></i>مسدود
+            </a>
+            <a href="?{% if q %}q={{ q }}&{% endif %}filter=staff"
+               style="padding:8px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;
+                      {% if filter_type == 'staff' %}background:var(--purple);color:white;box-shadow:0 4px 12px var(--purple-glow)
+                      {% else %}background:var(--bg-card2);color:var(--text-muted);border:1px solid var(--border){% endif %}">
+                <i class="bi bi-shield-check me-1"></i>ادمین
+            </a>
+        </div>
+
+        <button type="submit" class="btn-ghost" style="flex-shrink:0">
+            <i class="bi bi-funnel me-1"></i>اعمال
+        </button>
+    </form>
+</div>
+
+<!-- ─── Users Table ────────────────────────────────────────────── -->
+<div class="dash-card">
+    <div class="dash-card-title" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <i class="bi bi-people" style="color:var(--purple-light)"></i>
+        لیست کاربران
+        <span style="font-size:0.78rem;color:var(--text-faint);font-weight:400;margin-right:6px">({{ page_obj.paginator.count }} مورد)</span>
+    </div>
+    <div style="overflow-x:auto;margin-top:4px">
+        {% if page_obj %}
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>کاربر</th>
+                    <th>ایمیل</th>
+                    <th>تاریخ عضویت</th>
+                    <th>آخرین ورود</th>
+                    <th>پست‌ها</th>
+                    <th>وضعیت</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in page_obj %}
+                <tr>
+                    <td style="color:var(--text-faint);font-size:0.78rem">
+                        {{ page_obj.start_index|add:forloop.counter0 }}
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            {% with colors="#8b5cf6,#10b981,#3b82f6,#f59e0b,#ef4444,#06b6d4" %}
+                            <div class="avatar-sm" style="background:{% cycle '#8b5cf6' '#10b981' '#3b82f6' '#f59e0b' '#ef4444' '#06b6d4' %}">
+                                {{ u.username|slice:":1"|upper }}
+                            </div>
+                            {% endwith %}
+                            <div>
+                                <div style="font-weight:600;font-size:0.875rem">{{ u.username }}</div>
+                                {% if u.is_superuser %}
+                                    <div style="font-size:0.72rem;color:var(--purple-light)">سوپر ادمین</div>
+                                {% elif u.is_staff %}
+                                    <div style="font-size:0.72rem;color:var(--purple-light)">ادمین</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.82rem">{{ u.email|default:"—" }}</td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap">{{ u.date_joined|date:"Y/m/d" }}</td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap">
+                        {% if u.last_login %}{{ u.last_login|date:"Y/m/d" }}{% else %}<span style="color:var(--text-faint)">هرگز</span>{% endif %}
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.82rem">
+                        {% if u.post_count is not None %}{{ u.post_count }}{% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_superuser %}
+                            <span class="badge-admin"><i class="bi bi-shield-fill me-1"></i>سوپر</span>
+                        {% elif u.is_staff %}
+                            <span class="badge-admin"><i class="bi bi-shield-check me-1"></i>ادمین</span>
+                        {% elif u.is_active %}
+                            <span class="badge-active"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>فعال</span>
+                        {% else %}
+                            <span class="badge-banned"><i class="bi bi-slash-circle me-1"></i>مسدود</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                            <a href="{% url 'dashboard:user_detail' u.pk %}" class="btn-ghost"
+                               style="padding:5px 10px;text-decoration:none;font-size:0.8rem;display:inline-flex;align-items:center;gap:4px">
+                                <i class="bi bi-eye"></i> جزئیات
+                            </a>
+                            {% if u != request.user and not u.is_superuser %}
+                            <form method="post" action="{% url 'dashboard:user_ban' u.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                {% if u.is_active %}
+                                    <button type="submit" class="btn-danger-ghost"
+                                            onclick="return confirm('این کاربر مسدود شود؟')">
+                                        <i class="bi bi-slash-circle"></i>
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn-success-ghost">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid var(--border)">
+            <div style="font-size:0.8rem;color:var(--text-faint)">
+                نمایش {{ page_obj.start_index }}–{{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+            </div>
+            <div style="display:flex;gap:6px">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_type %}filter={{ filter_type }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+                <span style="padding:5px 12px;background:var(--purple);color:white;border-radius:8px;font-size:0.82rem;font-weight:600">
+                    {{ page_obj.number }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_type %}filter={{ filter_type }}&{% endif %}page={{ page_obj.next_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div style="text-align:center;padding:60px 20px">
+            <i class="bi bi-people" style="font-size:3rem;color:var(--text-faint);display:block;margin-bottom:12px"></i>
+            <div style="font-size:1.1rem;font-weight:600;color:var(--text-muted);margin-bottom:6px">کاربری یافت نشد</div>
+            <div style="font-size:0.85rem;color:var(--text-faint)">فیلترها را تغییر دهید یا جستجو را پاک کنید</div>
+            {% if q or filter_type %}
+            <a href="{% url 'dashboard:users' %}" class="btn-ghost d-inline-block mt-4" style="font-size:0.85rem;text-decoration:none">
+                <i class="bi bi-x-circle me-1"></i>پاک کردن فیلترها
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

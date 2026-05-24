@@ -1,0 +1,169 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}کامنت‌ها - داشبورد GameBeat{% endblock %}
+{% block page_title %}مدیریت کامنت‌ها{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">کامنت‌ها</div>
+        <div class="page-subtitle">مشاهده، جستجو و حذف کامنت‌های کاربران</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:200px;max-width:400px">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="جستجو در محتوا یا نویسنده..."
+                   class="dash-input" style="padding-right:36px">
+        </div>
+        <button type="submit" class="btn-ghost">
+            <i class="bi bi-funnel me-1"></i>جستجو
+        </button>
+        {% if q %}
+        <a href="{% url 'dashboard:comments' %}" class="btn-ghost" style="text-decoration:none">
+            <i class="bi bi-x-circle me-1"></i>پاک
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Bulk Delete Bar -->
+<div id="bulkBar" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:12px">
+    <span id="selectedCount" style="font-size:0.85rem;color:#f87171;font-weight:600"></span>
+    <button type="submit" form="bulkForm" class="btn-danger-ghost" onclick="return confirm('کامنت‌های انتخابی حذف شوند؟')">
+        <i class="bi bi-trash3 me-1"></i>حذف انتخابی
+    </button>
+</div>
+
+<!-- Comments Table -->
+<form id="bulkForm" method="post" action="{% url 'dashboard:comment_bulk_delete' %}">
+{% csrf_token %}
+<div class="dash-card">
+    <div class="dash-card-title" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <i class="bi bi-chat-dots-fill" style="color:#60a5fa"></i>
+        لیست کامنت‌ها
+        <span style="font-size:0.78rem;color:var(--text-faint);font-weight:400;margin-right:6px">({{ page_obj.paginator.count }} مورد)</span>
+    </div>
+    <div style="overflow-x:auto;margin-top:4px">
+        {% if page_obj %}
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th style="width:40px">
+                        <input type="checkbox" id="selectAll" style="accent-color:var(--purple);width:16px;height:16px;cursor:pointer">
+                    </th>
+                    <th>#</th>
+                    <th>نویسنده</th>
+                    <th>محتوا</th>
+                    <th>روی پست</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in page_obj %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="ids" value="{{ comment.pk }}" class="row-check"
+                               style="accent-color:var(--purple);width:16px;height:16px;cursor:pointer">
+                    </td>
+                    <td style="color:var(--text-faint);font-size:0.78rem">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div class="avatar-sm" style="width:30px;height:30px;font-size:0.78rem">
+                                {{ comment.author.username|slice:":1"|upper }}
+                            </div>
+                            <a href="{% url 'dashboard:user_detail' comment.author.pk %}"
+                               style="font-size:0.85rem;font-weight:500;color:var(--text-main);text-decoration:none">
+                                {{ comment.author.username }}
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.85rem;color:var(--text-muted)">
+                            {{ comment.content|truncatechars:80 }}
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'dashboard:post_detail' comment.post.pk %}"
+                           style="font-size:0.78rem;color:var(--purple-light);text-decoration:none;display:flex;align-items:center;gap:4px">
+                            <i class="bi bi-file-post"></i> پست #{{ comment.post.pk }}
+                        </a>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ comment.created_at|date:"Y/m/d" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'dashboard:comment_delete' comment.pk %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-danger-ghost" style="padding:4px 9px"
+                                    onclick="return confirm('این کامنت حذف شود؟')">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_obj.has_other_pages %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid var(--border)">
+            <div style="font-size:0.8rem;color:var(--text-faint)">
+                نمایش {{ page_obj.start_index }}–{{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+            </div>
+            <div style="display:flex;gap:6px">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+                <span style="padding:5px 12px;background:var(--purple);color:white;border-radius:8px;font-size:0.82rem;font-weight:600">
+                    {{ page_obj.number }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
+                       class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div style="text-align:center;padding:60px 20px">
+            <i class="bi bi-chat-square" style="font-size:3rem;color:var(--text-faint);display:block;margin-bottom:12px"></i>
+            <div style="font-size:1.1rem;font-weight:600;color:var(--text-muted)">کامنتی یافت نشد</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const selectAll = document.getElementById('selectAll');
+const checks = document.querySelectorAll('.row-check');
+const bulkBar = document.getElementById('bulkBar');
+const countSpan = document.getElementById('selectedCount');
+function updateBulk() {
+    const cnt = document.querySelectorAll('.row-check:checked').length;
+    bulkBar.style.display = cnt > 0 ? 'flex' : 'none';
+    countSpan.textContent = cnt + ' کامنت انتخاب شده';
+}
+if (selectAll) {
+    selectAll.addEventListener('change', function () {
+        checks.forEach(c => c.checked = this.checked);
+        updateBulk();
+    });
+}
+checks.forEach(c => c.addEventListener('change', updateBulk));
+</script>
+{% endblock %}

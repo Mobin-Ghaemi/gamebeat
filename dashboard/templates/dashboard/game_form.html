@@ -1,0 +1,343 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{% if action == 'add' %}افزودن بازی{% else %}ویرایش بازی{% endif %} - داشبورد GameBeat{% endblock %}
+{% block page_title %}{% if action == 'add' %}افزودن بازی{% else %}ویرایش «{{ game.name }}»{% endif %}{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:0.85rem;color:var(--text-muted)">
+    <a href="{% url 'dashboard:games' %}" style="color:var(--purple-light);text-decoration:none">بازی‌ها</a>
+    <i class="bi bi-chevron-left" style="font-size:0.7rem"></i>
+    <span>{% if action == 'add' %}افزودن بازی جدید{% else %}ویرایش{% endif %}</span>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row g-4">
+
+        <!-- ─── Left: Main Fields ────────────────────────────── -->
+        <div class="col-lg-8">
+
+            <!-- Basic Info Card -->
+            <div class="dash-card mb-4">
+                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                    <i class="bi bi-controller" style="color:var(--purple-light)"></i>
+                    اطلاعات اصلی
+                </div>
+                <div style="padding-top:16px;display:flex;flex-direction:column;gap:18px">
+
+                    <!-- Name -->
+                    <div>
+                        <label class="dash-label">نام بازی <span style="color:var(--danger)">*</span></label>
+                        <input type="text" name="name" value="{% if game %}{{ game.name }}{% endif %}"
+                               class="dash-input" placeholder="مثال: The Witcher 3" required>
+                    </div>
+
+                    <!-- Genre -->
+                    <div>
+                        <label class="dash-label">ژانر</label>
+                        <select name="genre" class="dash-input" style="cursor:pointer">
+                            <option value="">انتخاب ژانر...</option>
+                            {% for val, label in genre_choices %}
+                                <option value="{{ val }}" {% if game and game.genre == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Developer + Publisher -->
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="dash-label">سازنده</label>
+                            <input type="text" name="developer" value="{% if game %}{{ game.developer }}{% endif %}"
+                                   class="dash-input" placeholder="مثال: CD Projekt Red">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="dash-label">ناشر</label>
+                            <input type="text" name="publisher" value="{% if game %}{{ game.publisher }}{% endif %}"
+                                   class="dash-input" placeholder="مثال: Bandai Namco">
+                        </div>
+                    </div>
+
+                    <!-- Release Year -->
+                    <div>
+                        <label class="dash-label">سال انتشار</label>
+                        <input type="number" name="release_year" value="{% if game %}{{ game.release_year }}{% endif %}"
+                               class="dash-input" placeholder="مثال: 2023" min="1970" max="2030"
+                               style="max-width:180px">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="dash-label">توضیحات</label>
+                        <textarea name="description" class="dash-input" rows="4"
+                                  placeholder="توضیحات کوتاه درباره بازی...">{% if game %}{{ game.description }}{% endif %}</textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Platforms Card -->
+            <div class="dash-card">
+                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                    <i class="bi bi-display" style="color:#60a5fa"></i>
+                    پلتفرم‌ها
+                </div>
+                <div style="padding-top:16px;display:flex;flex-wrap:wrap;gap:10px">
+                    {% for val, label in platform_choices %}
+                    <label style="
+                        display:flex;
+                        align-items:center;
+                        gap:8px;
+                        padding:10px 16px;
+                        border-radius:10px;
+                        border:1px solid var(--border);
+                        background:var(--bg-card2);
+                        cursor:pointer;
+                        transition:all 0.2s;
+                        font-size:0.875rem;
+                        color:var(--text-muted);
+                        user-select:none;
+                    " class="platform-label">
+                        <input type="checkbox" name="platforms" value="{{ val }}"
+                               {% if game and val in game.platforms %}checked{% endif %}
+                               style="display:none"
+                               class="platform-check">
+                        <span class="platform-check-icon" style="
+                            width:18px;
+                            height:18px;
+                            border-radius:5px;
+                            border:2px solid var(--border);
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            flex-shrink:0;
+                            transition:all 0.2s;
+                            font-size:0.7rem;
+                        "></span>
+                        {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ─── Right: Cover + Settings ─────────────────────── -->
+        <div class="col-lg-4">
+
+            <!-- Cover Upload Card -->
+            <div class="dash-card mb-4">
+                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                    <i class="bi bi-image" style="color:#f472b6"></i>
+                    تصویر کاور
+                </div>
+                <div style="padding-top:16px">
+
+                    <!-- Preview Area -->
+                    <div id="coverPreviewWrap" style="
+                        width:100%;
+                        aspect-ratio:3/4;
+                        max-height:300px;
+                        border-radius:12px;
+                        border:2px dashed var(--border);
+                        overflow:hidden;
+                        background:var(--bg-card2);
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        cursor:pointer;
+                        transition:border-color 0.2s;
+                        position:relative;
+                        margin-bottom:12px;
+                    " onclick="document.getElementById('coverInput').click()">
+                        {% if game and game.cover %}
+                            <img id="coverPreview" src="{{ game.cover.url }}" alt="cover"
+                                 style="width:100%;height:100%;object-fit:cover">
+                        {% else %}
+                            <div id="coverPlaceholder" style="text-align:center;padding:20px">
+                                <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:var(--text-faint);display:block;margin-bottom:8px"></i>
+                                <div style="font-size:0.8rem;color:var(--text-faint)">کلیک کنید تا تصویر انتخاب شود</div>
+                            </div>
+                            <img id="coverPreview" src="" alt="cover"
+                                 style="width:100%;height:100%;object-fit:cover;display:none">
+                        {% endif %}
+                    </div>
+
+                    <input type="file" name="cover" id="coverInput" accept="image/*"
+                           style="display:none" onchange="previewCover(this)">
+
+                    <button type="button" class="btn-ghost" style="width:100%;font-size:0.85rem"
+                            onclick="document.getElementById('coverInput').click()">
+                        <i class="bi bi-upload me-1"></i>انتخاب تصویر
+                    </button>
+                    <div style="font-size:0.72rem;color:var(--text-faint);text-align:center;margin-top:6px">
+                        فرمت‌های مجاز: JPG, PNG, WebP
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Settings Card -->
+            <div class="dash-card">
+                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                    <i class="bi bi-gear" style="color:var(--warning)"></i>
+                    تنظیمات
+                </div>
+                <div style="padding-top:16px">
+
+                    <!-- Featured Toggle -->
+                    <label style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        cursor:pointer;
+                        padding:12px 16px;
+                        border-radius:10px;
+                        background:var(--bg-card2);
+                        border:1px solid var(--border);
+                    ">
+                        <div>
+                            <div style="font-size:0.875rem;font-weight:600;color:var(--text-main)">بازی ویژه</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">
+                                در بخش ویژه نمایش داده می‌شود
+                            </div>
+                        </div>
+                        <div style="position:relative">
+                            <input type="checkbox" name="is_featured" id="featuredToggle"
+                                   {% if game and game.is_featured %}checked{% endif %}
+                                   style="display:none" onchange="updateToggle(this)">
+                            <div id="toggleTrack" onclick="document.getElementById('featuredToggle').click()" style="
+                                width:46px;
+                                height:26px;
+                                border-radius:13px;
+                                background:{% if game and game.is_featured %}var(--purple){% else %}var(--border){% endif %};
+                                position:relative;
+                                cursor:pointer;
+                                transition:background 0.2s;
+                                box-shadow:{% if game and game.is_featured %}0 0 10px var(--purple-glow){% else %}none{% endif %};
+                            ">
+                                <div id="toggleThumb" style="
+                                    width:20px;
+                                    height:20px;
+                                    border-radius:50%;
+                                    background:white;
+                                    position:absolute;
+                                    top:3px;
+                                    transition:transform 0.2s;
+                                    transform:{% if game and game.is_featured %}translateX(-22px){% else %}translateX(-3px){% endif %};
+                                "></div>
+                            </div>
+                        </div>
+                    </label>
+
+                </div>
+
+                <!-- Submit Buttons -->
+                <div style="display:flex;gap:10px;margin-top:20px">
+                    <button type="submit" class="btn-purple" style="flex:1;padding:11px 0;text-align:center;border-radius:10px;font-size:0.9rem;cursor:pointer">
+                        <i class="bi {% if action == 'add' %}bi-plus-circle{% else %}bi-check-circle{% endif %} me-1"></i>
+                        {% if action == 'add' %}افزودن بازی{% else %}ذخیره تغییرات{% endif %}
+                    </button>
+                    <a href="{% url 'dashboard:games' %}" class="btn-ghost" style="padding:11px 16px;text-decoration:none;text-align:center;border-radius:10px;font-size:0.9rem">
+                        انصراف
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cover image preview
+function previewCover(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('coverPreview');
+            const placeholder = document.getElementById('coverPlaceholder');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Featured toggle visual update
+function updateToggle(checkbox) {
+    const track = document.getElementById('toggleTrack');
+    const thumb = document.getElementById('toggleThumb');
+    if (checkbox.checked) {
+        track.style.background = 'var(--purple)';
+        track.style.boxShadow = '0 0 10px var(--purple-glow)';
+        thumb.style.transform = 'translateX(-22px)';
+    } else {
+        track.style.background = 'var(--border)';
+        track.style.boxShadow = 'none';
+        thumb.style.transform = 'translateX(-3px)';
+    }
+}
+
+// Platform checkbox styling
+document.querySelectorAll('.platform-label').forEach(function(label) {
+    const checkbox = label.querySelector('.platform-check');
+    const icon = label.querySelector('.platform-check-icon');
+
+    function syncStyle() {
+        if (checkbox.checked) {
+            label.style.background = 'rgba(139,92,246,0.15)';
+            label.style.borderColor = 'var(--purple)';
+            label.style.color = 'var(--purple-light)';
+            icon.style.background = 'var(--purple)';
+            icon.style.borderColor = 'var(--purple)';
+            icon.innerHTML = '<i class="bi bi-check" style="color:white;font-size:0.65rem"></i>';
+        } else {
+            label.style.background = 'var(--bg-card2)';
+            label.style.borderColor = 'var(--border)';
+            label.style.color = 'var(--text-muted)';
+            icon.style.background = '';
+            icon.style.borderColor = 'var(--border)';
+            icon.innerHTML = '';
+        }
+    }
+
+    syncStyle(); // init
+    label.addEventListener('click', function() {
+        checkbox.checked = !checkbox.checked;
+        syncStyle();
+    });
+});
+
+// Cover drag & drop
+const coverWrap = document.getElementById('coverPreviewWrap');
+coverWrap.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.style.borderColor = 'var(--purple)';
+    this.style.background = 'rgba(139,92,246,0.05)';
+});
+coverWrap.addEventListener('dragleave', function() {
+    this.style.borderColor = 'var(--border)';
+    this.style.background = 'var(--bg-card2)';
+});
+coverWrap.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = 'var(--border)';
+    this.style.background = 'var(--bg-card2)';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const input = document.getElementById('coverInput');
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+        previewCover(input);
+    }
+});
+</script>
+{% endblock %}

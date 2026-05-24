@@ -142,6 +142,10 @@ class Follow(models.Model):
         unique_together = ('follower', 'following')
         verbose_name = 'دنبال کردن'
         verbose_name_plural = 'دنبال کردن‌ها'
+        indexes = [
+            models.Index(fields=['follower']),
+            models.Index(fields=['following']),
+        ]
 
     def __str__(self):
         return f'{self.follower.username} → {self.following.username}'
@@ -188,6 +192,11 @@ class Post(models.Model):
         verbose_name = 'پست'
         verbose_name_plural = 'پست‌ها'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['author', '-created_at']),
+            models.Index(fields=['is_public', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f'{self.author.username}: {self.content[:50]}'
@@ -349,6 +358,11 @@ class GameBacklog(models.Model):
         verbose_name_plural = 'بک‌لاگ‌ها'
         ordering = ['-updated_at']
         unique_together = ('user', 'game_name')
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['user', 'is_favorite']),
+            models.Index(fields=['user', '-updated_at']),
+        ]
 
     def __str__(self):
         return f'{self.user.username} – {self.game_name} [{self.status}]'
