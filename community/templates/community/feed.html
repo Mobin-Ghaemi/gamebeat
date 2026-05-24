@@ -391,6 +391,17 @@
     <!-- CENTER: Posts Feed -->
     <main>
 
+        {% if is_discover %}
+        <!-- Discover Banner -->
+        <div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(168,85,247,0.06)); border:1px solid rgba(139,92,246,0.25); border-radius:16px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
+            <span style="font-size:1.8rem;">🔭</span>
+            <div>
+                <div style="font-weight:800; font-size:0.95rem; color:var(--text-white); margin-bottom:3px;">حالت کشف — محبوب‌ترین گیمرها</div>
+                <div style="font-size:0.82rem; color:var(--text-muted);">هنوز کسی رو دنبال نکردی. اینا پست‌های گیمرهای پرطرفداره — دنبالشون کن تا فید شخصی ببینی!</div>
+            </div>
+        </div>
+        {% endif %}
+
         {% if posts %}
             {% for post in posts %}
             <div class="post-card t-{{ post.post_type }}">
@@ -413,11 +424,20 @@
                             </div>
                         </div>
                     </a>
-                    {% if post.post_type == 'achievement' %}
-                        <span class="post-type-badge ptb-achievement"><i class="bi bi-trophy-fill"></i> دستاورد</span>
-                    {% elif post.post_type == 'highlight' %}
-                        <span class="post-type-badge ptb-highlight"><i class="bi bi-lightning-fill"></i> هایلایت</span>
-                    {% endif %}
+                    <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
+                        {% if post.post_type == 'achievement' %}
+                            <span class="post-type-badge ptb-achievement"><i class="bi bi-trophy-fill"></i> دستاورد</span>
+                        {% elif post.post_type == 'highlight' %}
+                            <span class="post-type-badge ptb-highlight"><i class="bi bi-lightning-fill"></i> هایلایت</span>
+                        {% endif %}
+                        {% if is_discover and user.is_authenticated %}
+                        <button class="follow-btn" id="fbtn-{{ post.author.id }}"
+                            data-username="{{ post.author.username }}"
+                            onclick="followUser('{{ post.author.username }}', this)">
+                            <i class="bi bi-person-plus-fill"></i> دنبال کردن
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="post-body">
@@ -647,8 +667,20 @@ function followUser(username, btn) {
     fetch(`/community/follow/${username}/`, {
         method:'POST', headers:{'X-CSRFToken':csrfToken}
     }).then(r=>r.json()).then(data=>{
-        btn.textContent = data.following ? '✓ دنبال' : 'دنبال';
-        btn.classList.toggle('following', data.following);
+        if (data.following) {
+            btn.innerHTML = '<i class="bi bi-check2"></i> دنبال می‌کنی';
+            btn.classList.add('following');
+            // Also update ALL follow buttons for this user on the page
+            document.querySelectorAll(`[id^="fbtn-"]`).forEach(b => {
+                if (b.dataset.username === username) {
+                    b.innerHTML = '<i class="bi bi-check2"></i> دنبال می‌کنی';
+                    b.classList.add('following');
+                }
+            });
+        } else {
+            btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> دنبال کردن';
+            btn.classList.remove('following');
+        }
     });
 }
 

@@ -33,3 +33,4 @@ staticfiles/
 # Tests
 .coverage
 htmlcov/
+.pyc_patched

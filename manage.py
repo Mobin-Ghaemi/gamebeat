@@ -2,7 +2,7 @@
 """
 GameBeat manage.py
 Auto-patches .pyc files to unchecked_hash mode before Django starts.
-This fixes the macOS com.apple.provenance AMFI timeout issue (Iran + Apple servers blocked).
+Fixes macOS com.apple.provenance AMFI timeout (Apple servers blocked in Iran).
 """
 import os
 import sys
@@ -10,15 +10,25 @@ import sys
 
 def _patch_pyc_files():
     """
-    Convert all timestamp-based .pyc files to unchecked_hash mode.
-    In unchecked_hash mode Python loads bytecode WITHOUT reading the source .py file,
-    which bypasses the macOS AMFI security check that times out in Iran.
-    Only runs on macOS (darwin). Silent on all other platforms.
+    Patch .pyc files once per hour — result cached in .pyc_patched timestamp.
+    On macOS only. Silent everywhere else.
     """
     if sys.platform != "darwin":
         return
 
     import struct
+    import time
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    stamp_file = os.path.join(base_dir, ".pyc_patched")
+
+    # Skip if patched within the last hour
+    try:
+        if time.time() - os.path.getmtime(stamp_file) < 3600:
+            return
+    except OSError:
+        pass
+
     try:
         import importlib.util
         MAGIC = importlib.util.MAGIC_NUMBER
@@ -33,7 +43,7 @@ def _patch_pyc_files():
                 return
             flags = struct.unpack("<I", data[4:8])[0]
             if flags == 1:
-                return  # already unchecked_hash
+                return
             if flags == 3:
                 new_data = data[:4] + struct.pack("<I", 1) + data[8:]
             elif flags == 0:
@@ -46,17 +56,14 @@ def _patch_pyc_files():
             pass
 
     import site
-
-    # Collect all search paths: venv + system site-packages + project dir
     search_paths = []
 
-    # venv site-packages (highest priority)
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # .venv / venv / env inside project
     for venv_name in (".venv", "venv", "env"):
-        venv_path = os.path.join(base_dir, venv_name, "lib")
-        if os.path.isdir(venv_path):
-            for entry in os.listdir(venv_path):
-                sp = os.path.join(venv_path, entry, "site-packages")
+        venv_lib = os.path.join(base_dir, venv_name, "lib")
+        if os.path.isdir(venv_lib):
+            for entry in os.listdir(venv_lib):
+                sp = os.path.join(venv_lib, entry, "site-packages")
                 if os.path.isdir(sp):
                     search_paths.append(sp)
 
@@ -66,17 +73,25 @@ def _patch_pyc_files():
     except AttributeError:
         pass
 
-    # project directory itself
+    # project directory
     search_paths.append(base_dir)
 
     for base in search_paths:
         for root, dirs, files in os.walk(base):
-            dirs[:] = [d for d in dirs if d not in {".venv", "venv", "env", ".git", "staticfiles"}]
+            dirs[:] = [d for d in dirs
+                       if d not in {".venv", "venv", "env", ".git", "staticfiles", "media"}]
             if "__pycache__" not in root:
                 continue
             for f in files:
                 if f.endswith(".pyc"):
                     _patch(os.path.join(root, f))
+
+    # Write timestamp so next startup skips this
+    try:
+        with open(stamp_file, "w") as f:
+            f.write(str(time.time()))
+    except OSError:
+        pass
 
 
 # ── Patch BEFORE any Django import ──────────────────────────────────────────
@@ -89,7 +104,7 @@ def main():
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
-            "Couldn't import Django. Are you sure it's installed and "
+            "Couldn\'t import Django. Are you sure it\'s installed and "
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc

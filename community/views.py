@@ -87,12 +87,31 @@ def feed(request):
         })
 
     my_profile = get_or_create_gamer_profile(request.user)
-    following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+    following_ids = list(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
 
     posts = list(Post.objects.filter(
         Q(author__in=following_ids) | Q(author=request.user),
         is_public=True
     ).select_related('author', 'author__gamer_profile').prefetch_related('likes', 'comments', 'reactions').order_by('-created_at')[:50])
+
+    # ── Discover mode: no follows yet → show popular posts ──────────────────
+    is_discover = len(posts) == 0 and len(following_ids) == 0
+    if is_discover:
+        # Top users by follower count (excluding self)
+        popular_users = User.objects.exclude(
+            id=request.user.id
+        ).filter(
+            gamer_profile__isnull=False
+        ).annotate(
+            fc=Count('followers_set')
+        ).order_by('-fc')[:10]
+
+        popular_ids = [u.id for u in popular_users]
+        posts = list(Post.objects.filter(
+            author__in=popular_ids, is_public=True
+        ).select_related('author', 'author__gamer_profile')
+         .prefetch_related('likes', 'comments', 'reactions')
+         .order_by('-created_at')[:30])
 
     _annotate_reactions(posts, request.user)
     liked_post_ids = set(PostLike.objects.filter(user=request.user).values_list('post_id', flat=True))
@@ -115,6 +134,7 @@ def feed(request):
         'my_profile': my_profile,
         'suggested_gamers': suggested_gamers,
         'active_lfg': active_lfg,
+        'is_discover': is_discover,
     }
     return render(request, 'community/feed.html', context)
 
