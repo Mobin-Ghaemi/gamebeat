@@ -15,6 +15,81 @@
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    <!-- hidden: steam cover url set by JS when applying import -->
+    <input type="hidden" name="steam_cover_url" id="dSteamCoverUrl">
+
+    <!-- ══ Steam Import Card ══════════════════════════════════════════════ -->
+    <div class="dash-card mb-4" id="steamImportCard">
+        <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="#60a5fa" style="margin-left:6px;vertical-align:-3px"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.524s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.607 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>
+                ایمپورت از استیم
+            </span>
+            <button type="button" onclick="toggleSteamCard()"
+                style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;gap:4px">
+                <span id="steamCardToggleLabel">نمایش</span>
+                <i class="bi bi-chevron-down" id="steamCardChevron" style="transition:transform .2s"></i>
+            </button>
+        </div>
+
+        <div id="steamCardBody" style="display:none;padding-top:16px">
+
+            <!-- Tabs -->
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+                <button type="button" onclick="dSwitchTab('url')" id="dtab-url"
+                    style="flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--purple);background:rgba(139,92,246,0.15);color:var(--purple-light);font-size:0.83rem;cursor:pointer;transition:all .2s">
+                    <i class="bi bi-link-45deg"></i> لینک استیم
+                </button>
+                <button type="button" onclick="dSwitchTab('search')" id="dtab-search"
+                    style="flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.83rem;cursor:pointer;transition:all .2s">
+                    <i class="bi bi-search"></i> جستجو در استیم
+                </button>
+            </div>
+
+            <!-- Tab: URL -->
+            <div id="dtab-url-body">
+                <div style="display:flex;gap:10px">
+                    <input id="dSteamUrlInput" type="text" class="dash-input" style="flex:1"
+                        placeholder="https://store.steampowered.com/app/292030/">
+                    <button type="button" onclick="dFetchSteam()" id="dFetchBtn"
+                        class="btn-purple" style="padding:0 20px;border-radius:10px;white-space:nowrap;font-size:0.85rem">
+                        <i class="bi bi-download"></i> دریافت
+                    </button>
+                </div>
+                <div id="dFetchError" style="display:none;margin-top:8px;color:var(--danger);font-size:0.8rem"></div>
+            </div>
+
+            <!-- Tab: Search -->
+            <div id="dtab-search-body" style="display:none">
+                <div style="position:relative">
+                    <input id="dSearchInput" type="text" class="dash-input"
+                        placeholder="نام بازی را بنویسید..." oninput="dSearchDebounce()">
+                    <div id="dSearchSpinner" style="display:none;position:absolute;left:12px;top:50%;transform:translateY(-50%)">
+                        <div style="width:14px;height:14px;border:2px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:dspin .6s linear infinite"></div>
+                    </div>
+                </div>
+                <div id="dSearchResults" style="margin-top:10px;display:flex;flex-direction:column;gap:7px"></div>
+            </div>
+
+            <!-- Preview -->
+            <div id="dSteamPreview" style="display:none;margin-top:16px;padding:14px;border-radius:12px;background:var(--bg-card2);border:1px solid rgba(139,92,246,0.35)">
+                <div style="display:flex;gap:14px;align-items:flex-start">
+                    <img id="dPreviewImg" src="" alt="" style="width:80px;height:112px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)">
+                    <div style="flex:1;min-width:0">
+                        <div id="dPreviewName" style="font-weight:700;font-size:1rem;color:var(--text-main);margin-bottom:6px"></div>
+                        <div id="dPreviewDesc" style="font-size:0.78rem;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.6"></div>
+                        <button type="button" onclick="dApplyToForm()"
+                            class="btn-purple" style="margin-top:12px;padding:7px 20px;font-size:0.82rem;border-radius:8px">
+                            <i class="bi bi-check2-circle"></i> اعمال به فرم
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- ══ End Steam Import Card ══════════════════════════════════════════ -->
+
     <div class="row g-4">
 
         <!-- ─── Left: Main Fields ────────────────────────────── -->
@@ -254,7 +329,151 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+@keyframes dspin { to { transform: rotate(360deg); } }
+</style>
 <script>
+// ── Steam Import ──────────────────────────────────────────────────────────────
+var _dSteamData = null;
+
+function toggleSteamCard() {
+    var body = document.getElementById('steamCardBody');
+    var label = document.getElementById('steamCardToggleLabel');
+    var chev = document.getElementById('steamCardChevron');
+    var open = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    label.textContent = open ? 'پنهان' : 'نمایش';
+    chev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function dSwitchTab(tab) {
+    var tabs = ['url', 'search'];
+    tabs.forEach(function(t) {
+        var btn = document.getElementById('dtab-' + t);
+        var body = document.getElementById('dtab-' + t + '-body');
+        if (t === tab) {
+            btn.style.border = '1px solid var(--purple)';
+            btn.style.background = 'rgba(139,92,246,0.15)';
+            btn.style.color = 'var(--purple-light)';
+            body.style.display = 'block';
+        } else {
+            btn.style.border = '1px solid var(--border)';
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--text-muted)';
+            body.style.display = 'none';
+        }
+    });
+    document.getElementById('dSteamPreview').style.display = 'none';
+    _dSteamData = null;
+}
+
+function dShowPreview(data) {
+    _dSteamData = data;
+    document.getElementById('dPreviewImg').src = data.cover_url || '';
+    document.getElementById('dPreviewName').textContent = data.name || '';
+    document.getElementById('dPreviewDesc').textContent = data.description || '';
+    document.getElementById('dSteamPreview').style.display = 'block';
+}
+
+function dFetchSteam() {
+    var url = document.getElementById('dSteamUrlInput').value.trim();
+    if (!url) return;
+    var btn = document.getElementById('dFetchBtn');
+    var err = document.getElementById('dFetchError');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:dspin .6s linear infinite;vertical-align:-2px"></span> دریافت...';
+    err.style.display = 'none';
+    fetch('/community/steam/fetch/?url=' + encodeURIComponent(url))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-download"></i> دریافت';
+            if (d.error) {
+                err.textContent = 'خطا: ' + d.error;
+                err.style.display = 'block';
+            } else {
+                dShowPreview(d);
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-download"></i> دریافت';
+            err.textContent = 'خطا در اتصال به سرور';
+            err.style.display = 'block';
+        });
+}
+
+var _dSearchTimer = null;
+function dSearchDebounce() {
+    clearTimeout(_dSearchTimer);
+    _dSearchTimer = setTimeout(dDoSearch, 400);
+}
+
+function dDoSearch() {
+    var q = document.getElementById('dSearchInput').value.trim();
+    if (q.length < 2) { document.getElementById('dSearchResults').innerHTML = ''; return; }
+    document.getElementById('dSearchSpinner').style.display = 'block';
+    fetch('/community/steam/search/?q=' + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            document.getElementById('dSearchSpinner').style.display = 'none';
+            var container = document.getElementById('dSearchResults');
+            if (!d.results || !d.results.length) {
+                container.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:10px">نتیجه‌ای یافت نشد</div>';
+                return;
+            }
+            container.innerHTML = d.results.map(function(item) {
+                return '<div onclick=\'dPickResult(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')\' style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg-card2);cursor:pointer;transition:background .15s" onmouseover="this.style.background=\'rgba(139,92,246,0.1)\'" onmouseout="this.style.background=\'var(--bg-card2)\'">' +
+                    '<img src="' + (item.cover_url || '') + '" style="width:36px;height:50px;object-fit:cover;border-radius:5px;flex-shrink:0">' +
+                    '<div style="font-size:0.85rem;color:var(--text-main);font-weight:600">' + item.name + '</div>' +
+                '</div>';
+            }).join('');
+        })
+        .catch(function() {
+            document.getElementById('dSearchSpinner').style.display = 'none';
+        });
+}
+
+function dPickResult(item) {
+    // fetch full details
+    fetch('/community/steam/fetch/?url=https://store.steampowered.com/app/' + item.appid + '/')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (!d.error) dShowPreview(d);
+            else dShowPreview(item);
+        })
+        .catch(function() { dShowPreview(item); });
+}
+
+function dApplyToForm() {
+    if (!_dSteamData) return;
+    // Fill form fields
+    var nameInput = document.querySelector('input[name="name"]');
+    var descInput = document.querySelector('textarea[name="description"]');
+    if (nameInput && !nameInput.value) nameInput.value = _dSteamData.name || '';
+    else if (nameInput) nameInput.value = _dSteamData.name || nameInput.value;
+    if (descInput && !descInput.value) descInput.value = _dSteamData.description || '';
+    // Set cover URL hidden input
+    document.getElementById('dSteamCoverUrl').value = _dSteamData.cover_url || '';
+    // Show cover preview
+    if (_dSteamData.cover_url) {
+        var img = document.getElementById('coverPreview');
+        var ph = document.getElementById('coverPlaceholder');
+        img.src = _dSteamData.cover_url;
+        img.style.display = 'block';
+        if (ph) ph.style.display = 'none';
+    }
+    // Visual feedback
+    var btn = event.currentTarget;
+    btn.innerHTML = '<i class="bi bi-check2-all"></i> اعمال شد ✓';
+    btn.style.background = 'var(--success, #22c55e)';
+    setTimeout(function() {
+        btn.innerHTML = '<i class="bi bi-check2-circle"></i> اعمال به فرم';
+        btn.style.background = '';
+    }, 2000);
+}
+// ── End Steam Import ──────────────────────────────────────────────────────────
+
 // Cover image preview
 function previewCover(input) {
     if (input.files && input.files[0]) {

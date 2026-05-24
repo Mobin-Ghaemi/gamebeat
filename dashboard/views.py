@@ -6,9 +6,27 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.core.files.base import ContentFile
 from datetime import timedelta, date
+import urllib.request
+import urllib.parse
+import os
 from .models import Game, GENRE_CHOICES, PLATFORM_CHOICES
 from community.models import Post, Comment, Hashtag, GamerProfile, PostLike, PostReaction, GameBacklog
+
+
+def _download_steam_cover(url, game_name):
+    """Download a Steam cover image and return a ContentFile with filename."""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = resp.read()
+        ext = os.path.splitext(url.split('?')[0])[1] or '.jpg'
+        safe_name = ''.join(c for c in game_name if c.isalnum() or c in ' _-')[:40].strip().replace(' ', '_')
+        filename = f"steam_{safe_name}{ext}"
+        return ContentFile(data, name=filename)
+    except Exception:
+        return None
 
 
 def is_admin(user):
@@ -269,6 +287,10 @@ def game_add(request):
         g.platforms = request.POST.getlist('platforms')
         if request.FILES.get('cover'):
             g.cover = request.FILES['cover']
+        elif request.POST.get('steam_cover_url'):
+            cf = _download_steam_cover(request.POST['steam_cover_url'], g.name)
+            if cf:
+                g.cover = cf
         g.save()
         messages.success(request, f'بازی «{g.name}» اضافه شد.')
         return redirect('dashboard:games')
@@ -292,6 +314,10 @@ def game_edit(request, game_id):
         game.platforms = request.POST.getlist('platforms')
         if request.FILES.get('cover'):
             game.cover = request.FILES['cover']
+        elif request.POST.get('steam_cover_url'):
+            cf = _download_steam_cover(request.POST['steam_cover_url'], game.name)
+            if cf:
+                game.cover = cf
         game.save()
         messages.success(request, f'بازی «{game.name}» ویرایش شد.')
         return redirect('dashboard:games')
