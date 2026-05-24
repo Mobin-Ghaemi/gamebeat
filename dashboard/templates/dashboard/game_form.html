@@ -6,557 +6,756 @@
 
 {% block content %}
 
+<style>
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+@keyframes shimmer  { 0%{background-position:200% center} 100%{background-position:-200% center} }
+@keyframes spin360  { to{transform:rotate(360deg)} }
+@keyframes pulseGlow{ 0%,100%{box-shadow:0 0 0 0 rgba(96,165,250,.4)} 50%{box-shadow:0 0 0 8px rgba(96,165,250,0)} }
+@keyframes popIn    { 0%{opacity:0;transform:scale(.92)} 100%{opacity:1;transform:scale(1)} }
+
+/* ── Mode Selector ──────────────────────────────────────── */
+.mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px }
+.mode-card {
+    position:relative; overflow:hidden;
+    padding:22px 24px; border-radius:16px; cursor:pointer;
+    border:2px solid transparent; transition:all .25s; user-select:none;
+}
+.mode-card:hover { transform:translateY(-2px) }
+.mode-card.active { border-color:transparent }
+.mode-card .mc-badge {
+    position:absolute; top:12px; left:12px;
+    font-size:.68rem; padding:2px 8px; border-radius:20px;
+    font-weight:700; letter-spacing:.03em;
+}
+.mode-card .mc-icon { font-size:2rem; margin-bottom:8px; display:block }
+.mode-card .mc-title { font-size:1rem; font-weight:700; margin-bottom:4px }
+.mode-card .mc-sub   { font-size:.78rem; line-height:1.5 }
+.mode-card .mc-check {
+    position:absolute; top:14px; right:14px;
+    width:22px; height:22px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.75rem; opacity:0; transition:opacity .2s;
+}
+.mode-card.active .mc-check { opacity:1 }
+
+/* Steam card */
+.mode-card.steam-card {
+    background:linear-gradient(135deg,#0d1b2a 0%,#1a3a5c 60%,#0f2840 100%);
+    border-color:#1e4976;
+}
+.mode-card.steam-card.active {
+    border-color:#60a5fa;
+    box-shadow:0 0 0 1px #60a5fa, 0 8px 32px rgba(96,165,250,.25);
+}
+.mode-card.steam-card .mc-badge { background:rgba(96,165,250,.18); color:#60a5fa }
+.mode-card.steam-card .mc-title { color:#e2f0ff }
+.mode-card.steam-card .mc-sub   { color:#7fb3d9 }
+.mode-card.steam-card .mc-check { background:#60a5fa; color:#0d1b2a }
+
+/* Manual card */
+.mode-card.manual-card {
+    background:linear-gradient(135deg,#1a0a2e 0%,#2d1b4e 60%,#1e0f38 100%);
+    border-color:#3b1f6b;
+}
+.mode-card.manual-card.active {
+    border-color:#a78bfa;
+    box-shadow:0 0 0 1px #a78bfa, 0 8px 32px rgba(139,92,246,.25);
+}
+.mode-card.manual-card .mc-badge { background:rgba(167,139,250,.18); color:#a78bfa }
+.mode-card.manual-card .mc-title { color:#ede0ff }
+.mode-card.manual-card .mc-sub   { color:#9b7fd4 }
+.mode-card.manual-card .mc-check { background:#a78bfa; color:#1a0a2e }
+
+/* ── Steam Section ──────────────────────────────────────── */
+.steam-section {
+    animation:fadeUp .3s ease;
+    background:linear-gradient(160deg,#0d1b2a 0%,#111c2e 100%);
+    border:1px solid #1e3a58; border-radius:18px; overflow:hidden;
+}
+.steam-header {
+    padding:20px 24px; display:flex; align-items:center; gap:14px;
+    border-bottom:1px solid #1e3a58;
+    background:linear-gradient(90deg,rgba(96,165,250,.07) 0%,transparent 100%);
+}
+.steam-body { padding:24px }
+
+/* Steam sub-tabs */
+.steam-tabs { display:flex; gap:0; border-radius:12px; overflow:hidden; border:1px solid #1e3a58; margin-bottom:20px }
+.steam-tab {
+    flex:1; padding:11px 0; text-align:center; cursor:pointer;
+    font-size:.84rem; font-weight:600; transition:all .2s; border:none; outline:none;
+}
+.steam-tab.active { background:rgba(96,165,250,.18); color:#60a5fa }
+.steam-tab:not(.active) { background:transparent; color:#4a7fa8 }
+.steam-tab:hover:not(.active) { background:rgba(96,165,250,.07); color:#7fb3d9 }
+
+/* Steam inputs */
+.steam-input {
+    width:100%; padding:13px 16px; border-radius:11px; font-size:.9rem;
+    background:#0a1520; border:1px solid #1e3a58; color:#c8dff0;
+    outline:none; transition:border-color .2s, box-shadow .2s;
+    font-family:inherit;
+}
+.steam-input::placeholder { color:#3a6585 }
+.steam-input:focus { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(96,165,250,.15) }
+
+.steam-fetch-btn {
+    padding:0 22px; height:48px; border-radius:11px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#1a6fc4,#2a88df); color:#fff;
+    font-size:.88rem; font-weight:700; white-space:nowrap;
+    transition:all .2s; display:flex; align-items:center; gap:7px;
+    font-family:inherit;
+}
+.steam-fetch-btn:hover { background:linear-gradient(135deg,#2080d8,#3a99ef); transform:translateY(-1px) }
+.steam-fetch-btn:disabled { opacity:.6; transform:none; cursor:not-allowed }
+
+/* Search result item */
+.steam-result-item {
+    display:flex; align-items:center; gap:12px; padding:10px 12px;
+    border-radius:10px; border:1px solid #1a3550; background:#0a1828;
+    cursor:pointer; transition:all .18s;
+}
+.steam-result-item:hover { border-color:#60a5fa; background:#0f2240; transform:translateX(-3px) }
+.steam-result-item img { width:52px; height:72px; object-fit:cover; border-radius:6px; flex-shrink:0 }
+.steam-result-item .sri-name { font-size:.88rem; font-weight:700; color:#c8dff0; margin-bottom:3px }
+.steam-result-item .sri-appid { font-size:.72rem; color:#3a6585 }
+.sri-arrow { margin-right:auto; color:#3a6585; font-size:.9rem; transition:color .2s }
+.steam-result-item:hover .sri-arrow { color:#60a5fa }
+
+/* Preview card (big) */
+.steam-preview-card {
+    display:none; animation:popIn .28s ease;
+    border-radius:14px; overflow:hidden;
+    border:1px solid rgba(96,165,250,.3);
+    background:linear-gradient(135deg,#0d1e30 0%,#0f2540 100%);
+    margin-top:20px;
+}
+.steam-preview-card.show { display:block }
+.spc-banner {
+    width:100%; height:160px; object-fit:cover;
+    filter:brightness(.7);
+}
+.spc-body { padding:18px; display:flex; gap:16px }
+.spc-cover {
+    width:90px; height:126px; object-fit:cover;
+    border-radius:8px; flex-shrink:0; margin-top:-60px;
+    border:3px solid #0d1e30; box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.spc-info { flex:1; min-width:0; padding-top:4px }
+.spc-name { font-size:1.1rem; font-weight:800; color:#e2f0ff; margin-bottom:6px }
+.spc-desc { font-size:.78rem; color:#7fb3d9; line-height:1.6;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
+.spc-apply {
+    margin-top:14px; padding:10px 24px; border-radius:10px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#1a6fc4,#2a88df); color:#fff;
+    font-size:.875rem; font-weight:700; font-family:inherit; transition:all .2s;
+    display:inline-flex; align-items:center; gap:7px;
+}
+.spc-apply:hover { background:linear-gradient(135deg,#2080d8,#3a99ef); transform:translateY(-1px); box-shadow:0 4px 16px rgba(96,165,250,.3) }
+.spc-applied { background:linear-gradient(135deg,#166534,#16a34a) !important; animation:pulseGlow .6s ease }
+
+/* ── Manual Section ─────────────────────────────────────── */
+.manual-section { animation:fadeUp .3s ease }
+
+/* ── Divider ────────────────────────────────────────────── */
+.or-divider {
+    display:flex; align-items:center; gap:12px;
+    font-size:.78rem; color:#3d3358; margin:28px 0; user-select:none;
+}
+.or-divider::before,.or-divider::after {
+    content:''; flex:1; height:1px; background:#2a1f40;
+}
+
+/* ── Spinner ────────────────────────────────────────────── */
+.mini-spin {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid currentColor; border-top-color:transparent;
+    border-radius:50%; animation:spin360 .65s linear infinite; vertical-align:-2px;
+}
+</style>
+
 <!-- Breadcrumb -->
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:0.85rem;color:var(--text-muted)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:.85rem;color:var(--text-muted)">
     <a href="{% url 'dashboard:games' %}" style="color:var(--purple-light);text-decoration:none">بازی‌ها</a>
-    <i class="bi bi-chevron-left" style="font-size:0.7rem"></i>
+    <i class="bi bi-chevron-left" style="font-size:.7rem"></i>
     <span>{% if action == 'add' %}افزودن بازی جدید{% else %}ویرایش{% endif %}</span>
 </div>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <!-- hidden: steam cover url set by JS when applying import -->
-    <input type="hidden" name="steam_cover_url" id="dSteamCoverUrl">
+<form method="post" enctype="multipart/form-data" id="gameForm">
+{% csrf_token %}
+<input type="hidden" name="steam_cover_url" id="dSteamCoverUrl">
 
-    <!-- ══ Steam Import Card ══════════════════════════════════════════════ -->
-    <div class="dash-card mb-4" id="steamImportCard">
-        <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-            <span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="#60a5fa" style="margin-left:6px;vertical-align:-3px"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.524s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.607 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>
-                ایمپورت از استیم
-            </span>
-            <button type="button" onclick="toggleSteamCard()"
-                style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;gap:4px">
-                <span id="steamCardToggleLabel">نمایش</span>
-                <i class="bi bi-chevron-down" id="steamCardChevron" style="transition:transform .2s"></i>
+{% if action == 'add' %}
+<!-- ══════════════════════════════════════════════════
+     MODE SELECTOR  (only on Add — not Edit)
+═══════════════════════════════════════════════════ -->
+<div class="mode-grid">
+
+    <!-- Steam -->
+    <div class="mode-card steam-card active" id="modeCardSteam" onclick="switchMode('steam')">
+        <div class="mc-badge">🚀 سریع‌ترین روش</div>
+        <div class="mc-check"><i class="bi bi-check2"></i></div>
+        <span class="mc-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#60a5fa"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.524s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.607 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>
+        </span>
+        <div class="mc-title">ایمپورت از استیم</div>
+        <div class="mc-sub">لینک بازی یا جستجو — اطلاعات و تصویر خودکار پر می‌شود</div>
+    </div>
+
+    <!-- Manual -->
+    <div class="mode-card manual-card" id="modeCardManual" onclick="switchMode('manual')">
+        <div class="mc-check"><i class="bi bi-check2"></i></div>
+        <span class="mc-icon" style="color:#a78bfa">
+            <i class="bi bi-pencil-square" style="font-size:2rem"></i>
+        </span>
+        <div class="mc-title">افزودن دستی</div>
+        <div class="mc-sub">وارد کردن اطلاعات بازی به صورت کامل و شخصی‌سازی شده</div>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════
+     STEAM SECTION
+═══════════════════════════════════════════════════ -->
+<div id="steamSection" {% if action == 'edit' %}style="display:none"{% endif %}>
+<div class="steam-section">
+
+    <!-- Header -->
+    <div class="steam-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#60a5fa" style="flex-shrink:0"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.524s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.607 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>
+        <div>
+            <div style="font-size:1.05rem;font-weight:800;color:#e2f0ff">ایمپورت از استیم</div>
+            <div style="font-size:.78rem;color:#4a7fa8;margin-top:2px">لینک بازی را وارد کنید یا جستجو کنید — همه چیز خودکار پر می‌شود</div>
+        </div>
+        <div style="margin-right:auto">
+            <span style="font-size:.72rem;padding:4px 10px;border-radius:20px;background:rgba(96,165,250,.12);color:#60a5fa;font-weight:700">STEAM IMPORT</span>
+        </div>
+    </div>
+
+    <div class="steam-body">
+
+        <!-- Sub-tabs -->
+        <div class="steam-tabs">
+            <button type="button" class="steam-tab active" id="stab-url" onclick="sSwitchTab('url')">
+                <i class="bi bi-link-45deg"></i>&nbsp; لینک مستقیم
+            </button>
+            <button type="button" class="steam-tab" id="stab-search" onclick="sSwitchTab('search')">
+                <i class="bi bi-search"></i>&nbsp; جستجو در استیم
             </button>
         </div>
 
-        <div id="steamCardBody" style="display:none;padding-top:16px">
-
-            <!-- Tabs -->
-            <div style="display:flex;gap:8px;margin-bottom:16px">
-                <button type="button" onclick="dSwitchTab('url')" id="dtab-url"
-                    style="flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--purple);background:rgba(139,92,246,0.15);color:var(--purple-light);font-size:0.83rem;cursor:pointer;transition:all .2s">
-                    <i class="bi bi-link-45deg"></i> لینک استیم
-                </button>
-                <button type="button" onclick="dSwitchTab('search')" id="dtab-search"
-                    style="flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.83rem;cursor:pointer;transition:all .2s">
-                    <i class="bi bi-search"></i> جستجو در استیم
+        <!-- Tab: URL -->
+        <div id="stab-url-body">
+            <label style="font-size:.8rem;color:#4a7fa8;margin-bottom:7px;display:block;font-weight:600">لینک صفحه بازی در استیم</label>
+            <div style="display:flex;gap:10px">
+                <input id="sSteamUrlInput" type="text" class="steam-input" style="flex:1;height:48px"
+                    placeholder="https://store.steampowered.com/app/292030/The_Witcher_3..."
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();sFetchSteam()}">
+                <button type="button" class="steam-fetch-btn" onclick="sFetchSteam()" id="sFetchBtn">
+                    <i class="bi bi-download"></i> دریافت اطلاعات
                 </button>
             </div>
+            <div id="sFetchError" style="display:none;margin-top:9px;color:#f87171;font-size:.8rem;background:rgba(248,113,113,.08);padding:8px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.2)"></div>
+        </div>
 
-            <!-- Tab: URL -->
-            <div id="dtab-url-body">
-                <div style="display:flex;gap:10px">
-                    <input id="dSteamUrlInput" type="text" class="dash-input" style="flex:1"
-                        placeholder="https://store.steampowered.com/app/292030/">
-                    <button type="button" onclick="dFetchSteam()" id="dFetchBtn"
-                        class="btn-purple" style="padding:0 20px;border-radius:10px;white-space:nowrap;font-size:0.85rem">
-                        <i class="bi bi-download"></i> دریافت
+        <!-- Tab: Search -->
+        <div id="stab-search-body" style="display:none">
+            <label style="font-size:.8rem;color:#4a7fa8;margin-bottom:7px;display:block;font-weight:600">نام بازی را بنویسید</label>
+            <div style="position:relative">
+                <input id="sSearchInput" type="text" class="steam-input"
+                    placeholder="مثال: Cyberpunk 2077" oninput="sSearchDebounce()" style="padding-left:42px">
+                <i class="bi bi-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#3a6585;font-size:.85rem"></i>
+                <div id="sSearchSpinner" style="display:none;position:absolute;left:13px;top:50%;transform:translateY(-50%)">
+                    <div class="mini-spin" style="color:#60a5fa"></div>
+                </div>
+            </div>
+            <div id="sSearchResults" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:2px"></div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="steam-preview-card" id="sSteamPreview">
+            <img id="sPreviewBanner" src="" alt="" class="spc-banner"
+                 onerror="this.style.display='none'">
+            <div class="spc-body">
+                <img id="sPreviewCover" src="" alt="" class="spc-cover">
+                <div class="spc-info">
+                    <div class="spc-name" id="sPreviewName"></div>
+                    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="sPreviewMeta"></div>
+                    <div class="spc-desc" id="sPreviewDesc"></div>
+                    <button type="button" class="spc-apply" id="sApplyBtn" onclick="sApplyToForm()">
+                        <i class="bi bi-check2-circle"></i> اعمال اطلاعات و ذخیره بازی
                     </button>
                 </div>
-                <div id="dFetchError" style="display:none;margin-top:8px;color:var(--danger);font-size:0.8rem"></div>
             </div>
-
-            <!-- Tab: Search -->
-            <div id="dtab-search-body" style="display:none">
-                <div style="position:relative">
-                    <input id="dSearchInput" type="text" class="dash-input"
-                        placeholder="نام بازی را بنویسید..." oninput="dSearchDebounce()">
-                    <div id="dSearchSpinner" style="display:none;position:absolute;left:12px;top:50%;transform:translateY(-50%)">
-                        <div style="width:14px;height:14px;border:2px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:dspin .6s linear infinite"></div>
-                    </div>
-                </div>
-                <div id="dSearchResults" style="margin-top:10px;display:flex;flex-direction:column;gap:7px"></div>
-            </div>
-
-            <!-- Preview -->
-            <div id="dSteamPreview" style="display:none;margin-top:16px;padding:14px;border-radius:12px;background:var(--bg-card2);border:1px solid rgba(139,92,246,0.35)">
-                <div style="display:flex;gap:14px;align-items:flex-start">
-                    <img id="dPreviewImg" src="" alt="" style="width:80px;height:112px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)">
-                    <div style="flex:1;min-width:0">
-                        <div id="dPreviewName" style="font-weight:700;font-size:1rem;color:var(--text-main);margin-bottom:6px"></div>
-                        <div id="dPreviewDesc" style="font-size:0.78rem;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.6"></div>
-                        <button type="button" onclick="dApplyToForm()"
-                            class="btn-purple" style="margin-top:12px;padding:7px 20px;font-size:0.82rem;border-radius:8px">
-                            <i class="bi bi-check2-circle"></i> اعمال به فرم
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
     </div>
-    <!-- ══ End Steam Import Card ══════════════════════════════════════════ -->
+</div>
 
-    <div class="row g-4">
+<!-- hidden fields that carry data when submitting from Steam mode -->
+<input type="hidden" name="name"         id="sHiddenName">
+<input type="hidden" name="description"  id="sHiddenDesc">
+<input type="hidden" name="release_year" id="sHiddenYear">
+<input type="hidden" name="genre"        id="sHiddenGenre">
 
-        <!-- ─── Left: Main Fields ────────────────────────────── -->
-        <div class="col-lg-8">
+<div id="steamSubmitBar" style="display:none;margin-top:16px;display:none">
+    <!-- submit happens via sApplyToForm which disables manual fields and submits -->
+</div>
+</div>
 
-            <!-- Basic Info Card -->
-            <div class="dash-card mb-4">
-                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                    <i class="bi bi-controller" style="color:var(--purple-light)"></i>
-                    اطلاعات اصلی
-                </div>
-                <div style="padding-top:16px;display:flex;flex-direction:column;gap:18px">
+<!-- ══════════════════════════════════════════════════
+     MANUAL SECTION
+═══════════════════════════════════════════════════ -->
+<div id="manualSection" {% if action == 'add' %}style="display:none"{% endif %}>
 
-                    <!-- Name -->
-                    <div>
-                        <label class="dash-label">نام بازی <span style="color:var(--danger)">*</span></label>
-                        <input type="text" name="name" value="{% if game %}{{ game.name }}{% endif %}"
-                               class="dash-input" placeholder="مثال: The Witcher 3" required>
-                    </div>
+<div class="row g-4">
 
-                    <!-- Genre -->
-                    <div>
-                        <label class="dash-label">ژانر</label>
-                        <select name="genre" class="dash-input" style="cursor:pointer">
-                            <option value="">انتخاب ژانر...</option>
-                            {% for val, label in genre_choices %}
-                                <option value="{{ val }}" {% if game and game.genre == val %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+    <!-- ─── Left: Main Fields ────────────────────────────── -->
+    <div class="col-lg-8">
 
-                    <!-- Developer + Publisher -->
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <label class="dash-label">سازنده</label>
-                            <input type="text" name="developer" value="{% if game %}{{ game.developer }}{% endif %}"
-                                   class="dash-input" placeholder="مثال: CD Projekt Red">
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="dash-label">ناشر</label>
-                            <input type="text" name="publisher" value="{% if game %}{{ game.publisher }}{% endif %}"
-                                   class="dash-input" placeholder="مثال: Bandai Namco">
-                        </div>
-                    </div>
-
-                    <!-- Release Year -->
-                    <div>
-                        <label class="dash-label">سال انتشار</label>
-                        <input type="number" name="release_year" value="{% if game %}{{ game.release_year }}{% endif %}"
-                               class="dash-input" placeholder="مثال: 2023" min="1970" max="2030"
-                               style="max-width:180px">
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="dash-label">توضیحات</label>
-                        <textarea name="description" class="dash-input" rows="4"
-                                  placeholder="توضیحات کوتاه درباره بازی...">{% if game %}{{ game.description }}{% endif %}</textarea>
-                    </div>
-
-                </div>
+        <!-- Basic Info Card -->
+        <div class="dash-card mb-4">
+            <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+                <i class="bi bi-controller" style="color:var(--purple-light);font-size:1.1rem"></i>
+                <span>اطلاعات اصلی</span>
+                {% if action == 'add' %}
+                <span style="margin-right:auto;font-size:.72rem;padding:3px 9px;border-radius:20px;background:rgba(167,139,250,.12);color:#a78bfa;font-weight:700">دستی</span>
+                {% endif %}
             </div>
+            <div style="padding-top:16px;display:flex;flex-direction:column;gap:18px">
 
-            <!-- Platforms Card -->
-            <div class="dash-card">
-                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                    <i class="bi bi-display" style="color:#60a5fa"></i>
-                    پلتفرم‌ها
+                <div>
+                    <label class="dash-label">نام بازی <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="name" id="manualName" value="{% if game %}{{ game.name }}{% endif %}"
+                           class="dash-input" placeholder="مثال: The Witcher 3"
+                           {% if action == 'add' %}required{% endif %}>
                 </div>
-                <div style="padding-top:16px;display:flex;flex-wrap:wrap;gap:10px">
-                    {% for val, label in platform_choices %}
-                    <label style="
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                        padding:10px 16px;
-                        border-radius:10px;
-                        border:1px solid var(--border);
-                        background:var(--bg-card2);
-                        cursor:pointer;
-                        transition:all 0.2s;
-                        font-size:0.875rem;
-                        color:var(--text-muted);
-                        user-select:none;
-                    " class="platform-label">
-                        <input type="checkbox" name="platforms" value="{{ val }}"
-                               {% if game and val in game.platforms %}checked{% endif %}
-                               style="display:none"
-                               class="platform-check">
-                        <span class="platform-check-icon" style="
-                            width:18px;
-                            height:18px;
-                            border-radius:5px;
-                            border:2px solid var(--border);
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            flex-shrink:0;
-                            transition:all 0.2s;
-                            font-size:0.7rem;
-                        "></span>
-                        {{ label }}
-                    </label>
-                    {% endfor %}
+
+                <div>
+                    <label class="dash-label">ژانر</label>
+                    <select name="genre" class="dash-input" style="cursor:pointer">
+                        <option value="">انتخاب ژانر...</option>
+                        {% for val, label in genre_choices %}
+                            <option value="{{ val }}" {% if game and game.genre == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="dash-label">سازنده</label>
+                        <input type="text" name="developer" value="{% if game %}{{ game.developer }}{% endif %}"
+                               class="dash-input" placeholder="مثال: CD Projekt Red">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="dash-label">ناشر</label>
+                        <input type="text" name="publisher" value="{% if game %}{{ game.publisher }}{% endif %}"
+                               class="dash-input" placeholder="مثال: Bandai Namco">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="dash-label">سال انتشار</label>
+                    <input type="number" name="release_year" value="{% if game %}{{ game.release_year }}{% endif %}"
+                           class="dash-input" placeholder="مثال: 2023" min="1970" max="2030"
+                           style="max-width:180px">
+                </div>
+
+                <div>
+                    <label class="dash-label">توضیحات</label>
+                    <textarea name="description" class="dash-input" rows="4"
+                              placeholder="توضیحات کوتاه درباره بازی...">{% if game %}{{ game.description }}{% endif %}</textarea>
+                </div>
+
             </div>
-
         </div>
 
-        <!-- ─── Right: Cover + Settings ─────────────────────── -->
-        <div class="col-lg-4">
-
-            <!-- Cover Upload Card -->
-            <div class="dash-card mb-4">
-                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                    <i class="bi bi-image" style="color:#f472b6"></i>
-                    تصویر کاور
-                </div>
-                <div style="padding-top:16px">
-
-                    <!-- Preview Area -->
-                    <div id="coverPreviewWrap" style="
-                        width:100%;
-                        aspect-ratio:3/4;
-                        max-height:300px;
-                        border-radius:12px;
-                        border:2px dashed var(--border);
-                        overflow:hidden;
-                        background:var(--bg-card2);
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        cursor:pointer;
-                        transition:border-color 0.2s;
-                        position:relative;
-                        margin-bottom:12px;
-                    " onclick="document.getElementById('coverInput').click()">
-                        {% if game and game.cover %}
-                            <img id="coverPreview" src="{{ game.cover.url }}" alt="cover"
-                                 style="width:100%;height:100%;object-fit:cover">
-                        {% else %}
-                            <div id="coverPlaceholder" style="text-align:center;padding:20px">
-                                <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:var(--text-faint);display:block;margin-bottom:8px"></i>
-                                <div style="font-size:0.8rem;color:var(--text-faint)">کلیک کنید تا تصویر انتخاب شود</div>
-                            </div>
-                            <img id="coverPreview" src="" alt="cover"
-                                 style="width:100%;height:100%;object-fit:cover;display:none">
-                        {% endif %}
-                    </div>
-
-                    <input type="file" name="cover" id="coverInput" accept="image/*"
-                           style="display:none" onchange="previewCover(this)">
-
-                    <button type="button" class="btn-ghost" style="width:100%;font-size:0.85rem"
-                            onclick="document.getElementById('coverInput').click()">
-                        <i class="bi bi-upload me-1"></i>انتخاب تصویر
-                    </button>
-                    <div style="font-size:0.72rem;color:var(--text-faint);text-align:center;margin-top:6px">
-                        فرمت‌های مجاز: JPG, PNG, WebP
-                    </div>
-
-                </div>
+        <!-- Platforms Card -->
+        <div class="dash-card">
+            <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <i class="bi bi-display" style="color:#60a5fa"></i>
+                پلتفرم‌ها
             </div>
-
-            <!-- Settings Card -->
-            <div class="dash-card">
-                <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                    <i class="bi bi-gear" style="color:var(--warning)"></i>
-                    تنظیمات
-                </div>
-                <div style="padding-top:16px">
-
-                    <!-- Featured Toggle -->
-                    <label style="
-                        display:flex;
-                        align-items:center;
-                        justify-content:space-between;
-                        cursor:pointer;
-                        padding:12px 16px;
-                        border-radius:10px;
-                        background:var(--bg-card2);
-                        border:1px solid var(--border);
-                    ">
-                        <div>
-                            <div style="font-size:0.875rem;font-weight:600;color:var(--text-main)">بازی ویژه</div>
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">
-                                در بخش ویژه نمایش داده می‌شود
-                            </div>
-                        </div>
-                        <div style="position:relative">
-                            <input type="checkbox" name="is_featured" id="featuredToggle"
-                                   {% if game and game.is_featured %}checked{% endif %}
-                                   style="display:none" onchange="updateToggle(this)">
-                            <div id="toggleTrack" onclick="document.getElementById('featuredToggle').click()" style="
-                                width:46px;
-                                height:26px;
-                                border-radius:13px;
-                                background:{% if game and game.is_featured %}var(--purple){% else %}var(--border){% endif %};
-                                position:relative;
-                                cursor:pointer;
-                                transition:background 0.2s;
-                                box-shadow:{% if game and game.is_featured %}0 0 10px var(--purple-glow){% else %}none{% endif %};
-                            ">
-                                <div id="toggleThumb" style="
-                                    width:20px;
-                                    height:20px;
-                                    border-radius:50%;
-                                    background:white;
-                                    position:absolute;
-                                    top:3px;
-                                    transition:transform 0.2s;
-                                    transform:{% if game and game.is_featured %}translateX(-22px){% else %}translateX(-3px){% endif %};
-                                "></div>
-                            </div>
-                        </div>
-                    </label>
-
-                </div>
-
-                <!-- Submit Buttons -->
-                <div style="display:flex;gap:10px;margin-top:20px">
-                    <button type="submit" class="btn-purple" style="flex:1;padding:11px 0;text-align:center;border-radius:10px;font-size:0.9rem;cursor:pointer">
-                        <i class="bi {% if action == 'add' %}bi-plus-circle{% else %}bi-check-circle{% endif %} me-1"></i>
-                        {% if action == 'add' %}افزودن بازی{% else %}ذخیره تغییرات{% endif %}
-                    </button>
-                    <a href="{% url 'dashboard:games' %}" class="btn-ghost" style="padding:11px 16px;text-decoration:none;text-align:center;border-radius:10px;font-size:0.9rem">
-                        انصراف
-                    </a>
-                </div>
-
+            <div style="padding-top:16px;display:flex;flex-wrap:wrap;gap:10px">
+                {% for val, label in platform_choices %}
+                <label class="platform-label" style="
+                    display:flex;align-items:center;gap:8px;padding:10px 16px;
+                    border-radius:10px;border:1px solid var(--border);background:var(--bg-card2);
+                    cursor:pointer;transition:all .2s;font-size:.875rem;color:var(--text-muted);user-select:none;">
+                    <input type="checkbox" name="platforms" value="{{ val }}"
+                           {% if game and val in game.platforms %}checked{% endif %}
+                           style="display:none" class="platform-check">
+                    <span class="platform-check-icon" style="
+                        width:18px;height:18px;border-radius:5px;border:2px solid var(--border);
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        transition:all .2s;font-size:.7rem;"></span>
+                    {{ label }}
+                </label>
+                {% endfor %}
             </div>
-
         </div>
+
     </div>
+
+    <!-- ─── Right: Cover + Settings ─────────────────────── -->
+    <div class="col-lg-4">
+
+        <!-- Cover Upload Card -->
+        <div class="dash-card mb-4">
+            <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <i class="bi bi-image" style="color:#f472b6"></i>
+                تصویر کاور
+            </div>
+            <div style="padding-top:16px">
+                <div id="coverPreviewWrap" style="
+                    width:100%;aspect-ratio:3/4;max-height:300px;border-radius:12px;
+                    border:2px dashed var(--border);overflow:hidden;background:var(--bg-card2);
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;
+                    transition:border-color .2s;position:relative;margin-bottom:12px;"
+                    onclick="document.getElementById('coverInput').click()">
+                    {% if game and game.cover %}
+                        <img id="coverPreview" src="{{ game.cover.url }}" alt="cover"
+                             style="width:100%;height:100%;object-fit:cover">
+                    {% else %}
+                        <div id="coverPlaceholder" style="text-align:center;padding:20px">
+                            <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:var(--text-faint);display:block;margin-bottom:8px"></i>
+                            <div style="font-size:.8rem;color:var(--text-faint)">کلیک کنید تا تصویر انتخاب شود</div>
+                        </div>
+                        <img id="coverPreview" src="" alt="cover"
+                             style="width:100%;height:100%;object-fit:cover;display:none">
+                    {% endif %}
+                </div>
+                <input type="file" name="cover" id="coverInput" accept="image/*"
+                       style="display:none" onchange="previewCover(this)">
+                <button type="button" class="btn-ghost" style="width:100%;font-size:.85rem"
+                        onclick="document.getElementById('coverInput').click()">
+                    <i class="bi bi-upload me-1"></i>انتخاب تصویر
+                </button>
+                <div style="font-size:.72rem;color:var(--text-faint);text-align:center;margin-top:6px">
+                    فرمت‌های مجاز: JPG, PNG, WebP
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings + Submit Card -->
+        <div class="dash-card">
+            <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+                <i class="bi bi-gear" style="color:var(--warning)"></i>
+                تنظیمات
+            </div>
+            <div style="padding-top:16px">
+                <label style="
+                    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+                    padding:12px 16px;border-radius:10px;background:var(--bg-card2);border:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--text-main)">بازی ویژه</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">در بخش ویژه نمایش داده می‌شود</div>
+                    </div>
+                    <div style="position:relative">
+                        <input type="checkbox" name="is_featured" id="featuredToggle"
+                               {% if game and game.is_featured %}checked{% endif %}
+                               style="display:none" onchange="updateToggle(this)">
+                        <div id="toggleTrack" onclick="document.getElementById('featuredToggle').click()" style="
+                            width:46px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;
+                            background:{% if game and game.is_featured %}var(--purple){% else %}var(--border){% endif %};
+                            box-shadow:{% if game and game.is_featured %}0 0 10px var(--purple-glow){% else %}none{% endif %};">
+                            <div id="toggleThumb" style="
+                                width:20px;height:20px;border-radius:50%;background:white;
+                                position:absolute;top:3px;transition:transform .2s;
+                                transform:{% if game and game.is_featured %}translateX(-22px){% else %}translateX(-3px){% endif %};
+                            "></div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px">
+                <button type="submit" class="btn-purple" style="flex:1;padding:11px 0;text-align:center;border-radius:10px;font-size:.9rem;cursor:pointer">
+                    <i class="bi {% if action == 'add' %}bi-plus-circle{% else %}bi-check-circle{% endif %} me-1"></i>
+                    {% if action == 'add' %}افزودن بازی{% else %}ذخیره تغییرات{% endif %}
+                </button>
+                <a href="{% url 'dashboard:games' %}" class="btn-ghost" style="padding:11px 16px;text-decoration:none;text-align:center;border-radius:10px;font-size:.9rem">
+                    انصراف
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</div><!-- /manualSection -->
+
 </form>
 
 {% endblock %}
 
 {% block extra_js %}
-<style>
-@keyframes dspin { to { transform: rotate(360deg); } }
-</style>
 <script>
-// ── Steam Import ──────────────────────────────────────────────────────────────
-var _dSteamData = null;
+/* ══════════════════════════════════════════════════
+   MODE SWITCHER
+══════════════════════════════════════════════════ */
+var _currentMode = 'steam';
 
-function toggleSteamCard() {
-    var body = document.getElementById('steamCardBody');
-    var label = document.getElementById('steamCardToggleLabel');
-    var chev = document.getElementById('steamCardChevron');
-    var open = body.style.display === 'none';
-    body.style.display = open ? 'block' : 'none';
-    label.textContent = open ? 'پنهان' : 'نمایش';
-    chev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+function switchMode(mode) {
+    _currentMode = mode;
+    var steamCard  = document.getElementById('modeCardSteam');
+    var manualCard = document.getElementById('modeCardManual');
+    var steamSec   = document.getElementById('steamSection');
+    var manualSec  = document.getElementById('manualSection');
+    var manualName = document.getElementById('manualName');
+
+    if (mode === 'steam') {
+        steamCard.classList.add('active');
+        manualCard.classList.remove('active');
+        steamSec.style.display  = 'block';
+        manualSec.style.display = 'none';
+        if (manualName) manualName.removeAttribute('required');
+    } else {
+        manualCard.classList.add('active');
+        steamCard.classList.remove('active');
+        manualSec.style.display = 'block';
+        steamSec.style.display  = 'none';
+        if (manualName) manualName.setAttribute('required','');
+    }
 }
 
-function dSwitchTab(tab) {
-    var tabs = ['url', 'search'];
-    tabs.forEach(function(t) {
-        var btn = document.getElementById('dtab-' + t);
-        var body = document.getElementById('dtab-' + t + '-body');
+/* ══════════════════════════════════════════════════
+   STEAM SECTION
+══════════════════════════════════════════════════ */
+var _sSteamData = null;
+
+function sSwitchTab(tab) {
+    ['url','search'].forEach(function(t) {
+        var btn  = document.getElementById('stab-' + t);
+        var body = document.getElementById('stab-' + t + '-body');
         if (t === tab) {
-            btn.style.border = '1px solid var(--purple)';
-            btn.style.background = 'rgba(139,92,246,0.15)';
-            btn.style.color = 'var(--purple-light)';
+            btn.classList.add('active');
             body.style.display = 'block';
         } else {
-            btn.style.border = '1px solid var(--border)';
-            btn.style.background = 'transparent';
-            btn.style.color = 'var(--text-muted)';
+            btn.classList.remove('active');
             body.style.display = 'none';
         }
     });
-    document.getElementById('dSteamPreview').style.display = 'none';
-    _dSteamData = null;
+    document.getElementById('sSteamPreview').classList.remove('show');
+    _sSteamData = null;
 }
 
-function dShowPreview(data) {
-    _dSteamData = data;
-    document.getElementById('dPreviewImg').src = data.cover_url || '';
-    document.getElementById('dPreviewName').textContent = data.name || '';
-    document.getElementById('dPreviewDesc').textContent = data.description || '';
-    document.getElementById('dSteamPreview').style.display = 'block';
+function sShowPreview(data) {
+    _sSteamData = data;
+    var appid = data.appid || '';
+
+    // Banner (Steam header image)
+    var bannerEl = document.getElementById('sPreviewBanner');
+    if (appid) {
+        bannerEl.src = 'https://cdn.akamai.steamstatic.com/steam/apps/' + appid + '/header.jpg';
+        bannerEl.style.display = 'block';
+    } else {
+        bannerEl.style.display = 'none';
+    }
+
+    document.getElementById('sPreviewCover').src = data.cover_url || '';
+    document.getElementById('sPreviewName').textContent = data.name || '';
+    document.getElementById('sPreviewDesc').textContent = data.description || '';
+
+    // Meta chips
+    var meta = '';
+    if (data.release_date) meta += '<span style="font-size:.72rem;padding:2px 8px;border-radius:20px;background:rgba(96,165,250,.12);color:#60a5fa">' + data.release_date + '</span>';
+    document.getElementById('sPreviewMeta').innerHTML = meta;
+
+    // Reset apply btn
+    var applyBtn = document.getElementById('sApplyBtn');
+    applyBtn.classList.remove('spc-applied');
+    applyBtn.innerHTML = '<i class="bi bi-check2-circle"></i> اعمال اطلاعات و ذخیره بازی';
+
+    document.getElementById('sSteamPreview').classList.add('show');
+    // scroll into view
+    setTimeout(function() {
+        document.getElementById('sSteamPreview').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }, 100);
 }
 
-function dFetchSteam() {
-    var url = document.getElementById('dSteamUrlInput').value.trim();
-    if (!url) return;
-    var btn = document.getElementById('dFetchBtn');
-    var err = document.getElementById('dFetchError');
+function sFetchSteam() {
+    var url = document.getElementById('sSteamUrlInput').value.trim();
+    if (!url) { document.getElementById('sSteamUrlInput').focus(); return; }
+    var btn = document.getElementById('sFetchBtn');
+    var err = document.getElementById('sFetchError');
     btn.disabled = true;
-    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:dspin .6s linear infinite;vertical-align:-2px"></span> دریافت...';
+    btn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> در حال دریافت...';
     err.style.display = 'none';
     fetch('/community/steam/fetch/?url=' + encodeURIComponent(url))
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
+        .then(function(r){ return r.json(); })
+        .then(function(d){
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-download"></i> دریافت';
+            btn.innerHTML = '<i class="bi bi-download"></i> دریافت اطلاعات';
             if (d.error) {
-                err.textContent = 'خطا: ' + d.error;
+                err.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>' + d.error;
                 err.style.display = 'block';
             } else {
-                dShowPreview(d);
+                sShowPreview(d);
             }
         })
-        .catch(function() {
+        .catch(function(){
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-download"></i> دریافت';
-            err.textContent = 'خطا در اتصال به سرور';
+            btn.innerHTML = '<i class="bi bi-download"></i> دریافت اطلاعات';
+            err.innerHTML = '<i class="bi bi-wifi-off me-1"></i> خطا در اتصال به سرور';
             err.style.display = 'block';
         });
 }
 
-var _dSearchTimer = null;
-function dSearchDebounce() {
-    clearTimeout(_dSearchTimer);
-    _dSearchTimer = setTimeout(dDoSearch, 400);
+var _sTimer = null;
+function sSearchDebounce() {
+    var q = document.getElementById('sSearchInput').value.trim();
+    document.getElementById('sSearchSpinner').style.display = q.length >= 2 ? 'block' : 'none';
+    clearTimeout(_sTimer);
+    if (q.length < 2) { document.getElementById('sSearchResults').innerHTML = ''; return; }
+    _sTimer = setTimeout(sDoSearch, 420);
 }
 
-function dDoSearch() {
-    var q = document.getElementById('dSearchInput').value.trim();
-    if (q.length < 2) { document.getElementById('dSearchResults').innerHTML = ''; return; }
-    document.getElementById('dSearchSpinner').style.display = 'block';
+function sDoSearch() {
+    var q = document.getElementById('sSearchInput').value.trim();
+    if (q.length < 2) return;
+    document.getElementById('sSearchSpinner').style.display = 'block';
     fetch('/community/steam/search/?q=' + encodeURIComponent(q))
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            document.getElementById('dSearchSpinner').style.display = 'none';
-            var container = document.getElementById('dSearchResults');
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            document.getElementById('sSearchSpinner').style.display = 'none';
+            var el = document.getElementById('sSearchResults');
             if (!d.results || !d.results.length) {
-                container.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:10px">نتیجه‌ای یافت نشد</div>';
+                el.innerHTML = '<div style="text-align:center;padding:16px;color:#3a6585;font-size:.82rem"><i class="bi bi-emoji-frown" style="font-size:1.4rem;display:block;margin-bottom:6px"></i>نتیجه‌ای پیدا نشد</div>';
                 return;
             }
-            container.innerHTML = d.results.map(function(item) {
-                return '<div onclick=\'dPickResult(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')\' style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg-card2);cursor:pointer;transition:background .15s" onmouseover="this.style.background=\'rgba(139,92,246,0.1)\'" onmouseout="this.style.background=\'var(--bg-card2)\'">' +
-                    '<img src="' + (item.cover_url || '') + '" style="width:36px;height:50px;object-fit:cover;border-radius:5px;flex-shrink:0">' +
-                    '<div style="font-size:0.85rem;color:var(--text-main);font-weight:600">' + item.name + '</div>' +
+            el.innerHTML = d.results.map(function(item) {
+                var safe = JSON.stringify(item).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                return '<div class="steam-result-item" onclick=\'sPickResult(' + safe + ')\'>' +
+                    '<img src="' + (item.cover_url||'') + '" onerror="this.style.opacity=.3" alt="">' +
+                    '<div><div class="sri-name">' + item.name + '</div><div class="sri-appid">App ID: ' + item.appid + '</div></div>' +
+                    '<i class="bi bi-arrow-left sri-arrow"></i>' +
                 '</div>';
             }).join('');
         })
-        .catch(function() {
-            document.getElementById('dSearchSpinner').style.display = 'none';
+        .catch(function(){
+            document.getElementById('sSearchSpinner').style.display = 'none';
         });
 }
 
-function dPickResult(item) {
-    // fetch full details
+function sPickResult(item) {
+    // show quick preview immediately, then fetch full details
+    sShowPreview(item);
     fetch('/community/steam/fetch/?url=https://store.steampowered.com/app/' + item.appid + '/')
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (!d.error) dShowPreview(d);
-            else dShowPreview(item);
-        })
-        .catch(function() { dShowPreview(item); });
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (!d.error) sShowPreview(d); })
+        .catch(function(){});
 }
 
-function dApplyToForm() {
-    if (!_dSteamData) return;
-    // Fill form fields
-    var nameInput = document.querySelector('input[name="name"]');
-    var descInput = document.querySelector('textarea[name="description"]');
-    if (nameInput && !nameInput.value) nameInput.value = _dSteamData.name || '';
-    else if (nameInput) nameInput.value = _dSteamData.name || nameInput.value;
-    if (descInput && !descInput.value) descInput.value = _dSteamData.description || '';
-    // Set cover URL hidden input
-    document.getElementById('dSteamCoverUrl').value = _dSteamData.cover_url || '';
-    // Show cover preview
-    if (_dSteamData.cover_url) {
-        var img = document.getElementById('coverPreview');
-        var ph = document.getElementById('coverPlaceholder');
-        img.src = _dSteamData.cover_url;
-        img.style.display = 'block';
-        if (ph) ph.style.display = 'none';
+function sApplyToForm() {
+    if (!_sSteamData) return;
+    var applyBtn = document.getElementById('sApplyBtn');
+
+    // Fill hidden fields (for Steam mode submit)
+    document.getElementById('sHiddenName').value = _sSteamData.name || '';
+    document.getElementById('sHiddenDesc').value = _sSteamData.description || '';
+    document.getElementById('dSteamCoverUrl').value = _sSteamData.cover_url || '';
+    if (_sSteamData.release_date) {
+        var yr = (_sSteamData.release_date || '').match(/\d{4}/);
+        document.getElementById('sHiddenYear').value = yr ? yr[0] : '';
     }
-    // Visual feedback
-    var btn = event.currentTarget;
-    btn.innerHTML = '<i class="bi bi-check2-all"></i> اعمال شد ✓';
-    btn.style.background = 'var(--success, #22c55e)';
-    setTimeout(function() {
-        btn.innerHTML = '<i class="bi bi-check2-circle"></i> اعمال به فرم';
-        btn.style.background = '';
-    }, 2000);
-}
-// ── End Steam Import ──────────────────────────────────────────────────────────
 
-// Cover image preview
+    // Disable manual section inputs so they don't double-submit
+    document.querySelectorAll('#manualSection input, #manualSection textarea, #manualSection select').forEach(function(el) {
+        el.disabled = true;
+    });
+
+    // Visual feedback then submit
+    applyBtn.classList.add('spc-applied');
+    applyBtn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> در حال ذخیره...';
+    applyBtn.disabled = true;
+
+    setTimeout(function(){
+        document.getElementById('gameForm').submit();
+    }, 350);
+}
+
+/* ══════════════════════════════════════════════════
+   MANUAL SECTION — Cover Preview
+══════════════════════════════════════════════════ */
 function previewCover(input) {
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
-            const img = document.getElementById('coverPreview');
-            const placeholder = document.getElementById('coverPlaceholder');
+            var img = document.getElementById('coverPreview');
+            var ph  = document.getElementById('coverPlaceholder');
             img.src = e.target.result;
             img.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
+            if (ph) ph.style.display = 'none';
         };
         reader.readAsDataURL(input.files[0]);
     }
 }
 
-// Featured toggle visual update
 function updateToggle(checkbox) {
-    const track = document.getElementById('toggleTrack');
-    const thumb = document.getElementById('toggleThumb');
+    var track = document.getElementById('toggleTrack');
+    var thumb = document.getElementById('toggleThumb');
     if (checkbox.checked) {
-        track.style.background = 'var(--purple)';
-        track.style.boxShadow = '0 0 10px var(--purple-glow)';
-        thumb.style.transform = 'translateX(-22px)';
+        track.style.background  = 'var(--purple)';
+        track.style.boxShadow   = '0 0 10px var(--purple-glow)';
+        thumb.style.transform   = 'translateX(-22px)';
     } else {
-        track.style.background = 'var(--border)';
-        track.style.boxShadow = 'none';
-        thumb.style.transform = 'translateX(-3px)';
+        track.style.background  = 'var(--border)';
+        track.style.boxShadow   = 'none';
+        thumb.style.transform   = 'translateX(-3px)';
     }
 }
 
-// Platform checkbox styling
+/* Platform checkboxes */
 document.querySelectorAll('.platform-label').forEach(function(label) {
-    const checkbox = label.querySelector('.platform-check');
-    const icon = label.querySelector('.platform-check-icon');
-
+    var checkbox = label.querySelector('.platform-check');
+    var icon     = label.querySelector('.platform-check-icon');
     function syncStyle() {
         if (checkbox.checked) {
-            label.style.background = 'rgba(139,92,246,0.15)';
-            label.style.borderColor = 'var(--purple)';
-            label.style.color = 'var(--purple-light)';
-            icon.style.background = 'var(--purple)';
-            icon.style.borderColor = 'var(--purple)';
-            icon.innerHTML = '<i class="bi bi-check" style="color:white;font-size:0.65rem"></i>';
+            label.style.background   = 'rgba(139,92,246,0.15)';
+            label.style.borderColor  = 'var(--purple)';
+            label.style.color        = 'var(--purple-light)';
+            icon.style.background    = 'var(--purple)';
+            icon.style.borderColor   = 'var(--purple)';
+            icon.innerHTML           = '<i class="bi bi-check" style="color:white;font-size:.65rem"></i>';
         } else {
-            label.style.background = 'var(--bg-card2)';
-            label.style.borderColor = 'var(--border)';
-            label.style.color = 'var(--text-muted)';
-            icon.style.background = '';
-            icon.style.borderColor = 'var(--border)';
-            icon.innerHTML = '';
+            label.style.background   = 'var(--bg-card2)';
+            label.style.borderColor  = 'var(--border)';
+            label.style.color        = 'var(--text-muted)';
+            icon.style.background    = '';
+            icon.style.borderColor   = 'var(--border)';
+            icon.innerHTML           = '';
         }
     }
+    syncStyle();
+    label.addEventListener('click', function() { checkbox.checked = !checkbox.checked; syncStyle(); });
+});
 
-    syncStyle(); // init
-    label.addEventListener('click', function() {
-        checkbox.checked = !checkbox.checked;
-        syncStyle();
+/* Cover drag & drop */
+var coverWrap = document.getElementById('coverPreviewWrap');
+if (coverWrap) {
+    coverWrap.addEventListener('dragover', function(e) {
+        e.preventDefault(); this.style.borderColor='var(--purple)'; this.style.background='rgba(139,92,246,.05)';
     });
-});
+    coverWrap.addEventListener('dragleave', function() {
+        this.style.borderColor='var(--border)'; this.style.background='var(--bg-card2)';
+    });
+    coverWrap.addEventListener('drop', function(e) {
+        e.preventDefault(); this.style.borderColor='var(--border)'; this.style.background='var(--bg-card2)';
+        var files = e.dataTransfer.files;
+        if (files.length > 0) {
+            var input = document.getElementById('coverInput');
+            var dt = new DataTransfer(); dt.items.add(files[0]); input.files = dt.files;
+            previewCover(input);
+        }
+    });
+}
 
-// Cover drag & drop
-const coverWrap = document.getElementById('coverPreviewWrap');
-coverWrap.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.style.borderColor = 'var(--purple)';
-    this.style.background = 'rgba(139,92,246,0.05)';
-});
-coverWrap.addEventListener('dragleave', function() {
-    this.style.borderColor = 'var(--border)';
-    this.style.background = 'var(--bg-card2)';
-});
-coverWrap.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.style.borderColor = 'var(--border)';
-    this.style.background = 'var(--bg-card2)';
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        const input = document.getElementById('coverInput');
-        const dt = new DataTransfer();
-        dt.items.add(files[0]);
-        input.files = dt.files;
-        previewCover(input);
-    }
-});
+/* ══ Init ══ */
+{% if action == 'edit' %}
+// Edit mode: always show manual section
+document.getElementById('manualSection').style.display = 'block';
+{% endif %}
 </script>
 {% endblock %}
