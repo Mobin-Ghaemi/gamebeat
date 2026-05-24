@@ -714,6 +714,11 @@
             <a href="{% url 'community:games_ranking' %}" class="nav-link-item {% block nav_games %}{% endblock %}">
                 <i class="bi bi-joystick"></i> بازی‌ها
             </a>
+            {% if user.is_staff or user.is_superuser %}
+            <a href="/admin-panel/" class="nav-link-item" style="color:#a78bfa; border:1px solid rgba(139,92,246,0.3); border-radius:10px;">
+                <i class="bi bi-shield-lock-fill"></i> ادمین
+            </a>
+            {% endif %}
         </div>
 
         <div class="nav-actions">
