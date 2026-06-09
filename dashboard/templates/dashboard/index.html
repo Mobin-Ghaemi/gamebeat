@@ -10,41 +10,41 @@
 <div class="row g-4 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card purple">
-            <div class="stat-card-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-card-icon"><svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg></div>
             <div class="stat-card-value">{{ stats.total_users }}</div>
             <div class="stat-card-label">کل کاربران</div>
             <div class="stat-card-sub" style="color:var(--purple-light)">
-                <i class="bi bi-arrow-up-short"></i> +{{ stats.new_users_today }} امروز
+                <svg class="bi bi-arrow-up-short" aria-hidden="true"><use href="#bi-arrow-up-short"></use></svg> +{{ stats.new_users_today }} امروز
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card green">
-            <div class="stat-card-icon"><i class="bi bi-file-post-fill"></i></div>
+            <div class="stat-card-icon"><svg class="bi bi-file-post-fill" aria-hidden="true"><use href="#bi-file-post-fill"></use></svg></div>
             <div class="stat-card-value">{{ stats.total_posts }}</div>
             <div class="stat-card-label">کل پست‌ها</div>
             <div class="stat-card-sub" style="color:#34d399">
-                <i class="bi bi-collection"></i> {{ stats.posts_today }} پست امروز
+                <svg class="bi bi-collection" aria-hidden="true"><use href="#bi-collection"></use></svg> {{ stats.posts_today }} پست امروز
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card blue">
-            <div class="stat-card-icon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="stat-card-icon"><svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg></div>
             <div class="stat-card-value">{{ stats.total_comments }}</div>
             <div class="stat-card-label">کامنت‌ها</div>
             <div class="stat-card-sub" style="color:#60a5fa">
-                <i class="bi bi-hash"></i> {{ stats.total_hashtags }} هشتگ
+                <svg class="bi bi-hash" aria-hidden="true"><use href="#bi-hash"></use></svg> {{ stats.total_hashtags }} هشتگ
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card orange">
-            <div class="stat-card-icon"><i class="bi bi-controller"></i></div>
+            <div class="stat-card-icon"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>
             <div class="stat-card-value">{{ stats.total_games }}</div>
             <div class="stat-card-label">بازی‌ها</div>
             <div class="stat-card-sub" style="color:#fcd34d">
-                <i class="bi bi-activity"></i> {{ stats.active_users }} کاربر فعال
+                <svg class="bi bi-activity" aria-hidden="true"><use href="#bi-activity"></use></svg> {{ stats.active_users }} کاربر فعال
             </div>
         </div>
     </div>
@@ -55,7 +55,7 @@
     <div class="col-lg-8">
         <div class="dash-card" style="height:100%">
             <div class="dash-card-title">
-                <i class="bi bi-bar-chart-fill" style="color:var(--purple-light)"></i>
+                <svg class="bi bi-bar-chart-fill" aria-hidden="true" style="color:var(--purple-light)"><use href="#bi-bar-chart-fill"></use></svg>
                 آمار ۳۰ روز گذشته
             </div>
             <!-- Dual bar chart: purple=users, cyan=posts -->
@@ -104,7 +104,7 @@
     <div class="col-lg-4">
         <div class="dash-card" style="height:100%">
             <div class="dash-card-title">
-                <i class="bi bi-hash" style="color:#fcd34d"></i>
+                <svg class="bi bi-hash" aria-hidden="true" style="color:#fcd34d"><use href="#bi-hash"></use></svg>
                 هشتگ‌های برتر
             </div>
             {% if top_hashtags %}
@@ -128,7 +128,7 @@
             </div>
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-faint)">
-                <i class="bi bi-hash" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                <svg class="bi bi-hash" aria-hidden="true" style="font-size:2rem;display:block;margin-bottom:8px"><use href="#bi-hash"></use></svg>
                 هنوز هشتگی ثبت نشده
             </div>
             {% endif %}
@@ -140,7 +140,7 @@
 <div class="row g-4 mb-4">
     <div class="col-lg-4 col-md-6">
         <div class="dash-card">
-            <div class="dash-card-title"><i class="bi bi-graph-up-arrow" style="color:#34d399"></i> آمار کلی</div>
+            <div class="dash-card-title"><svg class="bi bi-graph-up-arrow" aria-hidden="true" style="color:#34d399"><use href="#bi-graph-up-arrow"></use></svg> آمار کلی</div>
             <div style="display:flex;flex-direction:column;gap:12px">
                 <div style="display:flex;justify-content:space-between;align-items:center">
                     <span style="font-size:0.85rem;color:var(--text-muted)">کاربران جدید (ماه)</span>
@@ -167,8 +167,8 @@
     <div class="col-lg-6">
         <div class="dash-card">
             <div class="dash-card-title d-flex justify-content-between align-items-center" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
-                <span><i class="bi bi-person-lines-fill" style="color:var(--purple-light)"></i> آخرین کاربران</span>
-                <a href="{% url 'dashboard:users' %}" style="font-size:0.78rem;color:var(--purple-light);text-decoration:none">مشاهده همه <i class="bi bi-arrow-left-short"></i></a>
+                <span><svg class="bi bi-person-lines-fill" aria-hidden="true" style="color:var(--purple-light)"><use href="#bi-person-lines-fill"></use></svg> آخرین کاربران</span>
+                <a href="{% url 'dashboard:users' %}" style="font-size:0.78rem;color:var(--purple-light);text-decoration:none">مشاهده همه <svg class="bi bi-arrow-left-short" aria-hidden="true"><use href="#bi-arrow-left-short"></use></svg></a>
             </div>
             <div style="margin-top:12px">
                 {% if recent_users %}
@@ -210,7 +210,7 @@
                 </table>
                 {% else %}
                 <div style="text-align:center;padding:30px;color:var(--text-faint)">
-                    <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                    <svg class="bi bi-people" aria-hidden="true" style="font-size:2rem;display:block;margin-bottom:8px"><use href="#bi-people"></use></svg>
                     هنوز کاربری ثبت نشده
                 </div>
                 {% endif %}
@@ -222,8 +222,8 @@
     <div class="col-lg-6">
         <div class="dash-card">
             <div class="dash-card-title d-flex justify-content-between align-items-center" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
-                <span><i class="bi bi-file-post-fill" style="color:#34d399"></i> آخرین پست‌ها</span>
-                <a href="{% url 'dashboard:posts' %}" style="font-size:0.78rem;color:#34d399;text-decoration:none">مشاهده همه <i class="bi bi-arrow-left-short"></i></a>
+                <span><svg class="bi bi-file-post-fill" aria-hidden="true" style="color:#34d399"><use href="#bi-file-post-fill"></use></svg> آخرین پست‌ها</span>
+                <a href="{% url 'dashboard:posts' %}" style="font-size:0.78rem;color:#34d399;text-decoration:none">مشاهده همه <svg class="bi bi-arrow-left-short" aria-hidden="true"><use href="#bi-arrow-left-short"></use></svg></a>
             </div>
             <div style="margin-top:12px">
                 {% if recent_posts %}
@@ -258,7 +258,7 @@
                 </table>
                 {% else %}
                 <div style="text-align:center;padding:30px;color:var(--text-faint)">
-                    <i class="bi bi-chat-square" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                    <svg class="bi bi-chat-square" aria-hidden="true" style="font-size:2rem;display:block;margin-bottom:8px"><use href="#bi-chat-square"></use></svg>
                     هنوز پستی ثبت نشده
                 </div>
                 {% endif %}

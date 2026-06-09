@@ -1,5 +1,7 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, Achievement
+from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 
 admin.site.register(GamerProfile)
 admin.site.register(Post)
@@ -8,3 +10,69 @@ admin.site.register(Comment)
 admin.site.register(Follow)
 admin.site.register(LFGPost)
 admin.site.register(Achievement)
+admin.site.register(ActivityLog)
+admin.site.register(Club)
+admin.site.register(ClubMember)
+admin.site.register(ClubPost)
+
+
+@admin.register(Challenge)
+class ChallengeAdmin(admin.ModelAdmin):
+    list_display = ('title', 'challenge_type', 'start_date', 'end_date', 'is_active')
+    list_filter = ('challenge_type', 'is_active')
+    search_fields = ('title',)
+
+
+@admin.register(ScoreSettings)
+class ScoreSettingsAdmin(admin.ModelAdmin):
+    """
+    Singleton admin — فقط یک ردیف قابل ویرایش است.
+    دکمه‌های Add و Delete حذف شده‌اند.
+    """
+    fieldsets = (
+        ('💓 ضریب ضربان لیدربورد', {
+            'description': (
+                'این مقادیر در محاسبه رتبه‌بندی لیدربورد استفاده می‌شوند. '
+                'تغییرات بلافاصله اعمال می‌شود.'
+            ),
+            'fields': ('post_score', 'comment_score', 'active_day_score'),
+        }),
+        ('اطلاعات', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',),
+        }),
+    )
+    readonly_fields = ('updated_at',)
+
+    def formula_preview(self, obj):
+        return format_html(
+            '<span style="font-size:1rem; font-weight:700;">'
+            '📝 پست × <b style="color:#fb923c;">{}</b> &nbsp;|&nbsp; '
+            '💬 کامنت × <b style="color:#fb923c;">{}</b> &nbsp;|&nbsp; '
+            '📅 روز فعال × <b style="color:#a78bfa;">{}</b>'
+            '</span>',
+            obj.post_score, obj.comment_score, obj.active_day_score,
+        )
+    formula_preview.short_description = 'فرمول فعلی'
+
+    list_display = ('formula_preview', 'updated_at')
+
+    # ── Singleton: جلوگیری از Add و Delete ──
+    def has_add_permission(self, request):
+        return not ScoreSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_object(self, request, object_id, *args, **kwargs):
+        # همیشه pk=1 برگردان
+        return ScoreSettings.get()
+
+    def changelist_view(self, request, extra_context=None):
+        # اگر رکورد وجود دارد مستقیم به صفحه ویرایش برو
+        obj, _ = ScoreSettings.objects.get_or_create(pk=1)
+        from django.http import HttpResponseRedirect
+        from django.urls import reverse
+        return HttpResponseRedirect(
+            reverse('admin:community_scoresettings_change', args=[obj.pk])
+        )

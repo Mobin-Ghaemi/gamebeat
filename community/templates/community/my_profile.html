@@ -93,13 +93,6 @@
 .ph-bio  { font-size:.88rem; color:var(--text-muted); margin-top:8px; line-height:1.6; }
 
 .badges-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
-.lv-badge {
-    display:inline-flex; align-items:center; gap:5px;
-    background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(168,85,247,.2));
-    border:1px solid rgba(168,85,247,.4); color:#c084fc;
-    padding:3px 12px; border-radius:20px; font-size:.75rem; font-weight:800;
-}
-
 /* stat strip */
 .stat-strip { display:flex; border-top:1px solid var(--border); margin-top:16px; }
 .stat-cell {
@@ -111,14 +104,6 @@
 .stat-cell:hover { background:rgba(139,92,246,.06); }
 .stat-n { font-size:1.2rem; font-weight:900; color:#fff; }
 .stat-l { font-size:.68rem; color:var(--text-dim); margin-top:2px; }
-.stat-n.xp { color:#a855f7; }
-
-/* xp bar */
-.xp-strip { padding:0 22px 16px; }
-.xp-meta { display:flex; justify-content:space-between; font-size:.73rem; color:var(--text-dim); margin-bottom:5px; }
-.xp-track { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
-.xp-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#a855f7); border-radius:3px; transition:width .7s ease; }
-
 /* action buttons */
 .ph-actions { display:flex; gap:8px; flex-wrap:wrap; padding-bottom:4px; }
 .btn-outline-purple {
@@ -237,24 +222,6 @@
 /* ─── Sidebar cards ──────────────────────────────────── */
 .sidebar-section { margin-bottom:16px; }
 
-/* XP card */
-.xp-sidebar-card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
-.xp-card-top {
-    padding:20px 20px 16px;
-    background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(168,85,247,.06));
-    border-bottom:1px solid var(--border);
-}
-.xp-level-big {
-    font-size:2.8rem; font-weight:900; line-height:1;
-    background:linear-gradient(135deg,#8b5cf6,#a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-.xp-level-label { font-size:.75rem; color:var(--text-dim); margin-top:2px; }
-.xp-card-body { padding:16px 20px; }
-.xp-progress-label { display:flex; justify-content:space-between; font-size:.73rem; color:var(--text-dim); margin-bottom:6px; }
-.xp-bar-bg { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
-.xp-bar-fg { height:100%; background:linear-gradient(90deg,#8b5cf6,#a855f7); border-radius:4px; transition:width .8s ease; }
-.xp-next { font-size:.72rem; color:var(--text-dim); margin-top:6px; text-align:center; }
-
 /* quick link */
 .quick-link {
     display:flex; align-items:center; gap:10px; padding:10px 12px;
@@ -309,7 +276,7 @@
 <div class="acct-banner" onclick="document.getElementById('bannerInput').click()">
     {% if profile.banner %}<img src="{{ profile.banner.url }}" alt="">{% endif %}
     <div class="banner-overlay">
-        <i class="bi bi-camera"></i>
+        <svg class="bi bi-camera" aria-hidden="true"><use href="#bi-camera"></use></svg>
         <span>تغییر بنر</span>
     </div>
 </div>
@@ -330,14 +297,11 @@
                         {% else %}
                             <div class="av-init">{{ request.user.username|first|upper }}</div>
                         {% endif %}
-                        <div class="av-lens"><i class="bi bi-camera-fill"></i></div>
+                        <div class="av-lens"><svg class="bi bi-camera-fill" aria-hidden="true"><use href="#bi-camera-fill"></use></svg></div>
                     </div>
                     <div class="ph-actions">
                         <a href="{% url 'community:profile' username=request.user.username %}" class="btn-outline-purple">
-                            <i class="bi bi-eye"></i> مشاهده پروفایل
-                        </a>
-                        <a href="{% url 'account:dashboard' %}" class="btn-outline-purple">
-                            <i class="bi bi-joystick"></i> گیم‌نت
+                            <svg class="bi bi-eye" aria-hidden="true"><use href="#bi-eye"></use></svg> مشاهده پروفایل
                         </a>
                     </div>
                 </div>
@@ -347,10 +311,9 @@
                 {% if profile.bio %}<div class="ph-bio">{{ profile.bio }}</div>{% endif %}
 
                 <div class="badges-row">
-                    <span class="lv-badge"><i class="bi bi-star-fill"></i> Level {{ profile.level }}</span>
                     {% if profile.platform %}<span class="platform-badge"><i class="{{ profile.platform_icon }}"></i> {{ profile.get_platform_display }}</span>{% endif %}
-                    {% if profile.rank %}<span class="rank-badge rank-{{ profile.rank|lower }}"><i class="bi bi-shield-fill"></i> {{ profile.rank }}</span>{% endif %}
-                    {% if profile.city %}<span style="color:var(--text-dim);font-size:.78rem;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-geo-alt-fill"></i>{{ profile.city }}</span>{% endif %}
+                    {% if profile.rank %}<span class="rank-badge rank-{{ profile.rank|lower }}"><svg class="bi bi-shield-fill" aria-hidden="true"><use href="#bi-shield-fill"></use></svg> {{ profile.rank }}</span>{% endif %}
+                    {% if profile.city %}<span style="color:var(--text-dim);font-size:.78rem;display:inline-flex;align-items:center;gap:4px;"><svg class="bi bi-geo-alt-fill" aria-hidden="true"><use href="#bi-geo-alt-fill"></use></svg>{{ profile.city }}</span>{% endif %}
                 </div>
             </div>
 
@@ -367,18 +330,6 @@
                     <div class="stat-n">{{ profile.following_count }}</div>
                     <div class="stat-l">دنبال می‌کنم</div>
                 </div>
-                <div class="stat-cell">
-                    <div class="stat-n xp">{{ profile.xp }}</div>
-                    <div class="stat-l">XP</div>
-                </div>
-            </div>
-
-            <div class="xp-strip">
-                <div class="xp-meta">
-                    <span>{{ profile.xp }} / {{ profile.level|add:1 }}00 XP</span>
-                    <span>{{ profile.level_progress }}% تا Level {{ profile.level|add:1 }}</span>
-                </div>
-                <div class="xp-track"><div class="xp-fill" style="width:{{ profile.level_progress }}%"></div></div>
             </div>
         </div>
 
@@ -402,19 +353,19 @@
 
                 <div class="post-expanded" id="postExpanded">
                     <div class="type-tabs">
-                        <button type="button" class="type-tab on" onclick="setType('text',this)"><i class="bi bi-chat-text"></i> متن</button>
-                        <button type="button" class="type-tab" onclick="setType('achievement',this)"><i class="bi bi-trophy" style="color:#ffd700"></i> دستاورد</button>
-                        <button type="button" class="type-tab" onclick="setType('highlight',this)"><i class="bi bi-lightning" style="color:#a855f7"></i> هایلایت</button>
-                        <button type="button" class="type-tab" onclick="setType('lfg',this)"><i class="bi bi-people" style="color:#00d4ff"></i> LFG</button>
+                        <button type="button" class="type-tab on" onclick="setType('text',this)"><svg class="bi bi-chat-text" aria-hidden="true"><use href="#bi-chat-text"></use></svg> متن</button>
+                        <button type="button" class="type-tab" onclick="setType('achievement',this)"><svg class="bi bi-trophy" aria-hidden="true" style="color:#ffd700"><use href="#bi-trophy"></use></svg> دستاورد</button>
+                        <button type="button" class="type-tab" onclick="setType('highlight',this)"><svg class="bi bi-lightning" aria-hidden="true" style="color:#a855f7"><use href="#bi-lightning"></use></svg> هایلایت</button>
+                        <button type="button" class="type-tab" onclick="setType('lfg',this)"><svg class="bi bi-people" aria-hidden="true" style="color:#00d4ff"><use href="#bi-people"></use></svg> LFG</button>
                     </div>
                     <div class="post-foot-row">
                         <input type="text" name="game_tag" class="g-input" placeholder="تگ بازی مثلاً: CS2" style="max-width:160px; padding:7px 12px;">
                         <label class="attach-btn">
-                            <i class="bi bi-image"></i> <span id="imgTxt">تصویر</span>
+                            <svg class="bi bi-image" aria-hidden="true"><use href="#bi-image"></use></svg> <span id="imgTxt">تصویر</span>
                             <input type="file" name="image" accept="image/*" style="display:none" onchange="document.getElementById('imgTxt').textContent=this.files[0]?.name.slice(0,14)||'تصویر'">
                         </label>
                         <button type="submit" class="post-send-btn">
-                            <i class="bi bi-send-fill"></i> ارسال
+                            <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg> ارسال
                         </button>
                     </div>
                 </div>
@@ -431,7 +382,7 @@
             <!-- Personal Info -->
             <div class="acct-card">
                 <div class="card-head">
-                    <div class="card-title"><div class="card-icon"><i class="bi bi-person-fill"></i></div> اطلاعات شخصی</div>
+                    <div class="card-title"><div class="card-icon"><svg class="bi bi-person-fill" aria-hidden="true"><use href="#bi-person-fill"></use></svg></div> اطلاعات شخصی</div>
                 </div>
                 <div class="form-sec">
                     <div class="field-row field">
@@ -463,7 +414,7 @@
             <!-- Platform -->
             <div class="acct-card">
                 <div class="card-head">
-                    <div class="card-title"><div class="card-icon"><i class="bi bi-controller"></i></div> پلتفرم اصلی</div>
+                    <div class="card-title"><div class="card-icon"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div> پلتفرم اصلی</div>
                     <span style="font-size:.75rem; color:var(--text-dim);">روی چی بیشتر بازی می‌کنی؟</span>
                 </div>
                 <div class="form-sec">
@@ -472,12 +423,12 @@
                         <div class="po">
                             <input type="radio" name="platform" id="p_{{ val }}" value="{{ val }}" {% if profile.platform == val %}checked{% endif %}>
                             <label for="p_{{ val }}">
-                                {% if val == 'pc' %}<i class="bi bi-pc-display"></i>
-                                {% elif val == 'ps5' or val == 'ps4' %}<i class="bi bi-playstation"></i>
-                                {% elif val == 'xbox' %}<i class="bi bi-xbox"></i>
-                                {% elif val == 'mobile' %}<i class="bi bi-phone"></i>
-                                {% elif val == 'nintendo' %}<i class="bi bi-joystick"></i>
-                                {% else %}<i class="bi bi-controller"></i>{% endif %}
+                                {% if val == 'pc' %}<svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>
+                                {% elif val == 'ps5' or val == 'ps4' %}<svg class="bi bi-playstation" aria-hidden="true"><use href="#bi-playstation"></use></svg>
+                                {% elif val == 'xbox' %}<svg class="bi bi-xbox" aria-hidden="true"><use href="#bi-xbox"></use></svg>
+                                {% elif val == 'mobile' %}<svg class="bi bi-phone" aria-hidden="true"><use href="#bi-phone"></use></svg>
+                                {% elif val == 'nintendo' %}<svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg>
+                                {% else %}<svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>{% endif %}
                                 {{ label }}
                             </label>
                         </div>
@@ -489,7 +440,7 @@
             <!-- Games & Style -->
             <div class="acct-card">
                 <div class="card-head">
-                    <div class="card-title"><div class="card-icon"><i class="bi bi-joystick"></i></div> بازی‌ها و سبک</div>
+                    <div class="card-title"><div class="card-icon"><svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg></div> بازی‌ها و سبک</div>
                 </div>
                 <div class="form-sec">
                     <div class="field">
@@ -545,29 +496,29 @@
             <!-- Gaming IDs -->
             <div class="acct-card">
                 <div class="card-head">
-                    <div class="card-title"><div class="card-icon"><i class="bi bi-link-45deg"></i></div> آیدی‌های گیمینگ</div>
+                    <div class="card-title"><div class="card-icon"><svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg></div> آیدی‌های گیمینگ</div>
                     <span style="font-size:.75rem; color:var(--text-dim);">Steam · PSN · Xbox</span>
                 </div>
                 <div class="form-sec">
                     <div class="field">
-                        <label class="g-label"><i class="bi bi-steam" style="color:#66c0f4;"></i> Steam</label>
+                        <label class="g-label"><svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;"><use href="#bi-steam"></use></svg> Steam</label>
                         <div class="social-field">
                             <input type="text" name="steam_id" value="{{ profile.steam_id }}" placeholder="steam username">
-                            <span class="social-prefix"><i class="bi bi-steam" style="color:#66c0f4;"></i></span>
+                            <span class="social-prefix"><svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;"><use href="#bi-steam"></use></svg></span>
                         </div>
                     </div>
                     <div class="field">
-                        <label class="g-label"><i class="bi bi-playstation" style="color:#0070d1;"></i> PlayStation Network</label>
+                        <label class="g-label"><svg class="bi bi-playstation" aria-hidden="true" style="color:#0070d1;"><use href="#bi-playstation"></use></svg> PlayStation Network</label>
                         <div class="social-field">
                             <input type="text" name="psn_id" value="{{ profile.psn_id }}" placeholder="PSN ID">
-                            <span class="social-prefix"><i class="bi bi-playstation" style="color:#0070d1;"></i></span>
+                            <span class="social-prefix"><svg class="bi bi-playstation" aria-hidden="true" style="color:#0070d1;"><use href="#bi-playstation"></use></svg></span>
                         </div>
                     </div>
                     <div class="field" style="margin-bottom:0">
-                        <label class="g-label"><i class="bi bi-xbox" style="color:#107c10;"></i> Xbox</label>
+                        <label class="g-label"><svg class="bi bi-xbox" aria-hidden="true" style="color:#107c10;"><use href="#bi-xbox"></use></svg> Xbox</label>
                         <div class="social-field">
                             <input type="text" name="xbox_gamertag" value="{{ profile.xbox_gamertag }}" placeholder="Gamertag">
-                            <span class="social-prefix"><i class="bi bi-xbox" style="color:#107c10;"></i></span>
+                            <span class="social-prefix"><svg class="bi bi-xbox" aria-hidden="true" style="color:#107c10;"><use href="#bi-xbox"></use></svg></span>
                         </div>
                     </div>
                 </div>
@@ -576,7 +527,7 @@
             <!-- Save Bar -->
             <div class="save-bar-fixed">
                 <button type="submit" class="save-main-btn" onclick="showSavedToast()">
-                    <i class="bi bi-check2-circle"></i> ذخیره تغییرات
+                    <svg class="bi bi-check2-circle" aria-hidden="true"><use href="#bi-check2-circle"></use></svg> ذخیره تغییرات
                 </button>
             </div>
         </form>
@@ -586,62 +537,27 @@
     <!-- ▌ SIDEBAR -->
     <div>
 
-        <!-- XP Level Card -->
-        <div class="xp-sidebar-card sidebar-section">
-            <div class="xp-card-top">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div>
-                        <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:2px;">سطح فعلی</div>
-                        <div class="xp-level-big">{{ profile.level }}</div>
-                        <div class="xp-level-label">Level {{ profile.level }} · {{ profile.xp }} XP</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-size:1.8rem; font-weight:900; color:var(--text-white);">{{ profile.posts_count }}</div>
-                        <div style="font-size:.7rem; color:var(--text-dim);">پست</div>
-                    </div>
-                </div>
-            </div>
-            <div class="xp-card-body">
-                <div class="xp-progress-label">
-                    <span>{{ profile.xp }} XP</span>
-                    <span>{{ profile.level_progress }}%</span>
-                </div>
-                <div class="xp-bar-bg"><div class="xp-bar-fg" style="width:{{ profile.level_progress }}%"></div></div>
-                <div class="xp-next">{{ profile.level_progress }}% تا Level {{ profile.level|add:1 }}</div>
-                <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
-                        <div style="font-size:1.1rem;font-weight:800;color:#fff;">{{ profile.followers_count }}</div>
-                        <div style="font-size:.68rem;color:var(--text-dim);">دنبال‌کننده</div>
-                    </div>
-                    <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
-                        <div style="font-size:1.1rem;font-weight:800;color:#fff;">{{ profile.following_count }}</div>
-                        <div style="font-size:.68rem;color:var(--text-dim);">دنبال‌شده</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Gaming IDs sidebar preview -->
         {% if profile.steam_id or profile.psn_id or profile.xbox_gamertag %}
         <div class="acct-card sidebar-section" style="border-radius:16px; padding:16px; margin-bottom:16px;">
             <div style="font-size:.82rem;font-weight:800;color:var(--text-white);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-                <i class="bi bi-controller" style="color:#8b5cf6;"></i> آیدی‌های گیمینگ
+                <svg class="bi bi-controller" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-controller"></use></svg> آیدی‌های گیمینگ
             </div>
             {% if profile.steam_id %}
             <div class="social-badge">
-                <i class="bi bi-steam" style="color:#66c0f4; font-size:1.1rem;"></i>
+                <svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4; font-size:1.1rem;"><use href="#bi-steam"></use></svg>
                 <div><div class="sb-label">Steam</div><div class="sb-val">{{ profile.steam_id }}</div></div>
             </div>
             {% endif %}
             {% if profile.psn_id %}
             <div class="social-badge">
-                <i class="bi bi-playstation" style="color:#0070d1; font-size:1.1rem;"></i>
+                <svg class="bi bi-playstation" aria-hidden="true" style="color:#0070d1; font-size:1.1rem;"><use href="#bi-playstation"></use></svg>
                 <div><div class="sb-label">PSN</div><div class="sb-val">{{ profile.psn_id }}</div></div>
             </div>
             {% endif %}
             {% if profile.xbox_gamertag %}
             <div class="social-badge" style="margin-bottom:0">
-                <i class="bi bi-xbox" style="color:#107c10; font-size:1.1rem;"></i>
+                <svg class="bi bi-xbox" aria-hidden="true" style="color:#107c10; font-size:1.1rem;"><use href="#bi-xbox"></use></svg>
                 <div><div class="sb-label">Xbox</div><div class="sb-val">{{ profile.xbox_gamertag }}</div></div>
             </div>
             {% endif %}
@@ -651,28 +567,24 @@
         <!-- Quick Links -->
         <div class="acct-card sidebar-section" style="border-radius:16px; padding:10px; margin-bottom:0;">
             <a href="{% url 'community:feed' %}" class="quick-link">
-                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="bi bi-house-fill"></i></div>
+                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><svg class="bi bi-house-fill" aria-hidden="true"><use href="#bi-house-fill"></use></svg></div>
                 فید اصلی
             </a>
             <a href="{% url 'community:profile' username=request.user.username %}" class="quick-link">
-                <div class="ql-icon" style="background:rgba(168,85,247,.1);color:#a855f7;"><i class="bi bi-person-circle"></i></div>
+                <div class="ql-icon" style="background:rgba(168,85,247,.1);color:#a855f7;"><svg class="bi bi-person-circle" aria-hidden="true"><use href="#bi-person-circle"></use></svg></div>
                 پروفایل عمومی
             </a>
             <a href="{% url 'community:search' %}" class="quick-link">
-                <div class="ql-icon" style="background:rgba(0,212,255,.08);color:#00d4ff;"><i class="bi bi-search"></i></div>
+                <div class="ql-icon" style="background:rgba(0,212,255,.08);color:#00d4ff;"><svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg></div>
                 جستجوی گیمر
             </a>
             <a href="{% url 'community:leaderboard' %}" class="quick-link">
-                <div class="ql-icon" style="background:rgba(255,215,0,.1);color:#ffd700;"><i class="bi bi-trophy-fill"></i></div>
+                <div class="ql-icon" style="background:rgba(255,215,0,.1);color:#ffd700;"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg></div>
                 لیدربورد
-            </a>
-            <a href="{% url 'account:dashboard' %}" class="quick-link">
-                <div class="ql-icon" style="background:rgba(255,107,53,.1);color:#ff6b35;"><i class="bi bi-joystick"></i></div>
-                داشبورد گیم‌نت
             </a>
             <div style="border-top:1px solid var(--border); margin:6px 0;"></div>
             <a href="{% url 'account:logout' %}" class="quick-link" style="color:#8b5cf6;">
-                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><i class="bi bi-box-arrow-right"></i></div>
+                <div class="ql-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;"><svg class="bi bi-box-arrow-right" aria-hidden="true"><use href="#bi-box-arrow-right"></use></svg></div>
                 خروج
             </a>
         </div>
@@ -682,7 +594,7 @@
 </div><!-- /acct-body -->
 
 <!-- Toast -->
-<div class="saved-toast" id="savedToast"><i class="bi bi-check-circle-fill"></i> ذخیره شد!</div>
+<div class="saved-toast" id="savedToast"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> ذخیره شد!</div>
 
 </div>
 {% endblock %}

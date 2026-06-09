@@ -23,17 +23,17 @@
                     <div class="hero-buttons d-flex flex-column flex-md-row gap-3">
                         {% if user.is_authenticated %}
                             <a href="{% url 'account:dashboard' %}" class="btn btn-primary btn-lg px-5">
-                                <i class="bi bi-grid-fill"></i>
+                                <svg class="bi bi-grid-fill" aria-hidden="true"><use href="#bi-grid-fill"></use></svg>
                                 داشبورد من
                             </a>
                         {% else %}
                             <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg px-5">
-                                <i class="bi bi-rocket-takeoff"></i>
+                                <svg class="bi bi-rocket-takeoff" aria-hidden="true"><use href="#bi-rocket-takeoff"></use></svg>
                                 شروع رایگان
                             </a>
                         {% endif %}
                         <a href="#features" class="btn btn-outline-light btn-lg px-5">
-                            <i class="bi bi-arrow-down-circle"></i>
+                            <svg class="bi bi-arrow-down-circle" aria-hidden="true"><use href="#bi-arrow-down-circle"></use></svg>
                             بیشتر بدانید
                         </a>
                     </div>
@@ -44,17 +44,17 @@
                 <div class="hero-image text-center">
                     <div class="gaming-showcase">
                         <div class="gaming-card">
-                            <i class="bi bi-controller" style="font-size: 8rem; color: var(--primary-purple);"></i>
+                            <svg class="bi bi-controller" aria-hidden="true" style="font-size: 8rem; color: var(--primary-purple);"><use href="#bi-controller"></use></svg>
                         </div>
                         <div class="floating-elements">
                             <div class="floating-element element-1">
-                                <i class="bi bi-laptop"></i>
+                                <svg class="bi bi-laptop" aria-hidden="true"><use href="#bi-laptop"></use></svg>
                             </div>
                             <div class="floating-element element-2">
-                                <i class="bi bi-graph-up"></i>
+                                <svg class="bi bi-graph-up" aria-hidden="true"><use href="#bi-graph-up"></use></svg>
                             </div>
                             <div class="floating-element element-3">
-                                <i class="bi bi-people"></i>
+                                <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
                             </div>
                         </div>
                     </div>
@@ -85,7 +85,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-laptop"></i>
+                        <svg class="bi bi-laptop" aria-hidden="true"><use href="#bi-laptop"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">مدیریت دستگاه‌ها</h5>
                     <p style="color: var(--text-muted);">
@@ -97,7 +97,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-stopwatch"></i>
+                        <svg class="bi bi-stopwatch" aria-hidden="true"><use href="#bi-stopwatch"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">مدیریت جلسات</h5>
                     <p style="color: var(--text-muted);">
@@ -109,7 +109,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-graph-up"></i>
+                        <svg class="bi bi-graph-up" aria-hidden="true"><use href="#bi-graph-up"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">گزارشات تفصیلی</h5>
                     <p style="color: var(--text-muted);">
@@ -121,7 +121,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-shield-check"></i>
+                        <svg class="bi bi-shield-check" aria-hidden="true"><use href="#bi-shield-check"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">امنیت بالا</h5>
                     <p style="color: var(--text-muted);">
@@ -133,7 +133,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-cloud"></i>
+                        <svg class="bi bi-cloud" aria-hidden="true"><use href="#bi-cloud"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">Cloud-Based</h5>
                     <p style="color: var(--text-muted);">
@@ -145,7 +145,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="feature-card text-center p-4">
                     <div class="feature-icon mb-3">
-                        <i class="bi bi-headset"></i>
+                        <svg class="bi bi-headset" aria-hidden="true"><use href="#bi-headset"></use></svg>
                     </div>
                     <h5 class="fw-bold mb-3">پشتیبانی ۲۴/۷</h5>
                     <p style="color: var(--text-muted);">
@@ -187,10 +187,10 @@
                     </div>
                     <div class="pricing-features">
                         <ul>
-                            <li><i class="bi bi-check"></i> مدیریت نامحدود دستگاه</li>
-                            <li><i class="bi bi-check"></i> گزارش‌های تفصیلی</li>
-                            <li><i class="bi bi-check"></i> پشتیبانی آنلاین</li>
-                            <li><i class="bi bi-check"></i> بروزرسانی رایگان</li>
+                            <li><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg> مدیریت نامحدود دستگاه</li>
+                            <li><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg> گزارش‌های تفصیلی</li>
+                            <li><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg> پشتیبانی آنلاین</li>
+                            <li><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg> بروزرسانی رایگان</li>
                         </ul>
                     </div>
                     <div class="pricing-action">
@@ -226,12 +226,12 @@
                 </p>
                 {% if user.is_authenticated %}
                     <a href="{% url 'account:dashboard' %}" class="btn btn-primary btn-lg px-5">
-                        <i class="bi bi-grid-fill"></i>
+                        <svg class="bi bi-grid-fill" aria-hidden="true"><use href="#bi-grid-fill"></use></svg>
                         ورود به داشبورد
                     </a>
                 {% else %}
                     <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg px-5">
-                        <i class="bi bi-rocket-takeoff"></i>
+                        <svg class="bi bi-rocket-takeoff" aria-hidden="true"><use href="#bi-rocket-takeoff"></use></svg>
                         ثبت نام رایگان
                     </a>
                 {% endif %}

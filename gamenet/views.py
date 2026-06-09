@@ -1486,7 +1486,6 @@ def panel_reports(request, slug):
 # ==================== Quick Session API ====================
 
 @gamenet_subscription_required_api
-@gamenet_subscription_required_api
 @require_POST
 def quick_start_session(request, device_id):
     """شروع سریع جلسه بدون نیاز به فرم"""

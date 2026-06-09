@@ -1,0 +1,185 @@
+{% extends 'community/base.html' %}
+{% block title %}ساخت کانال | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.cc-wrap { max-width: 540px; margin: 40px auto; padding: 0 16px; direction: rtl; }
+.cc-card {
+  background: #0d0d1a;
+  border: 1px solid rgba(5,150,105,.2);
+  border-radius: 24px; padding: 32px;
+}
+.cc-title { font-size: 1.2rem; font-weight: 900; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+.cc-sub { font-size: .83rem; color: #3d3d55; margin-bottom: 28px; }
+.cc-label { font-size: .8rem; font-weight: 700; color: #888; margin-bottom: 6px; display: block; }
+.cc-input {
+  width: 100%; background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+  color: #e2e2e2; font-size: .88rem; padding: 12px 16px;
+  font-family: 'Vazirmatn', sans-serif; outline: none;
+  transition: all .2s; box-sizing: border-box;
+}
+.cc-input:focus {
+  border-color: rgba(5,150,105,.5);
+  background: rgba(5,150,105,.06);
+  box-shadow: 0 0 0 3px rgba(5,150,105,.1);
+}
+.cc-field { margin-bottom: 20px; }
+.cc-icon-preview {
+  width: 72px; height: 72px; border-radius: 18px;
+  background: linear-gradient(135deg,#064e3b,#059669);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; cursor: pointer; margin-bottom: 10px;
+  border: 2px dashed rgba(5,150,105,.4);
+  transition: all .2s; overflow: hidden;
+}
+.cc-icon-preview:hover { border-color: rgba(5,150,105,.8); }
+.cc-icon-preview img { width:100%;height:100%;object-fit:cover; }
+
+.cc-username-wrap { position: relative; }
+.cc-username-prefix {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: #059669; font-weight: 900; font-size: .95rem; pointer-events: none;
+}
+.cc-input.username { padding-right: 32px; }
+.cc-username-hint { font-size: .74rem; color: #3d3d55; margin-top: 5px; }
+
+.cc-toggle {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 14px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+  cursor: pointer; user-select: none;
+}
+.cc-toggle-info { flex: 1; }
+.cc-toggle-title { font-size: .85rem; font-weight: 700; color: #ccc; margin-bottom: 2px; }
+.cc-toggle-desc { font-size: .74rem; color: #444; }
+.cc-switch {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  position: relative; transition: all .25s; flex-shrink: 0;
+}
+.cc-switch.on { background: linear-gradient(135deg,#047857,#059669); border-color: #059669; box-shadow: 0 0 10px rgba(5,150,105,.4); }
+.cc-switch::after {
+  content: ''; position: absolute; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; top: 2px; right: 3px;
+  transition: transform .25s; box-shadow: 0 2px 4px rgba(0,0,0,.3);
+}
+.cc-switch.on::after { transform: translateX(-20px); }
+#isPublicInput { display: none; }
+
+.cc-error {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+  border-radius: 12px; padding: 12px 16px;
+  color: #fca5a5; font-size: .84rem; margin-bottom: 16px;
+}
+.cc-submit {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg,#047857,#059669);
+  border: none; border-radius: 16px;
+  color: #fff; font-size: .95rem; font-weight: 900;
+  cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+  box-shadow: 0 6px 20px rgba(5,150,105,.4);
+  transition: all .2s; margin-top: 8px;
+}
+.cc-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(5,150,105,.5); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cc-wrap">
+  <div class="cc-card">
+    <div class="cc-title">
+      <svg style="width:1.3em;height:1.3em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg>
+      ساخت کانال جدید
+    </div>
+    <p class="cc-sub">محتوای خودت رو با مشترکانت به اشتراک بذار</p>
+
+    {% if error %}
+    <div class="cc-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="cc-field">
+        <label class="cc-label">آیکون کانال (اختیاری)</label>
+        <div class="cc-icon-preview" id="iconPreview" onclick="document.getElementById('iconInput').click()"><svg style="width:1.5em;height:1.5em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg></div>
+        <input type="file" name="icon" id="iconInput" accept="image/*" style="display:none">
+        <div style="font-size:.74rem;color:#3d3d55">برای تغییر کلیک کن</div>
+      </div>
+
+      <div class="cc-field">
+        <label class="cc-label" for="chName">نام کانال *</label>
+        <input type="text" name="name" id="chName" class="cc-input" placeholder="مثلاً: اخبار گیمینگ" maxlength="100" required>
+      </div>
+
+      <div class="cc-field">
+        <label class="cc-label" for="chUsername">نام‌کاربری کانال *</label>
+        <div class="cc-username-wrap">
+          <span class="cc-username-prefix">@</span>
+          <input type="text" name="username" id="chUsername" class="cc-input username"
+                 placeholder="gaming_news" maxlength="50" pattern="[a-zA-Z0-9_]+"
+                 oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')" required>
+        </div>
+        <div class="cc-username-hint">فقط حروف انگلیسی، اعداد و آندرلاین — قابل تغییر نیست</div>
+      </div>
+
+      <div class="cc-field">
+        <label class="cc-label" for="chDesc">توضیحات (اختیاری)</label>
+        <textarea name="description" id="chDesc" class="cc-input" rows="2" placeholder="کانالت رو معرفی کن..."></textarea>
+      </div>
+
+      <div class="cc-field">
+        <label class="cc-label">نوع کانال</label>
+        <div class="cc-toggle" onclick="togglePublic()">
+          <div class="cc-toggle-info">
+            <div class="cc-toggle-title">کانال عمومی</div>
+            <div class="cc-toggle-desc" id="toggleDesc">همه می‌تونن پیدا کنن و عضو بشن</div>
+          </div>
+          <div class="cc-switch on" id="publicSwitch"></div>
+        </div>
+        <input type="hidden" name="is_public" id="isPublicInput" value="on">
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button type="submit" class="cc-submit">
+          <svg class="bi bi-broadcast me-2" aria-hidden="true"><use href="#bi-broadcast"></use></svg>ساخت کانال
+        </button>
+        <a href="{% url 'community:inbox' %}" style="padding:12px 22px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:.88rem;font-weight:700;text-decoration:none;transition:all .2s;background:rgba(255,255,255,0.03);" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='rgba(255,255,255,0.4)';this.style.borderColor='rgba(255,255,255,0.1)'">
+          انصراف
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('iconInput').addEventListener('change', function() {
+  if (!this.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const p = document.getElementById('iconPreview');
+    p.innerHTML = `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(this.files[0]);
+});
+
+let isPublic = true;
+function togglePublic() {
+  isPublic = !isPublic;
+  const sw   = document.getElementById('publicSwitch');
+  const desc = document.getElementById('toggleDesc');
+  const inp  = document.getElementById('isPublicInput');
+  sw.classList.toggle('on', isPublic);
+  desc.textContent = isPublic ? 'همه می‌تونن پیدا کنن و عضو بشن' : 'فقط با دعوت می‌شه عضو شد';
+  inp.value = isPublic ? 'on' : '';
+}
+
+document.getElementById('chName').addEventListener('input', function() {
+  const un = document.getElementById('chUsername');
+  if (!un.value) {
+    un.value = this.value.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0,30);
+  }
+});
+</script>
+{% endblock %}

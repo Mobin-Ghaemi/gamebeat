@@ -410,7 +410,7 @@
 <!-- Publish overlay -->
 <div class="pub-ov" id="pubOv">
     <div class="pub-modal">
-        <span class="pub-emoji">🚀</span>
+        <span class="pub-emoji"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 6 0c.357 2 .5 4-2 6-1.25 1-2 2.729-2 4.5C2 14 4.686 16 8 16m0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3C6.125 10 7 10.5 7 10.5c-.375-1.25.5-3.25 2-3.5-.179 1-.25 2 1 3 .625.5 1 1.364 1 2.25C11 14 9.657 15 8 15"/></svg></span>
         <div class="pub-title">پست منتشر شد!</div>
         <div class="pub-sub">در حال انتقال...</div>
     </div>
@@ -430,7 +430,7 @@
     <!-- ── HEAD ── -->
     <div class="cc-head">
         <a href="{% url 'community:profile' username=request.user.username %}" class="cc-back">
-            <i class="bi bi-arrow-right"></i>
+            <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg>
         </a>
         {% if my_profile.avatar %}
             <img src="{{ my_profile.avatar.url }}" class="cc-av">
@@ -441,28 +441,28 @@
             <div class="cc-name">{{ request.user.get_full_name|default:request.user.username }}</div>
             <div class="cc-handle">@{{ request.user.username }}</div>
         </div>
-        <div class="cc-pub-badge"><i class="bi bi-globe2"></i> عمومی</div>
+        <div class="cc-pub-badge"><svg class="bi bi-globe2" aria-hidden="true"><use href="#bi-globe2"></use></svg> عمومی</div>
     </div>
 
     <!-- ── TYPE ── -->
     <div style="padding: 14px 24px 0; display:flex; gap:8px;">
         <div class="type-pill active" data-t="text" onclick="setType('text',this)">
-            <i class="bi bi-chat-text"></i> معمولی
+            <svg class="bi bi-chat-text" aria-hidden="true"><use href="#bi-chat-text"></use></svg> معمولی
         </div>
         <div class="type-pill" data-t="achievement" onclick="setType('achievement',this)">
-            <i class="bi bi-trophy"></i> دستاورد
+            <svg class="bi bi-trophy" aria-hidden="true"><use href="#bi-trophy"></use></svg> دستاورد
         </div>
         <div class="type-pill" data-t="highlight" onclick="setType('highlight',this)">
-            <i class="bi bi-star"></i> هایلایت
+            <svg class="bi bi-star" aria-hidden="true"><use href="#bi-star"></use></svg> هایلایت
         </div>
     </div>
 
     <!-- ── TOOLBAR ── -->
     <div class="cc-toolbar" style="padding-top:12px; padding-bottom:0; border-top:none; border-bottom: 1px solid #2a2a2a;">
-        <button type="button" class="tb-btn" title="هشتگ" onclick="addHash()"><i class="bi bi-hash"></i></button>
+        <button type="button" class="tb-btn" title="هشتگ" onclick="addHash()"><svg class="bi bi-hash" aria-hidden="true"><use href="#bi-hash"></use></svg></button>
         <div class="tb-sep"></div>
-        <button type="button" class="tb-btn" title="بولد" onclick="doBold()"><i class="bi bi-type-bold"></i></button>
-        <button type="button" class="tb-btn" title="ایتالیک" onclick="doItalic()"><i class="bi bi-type-italic"></i></button>
+        <button type="button" class="tb-btn" title="بولد" onclick="doBold()"><svg class="bi bi-type-bold" aria-hidden="true"><use href="#bi-type-bold"></use></svg></button>
+        <button type="button" class="tb-btn" title="ایتالیک" onclick="doItalic()"><svg class="bi bi-type-italic" aria-hidden="true"><use href="#bi-type-italic"></use></svg></button>
         {% if trending %}
         <div class="tb-sep"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -493,50 +493,38 @@
 
     <div class="cc-divider"></div>
 
-    <!-- ── MEDIA (IMAGE / VIDEO) ── -->
+    <!-- ── MEDIA (IMAGE + VIDEO) ── -->
     <div class="cc-section">
-        <div class="cc-section-title"><i class="bi bi-images"></i> تصویر یا ویدیو</div>
-
-        <!-- تب‌های انتخاب نوع -->
-        <div class="media-tabs">
-            <button type="button" class="media-tab active-img" id="tabImg" onclick="switchMedia('img')">
-                <i class="bi bi-image"></i> عکس
-            </button>
-            <button type="button" class="media-tab" id="tabVid" onclick="switchMedia('vid')">
-                <i class="bi bi-camera-video-fill"></i> ویدیو
-            </button>
+        <!-- عکس -->
+        <div class="cc-section-title"><svg class="bi bi-image" aria-hidden="true" style="color:#06b6d4"><use href="#bi-image"></use></svg> عکس <span style="font-size:.68rem;color:#3a3a3a;font-weight:500;letter-spacing:0;text-transform:none;">(حداکثر ۴ تصویر)</span></div>
+        <div class="img-dz" id="dz"
+            onclick="document.getElementById('imgIn').click()"
+            ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">
+            <svg class="bi bi-cloud-arrow-up img-dz-icon" aria-hidden="true"><use href="#bi-cloud-arrow-up"></use></svg>
+            <div class="img-dz-txt"><b>کلیک کن</b> یا فایل رو اینجا بکش</div>
+            <div class="img-dz-sub">PNG · JPG · WebP</div>
+            <input type="file" id="imgIn" name="image" accept="image/*" multiple style="display:none" onchange="imgAdd(this.files)">
         </div>
+        <div class="img-thumbs" id="thumbs"></div>
 
-        <!-- Image dropzone -->
-        <div id="imgSection">
-            <div class="img-dz" id="dz"
-                onclick="document.getElementById('imgIn').click()"
-                ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">
-                <i class="bi bi-cloud-arrow-up img-dz-icon"></i>
-                <div class="img-dz-txt"><b>کلیک کن</b> یا فایل رو اینجا بکش</div>
-                <div class="img-dz-sub">PNG · JPG · WebP — حداکثر ۴ عکس</div>
-                <input type="file" id="imgIn" name="image" accept="image/*" multiple style="display:none" onchange="imgAdd(this.files)">
-            </div>
-            <div class="img-thumbs" id="thumbs"></div>
-        </div>
-
-        <!-- Video dropzone -->
-        <div id="vidSection" style="display:none;">
+        <!-- ویدیو -->
+        <div style="margin-top:18px;">
+            <div class="cc-section-title" style="margin-bottom:12px;"><svg class="bi bi-camera-video-fill" aria-hidden="true" style="color:#a855f7"><use href="#bi-camera-video-fill"></use></svg> ویدیو <span style="font-size:.68rem;color:#3a3a3a;font-weight:500;letter-spacing:0;text-transform:none;">(حداکثر ۱۰۰ مگابایت)</span></div>
             <div class="vid-dz" id="vidDz"
                 onclick="document.getElementById('vidIn').click()"
                 ondragover="vidDzOver(event)" ondragleave="vidDzLeave()" ondrop="vidDzDrop(event)">
-                <i class="bi bi-camera-video vid-dz-icon"></i>
+                <svg class="bi bi-camera-video vid-dz-icon" aria-hidden="true"><use href="#bi-camera-video"></use></svg>
                 <div class="vid-dz-txt"><b>کلیک کن</b> یا ویدیو رو اینجا بکش</div>
-                <div class="vid-dz-sub">MP4 · WebM · MOV — حداکثر ۱۰۰ مگابایت</div>
+                <div class="vid-dz-sub">MP4 · WebM · MOV</div>
                 <input type="file" id="vidIn" name="video" accept="video/mp4,video/webm,video/quicktime" style="display:none" onchange="vidAdd(this.files)">
             </div>
             <div class="vid-preview" id="vidPreview">
                 <video id="vidPlayer" controls></video>
                 <button type="button" class="vid-del-btn" onclick="vidRemove()">
-                    <i class="bi bi-trash3"></i> حذف ویدیو
+                    <svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف ویدیو
                 </button>
                 <div class="vid-info" id="vidInfo">
-                    <i class="bi bi-film"></i>
+                    <svg class="bi bi-film" aria-hidden="true"><use href="#bi-film"></use></svg>
                     <span id="vidName"></span>
                     <span id="vidSize"></span>
                 </div>
@@ -548,19 +536,19 @@
 
     <!-- ── LINK ── -->
     <div class="cc-section">
-        <div class="cc-section-title link-title"><i class="bi bi-link-45deg"></i> لینک</div>
+        <div class="cc-section-title link-title"><svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg> لینک</div>
         <div class="lk-row">
             <input type="text" id="lkIn" class="lk-in" placeholder="https://..."
                 oninput="lkChange()" onpaste="setTimeout(lkChange,60)">
             <button type="button" class="lk-btn" id="lkBtn" onclick="lkFetch()">
-                <i class="bi bi-search"></i> پیش‌نمایش
+                <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> پیش‌نمایش
             </button>
         </div>
         <div class="lk-spin" id="lkSpin">
-            <i class="bi bi-arrow-repeat spinning"></i> در حال دریافت اطلاعات...
+            <svg class="bi bi-arrow-repeat spinning" aria-hidden="true"><use href="#bi-arrow-repeat"></use></svg> در حال دریافت اطلاعات...
         </div>
         <div class="lk-prev" id="lkPrev">
-            <div class="lk-prev-img" id="lkImg"><i class="bi bi-link-45deg"></i></div>
+            <div class="lk-prev-img" id="lkImg"><svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg></div>
             <div class="lk-prev-body">
                 <div class="lk-prev-title" id="lkTitle"></div>
                 <div class="lk-prev-desc" id="lkDesc"></div>
@@ -586,7 +574,7 @@
             <div class="char-text"><b id="charLeft">۱۰۰۰</b> کاراکتر مانده</div>
         </div>
         <button type="submit" class="cc-pub-btn" id="pubBtn" disabled>
-            <i class="bi bi-send-fill"></i> انتشار پست
+            <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg> انتشار پست
         </button>
     </div>
 
@@ -742,7 +730,7 @@ function renderThumbs(){
     imgFiles.forEach((f,i)=>{
         const url=URL.createObjectURL(f);
         const d=document.createElement('div'); d.className='img-thumb';
-        d.innerHTML=`<img src="${url}"><button type="button" class="img-thumb-del" onclick="delImg(${i})"><i class="bi bi-x"></i></button>${i===0?'<span class="img-badge">اصلی</span>':''}`;
+        d.innerHTML=`<img src="${url}"><button type="button" class="img-thumb-del" onclick="delImg(${i})"><svg class="bi bi-x" aria-hidden="true"><use href="#bi-x"></use></svg></button>${i===0?'<span class="img-badge">اصلی</span>':''}`;
         w.appendChild(d);
     });
     if(imgFiles.length){
@@ -760,7 +748,7 @@ function dzDrop(e){ e.preventDefault(); dzLeave(); imgAdd(e.dataTransfer.files);
 function vidAdd(fl){
     const f = fl[0];
     if(!f) return;
-    if(f.size > 100*1024*1024){ alert('حجم ویدیو نباید بیشتر از ۱۰۰ مگابایت باشد'); return; }
+    if(f.size > 100*1024*1024){ showToast('حجم ویدیو نباید بیشتر از ۱۰۰ مگابایت باشد', 'error'); return; }
     const url = URL.createObjectURL(f);
     document.getElementById('vidPlayer').src = url;
     document.getElementById('vidPreview').classList.add('show');
@@ -806,7 +794,7 @@ function lkFetch(){
                 document.getElementById('lkDesc').textContent=d.description||'';
                 document.getElementById('lkUrl').textContent=url;
                 const iw=document.getElementById('lkImg');
-                iw.innerHTML=d.image?`<img src="${d.image}" alt="" style="width:88px;height:100%;object-fit:cover;">`:'<i class="bi bi-link-45deg"></i>';
+                iw.innerHTML=d.image?`<img src="${d.image}" alt="" style="width:88px;height:100%;object-fit:cover;">`:'<svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg>';
                 document.getElementById('hTitle').value=d.title||'';
                 document.getElementById('hDesc').value=d.description||'';
                 document.getElementById('hImg').value=d.image||'';
@@ -823,7 +811,7 @@ function setGame(g){ document.getElementById('gtIn').value=g; }
 function onPub(e){
     const btn=document.getElementById('pubBtn');
     btn.disabled=true;
-    btn.innerHTML='<i class="bi bi-arrow-repeat spinning"></i> در حال انتشار...';
+    btn.innerHTML='<svg class="bi bi-arrow-repeat spinning" aria-hidden="true"><use href="#bi-arrow-repeat"></use></svg> در حال انتشار...';
     document.getElementById('pubOv').classList.add('show');
 }
 </script>

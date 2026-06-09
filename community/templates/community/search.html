@@ -221,6 +221,76 @@
 
 .results-meta span { color: var(--red-primary); font-weight: 700; }
 
+/* ── Follow Requests Section ── */
+.fr-section {
+    margin-bottom: 28px;
+}
+.fr-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+}
+.fr-header h3 {
+    font-size: 1rem; font-weight: 800; color: var(--text-white);
+    margin: 0; display: flex; align-items: center; gap: 8px;
+}
+.fr-badge {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff; font-size: 0.72rem; font-weight: 800;
+    padding: 2px 9px; border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(139,92,246,.4);
+}
+.fr-list {
+    display: flex; flex-direction: column; gap: 10px;
+}
+.fr-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg-card);
+    border: 1px solid rgba(139,92,246,.18);
+    border-radius: 16px;
+    padding: 14px 16px;
+    transition: border-color .2s;
+}
+.fr-item:hover { border-color: rgba(139,92,246,.4); }
+.fr-av {
+    width: 48px; height: 48px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+    border: 2px solid rgba(139,92,246,.3);
+}
+.fr-av-ph {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg,#4c1d95,#7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 800; color: #fff;
+    border: 2px solid rgba(139,92,246,.3);
+}
+.fr-info { flex: 1; min-width: 0; }
+.fr-name {
+    font-weight: 700; font-size: .9rem; color: var(--text-white);
+    text-decoration: none; display: block;
+}
+.fr-name:hover { color: #a78bfa; }
+.fr-username { font-size: .76rem; color: var(--text-dim); margin-top: 2px; }
+.fr-time { font-size: .72rem; color: var(--text-dim); }
+.fr-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.fr-btn {
+    padding: 8px 18px; border-radius: 10px; border: none;
+    font-size: .82rem; font-weight: 700; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: opacity .15s, transform .1s;
+    display: flex; align-items: center; gap: 6px;
+}
+.fr-btn:hover { opacity: .85; transform: translateY(-1px); }
+.fr-btn.accept {
+    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(139,92,246,.3);
+}
+.fr-btn.reject {
+    background: rgba(248,113,113,.1);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,.2);
+}
+
 /* Empty */
 .empty-results {
     text-align: center;
@@ -254,7 +324,7 @@
                     placeholder="یوزرنیم، بازی، شهر..."
                     value="{{ query }}">
                 <button type="submit" class="search-submit">
-                    <i class="bi bi-search"></i>
+                    <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
                 </button>
             </div>
         </form>
@@ -264,7 +334,7 @@
     <form method="get" action="{% url 'community:search' %}" id="filterForm">
         {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
         <div class="filters-row">
-            <span class="filter-label"><i class="bi bi-funnel-fill text-red"></i> فیلتر:</span>
+            <span class="filter-label"><svg class="bi bi-funnel-fill text-red" aria-hidden="true"><use href="#bi-funnel-fill"></use></svg> فیلتر:</span>
 
             <select name="platform" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                 <option value="">همه پلتفرم‌ها</option>
@@ -288,11 +358,52 @@
 
             {% if query or platform_filter or city_filter or game_filter %}
                 <a href="{% url 'community:search' %}" style="color: var(--red-primary); font-size: 0.85rem; text-decoration: none;">
-                    <i class="bi bi-x-circle"></i> پاک کردن فیلترها
+                    <svg class="bi bi-x-circle" aria-hidden="true"><use href="#bi-x-circle"></use></svg> پاک کردن فیلترها
                 </a>
             {% endif %}
         </div>
     </form>
+
+    <!-- ── درخواست‌های دنبال کردن ── -->
+    {% if pending_requests %}
+    <div class="fr-section" id="frSection">
+        <div class="fr-header">
+            <h3>
+                <svg class="bi bi-person-plus-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-person-plus-fill"></use></svg>
+                درخواست‌های دنبال کردن
+                <span class="fr-badge">{{ pending_count }}</span>
+            </h3>
+        </div>
+        <div class="fr-list" id="frList">
+            {% for fr in pending_requests %}
+            <div class="fr-item" id="fr-{{ fr.id }}">
+                <a href="{% url 'community:profile' username=fr.from_user.username %}">
+                    {% if fr.from_user.gamer_profile.avatar %}
+                        <img src="{{ fr.from_user.gamer_profile.avatar.url }}" class="fr-av">
+                    {% else %}
+                        <div class="fr-av-ph">{{ fr.from_user.username|first|upper }}</div>
+                    {% endif %}
+                </a>
+                <div class="fr-info">
+                    <a href="{% url 'community:profile' username=fr.from_user.username %}" class="fr-name">
+                        {{ fr.from_user.get_full_name|default:fr.from_user.username }}
+                    </a>
+                    <div class="fr-username">@{{ fr.from_user.username }}</div>
+                    <div class="fr-time">{{ fr.created_at|timesince }} پیش</div>
+                </div>
+                <div class="fr-actions">
+                    <button class="fr-btn accept" onclick="respondRequest({{ fr.id }}, 'accept')">
+                        <svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> قبول
+                    </button>
+                    <button class="fr-btn reject" onclick="respondRequest({{ fr.id }}, 'reject')">
+                        <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg> رد
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Results -->
     {% if gamers %}
@@ -319,7 +430,7 @@
 
                 <div class="gamer-card-badges">
                     {% if gamer.platform %}
-                        <span class="platform-badge" style="font-size:0.72rem;"><i class="bi bi-controller"></i> {{ gamer.get_platform_display }}</span>
+                        <span class="platform-badge" style="font-size:0.72rem;"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ gamer.get_platform_display }}</span>
                     {% endif %}
                     {% if gamer.rank %}
                         <span class="rank-badge rank-{{ gamer.rank }}" style="font-size:0.72rem;">{{ gamer.get_rank_display }}</span>
@@ -328,7 +439,7 @@
 
                 {% if gamer.city %}
                     <div style="color: var(--text-dim); font-size: 0.78rem; margin-bottom: 8px;">
-                        <i class="bi bi-geo-alt"></i> {{ gamer.get_city_display }}
+                        <svg class="bi bi-geo-alt" aria-hidden="true"><use href="#bi-geo-alt"></use></svg> {{ gamer.get_city_display }}
                     </div>
                 {% endif %}
 
@@ -348,10 +459,6 @@
 
                 <div class="gamer-card-stats">
                     <div class="gamer-card-stat">
-                        <div class="gamer-card-stat-val">{{ gamer.level }}</div>
-                        <div class="gamer-card-stat-lbl">لول</div>
-                    </div>
-                    <div class="gamer-card-stat">
                         <div class="gamer-card-stat-val">{{ gamer.followers_count }}</div>
                         <div class="gamer-card-stat-lbl">فالوور</div>
                     </div>
@@ -364,9 +471,9 @@
                 <button class="btn-red btn-follow w-100 {% if gamer.user.id in following_ids %}following{% endif %}"
                     onclick="handleFollow('{{ gamer.user.username }}', this)">
                     {% if gamer.user.id in following_ids %}
-                        <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                        <svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> دنبال می‌کنی
                     {% else %}
-                        <i class="bi bi-plus-lg"></i> دنبال کن
+                        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن
                     {% endif %}
                 </button>
             </div>
@@ -375,13 +482,13 @@
 
     {% elif query or platform_filter or city_filter or game_filter %}
         <div class="empty-results">
-            <i class="bi bi-search"></i>
+            <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
             <h4 style="color: var(--text-white); margin-bottom: 8px;">نتیجه‌ای پیدا نشد</h4>
             <p>با کلمات دیگه‌ای سرچ کن یا فیلترها رو پاک کن</p>
         </div>
     {% else %}
         <div class="empty-results">
-            <i class="bi bi-people"></i>
+            <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
             <h4 style="color: var(--text-white); margin-bottom: 8px;">دنبال گیمر می‌گردی؟</h4>
             <p>سرچ کن یا فیلتر بزن تا گیمرهایی که دنبالشونی رو پیدا کنی</p>
         </div>
@@ -393,20 +500,68 @@
 {% block extra_js %}
 <script>
 function handleFollow(username, btn) {
-    fetch(`/community/follow/${username}/`, {
+    fetch(`/follow/${username}/`, {
         method: 'POST',
         headers: {'X-CSRFToken': csrfToken}
     })
     .then(r => r.json())
     .then(data => {
         if (data.following) {
-            btn.innerHTML = '<i class="bi bi-check-lg"></i> دنبال می‌کنی';
+            btn.innerHTML = '<svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> دنبال می‌کنی';
+            btn.classList.add('following');
+        } else if (data.status === 'requested') {
+            btn.innerHTML = '<svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> درخواست ارسال شد';
             btn.classList.add('following');
         } else {
-            btn.innerHTML = '<i class="bi bi-plus-lg"></i> دنبال کن';
+            btn.innerHTML = '<svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن';
             btn.classList.remove('following');
         }
     });
+}
+
+function respondRequest(requestId, action) {
+    const item = document.getElementById('fr-' + requestId);
+    const btns = item.querySelectorAll('.fr-btn');
+    btns.forEach(b => b.disabled = true);
+
+    fetch(`/follow-requests/${requestId}/respond/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `action=${action}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            // انیمیشن fade + slide out
+            item.style.transition = 'all .35s cubic-bezier(.4,0,.2,1)';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(30px)';
+            item.style.maxHeight = item.offsetHeight + 'px';
+            setTimeout(() => {
+                item.style.maxHeight = '0';
+                item.style.padding = '0';
+                item.style.margin = '0';
+                item.style.overflow = 'hidden';
+            }, 200);
+            setTimeout(() => {
+                item.remove();
+                // آپدیت badge تعداد
+                const badge = document.querySelector('.fr-badge');
+                if (badge) {
+                    const n = parseInt(badge.textContent) - 1;
+                    if (n <= 0) {
+                        document.getElementById('frSection')?.remove();
+                    } else {
+                        badge.textContent = n;
+                    }
+                }
+            }, 550);
+        }
+    })
+    .catch(() => { btns.forEach(b => b.disabled = false); });
 }
 </script>
 {% endblock %}

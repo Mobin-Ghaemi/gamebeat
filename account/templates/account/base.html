@@ -8,11 +8,12 @@
     <!-- Bootstrap & Icons (local - no CDN) -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'vendor/css/bootstrap.rtl.min.css' %}">
-    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap-icons.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/css/vazirmatn-font-face.css' %}">
-    
+
     <!-- Custom CSS -->
     <style>
+        svg.bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; }
+
         :root {
             /* Dark Theme Colors */
             --bg-dark: #0a0a0a;
@@ -318,11 +319,12 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+{% include "community/icons_sprite.html" %}
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'account:home' %}">
-                <i class="bi bi-controller me-2"></i>
+                <svg class="bi bi-controller me-2" aria-hidden="true"><use href="#bi-controller"></use></svg>
                 GameBeat
             </a>
             
@@ -335,44 +337,44 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="/community/">
-                                <i class="bi bi-people-fill me-1"></i>کامیونیتی
+                                <svg class="bi bi-people-fill me-1" aria-hidden="true"><use href="#bi-people-fill"></use></svg>کامیونیتی
                             </a>
                         </li>
                         {% if user.is_staff %}
                         <li class="nav-item">
                             <a class="nav-link" href="/admin-panel/">
-                                <i class="bi bi-speedometer2 me-1"></i>پنل ادمین
+                                <svg class="bi bi-speedometer2 me-1" aria-hidden="true"><use href="#bi-speedometer2"></use></svg>پنل ادمین
                             </a>
                         </li>
                         {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i>
+                                <svg class="bi bi-person-circle me-1" aria-hidden="true"><use href="#bi-person-circle"></use></svg>
                                 {{ user.username }}
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'account:dashboard' %}">
-                                    <i class="bi bi-grid me-2"></i>داشبورد
+                                    <svg class="bi bi-grid me-2" aria-hidden="true"><use href="#bi-grid"></use></svg>داشبورد
                                 </a></li>
                                 <li><a class="dropdown-item" href="/community/">
-                                    <i class="bi bi-people me-2"></i>کامیونیتی
+                                    <svg class="bi bi-people me-2" aria-hidden="true"><use href="#bi-people"></use></svg>کامیونیتی
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'account:logout' %}">
-                                    <i class="bi bi-box-arrow-right me-2"></i>خروج
+                                    <svg class="bi bi-box-arrow-right me-2" aria-hidden="true"><use href="#bi-box-arrow-right"></use></svg>خروج
                                 </a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'account:login' %}">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                <svg class="bi bi-box-arrow-in-right me-1" aria-hidden="true"><use href="#bi-box-arrow-in-right"></use></svg>
                                 ورود
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="btn btn-primary ms-2" href="{% url 'account:register' %}">
-                                <i class="bi bi-person-plus me-1"></i>
+                                <svg class="bi bi-person-plus me-1" aria-hidden="true"><use href="#bi-person-plus"></use></svg>
                                 ثبت نام
                             </a>
                         </li>
@@ -387,7 +389,7 @@
         <div class="container mt-3">
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                    <svg class="bi me-2" aria-hidden="true"><use href="#bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></use></svg>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>

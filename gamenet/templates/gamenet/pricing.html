@@ -4,73 +4,136 @@
 {% block title %}قیمت‌ها | گیم‌بیت{% endblock %}
 
 {% block content %}
-<section class="pricing-section" style="padding: 40px 0;">
+<section class="pricing-section" style="padding: 40px 0 80px;">
     <div class="container">
-        <div class="section-header fade-in">
-            <h1 class="section-title">پلن‌های ابونمان</h1>
+        <div class="section-header fade-in" style="text-align:center; margin-bottom:40px;">
+            <h1 class="section-title">پلن‌های ابونمان گیم‌نت</h1>
             <p class="section-subtitle">
-                بسته مناسب خودت رو انتخاب کن و گیم‌نت رو به سطح جدیدی ببر
+                بسته مناسب گیم‌نت خودت رو انتخاب کن و مدیریت رو به سطح جدیدی ببر
             </p>
+
+            <!-- Toggle ماهانه / سالانه -->
+            <div style="display:inline-flex; align-items:center; gap:12px; margin-top:24px;
+                        background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.25);
+                        border-radius:50px; padding:6px 8px;">
+                <button id="btnMonthly" onclick="setPeriod('monthly')"
+                    style="border:none; border-radius:40px; padding:8px 22px; font-size:.9rem; font-weight:700;
+                           font-family:inherit; cursor:pointer; transition:.2s;
+                           background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff;">ماهانه</button>
+                <button id="btnYearly" onclick="setPeriod('yearly')"
+                    style="border:none; border-radius:40px; padding:8px 22px; font-size:.9rem; font-weight:700;
+                           font-family:inherit; cursor:pointer; transition:.2s;
+                           background:transparent; color:#a78bfa;">سالانه
+                    <span style="font-size:.7rem; background:rgba(34,197,94,.15); color:#4ade80;
+                                 border:1px solid rgba(34,197,94,.3); padding:2px 7px; border-radius:10px; margin-right:4px;">تخفیف ۵٪</span>
+                </button>
+            </div>
         </div>
-        
-        <div class="pricing-grid">
-            <div class="pricing-card fade-in">
+
+        <div class="pricing-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; max-width:960px; margin:0 auto;">
+
+            <!-- ── پلن پایه ── -->
+            <div class="pricing-card fade-in" style="position:relative;">
                 <h3 class="pricing-name">پایه</h3>
                 <p class="pricing-desc">برای گیم‌نت‌های کوچک</p>
                 <div class="pricing-price">
-                    <span class="price-amount">۴۹</span>
-                    <span class="price-period">هزار تومان/ماه</span>
+                    <span class="price-amount" id="price-basic" data-monthly="۱٬۹۸۰" data-yearly="۲۲٬۵۰۰">۱٬۹۸۰</span>
+                    <span class="price-period" id="period-basic" data-monthly="هزار تومان/ماه" data-yearly="هزار تومان/سال">هزار تومان/ماه</span>
                 </div>
                 <ul class="pricing-features">
-                    <li><i class="fas fa-check"></i> تا ۱۰ دستگاه</li>
+                    <li><i class="fas fa-check"></i> تا ۱۵ دستگاه</li>
                     <li><i class="fas fa-check"></i> گزارش‌گیری پایه</li>
-                    <li><i class="fas fa-check"></i> پشتیبانی ایمیل</li>
-                    <li><i class="fas fa-check"></i> ذخیره‌سازی ابری</li>
+                    <li><i class="fas fa-check"></i> پشتیبانی آنلاین</li>
+                    <li><i class="fas fa-check"></i> مدیریت کاربران</li>
+                    <li><i class="fas fa-check"></i> داشبورد آماری</li>
                 </ul>
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg">انتخاب پلن</a>
+                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg" style="width:100%; text-align:center; margin-top:auto;">انتخاب پلن پایه</a>
+                {% else %}
+                    <a href="#" class="btn btn-secondary btn-lg" style="width:100%; text-align:center; margin-top:auto; opacity:.6; cursor:default;">به‌زودی</a>
                 {% endif %}
             </div>
-            
-            <div class="pricing-card featured fade-in">
+
+            <!-- ── پلن حرفه‌ای ── -->
+            <div class="pricing-card featured fade-in" style="position:relative;">
                 <div class="pricing-badge">پرطرفدار</div>
                 <h3 class="pricing-name">حرفه‌ای</h3>
                 <p class="pricing-desc">برای گیم‌نت‌های متوسط</p>
                 <div class="pricing-price">
-                    <span class="price-amount">۹۹</span>
-                    <span class="price-period">هزار تومان/ماه</span>
+                    <span class="price-amount" id="price-pro" data-monthly="۳٬۹۵۰" data-yearly="۴۵٬۰۰۰">۳٬۹۵۰</span>
+                    <span class="price-period" id="period-pro" data-monthly="هزار تومان/ماه" data-yearly="هزار تومان/سال">هزار تومان/ماه</span>
                 </div>
                 <ul class="pricing-features">
                     <li><i class="fas fa-check"></i> تا ۵۰ دستگاه</li>
                     <li><i class="fas fa-check"></i> گزارش‌گیری پیشرفته</li>
                     <li><i class="fas fa-check"></i> مدیریت مسابقات</li>
                     <li><i class="fas fa-check"></i> پشتیبانی تلفنی</li>
+                    <li><i class="fas fa-check"></i> اتصال به Community</li>
                     <li><i class="fas fa-check"></i> API دسترسی</li>
                 </ul>
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg glow-box">انتخاب پلن</a>
+                    <a href="{% url 'account:register' %}" class="btn btn-primary btn-lg glow-box" style="width:100%; text-align:center; margin-top:auto;">انتخاب پلن حرفه‌ای</a>
+                {% else %}
+                    <a href="#" class="btn btn-primary btn-lg glow-box" style="width:100%; text-align:center; margin-top:auto; opacity:.6; cursor:default;">به‌زودی</a>
                 {% endif %}
             </div>
-            
-            <div class="pricing-card fade-in">
-                <h3 class="pricing-name">سازمانی</h3>
+
+            <!-- ── پلن ویژه ── -->
+            <div class="pricing-card fade-in" style="position:relative; border-color:rgba(251,191,36,.35);">
+                <div class="pricing-badge" style="background:linear-gradient(135deg,#d97706,#b45309);">ویژه</div>
+                <h3 class="pricing-name" style="color:#fbbf24;">ویژه</h3>
                 <p class="pricing-desc">برای گیم‌نت‌های بزرگ</p>
                 <div class="pricing-price">
-                    <span class="price-amount">۱۹۹</span>
-                    <span class="price-period">هزار تومان/ماه</span>
+                    <span class="price-amount" id="price-elite" data-monthly="۷٬۰۰۰" data-yearly="۸۰٬۰۰۰" style="color:#fbbf24;">۷٬۰۰۰</span>
+                    <span class="price-period" id="period-elite" data-monthly="هزار تومان/ماه" data-yearly="هزار تومان/سال">هزار تومان/ماه</span>
                 </div>
                 <ul class="pricing-features">
-                    <li><i class="fas fa-check"></i> دستگاه نامحدود</li>
-                    <li><i class="fas fa-check"></i> تحلیل هوش مصنوعی</li>
-                    <li><i class="fas fa-check"></i> مدیریت چندشعبه</li>
-                    <li><i class="fas fa-check"></i> پشتیبانی ۲۴/۷</li>
-                    <li><i class="fas fa-check"></i> سفارشی‌سازی کامل</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> دستگاه نامحدود</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> تحلیل هوش مصنوعی</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> مدیریت چندشعبه</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> پشتیبانی ۲۴/۷</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> سفارشی‌سازی کامل</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> مشاور اختصاصی</li>
                 </ul>
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg">انتخاب پلن</a>
+                    <a href="{% url 'account:register' %}" class="btn btn-secondary btn-lg" style="width:100%; text-align:center; margin-top:auto; border-color:rgba(251,191,36,.5); color:#fbbf24;">انتخاب پلن ویژه</a>
+                {% else %}
+                    <a href="#" class="btn btn-secondary btn-lg" style="width:100%; text-align:center; margin-top:auto; border-color:rgba(251,191,36,.5); color:#fbbf24; opacity:.6; cursor:default;">به‌زودی</a>
                 {% endif %}
             </div>
         </div>
+
+        <!-- مقایسه قیمت ماهانه/سالانه -->
+        <div id="yearlyNote" style="display:none; text-align:center; margin-top:20px; color:#4ade80; font-size:.87rem; font-weight:600;">
+            ✅ با انتخاب پلن سالانه، تقریباً یک ماه رایگان دریافت می‌کنید!
+        </div>
+
+        <!-- FAQ مختصر -->
+        <div style="max-width:640px; margin:56px auto 0; text-align:center;">
+            <p style="color:#8888aa; font-size:.84rem; line-height:1.8;">
+                قیمت‌ها به تومان و برای استفاده از نرم‌افزار مدیریت گیم‌نت گیم‌بیت می‌باشند.
+                تمام پلن‌ها شامل به‌روزرسانی‌های خودکار و پشتیبانی فارسی هستند.
+                برای سفارشی‌سازی یا خرید، با پشتیبانی تماس بگیرید.
+            </p>
+        </div>
     </div>
 </section>
+
+<script>
+function setPeriod(period) {
+    const monthly = period === 'monthly';
+    document.getElementById('btnMonthly').style.background = monthly ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'transparent';
+    document.getElementById('btnMonthly').style.color = monthly ? '#fff' : '#a78bfa';
+    document.getElementById('btnYearly').style.background = !monthly ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'transparent';
+    document.getElementById('btnYearly').style.color = !monthly ? '#fff' : '#a78bfa';
+    document.getElementById('yearlyNote').style.display = monthly ? 'none' : 'block';
+
+    [['basic'], ['pro'], ['elite']].forEach(([key]) => {
+        const pa = document.getElementById('price-' + key);
+        const pp = document.getElementById('period-' + key);
+        if (pa) pa.textContent = pa.dataset[monthly ? 'monthly' : 'yearly'];
+        if (pp) pp.textContent = pp.dataset[monthly ? 'monthly' : 'yearly'];
+    });
+}
+</script>
 {% endblock %}

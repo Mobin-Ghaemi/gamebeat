@@ -1,0 +1,176 @@
+{% extends 'community/base.html' %}
+{% block title %}گروه‌های گیمینگ | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.cl-wrap { max-width: 1000px; margin: 0 auto; padding: 30px 16px 80px; }
+
+.cl-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 28px;
+}
+.cl-title { font-size: 1.6rem; font-weight: 900; color: #fff; }
+.cl-create-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 22px; border-radius: 12px;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff; font-weight: 800; font-size: .88rem;
+    text-decoration: none; transition: all .2s;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.35);
+}
+.cl-create-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(139,92,246,0.5); color:#fff; }
+
+.cl-section-title {
+    font-size: .75rem; font-weight: 800; color: #a78bfa;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.cl-section-title::after { content:''; flex:1; height:1px; background:linear-gradient(to left,transparent,rgba(139,92,246,0.2)); }
+
+.cl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px; margin-bottom: 32px;
+}
+
+.cl-card {
+    background: #130826;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px; overflow: hidden;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+    text-decoration: none; display: flex; flex-direction: column;
+}
+.cl-card:hover {
+    border-color: rgba(139,92,246,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    transform: translateY(-2px);
+}
+
+.cl-card-banner {
+    height: 80px;
+    background: linear-gradient(135deg, #1e0035, #0d0022);
+    position: relative; overflow: hidden;
+}
+.cl-card-banner img { width:100%; height:100%; object-fit:cover; }
+.cl-card-banner-gradient {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(109,40,217,0.15));
+}
+
+.cl-card-avatar {
+    width: 54px; height: 54px; border-radius: 14px;
+    border: 3px solid #0a001e;
+    background: linear-gradient(135deg, #2d1154, #1a0a2e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; margin: -27px 16px 0; position: relative; z-index: 1;
+    overflow: hidden; flex-shrink: 0;
+}
+.cl-card-avatar img { width:100%; height:100%; object-fit:cover; border-radius:11px; }
+
+.cl-card-body { padding: 12px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+.cl-card-name { font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.cl-card-desc { font-size: .78rem; color: rgba(255,255,255,0.4); line-height: 1.5; flex: 1; }
+
+.cl-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+.cl-card-meta { font-size: .72rem; color: rgba(255,255,255,0.3); display: flex; align-items: center; gap: 8px; }
+.cl-genre-badge {
+    font-size: .65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 50px;
+    background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
+    color: #c4b5fd;
+}
+
+.cl-empty { text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3); }
+.cl-empty i { font-size:3rem;color:rgba(139,92,246,0.25);display:block;margin-bottom:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-wrap">
+    <div class="cl-header">
+        <div class="cl-title"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> گروه‌های گیمینگ</div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'community:create_club' %}" class="cl-create-btn">
+            <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت گروه جدید
+        </a>
+        {% endif %}
+    </div>
+
+    {% if my_clubs %}
+    <div class="cl-section-title"><svg class="bi bi-shield-fill" aria-hidden="true"><use href="#bi-shield-fill"></use></svg> گروه‌های من</div>
+    <div class="cl-grid">
+        {% for club in my_clubs %}
+        <a href="{% url 'community:club_detail' club.slug %}" class="cl-card">
+            <div class="cl-card-banner">
+                {% if club.banner %}<img src="{{ club.banner.url }}" alt="">{% endif %}
+                <div class="cl-card-banner-gradient"></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;">
+                <div class="cl-card-avatar">
+                    {% if club.avatar %}<img src="{{ club.avatar.url }}" alt="">{% else %}<svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg>{% endif %}
+                </div>
+            </div>
+            <div class="cl-card-body">
+                <div class="cl-card-name">{{ club.name }}</div>
+                {% if club.description %}
+                <div class="cl-card-desc">{{ club.description|truncatechars:80 }}</div>
+                {% endif %}
+                <div class="cl-card-footer">
+                    <div class="cl-card-meta">
+                        <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> {{ club.member_count }} عضو
+                    </div>
+                    {% if club.genre_tag %}
+                    <span class="cl-genre-badge">{{ club.genre_tag }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="cl-section-title"><svg class="bi bi-globe2" aria-hidden="true"><use href="#bi-globe2"></use></svg> همه گروه‌ها</div>
+
+    {% if clubs %}
+    <div class="cl-grid">
+        {% for club in clubs %}
+        <a href="{% url 'community:club_detail' club.slug %}" class="cl-card">
+            <div class="cl-card-banner">
+                {% if club.banner %}<img src="{{ club.banner.url }}" alt="">{% endif %}
+                <div class="cl-card-banner-gradient"></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;">
+                <div class="cl-card-avatar">
+                    {% if club.avatar %}<img src="{{ club.avatar.url }}" alt="">{% else %}<svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg>{% endif %}
+                </div>
+            </div>
+            <div class="cl-card-body">
+                <div class="cl-card-name">{{ club.name }}</div>
+                {% if club.description %}
+                <div class="cl-card-desc">{{ club.description|truncatechars:80 }}</div>
+                {% endif %}
+                <div class="cl-card-footer">
+                    <div class="cl-card-meta">
+                        <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> {{ club.mc }} عضو
+                    </div>
+                    {% if club.genre_tag %}
+                    <span class="cl-genre-badge">{{ club.genre_tag }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="cl-empty">
+        <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
+        <div style="font-size:.95rem;font-weight:700;color:rgba(255,255,255,0.35);">هنوز گروهی ساخته نشده</div>
+        <div style="font-size:.82rem;margin-top:6px;">اولین نفر باش و گروهت رو بساز!</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

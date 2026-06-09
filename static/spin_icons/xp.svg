@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="xg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <!-- badge shield/hexagon shape -->
+  <polygon fill="url(#xg)" points="32,4 54,16 54,48 32,60 10,48 10,16"/>
+  <!-- inner highlight -->
+  <polygon fill="rgba(255,255,255,0.15)" points="32,8 50,18 50,28 32,38 14,28 14,18"/>
+  <!-- XP text -->
+  <text x="32" y="40" font-family="Arial Black, sans-serif" font-size="22" font-weight="900"
+        text-anchor="middle" fill="#1a1a2e" letter-spacing="1">XP</text>
+  <!-- badge border -->
+  <polygon fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" points="32,4 54,16 54,48 32,60 10,48 10,16"/>
+  <!-- star accents -->
+  <circle fill="rgba(255,255,255,0.7)" cx="18" cy="20" r="2"/>
+  <circle fill="rgba(255,255,255,0.7)" cx="46" cy="20" r="2"/>
+  <circle fill="rgba(255,255,255,0.5)" cx="32" cy="12" r="1.5"/>
+</svg>

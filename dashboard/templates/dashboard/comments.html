@@ -17,26 +17,40 @@
 <div class="dash-card mb-4">
     <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
         <div class="search-wrapper" style="flex:1;min-width:200px;max-width:400px">
-            <i class="bi bi-search"></i>
+            <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
             <input type="text" name="q" value="{{ q }}" placeholder="جستجو در محتوا یا نویسنده..."
                    class="dash-input" style="padding-right:36px">
         </div>
         <button type="submit" class="btn-ghost">
-            <i class="bi bi-funnel me-1"></i>جستجو
+            <svg class="bi bi-funnel me-1" aria-hidden="true"><use href="#bi-funnel"></use></svg>جستجو
         </button>
         {% if q %}
         <a href="{% url 'dashboard:comments' %}" class="btn-ghost" style="text-decoration:none">
-            <i class="bi bi-x-circle me-1"></i>پاک
+            <svg class="bi bi-x-circle me-1" aria-hidden="true"><use href="#bi-x-circle"></use></svg>پاک
         </a>
         {% endif %}
     </form>
+</div>
+
+<!-- Moderation Tabs -->
+<div style="display:flex;gap:8px;margin-bottom:16px">
+  <a href="?tab=pending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+     style="padding:6px 18px;border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none;border:1px solid;
+     {% if tab == 'pending' %}background:rgba(251,191,36,.15);border-color:#fbbf24;color:#fbbf24{% else %}background:transparent;border-color:var(--border);color:var(--text-muted){% endif %}">
+    در انتظار <span style="font-size:.72rem;opacity:.8">({{ pending_count }})</span>
+  </a>
+  <a href="?tab=approved{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+     style="padding:6px 18px;border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none;border:1px solid;
+     {% if tab == 'approved' %}background:rgba(34,197,94,.15);border-color:#22c55e;color:#22c55e{% else %}background:transparent;border-color:var(--border);color:var(--text-muted){% endif %}">
+    بررسی شده <span style="font-size:.72rem;opacity:.8">({{ approved_count }})</span>
+  </a>
 </div>
 
 <!-- Bulk Delete Bar -->
 <div id="bulkBar" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:12px">
     <span id="selectedCount" style="font-size:0.85rem;color:#f87171;font-weight:600"></span>
     <button type="submit" form="bulkForm" class="btn-danger-ghost" onclick="return confirm('کامنت‌های انتخابی حذف شوند؟')">
-        <i class="bi bi-trash3 me-1"></i>حذف انتخابی
+        <svg class="bi bi-trash3 me-1" aria-hidden="true"><use href="#bi-trash3"></use></svg>حذف انتخابی
     </button>
 </div>
 
@@ -45,7 +59,7 @@
 {% csrf_token %}
 <div class="dash-card">
     <div class="dash-card-title" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
-        <i class="bi bi-chat-dots-fill" style="color:#60a5fa"></i>
+        <svg class="bi bi-chat-dots-fill" aria-hidden="true" style="color:#60a5fa"><use href="#bi-chat-dots-fill"></use></svg>
         لیست کامنت‌ها
         <span style="font-size:0.78rem;color:var(--text-faint);font-weight:400;margin-right:6px">({{ page_obj.paginator.count }} مورد)</span>
     </div>
@@ -92,18 +106,31 @@
                     <td>
                         <a href="{% url 'dashboard:post_detail' comment.post.pk %}"
                            style="font-size:0.78rem;color:var(--purple-light);text-decoration:none;display:flex;align-items:center;gap:4px">
-                            <i class="bi bi-file-post"></i> پست #{{ comment.post.pk }}
+                            <svg class="bi bi-file-post" aria-hidden="true"><use href="#bi-file-post"></use></svg> پست #{{ comment.post.pk }}
                         </a>
                     </td>
                     <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ comment.created_at|date:"Y/m/d" }}</td>
                     <td>
-                        <form method="post" action="{% url 'dashboard:comment_delete' comment.pk %}" style="display:inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-danger-ghost" style="padding:4px 9px"
-                                    onclick="return confirm('این کامنت حذف شود؟')">
-                                <i class="bi bi-trash3"></i>
+                        <div style="display:flex;gap:5px;align-items:center">
+                            {% if tab == 'pending' %}
+                            <form method="post" action="{% url 'dashboard:comment_approve' comment.pk %}" style="display:inline">
+                              {% csrf_token %}
+                              <button type="submit" style="padding:3px 10px;border-radius:6px;font-size:.72rem;background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;cursor:pointer">&#10003; تأیید</button>
+                            </form>
+                            <button type="button"
+                                    onclick="openRejectModal({{ comment.pk }}, '{{ comment.author.username|escapejs }}', '{{ comment.content|truncatechars:60|escapejs }}')"
+                                    style="padding:3px 10px;border-radius:6px;font-size:.72rem;background:rgba(251,191,36,.15);border:1px solid #fbbf24;color:#fbbf24;cursor:pointer">
+                              ✕ رد کردن
                             </button>
-                        </form>
+                            {% endif %}
+                            <form method="post" action="{% url 'dashboard:comment_delete' comment.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger-ghost" style="padding:4px 9px"
+                                        onclick="return confirm('این کامنت حذف شود؟')">
+                                    <svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -119,7 +146,7 @@
                 {% if page_obj.has_previous %}
                     <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"
                        class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
-                        <i class="bi bi-chevron-right"></i>
+                        <svg class="bi bi-chevron-right" aria-hidden="true"><use href="#bi-chevron-right"></use></svg>
                     </a>
                 {% endif %}
                 <span style="padding:5px 12px;background:var(--purple);color:white;border-radius:8px;font-size:0.82rem;font-weight:600">
@@ -128,7 +155,7 @@
                 {% if page_obj.has_next %}
                     <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}"
                        class="btn-ghost" style="padding:5px 12px;text-decoration:none;font-size:0.82rem">
-                        <i class="bi bi-chevron-left"></i>
+                        <svg class="bi bi-chevron-left" aria-hidden="true"><use href="#bi-chevron-left"></use></svg>
                     </a>
                 {% endif %}
             </div>
@@ -137,7 +164,7 @@
 
         {% else %}
         <div style="text-align:center;padding:60px 20px">
-            <i class="bi bi-chat-square" style="font-size:3rem;color:var(--text-faint);display:block;margin-bottom:12px"></i>
+            <svg class="bi bi-chat-square" aria-hidden="true" style="font-size:3rem;color:var(--text-faint);display:block;margin-bottom:12px"><use href="#bi-chat-square"></use></svg>
             <div style="font-size:1.1rem;font-weight:600;color:var(--text-muted)">کامنتی یافت نشد</div>
         </div>
         {% endif %}
@@ -146,6 +173,76 @@
 </form>
 
 {% endblock %}
+
+<!-- ─── Modal رد کردن کامنت ─────────────────────────────── -->
+<div id="rejectModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center">
+  <!-- overlay -->
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)"
+       onclick="closeRejectModal()"></div>
+  <!-- box -->
+  <div style="position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+              padding:28px;width:min(480px,92vw);z-index:1;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+
+    <div style="font-size:1.05rem;font-weight:700;color:var(--text-main);margin-bottom:4px">
+      <svg class="bi bi-x-circle" aria-hidden="true" style="color:#fbbf24;margin-left:6px"><use href="#bi-x-circle"></use></svg>رد کردن کامنت
+    </div>
+    <div id="rejectMeta" style="font-size:.78rem;color:var(--text-faint);margin-bottom:16px"></div>
+    <div id="rejectPreview"
+         style="background:var(--bg-card2);border-right:3px solid #fbbf24;border-radius:8px;
+                padding:10px 14px;font-size:.83rem;color:var(--text-muted);margin-bottom:20px;
+                line-height:1.6;max-height:80px;overflow:hidden"></div>
+
+    <form id="rejectForm" method="post">
+      {% csrf_token %}
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:.82rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px">
+          پیام برای کاربر (اختیاری)
+        </label>
+        <textarea name="message" id="rejectMsg" rows="3"
+                  placeholder="علت رد کردن را بنویسید... (در صورت خالی ماندن فقط کامنت حذف می‌شود)"
+                  class="dash-input" style="width:100%;resize:vertical"></textarea>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="font-size:.82rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px">
+          نحوه ارسال پیام
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:600">
+            <input type="radio" name="send_type" value="" checked style="accent-color:var(--purple)">
+            بدون پیام
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:600">
+            <input type="radio" name="send_type" value="notif" style="accent-color:var(--purple)">
+            <svg class="bi bi-bell" aria-hidden="true" style="color:#fbbf24"><use href="#bi-bell"></use></svg> اعلان
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:600">
+            <input type="radio" name="send_type" value="dm" style="accent-color:var(--purple)">
+            <svg class="bi bi-chat-dots" aria-hidden="true" style="color:#60a5fa"><use href="#bi-chat-dots"></use></svg> پیام خصوصی
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:600">
+            <input type="radio" name="send_type" value="both" style="accent-color:var(--purple)">
+            <svg class="bi bi-send" aria-hidden="true" style="color:#4ade80"><use href="#bi-send"></use></svg> هر دو
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button type="submit"
+                style="flex:1;padding:10px;border-radius:10px;font-size:.88rem;font-weight:700;
+                       background:rgba(251,191,36,.2);border:1px solid #fbbf24;color:#fbbf24;cursor:pointer">
+          <svg class="bi bi-x-circle me-1" aria-hidden="true"><use href="#bi-x-circle"></use></svg>رد کردن
+        </button>
+        <button type="button" onclick="closeRejectModal()"
+                style="padding:10px 18px;border-radius:10px;font-size:.88rem;font-weight:700;
+                       background:var(--bg-card2);border:1px solid var(--border);color:var(--text-muted);cursor:pointer">
+          انصراف
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 {% block extra_js %}
 <script>
@@ -165,5 +262,24 @@ if (selectAll) {
     });
 }
 checks.forEach(c => c.addEventListener('change', updateBulk));
+
+// ─── Reject Modal ───────────────────────────────────────────────
+function openRejectModal(pk, username, preview) {
+  document.getElementById('rejectMeta').textContent    = 'کامنت از: @' + username;
+  document.getElementById('rejectPreview').textContent = preview;
+  document.getElementById('rejectForm').action         = '/admin-panel/comments/' + pk + '/reject/';
+  document.getElementById('rejectMsg').value           = '';
+  // reset radio to "no message"
+  document.querySelector('#rejectForm input[name="send_type"][value=""]').checked = true;
+  const modal = document.getElementById('rejectModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('rejectMsg').focus(), 100);
+}
+function closeRejectModal() {
+  document.getElementById('rejectModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRejectModal(); });
 </script>
 {% endblock %}

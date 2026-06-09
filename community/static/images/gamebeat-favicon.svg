@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Dark BG -->
+  <rect width="32" height="32" rx="6" fill="#0c0101"/>
+  <rect width="32" height="32" rx="6" fill="none" stroke="#dc2626" stroke-width="1" stroke-opacity="0.55"/>
+
+  <!-- Pixel heart: pixel=4, gap=1, stride=5 -->
+  <!-- cols: 4,9,14,19,24 — rows: 4,9,14,19,24 -->
+
+  <!-- Row 0 (y=4): col1, col3 — top bumps -->
+  <rect x="9"  y="4"  width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="19" y="4"  width="4" height="4" rx="0.8" fill="#ef4444"/>
+
+  <!-- Row 1 (y=9): all 5 — highlights on col1, col3 -->
+  <rect x="4"  y="9"  width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="9"  y="9"  width="4" height="4" rx="0.8" fill="#fca5a5"/>
+  <rect x="14" y="9"  width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="19" y="9"  width="4" height="4" rx="0.8" fill="#fca5a5"/>
+  <rect x="24" y="9"  width="4" height="4" rx="0.8" fill="#ef4444"/>
+
+  <!-- Row 2 (y=14): all 5 -->
+  <rect x="4"  y="14" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="9"  y="14" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="14" y="14" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="19" y="14" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="24" y="14" width="4" height="4" rx="0.8" fill="#ef4444"/>
+
+  <!-- Row 3 (y=19): col1,2,3 -->
+  <rect x="9"  y="19" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="14" y="19" width="4" height="4" rx="0.8" fill="#ef4444"/>
+  <rect x="19" y="19" width="4" height="4" rx="0.8" fill="#ef4444"/>
+
+  <!-- Row 4 (y=24): col2 — tip -->
+  <rect x="14" y="24" width="4" height="4" rx="0.8" fill="#dc2626"/>
+</svg>

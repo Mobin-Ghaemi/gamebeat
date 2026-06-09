@@ -178,7 +178,7 @@
 <!-- Breadcrumb -->
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:.85rem;color:var(--text-muted)">
     <a href="{% url 'dashboard:games' %}" style="color:var(--purple-light);text-decoration:none">بازی‌ها</a>
-    <i class="bi bi-chevron-left" style="font-size:.7rem"></i>
+    <svg class="bi bi-chevron-left" aria-hidden="true" style="font-size:.7rem"><use href="#bi-chevron-left"></use></svg>
     <span>{% if action == 'add' %}افزودن بازی جدید{% else %}ویرایش{% endif %}</span>
 </div>
 
@@ -194,8 +194,8 @@
 
     <!-- Steam -->
     <div class="mode-card steam-card active" id="modeCardSteam" onclick="switchMode('steam')">
-        <div class="mc-badge">🚀 سریع‌ترین روش</div>
-        <div class="mc-check"><i class="bi bi-check2"></i></div>
+        <div class="mc-badge"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 0c.531 0 1.032.218 1.664.78C11.453 2.388 12.858 4.578 14 7.5 15.142 10.422 16 13 16 14a2 2 0 0 1-4 0c0-.266-.026-.533-.08-.8L9.5 14.5h-3L4.08 13.2A2 2 0 0 1 0 14c0-1 .858-3.578 2-6.5 1.142-2.922 2.547-5.112 4.336-6.72C6.968.218 7.469 0 8 0"/></svg> سریع‌ترین روش</div>
+        <div class="mc-check"><svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg></div>
         <span class="mc-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#60a5fa"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.524s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.607 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.497 1.009 2.455-.397.957-1.497 1.41-2.455 1.012zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z"/></svg>
         </span>
@@ -205,9 +205,9 @@
 
     <!-- Manual -->
     <div class="mode-card manual-card" id="modeCardManual" onclick="switchMode('manual')">
-        <div class="mc-check"><i class="bi bi-check2"></i></div>
+        <div class="mc-check"><svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg></div>
         <span class="mc-icon" style="color:#a78bfa">
-            <i class="bi bi-pencil-square" style="font-size:2rem"></i>
+            <svg class="bi bi-pencil-square" aria-hidden="true" style="font-size:2rem"><use href="#bi-pencil-square"></use></svg>
         </span>
         <div class="mc-title">افزودن دستی</div>
         <div class="mc-sub">وارد کردن اطلاعات بازی به صورت کامل و شخصی‌سازی شده</div>
@@ -239,10 +239,10 @@
         <!-- Sub-tabs -->
         <div class="steam-tabs">
             <button type="button" class="steam-tab active" id="stab-url" onclick="sSwitchTab('url')">
-                <i class="bi bi-link-45deg"></i>&nbsp; لینک مستقیم
+                <svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg>&nbsp; لینک مستقیم
             </button>
             <button type="button" class="steam-tab" id="stab-search" onclick="sSwitchTab('search')">
-                <i class="bi bi-search"></i>&nbsp; جستجو در استیم
+                <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>&nbsp; جستجو در استیم
             </button>
         </div>
 
@@ -254,7 +254,7 @@
                     placeholder="https://store.steampowered.com/app/292030/The_Witcher_3..."
                     onkeydown="if(event.key==='Enter'){event.preventDefault();sFetchSteam()}">
                 <button type="button" class="steam-fetch-btn" onclick="sFetchSteam()" id="sFetchBtn">
-                    <i class="bi bi-download"></i> دریافت اطلاعات
+                    <svg class="bi bi-download" aria-hidden="true"><use href="#bi-download"></use></svg> دریافت اطلاعات
                 </button>
             </div>
             <div id="sFetchError" style="display:none;margin-top:9px;color:#f87171;font-size:.8rem;background:rgba(248,113,113,.08);padding:8px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.2)"></div>
@@ -266,7 +266,7 @@
             <div style="position:relative">
                 <input id="sSearchInput" type="text" class="steam-input"
                     placeholder="مثال: Cyberpunk 2077" oninput="sSearchDebounce()" style="padding-left:42px">
-                <i class="bi bi-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#3a6585;font-size:.85rem"></i>
+                <svg class="bi bi-search" aria-hidden="true" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#3a6585;font-size:.85rem"><use href="#bi-search"></use></svg>
                 <div id="sSearchSpinner" style="display:none;position:absolute;left:13px;top:50%;transform:translateY(-50%)">
                     <div class="mini-spin" style="color:#60a5fa"></div>
                 </div>
@@ -276,16 +276,61 @@
 
         <!-- Preview Card -->
         <div class="steam-preview-card" id="sSteamPreview">
-            <img id="sPreviewBanner" src="" alt="" class="spc-banner"
-                 onerror="this.style.display='none'">
+            <img id="sPreviewBanner" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" class="spc-banner" style="display:none" onerror="this.style.display='none'">
             <div class="spc-body">
-                <img id="sPreviewCover" src="" alt="" class="spc-cover">
+                <img id="sPreviewCover" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" class="spc-cover" onerror="this.style.opacity='.2'">
                 <div class="spc-info">
                     <div class="spc-name" id="sPreviewName"></div>
-                    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap" id="sPreviewMeta"></div>
+
+                    <!-- Tags row: genre, year, metacritic -->
+                    <div id="sPreviewTags" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px"></div>
+
+                    <!-- Editable year + genre row (always visible) -->
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <label style="font-size:.72rem;color:#4a7fa8;font-weight:600;white-space:nowrap"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/></svg> سال انتشار:</label>
+                            <input type="number" id="sPreviewYearInput" min="1970" max="2035"
+                                   style="width:86px;padding:4px 8px;border-radius:7px;border:1px solid #1e3a58;background:#0a1520;color:#c8dff0;font-size:.82rem;font-family:inherit;outline:none"
+                                   placeholder="مثال: 2024">
+                        </div>
+                        <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap">
+                            <label style="font-size:.72rem;color:#4a7fa8;font-weight:600;white-space:nowrap;margin-top:3px"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> ژانرها:</label>
+                            <div id="sPreviewGenreChips" style="display:flex;flex-wrap:wrap;gap:4px">
+                                {% for val, label in genre_choices %}
+                                <button type="button" data-genre="{{ val }}"
+                                        onclick="sToggleGenre(this)"
+                                        style="padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid #1e3a58;background:transparent;color:#3a6585;font-family:inherit">
+                                    {{ label }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats row: recommendations, achievements, price -->
+                    <div id="sPreviewStats" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px"></div>
+
                     <div class="spc-desc" id="sPreviewDesc"></div>
+
+                    <!-- Translate button -->
+                    <button type="button" id="sTranslateBtn" onclick="sTranslateDescription()"
+                            style="margin-top:7px;padding:4px 12px;border-radius:8px;border:1px solid #1e3a58;
+                                   background:rgba(96,165,250,.08);color:#60a5fa;font-size:.72rem;font-weight:700;
+                                   cursor:pointer;font-family:inherit;transition:all .18s;display:none">
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287zM4.249 3.539c.142-.384.304-.744.481-1.078a7 7 0 0 1 .597-.933A7 7 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9 9 0 0 1-1.565-.667A6.96 6.96 0 0 0 1.018 7.5zm1.4-2.741a12.3 12.3 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332M8.5 5.09V7.5h2.99a12.3 12.3 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.6 13.6 0 0 1 7.5 10.91V8.5zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741zm-3.282 3.696q.18.469.385.881c.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a7 7 0 0 1-.598-.933 9 9 0 0 1-.481-1.079 8.4 8.4 0 0 0-1.198.49 7 7 0 0 0 2.276 1.522zm-1.383-2.964A13.4 13.4 0 0 1 3.508 8.5H1.018a6.96 6.96 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7 7 0 0 0 2.275-1.521 8.4 8.4 0 0 0-1.197-.49 9 9 0 0 1-.482 1.078 7 7 0 0 1-.596.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.6 12.6 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.96 6.96 0 0 0 14.982 8.5h-2.49a13.4 13.4 0 0 1-.437 3.008zM14.982 7.5a6.96 6.96 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008zM11.27 2.461q.266.502.482 1.078a8.4 8.4 0 0 0 1.197-.49 7 7 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a8 8 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/></svg> ترجمه فارسی
+                    </button>
+
+                    <!-- Full info table -->
+                    <div id="sPreviewTable" style="margin-top:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.75rem"></div>
+
+                    <!-- Platform picker inside preview -->
+                    <div style="margin-top:12px">
+                        <div style="font-size:.75rem;color:#4a7fa8;font-weight:600;margin-bottom:7px">پلتفرم‌های موجود:</div>
+                        <div id="sPreviewPlatforms" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+                    </div>
+
                     <button type="button" class="spc-apply" id="sApplyBtn" onclick="sApplyToForm()">
-                        <i class="bi bi-check2-circle"></i> اعمال اطلاعات و ذخیره بازی
+                        <svg class="bi bi-check2-circle" aria-hidden="true"><use href="#bi-check2-circle"></use></svg> ذخیره بازی
                     </button>
                 </div>
             </div>
@@ -294,15 +339,6 @@
     </div>
 </div>
 
-<!-- hidden fields that carry data when submitting from Steam mode -->
-<input type="hidden" name="name"         id="sHiddenName">
-<input type="hidden" name="description"  id="sHiddenDesc">
-<input type="hidden" name="release_year" id="sHiddenYear">
-<input type="hidden" name="genre"        id="sHiddenGenre">
-
-<div id="steamSubmitBar" style="display:none;margin-top:16px;display:none">
-    <!-- submit happens via sApplyToForm which disables manual fields and submits -->
-</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -318,7 +354,7 @@
         <!-- Basic Info Card -->
         <div class="dash-card mb-4">
             <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-                <i class="bi bi-controller" style="color:var(--purple-light);font-size:1.1rem"></i>
+                <svg class="bi bi-controller" aria-hidden="true" style="color:var(--purple-light);font-size:1.1rem"><use href="#bi-controller"></use></svg>
                 <span>اطلاعات اصلی</span>
                 {% if action == 'add' %}
                 <span style="margin-right:auto;font-size:.72rem;padding:3px 9px;border-radius:20px;background:rgba(167,139,250,.12);color:#a78bfa;font-weight:700">دستی</span>
@@ -334,13 +370,24 @@
                 </div>
 
                 <div>
-                    <label class="dash-label">ژانر</label>
-                    <select name="genre" class="dash-input" style="cursor:pointer">
-                        <option value="">انتخاب ژانر...</option>
+                    <label class="dash-label">ژانرها <span style="font-size:.72rem;color:var(--text-faint)">(می‌توانید چند ژانر انتخاب کنید)</span></label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="genreCheckboxes">
                         {% for val, label in genre_choices %}
-                            <option value="{{ val }}" {% if game and game.genre == val %}selected{% endif %}>{{ label }}</option>
+                        <label class="platform-label genre-label" style="
+                            display:flex;align-items:center;gap:8px;padding:8px 14px;
+                            border-radius:10px;border:1px solid var(--border);background:var(--bg-card2);
+                            cursor:pointer;transition:all .2s;font-size:.83rem;color:var(--text-muted);user-select:none;">
+                            <input type="checkbox" name="genres" value="{{ val }}"
+                                   {% if game and val in game.genres %}checked{% endif %}
+                                   style="display:none" class="genre-check">
+                            <span class="genre-check-icon" style="
+                                width:16px;height:16px;border-radius:4px;border:2px solid var(--border);
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                                transition:all .2s;font-size:.65rem;"></span>
+                            {{ label }}
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
 
                 <div class="row g-3">
@@ -375,7 +422,7 @@
         <!-- Platforms Card -->
         <div class="dash-card">
             <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                <i class="bi bi-display" style="color:#60a5fa"></i>
+                <svg class="bi bi-display" aria-hidden="true" style="color:#60a5fa"><use href="#bi-display"></use></svg>
                 پلتفرم‌ها
             </div>
             <div style="padding-top:16px;display:flex;flex-wrap:wrap;gap:10px">
@@ -405,7 +452,7 @@
         <!-- Cover Upload Card -->
         <div class="dash-card mb-4">
             <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                <i class="bi bi-image" style="color:#f472b6"></i>
+                <svg class="bi bi-image" aria-hidden="true" style="color:#f472b6"><use href="#bi-image"></use></svg>
                 تصویر کاور
             </div>
             <div style="padding-top:16px">
@@ -420,7 +467,7 @@
                              style="width:100%;height:100%;object-fit:cover">
                     {% else %}
                         <div id="coverPlaceholder" style="text-align:center;padding:20px">
-                            <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:var(--text-faint);display:block;margin-bottom:8px"></i>
+                            <svg class="bi bi-cloud-upload" aria-hidden="true" style="font-size:2.5rem;color:var(--text-faint);display:block;margin-bottom:8px"><use href="#bi-cloud-upload"></use></svg>
                             <div style="font-size:.8rem;color:var(--text-faint)">کلیک کنید تا تصویر انتخاب شود</div>
                         </div>
                         <img id="coverPreview" src="" alt="cover"
@@ -431,7 +478,7 @@
                        style="display:none" onchange="previewCover(this)">
                 <button type="button" class="btn-ghost" style="width:100%;font-size:.85rem"
                         onclick="document.getElementById('coverInput').click()">
-                    <i class="bi bi-upload me-1"></i>انتخاب تصویر
+                    <svg class="bi bi-upload me-1" aria-hidden="true"><use href="#bi-upload"></use></svg>انتخاب تصویر
                 </button>
                 <div style="font-size:.72rem;color:var(--text-faint);text-align:center;margin-top:6px">
                     فرمت‌های مجاز: JPG, PNG, WebP
@@ -442,10 +489,11 @@
         <!-- Settings + Submit Card -->
         <div class="dash-card">
             <div class="dash-card-title" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
-                <i class="bi bi-gear" style="color:var(--warning)"></i>
+                <svg class="bi bi-gear" aria-hidden="true" style="color:var(--warning)"><use href="#bi-gear"></use></svg>
                 تنظیمات
             </div>
-            <div style="padding-top:16px">
+            <div style="padding-top:16px;display:flex;flex-direction:column;gap:10px;">
+                <!-- بازی ویژه -->
                 <label style="
                     display:flex;align-items:center;justify-content:space-between;cursor:pointer;
                     padding:12px 16px;border-radius:10px;background:var(--bg-card2);border:1px solid var(--border);">
@@ -469,6 +517,54 @@
                         </div>
                     </div>
                 </label>
+                <!-- آنلاین / چندنفره -->
+                <label style="
+                    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+                    padding:12px 16px;border-radius:10px;background:var(--bg-card2);border:1px solid rgba(0,212,255,.2);">
+                    <div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--text-main)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287zM4.249 3.539c.142-.384.304-.744.481-1.078a7 7 0 0 1 .597-.933A7 7 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9 9 0 0 1-1.565-.667A6.96 6.96 0 0 0 1.018 7.5zm1.4-2.741a12.3 12.3 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332M8.5 5.09V7.5h2.99a12.3 12.3 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.6 13.6 0 0 1 7.5 10.91V8.5zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741zm-3.282 3.696q.18.469.385.881c.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a7 7 0 0 1-.598-.933 9 9 0 0 1-.481-1.079 8.4 8.4 0 0 0-1.198.49 7 7 0 0 0 2.276 1.522zm-1.383-2.964A13.4 13.4 0 0 1 3.508 8.5H1.018a6.96 6.96 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7 7 0 0 0 2.275-1.521 8.4 8.4 0 0 0-1.197-.49 9 9 0 0 1-.482 1.078 7 7 0 0 1-.596.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.6 12.6 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.96 6.96 0 0 0 14.982 8.5h-2.49a13.4 13.4 0 0 1-.437 3.008zM14.982 7.5a6.96 6.96 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008zM11.27 2.461q.266.502.482 1.078a8.4 8.4 0 0 0 1.197-.49 7 7 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a8 8 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/></svg> آنلاین / چندنفره</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">در لیست «پیدا کردن هم‌بازی» نمایش داده می‌شود</div>
+                    </div>
+                    <div style="position:relative">
+                        <input type="checkbox" name="is_online" id="onlineToggle"
+                               {% if game and game.is_online %}checked{% endif %}
+                               style="display:none" onchange="updateOnlineToggle(this)">
+                        <div id="onlineTrack" onclick="document.getElementById('onlineToggle').click()" style="
+                            width:46px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;
+                            background:{% if game and game.is_online %}#06b6d4{% else %}var(--border){% endif %};
+                            box-shadow:{% if game and game.is_online %}0 0 10px rgba(6,182,212,.4){% else %}none{% endif %};">
+                            <div id="onlineThumb" style="
+                                width:20px;height:20px;border-radius:50%;background:white;
+                                position:absolute;top:3px;transition:transform .2s;
+                                transform:{% if game and game.is_online %}translateX(-22px){% else %}translateX(-3px){% endif %};
+                            "></div>
+                        </div>
+                    </div>
+                </label>
+                <!-- کرک آنلاین -->
+                <label style="
+                    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+                    padding:12px 16px;border-radius:10px;background:var(--bg-card2);border:1px solid rgba(251,191,36,.2);">
+                    <div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--text-main)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a.5.5 0 0 1 .5.5v5.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 1 1 .708-.708L7.5 7.293V1.5A.5.5 0 0 1 8 1M.5 9.5A1.5 1.5 0 0 1 2 8h2a.5.5 0 0 1 0 1H2a.5.5 0 0 0-.5.5v4A.5.5 0 0 0 2 14h12a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 1 0-1h2a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5H2A1.5 1.5 0 0 1 .5 13.5z"/></svg> کرک آنلاین</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">بازی از طریق کرک قابل بازی آنلاین است</div>
+                    </div>
+                    <div style="position:relative">
+                        <input type="checkbox" name="is_crack_online" id="crackToggle"
+                               {% if game and game.is_crack_online %}checked{% endif %}
+                               style="display:none" onchange="updateCrackToggle(this)">
+                        <div id="crackTrack" onclick="document.getElementById('crackToggle').click()" style="
+                            width:46px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;
+                            background:{% if game and game.is_crack_online %}#f59e0b{% else %}var(--border){% endif %};
+                            box-shadow:{% if game and game.is_crack_online %}0 0 10px rgba(245,158,11,.4){% else %}none{% endif %};">
+                            <div id="crackThumb" style="
+                                width:20px;height:20px;border-radius:50%;background:white;
+                                position:absolute;top:3px;transition:transform .2s;
+                                transform:{% if game and game.is_crack_online %}translateX(-22px){% else %}translateX(-3px){% endif %};
+                            "></div>
+                        </div>
+                    </div>
+                </label>
             </div>
             <div style="display:flex;gap:10px;margin-top:20px">
                 <button type="submit" class="btn-purple" style="flex:1;padding:11px 0;text-align:center;border-radius:10px;font-size:.9rem;cursor:pointer">
@@ -485,6 +581,7 @@
 </div>
 
 </div><!-- /manualSection -->
+
 
 </form>
 
@@ -529,50 +626,138 @@ function sSwitchTab(tab) {
     ['url','search'].forEach(function(t) {
         var btn  = document.getElementById('stab-' + t);
         var body = document.getElementById('stab-' + t + '-body');
-        if (t === tab) {
-            btn.classList.add('active');
-            body.style.display = 'block';
-        } else {
-            btn.classList.remove('active');
-            body.style.display = 'none';
-        }
+        if (t === tab) { btn.classList.add('active'); body.style.display = 'block'; }
+        else           { btn.classList.remove('active'); body.style.display = 'none'; }
     });
     document.getElementById('sSteamPreview').classList.remove('show');
     _sSteamData = null;
+}
+
+function _chip(text, color) {
+    return '<span style="font-size:.7rem;padding:2px 8px;border-radius:20px;background:rgba(' + color + ',.12);color:rgb(' + color + ');font-weight:600;white-space:nowrap">' + text + '</span>';
+}
+function _stat(icon, val, label) {
+    if (!val) return '';
+    return '<div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:#7fb3d9"><i class="bi ' + icon + '" style="color:#60a5fa"></i><span style="font-weight:700;color:#c8dff0">' + val + '</span><span>' + label + '</span></div>';
 }
 
 function sShowPreview(data) {
     _sSteamData = data;
     var appid = data.appid || '';
 
-    // Banner (Steam header image)
+    // Banner
     var bannerEl = document.getElementById('sPreviewBanner');
-    if (appid) {
-        bannerEl.src = 'https://cdn.akamai.steamstatic.com/steam/apps/' + appid + '/header.jpg';
-        bannerEl.style.display = 'block';
-    } else {
-        bannerEl.style.display = 'none';
-    }
+    var bannerUrl = data.header_url || (appid ? 'https://cdn.akamai.steamstatic.com/steam/apps/' + appid + '/header.jpg' : '');
+    bannerEl.src = bannerUrl; bannerEl.style.display = bannerUrl ? 'block' : 'none';
 
+    // Cover & Name
     document.getElementById('sPreviewCover').src = data.cover_url || '';
     document.getElementById('sPreviewName').textContent = data.name || '';
     document.getElementById('sPreviewDesc').textContent = data.description || '';
+    // Show translate button only when we have an English description
+    var tBtn = document.getElementById('sTranslateBtn');
+    if (tBtn) {
+        tBtn.style.display = data.description ? 'inline-block' : 'none';
+        tBtn.innerHTML = '🌐 ترجمه فارسی';
+        tBtn.disabled = false;
+        tBtn.style.borderColor = '#1e3a58';
+        tBtn.style.color = '#60a5fa';
+    }
 
-    // Meta chips
-    var meta = '';
-    if (data.release_date) meta += '<span style="font-size:.72rem;padding:2px 8px;border-radius:20px;background:rgba(96,165,250,.12);color:#60a5fa">' + data.release_date + '</span>';
-    document.getElementById('sPreviewMeta').innerHTML = meta;
+    // Fill editable year & genre fields
+    var yrVal = data.release_year || ((data.release_date||'').match(/\b(19|20)\d{2}\b/)||[])[0] || '';
+    var yrInput = document.getElementById('sPreviewYearInput');
+    if (yrInput && yrVal) yrInput.value = yrVal;
+    // Pre-select genre chip(s) from Steam data
+    if (data.genre || (data.genres && data.genres.length)) {
+        var toSelect = data.genres || (data.genre ? [data.genre] : []);
+        document.querySelectorAll('#sPreviewGenreChips button').forEach(function(b) {
+            var isMatch = toSelect.indexOf(b.getAttribute('data-genre')) >= 0;
+            if (isMatch) {
+                b.style.background = 'rgba(96,165,250,.18)';
+                b.style.borderColor = '#60a5fa';
+                b.style.color = '#60a5fa';
+            } else {
+                b.style.background = 'transparent';
+                b.style.borderColor = '#1e3a58';
+                b.style.color = '#3a6585';
+            }
+        });
+    }
+
+    // Tags
+    var tags = '';
+    if (data.release_date) tags += _chip('📅 ' + data.release_date, '96,165,250');
+    if (data.genres_raw && data.genres_raw.length) tags += _chip('🎮 ' + data.genres_raw.slice(0,2).join(' · '), '167,139,250');
+    if (data.metacritic_score) tags += _chip('🏆 Metacritic ' + data.metacritic_score, data.metacritic_score >= 75 ? '34,197,94' : data.metacritic_score >= 50 ? '250,204,21' : '248,113,113');
+    if (data.is_free) tags += _chip('🆓 رایگان در استیم', '34,197,94');
+    else if (data.price) tags += _chip('💰 قیمت در استیم: ' + data.price, '250,204,21');
+    document.getElementById('sPreviewTags').innerHTML = tags;
+
+    // Stats
+    var stats = '';
+    if (data.recommendations) stats += _stat('bi-hand-thumbs-up-fill', Number(data.recommendations).toLocaleString(), 'رأی مثبت');
+    if (data.achievements)    stats += _stat('bi-trophy-fill',          data.achievements, 'دستاورد');
+    document.getElementById('sPreviewStats').innerHTML = stats;
+
+    // Info table
+    var rows = [];
+    if (data.developer)  rows.push(['سازنده', data.developer]);
+    if (data.publisher)  rows.push(['ناشر', data.publisher]);
+    var _platLabels = {'pc':'PC','ps5':'PS5','ps4':'PS4','xbox':'Xbox','switch':'Switch','mobile':'موبایل','multi':'چند پلتفرم'};
+    if (data.platforms && data.platforms.length) rows.push(['پلتفرم', data.platforms.map(function(p){ return _platLabels[p]||p; }).join(' · ')]);
+    if (data.categories && data.categories.length) rows.push(['دسته‌بندی', data.categories.slice(0,4).join(' · ')]);
+    if (data.supported_languages) rows.push(['زبان‌ها', data.supported_languages]);
+    if (data.website) rows.push(['سایت', '<a href="' + data.website + '" target="_blank" style="color:#60a5fa">' + data.website + '</a>']);
+    document.getElementById('sPreviewTable').innerHTML = rows.map(function(r) {
+        return '<span style="color:#4a7fa8;font-weight:600">' + r[0] + '</span><span style="color:#c8dff0">' + r[1] + '</span>';
+    }).join('');
+
+    // ── Platform picker ─────────────────────────────────
+    var ALL_PLATFORMS = [
+        {val:'pc',    label:'PC'},
+        {val:'ps5',   label:'PS5'},
+        {val:'ps4',   label:'PS4'},
+        {val:'xbox',  label:'Xbox'},
+        {val:'switch',label:'Switch'},
+        {val:'mobile',label:'موبایل'},
+        {val:'multi', label:'چند پلتفرم'},
+    ];
+    var steamPlats = data.platforms || ['pc'];
+    if (!data._selectedPlatforms) data._selectedPlatforms = steamPlats.slice();
+    document.getElementById('sPreviewPlatforms').innerHTML = ALL_PLATFORMS.map(function(p) {
+        var active = data._selectedPlatforms.indexOf(p.val) >= 0;
+        return '<button type="button" data-plat="' + p.val + '" onclick="sTogglePlat(this)" style="' +
+            'padding:4px 11px;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid;' +
+            (active ? 'background:rgba(96,165,250,.18);border-color:#60a5fa;color:#60a5fa' : 'background:transparent;border-color:#1e3a58;color:#3a6585') +
+        '">' + p.label + '</button>';
+    }).join('');
 
     // Reset apply btn
     var applyBtn = document.getElementById('sApplyBtn');
+    applyBtn.disabled = false;
     applyBtn.classList.remove('spc-applied');
-    applyBtn.innerHTML = '<i class="bi bi-check2-circle"></i> اعمال اطلاعات و ذخیره بازی';
+    applyBtn.innerHTML = '<svg class="bi bi-check2-circle" aria-hidden="true"><use href="#bi-check2-circle"></use></svg> ذخیره بازی';
 
     document.getElementById('sSteamPreview').classList.add('show');
-    // scroll into view
-    setTimeout(function() {
-        document.getElementById('sSteamPreview').scrollIntoView({behavior:'smooth',block:'nearest'});
-    }, 100);
+    setTimeout(function() { document.getElementById('sSteamPreview').scrollIntoView({behavior:'smooth',block:'nearest'}); }, 80);
+}
+
+function sTogglePlat(btn) {
+    _sSteamData._userEditedPlatforms = true;
+    var p = btn.getAttribute('data-plat');
+    var idx = _sSteamData._selectedPlatforms.indexOf(p);
+    if (idx >= 0) {
+        _sSteamData._selectedPlatforms.splice(idx, 1);
+        btn.style.background = 'transparent';
+        btn.style.borderColor = '#1e3a58';
+        btn.style.color = '#3a6585';
+    } else {
+        _sSteamData._selectedPlatforms.push(p);
+        btn.style.background = 'rgba(96,165,250,.18)';
+        btn.style.borderColor = '#60a5fa';
+        btn.style.color = '#60a5fa';
+    }
 }
 
 function sFetchSteam() {
@@ -581,99 +766,203 @@ function sFetchSteam() {
     var btn = document.getElementById('sFetchBtn');
     var err = document.getElementById('sFetchError');
     btn.disabled = true;
-    btn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> در حال دریافت...';
+    btn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> دریافت...';
     err.style.display = 'none';
-    fetch('/community/steam/fetch/?url=' + encodeURIComponent(url))
+    fetch('/steam/fetch/?url=' + encodeURIComponent(url))
         .then(function(r){ return r.json(); })
         .then(function(d){
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-download"></i> دریافت اطلاعات';
-            if (d.error) {
-                err.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>' + d.error;
-                err.style.display = 'block';
-            } else {
-                sShowPreview(d);
-            }
+            btn.disabled = false; btn.innerHTML = '<svg class="bi bi-download" aria-hidden="true"><use href="#bi-download"></use></svg> دریافت اطلاعات';
+            if (d.error) { err.innerHTML = '<svg class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"><use href="#bi-exclamation-triangle-fill"></use></svg>' + d.error; err.style.display='block'; }
+            else { sShowPreview(d); }
         })
         .catch(function(){
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-download"></i> دریافت اطلاعات';
-            err.innerHTML = '<i class="bi bi-wifi-off me-1"></i> خطا در اتصال به سرور';
-            err.style.display = 'block';
+            btn.disabled = false; btn.innerHTML = '<svg class="bi bi-download" aria-hidden="true"><use href="#bi-download"></use></svg> دریافت اطلاعات';
+            err.innerHTML = '<svg class="bi bi-wifi-off me-1" aria-hidden="true"><use href="#bi-wifi-off"></use></svg> خطا در اتصال'; err.style.display='block';
         });
 }
 
 var _sTimer = null;
 function sSearchDebounce() {
     var q = document.getElementById('sSearchInput').value.trim();
-    document.getElementById('sSearchSpinner').style.display = q.length >= 2 ? 'block' : 'none';
+    var spinner = document.getElementById('sSearchSpinner');
+    var searchIcon = document.querySelector('#stab-search-body .bi-search');
     clearTimeout(_sTimer);
-    if (q.length < 2) { document.getElementById('sSearchResults').innerHTML = ''; return; }
-    _sTimer = setTimeout(sDoSearch, 420);
+    if (q.length < 2) { document.getElementById('sSearchResults').innerHTML = ''; spinner.style.display='none'; if(searchIcon) searchIcon.style.display='block'; return; }
+    spinner.style.display = 'block'; if(searchIcon) searchIcon.style.display='none';
+    _sTimer = setTimeout(sDoSearch, 400);
 }
 
 function sDoSearch() {
     var q = document.getElementById('sSearchInput').value.trim();
     if (q.length < 2) return;
-    document.getElementById('sSearchSpinner').style.display = 'block';
-    fetch('/community/steam/search/?q=' + encodeURIComponent(q))
+    fetch('/steam/search/?q=' + encodeURIComponent(q))
         .then(function(r){ return r.json(); })
         .then(function(d){
             document.getElementById('sSearchSpinner').style.display = 'none';
+            var searchIcon = document.querySelector('#stab-search-body .bi-search');
+            if(searchIcon) searchIcon.style.display='block';
             var el = document.getElementById('sSearchResults');
             if (!d.results || !d.results.length) {
-                el.innerHTML = '<div style="text-align:center;padding:16px;color:#3a6585;font-size:.82rem"><i class="bi bi-emoji-frown" style="font-size:1.4rem;display:block;margin-bottom:6px"></i>نتیجه‌ای پیدا نشد</div>';
+                el.innerHTML = '<div style="text-align:center;padding:16px;color:#3a6585;font-size:.82rem"><svg class="bi bi-emoji-frown" aria-hidden="true" style="font-size:1.4rem;display:block;margin-bottom:6px"><use href="#bi-emoji-frown"></use></svg>نتیجه‌ای پیدا نشد</div>';
                 return;
             }
             el.innerHTML = d.results.map(function(item) {
-                var safe = JSON.stringify(item).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-                return '<div class="steam-result-item" onclick=\'sPickResult(' + safe + ')\'>' +
+                var id = item.appid;
+                return '<div class="steam-result-item" data-appid="' + id + '">' +
                     '<img src="' + (item.cover_url||'') + '" onerror="this.style.opacity=.3" alt="">' +
-                    '<div><div class="sri-name">' + item.name + '</div><div class="sri-appid">App ID: ' + item.appid + '</div></div>' +
-                    '<i class="bi bi-arrow-left sri-arrow"></i>' +
+                    '<div><div class="sri-name">' + item.name + '</div><div class="sri-appid">App ID: ' + id + '</div></div>' +
+                    '<svg class="bi bi-arrow-left sri-arrow" aria-hidden="true"><use href="#bi-arrow-left"></use></svg>' +
                 '</div>';
             }).join('');
+            // Attach click handlers after rendering (avoids JSON escaping issues)
+            el.querySelectorAll('.steam-result-item').forEach(function(row) {
+                var appid = row.getAttribute('data-appid');
+                var name  = row.querySelector('.sri-name').textContent;
+                var cover = row.querySelector('img').src;
+                row.addEventListener('click', function() {
+                    sPickResult({appid: appid, name: name, cover_url: cover});
+                });
+            });
         })
-        .catch(function(){
-            document.getElementById('sSearchSpinner').style.display = 'none';
-        });
+        .catch(function(){ document.getElementById('sSearchSpinner').style.display = 'none'; });
 }
 
 function sPickResult(item) {
-    // show quick preview immediately, then fetch full details
-    sShowPreview(item);
-    fetch('/community/steam/fetch/?url=https://store.steampowered.com/app/' + item.appid + '/')
-        .then(function(r){ return r.json(); })
-        .then(function(d){ if (!d.error) sShowPreview(d); })
-        .catch(function(){});
+    // Show quick preview immediately
+    sShowPreview({
+        appid:      item.appid,
+        name:       item.name,
+        cover_url:  item.cover_url,
+        header_url: 'https://cdn.akamai.steamstatic.com/steam/apps/' + item.appid + '/header.jpg'
+    });
+
+    // Block save btn while fetching full details
+    var applyBtn = document.getElementById('sApplyBtn');
+    applyBtn.disabled = true;
+    applyBtn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> دریافت جزئیات...';
+
+    // 10s timeout
+    var timeout = new Promise(function(_, reject) { setTimeout(function(){ reject(new Error('timeout')); }, 10000); });
+    var fetcher = fetch('/steam/fetch/?url=https://store.steampowered.com/app/' + item.appid + '/').then(function(r){ return r.json(); });
+
+    Promise.race([fetcher, timeout])
+        .then(function(d) {
+            if (d && !d.error) {
+                // Only preserve user's platform edits (not the initial default ['pc'])
+                if (_sSteamData && _sSteamData._userEditedPlatforms) {
+                    d._selectedPlatforms = _sSteamData._selectedPlatforms.slice();
+                }
+                sShowPreview(d);
+            } else {
+                // API returned an error object — keep basic preview, just re-enable btn
+                applyBtn.disabled = false;
+                applyBtn.innerHTML = '<svg class="bi bi-check2-circle" aria-hidden="true"><use href="#bi-check2-circle"></use></svg> ذخیره بازی';
+            }
+        })
+        .catch(function() {
+            // Timeout or network error — re-enable btn without resetting preview
+            applyBtn.disabled = false;
+            applyBtn.innerHTML = '<svg class="bi bi-check2-circle" aria-hidden="true"><use href="#bi-check2-circle"></use></svg> ذخیره بازی ⚠️';
+            // Small hint: year may be incomplete
+            var yrInput = document.getElementById('sPreviewYearInput');
+            if (yrInput && !yrInput.value) {
+                yrInput.style.borderColor = '#f59e0b';
+                yrInput.placeholder = 'سال را وارد کنید';
+            }
+        });
 }
 
 function sApplyToForm() {
     if (!_sSteamData) return;
     var applyBtn = document.getElementById('sApplyBtn');
+    var d = _sSteamData;
 
-    // Fill hidden fields (for Steam mode submit)
-    document.getElementById('sHiddenName').value = _sSteamData.name || '';
-    document.getElementById('sHiddenDesc').value = _sSteamData.description || '';
-    document.getElementById('dSteamCoverUrl').value = _sSteamData.cover_url || '';
-    if (_sSteamData.release_date) {
-        var yr = (_sSteamData.release_date || '').match(/\d{4}/);
-        document.getElementById('sHiddenYear').value = yr ? yr[0] : '';
-    }
+    // ── Read editable preview fields ─────────────────────
+    var yrInput = document.getElementById('sPreviewYearInput');
+    var yr = (yrInput && yrInput.value.trim())
+          || (d.release_year ? String(d.release_year) : '')
+          || ((d.release_date||'').match(/\b(19|20)\d{2}\b/)||[])[0]
+          || '';
 
-    // Disable manual section inputs so they don't double-submit
-    document.querySelectorAll('#manualSection input, #manualSection textarea, #manualSection select').forEach(function(el) {
-        el.disabled = true;
+    // Collect selected genres from chips
+    var selectedGenres = [];
+    document.querySelectorAll('#sPreviewGenreChips button').forEach(function(b) {
+        if (b.style.background && b.style.background.indexOf('rgba(96') >= 0) {
+            selectedGenres.push(b.getAttribute('data-genre'));
+        }
     });
+    if (!selectedGenres.length) selectedGenres = d.genres || (d.genre ? [d.genre] : []);
+    var plats = d._selectedPlatforms || d.platforms || ['pc'];
 
-    // Visual feedback then submit
+    // ── Visual feedback ──────────────────────────────────
     applyBtn.classList.add('spc-applied');
     applyBtn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> در حال ذخیره...';
     applyBtn.disabled = true;
 
-    setTimeout(function(){
-        document.getElementById('gameForm').submit();
-    }, 350);
+    // ── Build a brand-new form and submit it ─────────────
+    // This is the only 100% reliable method — zero DOM complexity.
+    var csrf = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+
+    function _hi(name, value) {  // helper: hidden input element
+        var el = document.createElement('input');
+        el.type = 'hidden'; el.name = name; el.value = value;
+        return el;
+    }
+
+    var f = document.createElement('form');
+    f.method  = 'POST';
+    f.action  = window.location.pathname;  // /admin-panel/games/add/
+    f.enctype = 'application/x-www-form-urlencoded';
+
+    f.appendChild(_hi('csrfmiddlewaretoken', csrf));
+    f.appendChild(_hi('name',          d.name        || ''));
+    f.appendChild(_hi('description',   d.description || ''));
+    f.appendChild(_hi('developer',     d.developer   || ''));
+    f.appendChild(_hi('publisher',     d.publisher   || ''));
+    f.appendChild(_hi('release_year',  yr));
+    selectedGenres.forEach(function(g) { f.appendChild(_hi('genres', g)); });
+    f.appendChild(_hi('steam_cover_url', d.cover_url || ''));
+
+    plats.forEach(function(p) { f.appendChild(_hi('platforms', p)); });
+
+    var featToggle   = document.getElementById('featuredToggle');
+    if (featToggle   && featToggle.checked)   f.appendChild(_hi('is_featured', 'on'));
+
+    var onlineToggle = document.getElementById('onlineToggle');
+    if (onlineToggle && onlineToggle.checked) f.appendChild(_hi('is_online', 'on'));
+
+    var crackToggle  = document.getElementById('crackToggle');
+    if (crackToggle  && crackToggle.checked)  f.appendChild(_hi('is_crack_online', 'on'));
+
+    document.body.appendChild(f);
+    f.submit();   // classic synchronous submit — guaranteed to work
+}
+
+/* ── Translate description → Persian ──────────────────── */
+function sTranslateDescription() {
+    var desc = _sSteamData && _sSteamData.description;
+    if (!desc) return;
+    var btn = document.getElementById('sTranslateBtn');
+    btn.innerHTML = '<span class="mini-spin"></span> در حال ترجمه...';
+    btn.disabled = true;
+    fetch('/translate/?text=' + encodeURIComponent(desc))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.translated) {
+                _sSteamData.description = res.translated;
+                document.getElementById('sPreviewDesc').textContent = res.translated;
+                btn.innerHTML = '✅ ترجمه شد';
+                btn.style.borderColor = '#22c55e';
+                btn.style.color = '#22c55e';
+            } else {
+                btn.innerHTML = '❌ ترجمه ناموفق';
+                btn.disabled = false;
+            }
+        })
+        .catch(function() {
+            btn.innerHTML = '❌ خطا در اتصال';
+            btn.disabled = false;
+        });
 }
 
 /* ══════════════════════════════════════════════════
@@ -706,11 +995,51 @@ function updateToggle(checkbox) {
         thumb.style.transform   = 'translateX(-3px)';
     }
 }
+function updateOnlineToggle(checkbox) {
+    var track = document.getElementById('onlineTrack');
+    var thumb = document.getElementById('onlineThumb');
+    if (checkbox.checked) {
+        track.style.background = '#06b6d4';
+        track.style.boxShadow  = '0 0 10px rgba(6,182,212,.4)';
+        thumb.style.transform  = 'translateX(-22px)';
+    } else {
+        track.style.background = 'var(--border)';
+        track.style.boxShadow  = 'none';
+        thumb.style.transform  = 'translateX(-3px)';
+    }
+}
+function updateCrackToggle(checkbox) {
+    var track = document.getElementById('crackTrack');
+    var thumb = document.getElementById('crackThumb');
+    if (checkbox.checked) {
+        track.style.background = '#f59e0b';
+        track.style.boxShadow  = '0 0 10px rgba(245,158,11,.4)';
+        thumb.style.transform  = 'translateX(-22px)';
+    } else {
+        track.style.background = 'var(--border)';
+        track.style.boxShadow  = 'none';
+        thumb.style.transform  = 'translateX(-3px)';
+    }
+}
 
-/* Platform checkboxes */
-document.querySelectorAll('.platform-label').forEach(function(label) {
-    var checkbox = label.querySelector('.platform-check');
-    var icon     = label.querySelector('.platform-check-icon');
+/* Genre toggle in Steam preview */
+function sToggleGenre(btn) {
+    var active = btn.style.background && btn.style.background.indexOf('rgba(96') >= 0;
+    if (active) {
+        btn.style.background = 'transparent';
+        btn.style.borderColor = '#1e3a58';
+        btn.style.color = '#3a6585';
+    } else {
+        btn.style.background = 'rgba(96,165,250,.18)';
+        btn.style.borderColor = '#60a5fa';
+        btn.style.color = '#60a5fa';
+    }
+}
+
+/* Genre checkboxes (manual section) */
+document.querySelectorAll('.genre-label').forEach(function(label) {
+    var checkbox = label.querySelector('.genre-check');
+    var icon     = label.querySelector('.genre-check-icon');
     function syncStyle() {
         if (checkbox.checked) {
             label.style.background   = 'rgba(139,92,246,0.15)';
@@ -718,7 +1047,7 @@ document.querySelectorAll('.platform-label').forEach(function(label) {
             label.style.color        = 'var(--purple-light)';
             icon.style.background    = 'var(--purple)';
             icon.style.borderColor   = 'var(--purple)';
-            icon.innerHTML           = '<i class="bi bi-check" style="color:white;font-size:.65rem"></i>';
+            icon.innerHTML           = '<svg class="bi bi-check" aria-hidden="true" style="color:white;font-size:.6rem"><use href="#bi-check"></use></svg>';
         } else {
             label.style.background   = 'var(--bg-card2)';
             label.style.borderColor  = 'var(--border)';
@@ -729,7 +1058,33 @@ document.querySelectorAll('.platform-label').forEach(function(label) {
         }
     }
     syncStyle();
-    label.addEventListener('click', function() { checkbox.checked = !checkbox.checked; syncStyle(); });
+    label.addEventListener('click', function(e) { e.preventDefault(); checkbox.checked = !checkbox.checked; syncStyle(); });
+});
+
+/* Platform checkboxes — exclude genre-labels that share the same class */
+document.querySelectorAll('.platform-label:not(.genre-label)').forEach(function(label) {
+    var checkbox = label.querySelector('.platform-check');
+    var icon     = label.querySelector('.platform-check-icon');
+    if (!checkbox || !icon) return;
+    function syncStyle() {
+        if (checkbox.checked) {
+            label.style.background   = 'rgba(139,92,246,0.15)';
+            label.style.borderColor  = 'var(--purple)';
+            label.style.color        = 'var(--purple-light)';
+            icon.style.background    = 'var(--purple)';
+            icon.style.borderColor   = 'var(--purple)';
+            icon.innerHTML           = '<svg class="bi bi-check" aria-hidden="true" style="color:white;font-size:.65rem"><use href="#bi-check"></use></svg>';
+        } else {
+            label.style.background   = 'var(--bg-card2)';
+            label.style.borderColor  = 'var(--border)';
+            label.style.color        = 'var(--text-muted)';
+            icon.style.background    = '';
+            icon.style.borderColor   = 'var(--border)';
+            icon.innerHTML           = '';
+        }
+    }
+    syncStyle();
+    label.addEventListener('click', function(e) { e.preventDefault(); checkbox.checked = !checkbox.checked; syncStyle(); });
 });
 
 /* Cover drag & drop */

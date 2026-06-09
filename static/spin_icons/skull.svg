@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- skull cranium -->
+  <ellipse fill="#e5e7eb" cx="32" cy="26" rx="22" ry="20"/>
+  <!-- jaw -->
+  <path fill="#d1d5db" d="M14 36 Q14 52 24 52 L40 52 Q50 52 50 36 Z"/>
+  <!-- jaw outline -->
+  <path fill="none" stroke="#9ca3af" stroke-width="1.5" d="M14 36 Q14 52 24 52 L40 52 Q50 52 50 36"/>
+  <!-- left eye socket -->
+  <ellipse fill="#374151" cx="23" cy="26" rx="7" ry="7"/>
+  <!-- right eye socket -->
+  <ellipse fill="#374151" cx="41" cy="26" rx="7" ry="7"/>
+  <!-- eye glow -->
+  <ellipse fill="rgba(239,68,68,0.5)" cx="23" cy="26" rx="4" ry="4"/>
+  <ellipse fill="rgba(239,68,68,0.5)" cx="41" cy="26" rx="4" ry="4"/>
+  <!-- nose -->
+  <path fill="#374151" d="M29 34 L32 38 L35 34 Q32 31 29 34 Z"/>
+  <!-- teeth -->
+  <rect fill="#f3f4f6" x="22" y="45" width="5" height="7" rx="2"/>
+  <rect fill="#f3f4f6" x="30" y="45" width="5" height="7" rx="2"/>
+  <rect fill="#f3f4f6" x="38" y="45" width="5" height="7" rx="2"/>
+  <!-- skull outline -->
+  <ellipse fill="none" stroke="#9ca3af" stroke-width="1.5" cx="32" cy="26" rx="22" ry="20"/>
+</svg>

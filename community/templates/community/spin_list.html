@@ -1,0 +1,506 @@
+{% extends 'community/base.html' %}
+{% load l10n %}
+{% block title %}گردونه شانس | گیم‌بیت{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Page ── */
+.spin-page { max-width: 1060px; margin: 0 auto; padding: 0 16px 80px; }
+
+.spin-hero {
+    text-align: center;
+    padding: 44px 20px 36px;
+    position: relative;
+}
+.spin-hero-title {
+    font-size: 2rem; font-weight: 900;
+    color: var(--text-white);
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 8px;
+}
+.spin-hero-sub {
+    color: var(--text-dim); font-size: .9rem;
+}
+
+/* ── Grid ── */
+.spin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+/* ── Card ── */
+.spin-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform .22s, border-color .22s, box-shadow .22s;
+    display: flex; flex-direction: column;
+}
+.spin-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(139,92,246,.45);
+    box-shadow: 0 12px 36px rgba(124,58,237,.15);
+}
+
+/* wheel preview area */
+.spin-wheel-area {
+    background: radial-gradient(ellipse at center, rgba(124,58,237,.12) 0%, rgba(0,0,0,.0) 70%);
+    padding: 28px 20px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    position: relative;
+}
+
+/* canvas wrap with glow ring */
+.spin-canvas-wrap {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 190px; height: 190px;
+}
+.spin-canvas-wrap canvas {
+    border-radius: 50%;
+    filter: drop-shadow(0 4px 20px rgba(124,58,237,.35));
+}
+/* center pin */
+.spin-pin {
+    position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #c4b5fd);
+    box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    z-index: 2;
+    pointer-events: none;
+}
+/* indicator arrow */
+.spin-arrow {
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 18px solid #fff;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    z-index: 3;
+}
+
+/* wheel name */
+.spin-wheel-name {
+    font-size: 1.1rem; font-weight: 800;
+    color: var(--text-white);
+    margin: 18px 0 0;
+    text-align: center;
+    letter-spacing: -.01em;
+}
+
+/* badges row */
+.spin-badges {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; flex-wrap: wrap;
+    margin: 10px 20px 0;
+}
+.spin-badge {
+    font-size: .72rem; font-weight: 700;
+    border-radius: 20px; padding: 3px 10px;
+    border: 1px solid;
+    display: flex; align-items: center; gap: 4px;
+}
+.spin-badge-free  { background: rgba(34,197,94,.1);  color:#4ade80; border-color:rgba(34,197,94,.25); }
+.spin-badge-cost  { background: rgba(248,113,113,.08); color:#f87171; border-color:rgba(248,113,113,.2); }
+.spin-badge-count { background: rgba(139,92,246,.1);  color:#a78bfa; border-color:rgba(139,92,246,.2); }
+
+/* ── Prizes list ── */
+.spin-prizes {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    flex: 1;
+}
+.spin-prizes-title {
+    font-size: .68rem; font-weight: 800;
+    color: var(--text-faint);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.prize-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .8rem;
+}
+.prize-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px currentColor;
+}
+.prize-emoji { font-size: .88rem; flex-shrink: 0; }
+.prize-name  { flex: 1; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prize-prob  {
+    font-size: .7rem; font-weight: 700;
+    color: var(--text-faint); flex-shrink: 0;
+    background: rgba(255,255,255,.05);
+    border-radius: 6px; padding: 1px 6px;
+}
+
+/* ── Spin button ── */
+.spin-btn-wrap { padding: 16px 20px 20px; }
+.spin-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px;
+    border-radius: 12px; border: none; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: .95rem; font-weight: 800;
+    text-decoration: none; transition: all .18s;
+}
+.spin-btn-free {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(124,58,237,.4);
+}
+.spin-btn-free:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,.5); color:#fff; }
+.spin-btn-paid {
+    background: rgba(239,68,68,.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,.3);
+}
+.spin-btn-paid:hover { background: rgba(239,68,68,.2); }
+.spin-btn-wait {
+    background: rgba(255,255,255,.03);
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    cursor: default;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 13px;
+    line-height: 1.3;
+}
+.spin-btn-wait:hover { opacity: 1; transform: none; }
+.spin-btn-wait .sbw-label {
+    font-size: .7rem; font-weight: 600;
+    color: var(--text-faint); opacity: .7;
+    letter-spacing: .03em;
+}
+.spin-btn-wait .sbw-time {
+    font-size: 1rem; font-weight: 900;
+    color: var(--text-muted);
+    direction: rtl;
+}
+
+/* ── Empty ── */
+.spin-empty {
+    text-align: center; padding: 80px 20px;
+    color: var(--text-dim);
+}
+.spin-empty-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; opacity: .5; }
+
+@media (max-width: 560px) {
+    .spin-grid { grid-template-columns: 1fr; }
+    .spin-hero-title { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="spin-page">
+
+    <!-- Hero -->
+    <div class="spin-hero">
+        <div class="spin-hero-title">
+            <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg> گردونه شانس
+        </div>
+        <p class="spin-hero-sub">هر روز یه شانس رایگان داری — بچرخون و ببین چی می‌بری!</p>
+    </div>
+
+    {% if wheel_data %}
+    <div class="spin-grid">
+        {% for wd in wheel_data %}
+        {% with wheel=wd.wheel %}
+        <div class="spin-card">
+
+            <!-- Wheel visual -->
+            <div class="spin-wheel-area">
+                <div class="spin-canvas-wrap">
+                    <div class="spin-arrow"></div>
+                    <canvas id="wc-{{ wheel.pk }}" width="180" height="180"
+                            data-items="{{ wd.items_json }}"></canvas>
+                    <div class="spin-pin"></div>
+                </div>
+
+                <!-- Name -->
+                <div class="spin-wheel-name">{{ wheel.name }}</div>
+
+                <!-- Badges -->
+                <div class="spin-badges">
+                    {% if wd.can_spin_free %}
+                        <span class="spin-badge spin-badge-free"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3 2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1 5 0v.006c0 .07 0 .27-.038.494H15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 14.5V7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2.038A3 3 0 0 1 3 2.506zm1.068.5H7v-.5a1.5 1.5 0 1 0-3 0c0 .085.002.274.045.43zM9 3h2.932l.023-.07c.043-.156.045-.345.045-.43a1.5 1.5 0 0 0-3 0zM1 4v2h6V4zm8 0v2h6V4zm5 3H9v8h4.5a.5.5 0 0 0 .5-.5zm-7 8V7H2v7.5a.5.5 0 0 0 .5.5z"/></svg> رایگان</span>
+                    {% else %}
+                        <span class="spin-badge spin-badge-cost cd-timer"
+                              data-ts="{{ wd.next_spin_ts }}">⏳ —</span>
+                    {% endif %}
+                    {% if wheel.cooldown_hours == 0 %}
+                        <span class="spin-badge spin-badge-free">∞ بی‌نهایت</span>
+                    {% elif wheel.cooldown_hours == 24 %}
+                        <span class="spin-badge spin-badge-count">روزانه</span>
+                    {% elif wheel.cooldown_hours == 168 %}
+                        <span class="spin-badge spin-badge-count">هفتگی</span>
+                    {% elif wheel.cooldown_hours == 720 %}
+                        <span class="spin-badge spin-badge-count">ماهانه</span>
+                    {% elif wheel.cooldown_hours > 0 %}
+                        <span class="spin-badge spin-badge-count">هر {{ wheel.cooldown_hours }}ساعت</span>
+                    {% endif %}
+                    {% if wheel.cost_zarban %}
+                    <span class="spin-badge spin-badge-cost">
+                        <svg style="width:14px;height:6px;overflow:visible;vertical-align:middle;color:#f87171;filter:drop-shadow(0 0 3px rgba(239,68,68,.7));" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        {{ wheel.cost_zarban }}
+                    </span>
+                    {% endif %}
+                    <span class="spin-badge spin-badge-count">{{ wd.item_count }} جایزه</span>
+                </div>
+            </div>
+
+            <!-- Prizes list -->
+            <div class="spin-prizes">
+                <div class="spin-prizes-title">جوایز</div>
+                {% for item in wd.items %}
+                <div class="prize-row">
+                    <span class="prize-dot" style="background:{{ item.color }};color:{{ item.color }};"></span>
+                    <span class="prize-emoji">{{ item.emoji }}</span>
+                    <span class="prize-name">{{ item.name }}</span>
+                    <span class="prize-prob">{{ item.probability }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Button -->
+            <div class="spin-btn-wrap">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'account:login' %}?next={% url 'community:spin_list' %}" class="spin-btn spin-btn-wait" style="cursor:pointer;opacity:.85;">
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg> ورود برای بازی
+                    </a>
+                {% elif wheel.cost_zarban %}
+                    <a href="{% url 'community:spin_detail' wheel.pk %}" class="spin-btn spin-btn-paid">
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.281 8.717 2.01z"/></svg> بچرخون — {{ wheel.cost_zarban }} ضربان
+                    </a>
+                {% elif wd.can_spin_free %}
+                    <a href="{% url 'community:spin_detail' wheel.pk %}" class="spin-btn spin-btn-free">
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3 2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1 5 0v.006c0 .07 0 .27-.038.494H15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 14.5V7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2.038A3 3 0 0 1 3 2.506zm1.068.5H7v-.5a1.5 1.5 0 1 0-3 0c0 .085.002.274.045.43zM9 3h2.932l.023-.07c.043-.156.045-.345.045-.43a1.5 1.5 0 0 0-3 0zM1 4v2h6V4zm8 0v2h6V4zm5 3H9v8h4.5a.5.5 0 0 0 .5-.5zm-7 8V7H2v7.5a.5.5 0 0 0 .5.5z"/></svg> رایگان بچرخون
+                    </a>
+                {% else %}
+                    <div class="spin-btn spin-btn-wait cd-btn-timer"
+                         data-ts="{{ wd.next_spin_ts|unlocalize }}"
+                         data-href="{% url 'community:spin_detail' wheel.pk %}">
+                        ⏳ …
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="spin-empty">
+        <span class="spin-empty-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg></span>
+        <div style="font-size:1rem; color:var(--text-muted); margin-bottom:6px;">فعلاً گردونه فعالی وجود ندارد</div>
+        <div style="font-size:.82rem;">به‌زودی اضافه می‌شه!</div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+/* ── تبدیل عدد انگلیسی به فارسی ── */
+function toFa(n) {
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+/* ── فرمت کوتاه برای badge ── */
+function fmtBadge(s) {
+    const weeks = Math.floor(s / (7 * 86400));
+    const days  = Math.floor(s / 86400);
+    const h     = Math.floor((s % 86400) / 3600);
+    const m     = Math.floor((s % 3600) / 60);
+    const sc    = s % 60;
+    if (weeks >= 1) return toFa(weeks) + ' هفته';
+    if (days  >= 1) return toFa(days)  + ' روز';
+    if (h     >= 1) return toFa(h)     + ' ساعت';
+    if (m     >= 1) return toFa(m)     + ' دقیقه';
+    return toFa(sc) + ' ثانیه';
+}
+
+/* ── فرمت کامل و خوانا برای دکمه (۳ واحد) ── */
+function fmtBtn(s) {
+    const weeks = Math.floor(s / (7 * 86400));
+    const days  = Math.floor((s % (7 * 86400)) / 86400);
+    const h     = Math.floor((s % 86400) / 3600);
+    const m     = Math.floor((s % 3600) / 60);
+    const sc    = s % 60;
+    if (weeks >= 1) {
+        let r = toFa(weeks) + ' هفته';
+        if (days > 0) r += ' و ' + toFa(days) + ' روز';
+        if (days > 0 && h > 0) r += ' و ' + toFa(h) + ' ساعت';
+        return r;
+    }
+    if (days >= 1) {
+        let r = toFa(days) + ' روز';
+        if (h > 0) r += ' و ' + toFa(h) + ' ساعت';
+        if (h > 0 && m > 0) r += ' و ' + toFa(m) + ' دقیقه';
+        return r;
+    }
+    if (h >= 1) {
+        let r = toFa(h) + ' ساعت';
+        if (m > 0) r += ' و ' + toFa(m) + ' دقیقه';
+        if (m > 0 && sc > 0) r += ' و ' + toFa(sc) + ' ثانیه';
+        return r;
+    }
+    if (m >= 1) return toFa(m) + ' دقیقه' + (sc > 0 ? ' و ' + toFa(sc) + ' ثانیه' : '');
+    return toFa(sc) + ' ثانیه';
+}
+
+/* ── Badge countdown (timestamp-based) ── */
+document.querySelectorAll('.cd-timer[data-ts]').forEach(el => {
+    const ts = parseInt(el.dataset.ts) || 0;
+    function tick() {
+        const remaining = Math.max(0, ts - Math.floor(Date.now() / 1000));
+        if (remaining <= 0) {
+            el.textContent = '🎁 رایگان';
+            el.className = el.className.replace('spin-badge-cost', 'spin-badge-free');
+            return;
+        }
+        el.textContent = '⏳ ' + fmtBadge(remaining);
+        setTimeout(tick, 1000);
+    }
+    tick();
+});
+
+/* ── Button countdown (timestamp-based) ── */
+document.querySelectorAll('.cd-btn-timer[data-ts]').forEach(el => {
+    const ts   = parseInt(el.dataset.ts) || 0;
+    const href = el.dataset.href;
+    function tick() {
+        const remaining = Math.max(0, ts - Math.floor(Date.now() / 1000));
+        if (remaining <= 0) {
+            const a = document.createElement('a');
+            a.href = href;
+            a.className = 'spin-btn spin-btn-free';
+            a.textContent = '🎁 رایگان بچرخون';
+            el.replaceWith(a);
+            return;
+        }
+        el.innerHTML =
+            '<span class="sbw-label">چرخش بعدی</span>' +
+            '<span class="sbw-time">⏳ ' + fmtBtn(remaining) + ' دیگه</span>';
+        setTimeout(tick, 1000);
+    }
+    tick();
+});
+
+/* helper: returns true if s is an image URL */
+function isUrl(s) {
+    return s && (s.startsWith('/') || s.startsWith('http'));
+}
+
+/* Preload a single image URL, returns a Promise<HTMLImageElement|null> */
+function loadImg(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
+/* Collect all unique image URLs across all canvases, preload them,
+   then draw every mini-wheel. */
+(function drawAllWheels() {
+    const canvases = document.querySelectorAll('canvas[data-items]');
+    const allItems = [];
+    canvases.forEach(c => {
+        try { allItems.push(...JSON.parse(c.dataset.items)); } catch(e) {}
+    });
+
+    /* gather unique URLs */
+    const urls = [...new Set(allItems.map(i => i.emoji).filter(isUrl))];
+
+    /* preload all in parallel */
+    const loadPromises = urls.map(url => loadImg(url).then(img => [url, img]));
+
+    Promise.all(loadPromises).then(results => {
+        const imgMap = {};
+        results.forEach(([url, img]) => { imgMap[url] = img; });
+
+        /* now draw each canvas */
+        canvases.forEach(canvas => {
+            const items = JSON.parse(canvas.dataset.items);
+            if (!items.length) return;
+
+            const ctx   = canvas.getContext('2d');
+            const cx    = canvas.width  / 2;
+            const cy    = canvas.height / 2;
+            const r     = cx - 4;
+            const total = items.reduce((s, i) => s + i.probability, 0) || 100;
+            const imgSz = 20;
+
+            let angle = -Math.PI / 2; /* start from top */
+
+            items.forEach((item) => {
+                const slice = (item.probability / total) * Math.PI * 2;
+                const end   = angle + slice;
+
+                /* Segment fill */
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, angle, end);
+                ctx.closePath();
+                ctx.fillStyle = item.color || '#6d28d9';
+                ctx.fill();
+
+                /* Subtle inner border between slices */
+                ctx.strokeStyle = 'rgba(0,0,0,.25)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                /* Icon / emoji in the middle of the slice */
+                const midAngle = angle + slice / 2;
+                const er = r * 0.62;
+                const ex = cx + er * Math.cos(midAngle);
+                const ey = cy + er * Math.sin(midAngle);
+
+                ctx.save();
+                if (isUrl(item.emoji) && imgMap[item.emoji]) {
+                    /* draw SVG/image icon centered at (ex, ey) */
+                    ctx.translate(ex, ey);
+                    ctx.drawImage(imgMap[item.emoji], -imgSz / 2, -imgSz / 2, imgSz, imgSz);
+                } else {
+                    ctx.font = `${r > 60 ? 16 : 12}px serif`;
+                    ctx.textAlign    = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'rgba(255,255,255,.9)';
+                    ctx.shadowColor = 'rgba(0,0,0,.6)';
+                    ctx.shadowBlur  = 3;
+                    ctx.fillText(item.emoji || '🎁', ex, ey);
+                }
+                ctx.restore();
+
+                angle = end;
+            });
+
+            /* Outer ring */
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,.18)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            /* Inner dark circle (hub) */
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2);
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,.3)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -5,10 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}داشبورد GameBeat{% endblock %}</title>
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/gamebeat-favicon.svg' %}">
+    <link rel="shortcut icon" href="{% static 'images/gamebeat-favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'vendor/css/bootstrap.rtl.min.css' %}">
-    <link rel="stylesheet" href="{% static 'vendor/css/bootstrap-icons.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/css/vazirmatn-font-face.css' %}">
+    {% block extra_css %}{% endblock %}
     <style>
+        svg.bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; }
+
         :root {
             --bg-void: #16161e;
             --bg-dark: #1c1c26;
@@ -658,6 +663,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+{% include "community/icons_sprite.html" %}
 
 <!-- Sidebar Overlay (mobile) -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
@@ -667,7 +673,7 @@
 
     <a href="{% url 'dashboard:index' %}" class="sidebar-brand">
         <div class="sidebar-brand-icon">
-            <i class="bi bi-controller"></i>
+            <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
         </div>
         <div class="sidebar-brand-text">
             <span class="sidebar-brand-name">GameBeat</span>
@@ -680,7 +686,7 @@
 
         <a href="{% url 'dashboard:index' %}"
            class="sidebar-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-            <i class="bi bi-grid-1x2"></i>
+            <svg class="bi bi-grid-1x2" aria-hidden="true"><use href="#bi-grid-1x2"></use></svg>
             داشبورد
         </a>
 
@@ -688,43 +694,75 @@
 
         <a href="{% url 'dashboard:users' %}"
            class="sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-people-fill"></i>
+            <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg>
             کاربران
         </a>
 
         <a href="{% url 'dashboard:posts' %}"
            class="sidebar-link {% if 'post' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-file-post-fill"></i>
+            <svg class="bi bi-file-post-fill" aria-hidden="true"><use href="#bi-file-post-fill"></use></svg>
             پست‌ها
         </a>
 
         <a href="{% url 'dashboard:comments' %}"
            class="sidebar-link {% if 'comment' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-chat-dots-fill"></i>
+            <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg>
             کامنت‌ها
         </a>
 
         <a href="{% url 'dashboard:hashtags' %}"
            class="sidebar-link {% if 'hashtag' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-hash"></i>
+            <svg class="bi bi-hash" aria-hidden="true"><use href="#bi-hash"></use></svg>
             هشتگ‌ها
         </a>
 
         <a href="{% url 'dashboard:games' %}"
            class="sidebar-link {% if 'game' in request.resolver_match.url_name %}active{% endif %}">
-            <i class="bi bi-controller"></i>
+            <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
             بازی‌ها
+        </a>
+
+        <a href="{% url 'dashboard:notify' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'notify' %}active{% endif %}">
+            <svg class="bi bi-megaphone-fill" aria-hidden="true"><use href="#bi-megaphone-fill"></use></svg>
+            پیام‌رسانی
+        </a>
+
+        <a href="{% url 'dashboard:score_settings' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'score_settings' %}active{% endif %}">
+            <svg class="bi bi-sliders" aria-hidden="true"><use href="#bi-sliders"></use></svg>
+            تنظیمات امتیاز
+        </a>
+
+        <a href="{% url 'dashboard:zarban' %}"
+           class="sidebar-link {% if 'zarban' in request.resolver_match.url_name %}active{% endif %}"
+           style="{% if 'zarban' in request.resolver_match.url_name %}background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.1));border-color:rgba(168,85,247,.35);color:#c084fc;{% endif %}">
+            <svg style="width:22px;height:10px;overflow:visible;vertical-align:middle;color:#f87171;filter:drop-shadow(0 0 3px rgba(239,68,68,.7));" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            مدیریت ضربان
+        </a>
+
+        <a href="{% url 'dashboard:spin_wheels' %}"
+           class="sidebar-link {% if 'spin' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="bi bi-circle-half" aria-hidden="true"><use href="#bi-circle-half"></use></svg>
+            گردونه شانس
+        </a>
+
+        <a href="{% url 'dashboard:premium' %}"
+           class="sidebar-link {% if 'premium' in request.resolver_match.url_name %}active{% endif %}"
+           style="{% if 'premium' in request.resolver_match.url_name %}background:linear-gradient(135deg,rgba(234,179,8,.15),rgba(202,138,4,.08));border-color:rgba(234,179,8,.4);color:#fde047;{% endif %}">
+            <svg class="bi bi-patch-check-fill" aria-hidden="true" style="color:#fbbf24"><use href="#bi-patch-check-fill"></use></svg>
+            اشتراک پریمیوم
         </a>
 
         <div class="sidebar-section-label" style="margin-top:8px">دسترسی سریع</div>
 
         <a href="/admin/" class="sidebar-link">
-            <i class="bi bi-shield-lock"></i>
+            <svg class="bi bi-shield-lock" aria-hidden="true"><use href="#bi-shield-lock"></use></svg>
             Django Admin
         </a>
 
         <a href="/" class="sidebar-link">
-            <i class="bi bi-house"></i>
+            <svg class="bi bi-house" aria-hidden="true"><use href="#bi-house"></use></svg>
             بازگشت به سایت
         </a>
     </nav>
@@ -741,7 +779,7 @@
                 </div>
             </div>
             <a href="/account/logout/" class="topbar-btn" title="خروج" style="width:30px;height:30px;flex-shrink:0">
-                <i class="bi bi-box-arrow-right" style="font-size:0.85rem"></i>
+                <svg class="bi bi-box-arrow-right" aria-hidden="true" style="font-size:0.85rem"><use href="#bi-box-arrow-right"></use></svg>
             </a>
         </div>
     </div>
@@ -751,7 +789,7 @@
 <header class="dash-topbar">
     <div class="d-flex align-items-center gap-3">
         <button class="topbar-btn d-lg-none" onclick="toggleSidebar()" style="background:none;border:1px solid var(--border)">
-            <i class="bi bi-list" style="font-size:1.2rem"></i>
+            <svg class="bi bi-list" aria-hidden="true" style="font-size:1.2rem"><use href="#bi-list"></use></svg>
         </button>
         <div>
             <div class="topbar-title">{% block page_title %}داشبورد{% endblock %}</div>
@@ -759,13 +797,13 @@
     </div>
     <div class="topbar-actions">
         <a href="{% url 'dashboard:game_add' %}" class="topbar-btn" title="افزودن بازی">
-            <i class="bi bi-plus-circle"></i>
+            <svg class="bi bi-plus-circle" aria-hidden="true"><use href="#bi-plus-circle"></use></svg>
         </a>
         <a href="{% url 'dashboard:users' %}" class="topbar-btn" title="کاربران">
-            <i class="bi bi-people"></i>
+            <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
         </a>
         <a href="/" class="topbar-btn" title="سایت اصلی">
-            <i class="bi bi-house"></i>
+            <svg class="bi bi-house" aria-hidden="true"><use href="#bi-house"></use></svg>
         </a>
     </div>
 </header>

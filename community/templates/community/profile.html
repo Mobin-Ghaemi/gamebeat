@@ -189,11 +189,6 @@
     font-size: 0.78rem; font-weight: 700;
     border: 1px solid;
 }
-.badge-level {
-    background: rgba(168,85,247,0.1);
-    border-color: rgba(168,85,247,0.3);
-    color: #c084fc;
-}
 .badge-platform {
     background: rgba(139,92,246,0.08);
     border-color: rgba(139,92,246,0.25);
@@ -213,25 +208,6 @@
     background: rgba(251,113,133,0.08);
     border-color: rgba(251,113,133,0.2);
     color: #fb7185;
-}
-
-/* XP bar */
-.xp-bar-section { margin-top: 16px; max-width: 340px; }
-.xp-bar-label {
-    display: flex; justify-content: space-between;
-    font-size: 0.77rem; margin-bottom: 5px;
-    color: var(--text-muted);
-}
-.xp-bar-label span:last-child { color: #c084fc; font-weight: 700; }
-.xp-bar-track {
-    background: var(--border); border-radius: 99px;
-    height: 7px; overflow: hidden;
-}
-.xp-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--purple), #c084fc);
-    border-radius: 99px;
-    transition: width 0.6s ease;
 }
 
 /* Stats bar */
@@ -599,26 +575,6 @@
 .sidebar-info-row i { color: var(--purple); width: 18px; text-align: center; flex-shrink: 0; }
 .sidebar-info-row span { color: rgba(255,255,255,0.75); }
 
-/* XP level card */
-.level-visual {
-    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(109,40,217,0.06));
-    border: 1px solid var(--purple-mid);
-    border-radius: 14px;
-    padding: 18px;
-    text-align: center;
-    margin-bottom: 12px;
-}
-.level-num {
-    font-size: 3rem; font-weight: 900;
-    background: linear-gradient(135deg, var(--purple), #c084fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-}
-.level-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-.level-xp-bar { margin-top: 12px; }
-
 /* Quick gaming IDs */
 .quick-ga-row {
     display: flex; align-items: center; gap: 10px;
@@ -973,10 +929,148 @@
 }
 .bl-fav-btn.active { color: #fb7185; }
 .bl-fav-btn:hover { background: rgba(251,113,133,0.1); }
+
+/* ── Banner Modal ── */
+.bm-overlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s;
+}
+.bm-overlay.open { opacity: 1; pointer-events: all; }
+.bm-box {
+    background: #0f0f24;
+    border: 1px solid rgba(139,92,246,.25);
+    border-radius: 22px;
+    width: min(520px, 94vw);
+    overflow: hidden;
+    transform: translateY(18px) scale(.97);
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 24px 60px rgba(0,0,0,.7);
+}
+.bm-overlay.open .bm-box { transform: translateY(0) scale(1); }
+
+.bm-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.bm-head-title { font-size: .95rem; font-weight: 800; color: #e0e0f5; }
+.bm-close {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(255,255,255,.06); border: none; cursor: pointer;
+    color: rgba(255,255,255,.5); font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+}
+.bm-close:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+/* preview */
+.bm-preview {
+    height: 160px;
+    background: linear-gradient(135deg,#0d0022,#1e0035,#08001a);
+    position: relative; overflow: hidden;
+}
+.bm-preview-img {
+    width: 100%; height: 100%; object-fit: cover;
+    position: absolute; inset: 0;
+}
+.bm-preview-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+    color: rgba(255,255,255,.3); font-size: .82rem;
+    pointer-events: none;
+}
+.bm-preview-label i { font-size: 1.8rem; opacity: .4; }
+
+/* drop zone */
+.bm-drop {
+    margin: 18px 22px 0;
+    border: 2px dashed rgba(139,92,246,.3);
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+}
+.bm-drop:hover, .bm-drop.drag { border-color: #8b5cf6; background: rgba(139,92,246,.05); }
+.bm-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.bm-drop-txt { font-size: .84rem; color: rgba(255,255,255,.4); }
+.bm-drop-txt strong { color: #a78bfa; }
+.bm-drop-hint { font-size: .72rem; color: rgba(255,255,255,.22); margin-top: 5px; }
+
+/* footer buttons */
+.bm-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px 20px; gap: 10px;
+}
+.bm-btn {
+    padding: 9px 20px; border-radius: 10px; font-size: .85rem; font-weight: 700;
+    border: none; cursor: pointer; transition: all .18s;
+}
+.bm-btn-save {
+    background: linear-gradient(135deg,#6d28d9,#8b5cf6);
+    color: #fff; flex: 1;
+    box-shadow: 0 4px 14px rgba(139,92,246,.4);
+}
+.bm-btn-save:hover { box-shadow: 0 6px 20px rgba(139,92,246,.55); }
+.bm-btn-save:disabled { opacity: .5; cursor: not-allowed; }
+.bm-btn-remove {
+    background: rgba(239,68,68,.1); color: #f87171;
+    border: 1px solid rgba(239,68,68,.2);
+}
+.bm-btn-remove:hover { background: rgba(239,68,68,.18); }
+.bm-err { font-size: .78rem; color: #f87171; padding: 0 22px 14px; display: none; }
 </style>
 {% endblock %}
 
 {% block content %}
+
+{% if is_own_profile %}
+<!-- ══ Banner Modal ══ -->
+<div class="bm-overlay" id="bmOverlay" onclick="bmBgClick(event)">
+    <div class="bm-box">
+        <div class="bm-head">
+            <span class="bm-head-title"><svg class="bi bi-image" aria-hidden="true" style="color:#a78bfa;margin-left:6px"><use href="#bi-image"></use></svg>ویرایش بنر پروفایل</span>
+            <button class="bm-close" onclick="closeBannerModal()">✕</button>
+        </div>
+        <div class="bm-preview" id="bmPreview">
+            {% if profile.banner %}
+            <img src="{{ profile.banner.url }}" class="bm-preview-img" id="bmPreviewImg">
+            {% else %}
+            <img src="" class="bm-preview-img" id="bmPreviewImg" style="display:none">
+            {% endif %}
+            <div class="bm-preview-label" id="bmPreviewLabel" {% if profile.banner %}style="display:none"{% endif %}>
+                <svg class="bi bi-panorama" aria-hidden="true"><use href="#bi-panorama"></use></svg>
+                پیش‌نمایش بنر
+            </div>
+        </div>
+        <div class="bm-drop" id="bmDrop">
+            <input type="file" accept="image/*" id="bmFileInput" onchange="bmFileChosen(this)">
+            <div class="bm-drop-txt"><strong>کلیک کن</strong> یا عکس رو اینجا بکش</div>
+            <div class="bm-drop-hint">PNG، JPG، WebP — حداکثر ۵ مگابایت</div>
+        </div>
+        <div class="bm-err" id="bmErr"></div>
+        <div class="bm-footer">
+            {% if profile.banner %}
+            <button class="bm-btn bm-btn-remove" onclick="bmRemove()">
+                <svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف بنر
+            </button>
+            {% else %}
+            <div></div>
+            {% endif %}
+            <button class="bm-btn bm-btn-save" id="bmSaveBtn" onclick="bmSave()" disabled>
+                <svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg> ذخیره
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="profile-page">
 
     <!-- Banner -->
@@ -985,9 +1079,9 @@
             <img src="{{ profile.banner.url }}" class="profile-banner-img">
         {% endif %}
         {% if is_own_profile %}
-            <a href="{% url 'community:edit_profile' %}" class="banner-edit-btn">
-                <i class="bi bi-camera"></i> ویرایش بنر
-            </a>
+            <button type="button" class="banner-edit-btn" onclick="openBannerModal()">
+                <svg class="bi bi-camera" aria-hidden="true"><use href="#bi-camera"></use></svg> ویرایش بنر
+            </button>
         {% endif %}
     </div>
 
@@ -1006,42 +1100,44 @@
                 <div class="profile-actions">
                     {% if is_own_profile %}
                         <a href="{% url 'community:edit_profile' %}" class="btn-edit-profile">
-                            <i class="bi bi-pencil-square"></i> ویرایش پروفایل
-                        </a>
-                        <a href="{% url 'account:dashboard' %}" class="btn-gamenet">
-                            <i class="bi bi-joystick"></i> مدیریت گیم‌نت
+                            <svg class="bi bi-pencil-square" aria-hidden="true"><use href="#bi-pencil-square"></use></svg> ویرایش پروفایل
                         </a>
                     {% else %}
                         <button class="btn-follow {% if is_following %}following{% endif %}"
                             id="followBtn"
                             onclick="handleFollow('{{ profile_user.username }}')">
                             {% if is_following %}
-                                <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                                <svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> دنبال می‌کنی
                             {% else %}
-                                <i class="bi bi-plus-lg"></i> دنبال کن
+                                <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن
                             {% endif %}
                         </button>
                         <a href="{% url 'community:conversation' username=profile_user.username %}" class="btn-edit-profile">
-                            <i class="bi bi-chat-dots-fill"></i> پیام
+                            <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> پیام
                         </a>
                     {% endif %}
                 </div>
             </div>
 
             <div class="profile-name-section">
-                <div class="profile-display-name">
+                <div class="profile-display-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     {% if profile_user.get_full_name %}{{ profile_user.get_full_name }}{% else %}{{ profile_user.username }}{% endif %}
+                    {% if profile.is_premium %}
+                    <span title="کاربر پریمیوم" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:50%;flex-shrink:0;box-shadow:0 2px 8px rgba(59,130,246,.5);">
+                      <svg viewBox="0 0 24 24" fill="white" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </span>
+                    {% endif %}
                 </div>
-                <div class="profile-username">@{{ profile_user.username }}</div>
+                <div class="profile-username">
+                    @{{ profile_user.username }}
+                    {% if profile.is_premium %}<span style="font-size:.68rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:1px 8px;margin-right:4px;vertical-align:middle;">✦ پریمیوم</span>{% endif %}
+                </div>
 
                 {% if profile.bio %}
                     <p class="profile-bio">{{ profile.bio }}</p>
                 {% endif %}
 
                 <div class="profile-badges">
-                    <span class="badge-item badge-level">
-                        <i class="bi bi-lightning-fill"></i> لول {{ profile.level }}
-                    </span>
                     {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
                         <span class="badge-item badge-platform">
                             <i class="bi {{ plt_icon }}"></i> {{ plt_label }}
@@ -1049,30 +1145,21 @@
                     {% endfor %}
                     {% if profile.rank %}
                         <span class="badge-item badge-rank">
-                            <i class="bi bi-star-fill"></i> {{ profile.get_rank_display }}
+                            <svg class="bi bi-star-fill" aria-hidden="true"><use href="#bi-star-fill"></use></svg> {{ profile.get_rank_display }}
                         </span>
                     {% endif %}
                     {% if profile.city %}
                         <span class="badge-item badge-city">
-                            <i class="bi bi-geo-alt-fill"></i> {{ profile.get_city_display }}
+                            <svg class="bi bi-geo-alt-fill" aria-hidden="true"><use href="#bi-geo-alt-fill"></use></svg> {{ profile.get_city_display }}
                         </span>
                     {% endif %}
                     {% if profile.gaming_style %}
                         <span class="badge-item badge-style">
-                            <i class="bi bi-controller"></i> {{ profile.get_gaming_style_display }}
+                            <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ profile.get_gaming_style_display }}
                         </span>
                     {% endif %}
                 </div>
 
-                <div class="xp-bar-section">
-                    <div class="xp-bar-label">
-                        <span>پیشرفت XP</span>
-                        <span>{{ profile.xp }} XP</span>
-                    </div>
-                    <div class="xp-bar-track">
-                        <div class="xp-bar-fill" style="width: {{ profile.level_progress }}%;"></div>
-                    </div>
-                </div>
             </div>
 
             <!-- Stats -->
@@ -1093,7 +1180,59 @@
                     <div class="profile-stat-val">{{ profile.total_hours_played }}</div>
                     <div class="profile-stat-lbl">ساعت بازی</div>
                 </div>
+                {% if completed_count > 0 %}
+                <div class="profile-stat">
+                    <div class="profile-stat-val">{{ completed_count }}</div>
+                    <div class="profile-stat-lbl"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg> تموم‌شده</div>
+                </div>
+                {% endif %}
             </div>
+
+            <!-- Favorite genre & pinned game -->
+            {% if fav_genre or profile.pinned_game_name %}
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px;">
+                {% if fav_genre %}
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c4b5fd;font-size:.75rem;font-weight:700;">
+                    <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> ژانر مورد علاقه: {{ fav_genre }}
+                </span>
+                {% endif %}
+                {% if profile.pinned_game_name %}
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);color:#fbbf24;font-size:.75rem;font-weight:700;">
+                    <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg> {{ profile.pinned_game_name }}
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Pinned game card (own profile management) -->
+            {% if is_own_profile %}
+            <div style="margin-top:8px;">
+                {% if profile.pinned_game_name %}
+                <div style="display:inline-flex;align-items:center;gap:8px;background:#130826;border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:8px 14px;">
+                    <svg class="bi bi-pin-fill" aria-hidden="true" style="color:#fbbf24;"><use href="#bi-pin-fill"></use></svg>
+                    <span style="font-size:.82rem;color:rgba(255,255,255,0.7);">بازی پین‌شده: <strong style="color:#fff;">{{ profile.pinned_game_name }}</strong></span>
+                    <button onclick="document.getElementById('pin-dropdown').classList.toggle('d-none')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:8px;padding:3px 8px;font-size:.72rem;cursor:pointer;font-family:'Vazirmatn',sans-serif;">تغییر</button>
+                    <button onclick="setPinnedGame('')" style="background:transparent;border:none;color:rgba(239,68,68,0.5);font-size:.75rem;cursor:pointer;padding:0 4px;" title="حذف پین">✕</button>
+                </div>
+                {% else %}
+                <button onclick="document.getElementById('pin-dropdown').classList.toggle('d-none')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);border-radius:10px;padding:6px 14px;font-size:.75rem;cursor:pointer;font-family:'Vazirmatn',sans-serif;">
+                    <svg class="bi bi-pin me-1" aria-hidden="true"><use href="#bi-pin"></use></svg> پین کردن بازی
+                </button>
+                {% endif %}
+                <div id="pin-dropdown" class="d-none" style="margin-top:8px;background:#130826;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;max-height:160px;overflow-y:auto;">
+                    {% if completed_games %}
+                    {% for g in completed_games %}
+                    <div onclick="setPinnedGame('{{ g.game_name|escapejs }}')" style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.82rem;color:rgba(255,255,255,0.65);transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.12)'" onmouseout="this.style.background='transparent'">
+                        🏆 {{ g.game_name }}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div style="text-align:center;color:rgba(255,255,255,0.25);font-size:.8rem;padding:10px;">هنوز بازی تموم نکردی</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
         </div>
 
         <!-- ═══ GAMING SHOWCASE ═══ -->
@@ -1105,7 +1244,7 @@
                 <!-- Currently Playing -->
                 <div class="showcase-row" style="margin-bottom:0;">
                     <div class="showcase-label" style="color:#4ade80;">
-                        🎮 الان بازی می‌کنه
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> الان بازی می‌کنه
                         {% if showcase_playing %}
                         <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; margin-right:auto; background:rgba(74,222,128,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_playing|length }}</span>
                         {% endif %}
@@ -1114,7 +1253,7 @@
                         {% if showcase_playing %}
                             {% for item in showcase_playing %}
                             <span class="showcase-chip playing">
-                                <i class="bi bi-play-circle-fill" style="font-size:0.72rem;"></i>
+                                <svg class="bi bi-play-circle-fill" aria-hidden="true" style="font-size:0.72rem;"><use href="#bi-play-circle-fill"></use></svg>
                                 {{ item.game_name }}
                                 {% if item.platform %}<span style="opacity:0.5; font-size:0.68rem;">· {{ item.platform }}</span>{% endif %}
                             </span>
@@ -1128,7 +1267,7 @@
                 <!-- Games Played / Completed -->
                 <div class="showcase-row" style="margin-bottom:0;">
                     <div class="showcase-label" style="color:#fbbf24;">
-                        ✅ بازی کرده
+                        <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg> بازی کرده
                         {% if showcase_completed %}
                         <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; margin-right:auto; background:rgba(251,191,36,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_completed|length }}</span>
                         {% endif %}
@@ -1137,7 +1276,7 @@
                         {% if showcase_completed %}
                             {% for item in showcase_completed %}
                             <span class="showcase-chip done">
-                                {% if item.rating %}⭐{{ item.rating }} · {% endif %}{{ item.game_name }}
+                                {% if item.rating %}<svg style="width:1em;height:1em;fill:#fbbf24;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.950l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.950l-3.522 3.356.83 4.73c.078.443-.36.790-.746.592L8 13.187l-4.389 2.256z"/></svg>{{ item.rating }} · {% endif %}{{ item.game_name }}
                             </span>
                             {% endfor %}
                         {% else %}
@@ -1152,13 +1291,13 @@
             <!-- Favorites row — below the 2 main sections -->
             <div class="showcase-row" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border); margin-bottom:0;">
                 <div class="showcase-label" style="color:#fb7185;">
-                    ❤️ مورد علاقه
+                    <svg style="width:1em;height:1em;fill:#fb7185;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01z"/></svg> مورد علاقه
                     <span style="font-size:0.68rem; font-weight:600; opacity:0.55; text-transform:none; letter-spacing:0; background:rgba(251,113,133,0.15); border-radius:20px; padding:1px 7px;">{{ showcase_favorites|length }}</span>
                 </div>
                 <div class="showcase-chips" id="sc-fav">
                     {% for item in showcase_favorites %}
                     <span class="showcase-chip fav">
-                        <i class="bi bi-joystick" style="font-size:0.72rem;"></i>
+                        <svg class="bi bi-joystick" aria-hidden="true" style="font-size:0.72rem;"><use href="#bi-joystick"></use></svg>
                         {{ item.game_name }}
                         {% if item.platform %}<span style="opacity:0.5; font-size:0.68rem;">· {{ item.platform }}</span>{% endif %}
                     </span>
@@ -1171,8 +1310,8 @@
 
             {% if is_own_profile %}
             <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:0.77rem; color:var(--text-dim);">
-                <i class="bi bi-info-circle" style="color:var(--purple);"></i>
-                برای تغییر وضعیت بازی‌ها به تب <strong style="color:var(--purple);">بک‌لاگ</strong> برو — ❤️ = مورد علاقه، وضعیت بازی = «دارم بازی می‌کنم» یا «تموم کردم»
+                <svg class="bi bi-info-circle" aria-hidden="true" style="color:var(--purple);"><use href="#bi-info-circle"></use></svg>
+                برای تغییر وضعیت بازی‌ها به تب <strong style="color:var(--purple);">بازی‌ها</strong> برو — ❤️ = مورد علاقه، وضعیت بازی = «دارم بازی می‌کنم» یا «تموم کردم»
             </div>
             {% endif %}
 
@@ -1181,22 +1320,22 @@
         <!-- Tabs -->
         <div class="profile-tabs">
             <button class="profile-tab active" id="tab-posts" onclick="switchTab('posts')">
-                <i class="bi bi-grid-3x3-gap-fill"></i> پست‌ها
+                <svg class="bi bi-grid-3x3-gap-fill" aria-hidden="true"><use href="#bi-grid-3x3-gap-fill"></use></svg> پست‌ها
             </button>
             <button class="profile-tab" id="tab-backlog" onclick="switchTab('backlog')">
-                <i class="bi bi-collection-play-fill"></i> بازی‌ها
+                <svg class="bi bi-collection-play-fill" aria-hidden="true"><use href="#bi-collection-play-fill"></use></svg> بازی‌ها
             </button>
             <button class="profile-tab" id="tab-ga" onclick="switchTab('ga')">
-                <i class="bi bi-plug-fill"></i> اکانت‌های گیمینگ
+                <svg class="bi bi-plug-fill" aria-hidden="true"><use href="#bi-plug-fill"></use></svg> اکانت‌های گیمینگ
             </button>
             <button class="profile-tab" id="tab-achievements" onclick="switchTab('achievements')">
-                <i class="bi bi-trophy-fill"></i> دستاوردها
+                <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاوردها
             </button>
             <button class="profile-tab" id="tab-followers" onclick="switchTab('followers')">
-                <i class="bi bi-people-fill"></i> فالوورها
+                <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> فالوورها
             </button>
             <button class="profile-tab" id="tab-following" onclick="switchTab('following')">
-                <i class="bi bi-person-check-fill"></i> دنبال‌شده‌ها
+                <svg class="bi bi-person-check-fill" aria-hidden="true"><use href="#bi-person-check-fill"></use></svg> دنبال‌شده‌ها
             </button>
         </div>
 
@@ -1211,13 +1350,13 @@
                     <!-- New Post Button -->
                     <a href="{% url 'community:create_post_page' %}" class="new-post-btn-row">
                         <div class="new-post-btn-inner">
-                            <div class="new-post-btn-icon"><i class="bi bi-plus-lg"></i></div>
+                            <div class="new-post-btn-icon"><svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg></div>
                             <div>
                                 <div class="new-post-btn-title">افزودن پست جدید</div>
                                 <div class="new-post-btn-sub">متن · تصویر · لینک · هشتگ</div>
                             </div>
                         </div>
-                        <i class="bi bi-arrow-left-circle-fill new-post-btn-arrow"></i>
+                        <svg class="bi bi-arrow-left-circle-fill new-post-btn-arrow" aria-hidden="true"><use href="#bi-arrow-left-circle-fill"></use></svg>
                     </a>
                     {% endif %}
 
@@ -1231,7 +1370,7 @@
                                     {% endif %}
                                     {% if post.post_type == 'achievement' %}
                                         <span style="color:#fbbf24; font-size:0.78rem; font-weight:700;">
-                                            <i class="bi bi-trophy-fill"></i> دستاورد
+                                            <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاورد
                                         </span>
                                     {% endif %}
                                 </div>
@@ -1263,25 +1402,39 @@
                             <div class="post-card-footer">
                                 <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
                                     <button class="post-action-btn" id="rxn-main-{{ post.id }}"
-                                        onclick="toggleReactionPicker({{ post.id }}); buildReactionPicker({{ post.id }}, '{{ post.my_reaction }}')">
+                                        data-my-reaction="{{ post.my_reaction }}"
+                                        onclick="toggleReactionPicker({{ post.id }})">
                                         {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.75rem;">خفن</span>
                                         {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.75rem;">GG</span>
-                                        {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.75rem;">Tryhard</span>
+                                        {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.75rem;">عصبانی</span>
                                         {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.75rem;">لجند</span>
                                         {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.75rem;">GG EZ</span>
-                                        {% else %}<i class="bi bi-hand-thumbs-up"></i> واکنش{% endif %}
+                                        {% elif post.my_reaction == 'cry' %}😢 <span style="font-size:.75rem;">گریه</span>
+                                        {% elif post.my_reaction == 'sob' %}😭 <span style="font-size:.75rem;">اشک</span>
+                                        {% else %}<svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> واکنش{% endif %}
                                     </button>
                                     <div class="reaction-picker"></div>
                                 </div>
+                                {% if request.user.is_authenticated %}
+                                <button class="post-action-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                                        onclick="toggleLike({{ post.id }}, this)">
+                                    <svg class="bi bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}" aria-hidden="true"><use href="#bi-heart"></use></svg>
+                                    <span class="like-count">{{ post.likes_count }}</span>
+                                </button>
+                                {% else %}
                                 <span class="post-action-btn">
-                                    <i class="bi bi-chat-dots"></i> {{ post.comments_count }}
+                                    <svg class="bi bi-heart" aria-hidden="true"><use href="#bi-heart"></use></svg> {{ post.likes_count }}
+                                </span>
+                                {% endif %}
+                                <span class="post-action-btn">
+                                    <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> {{ post.comments_count }}
                                 </span>
                             </div>
                         </div>
                         {% endfor %}
                     {% else %}
                         <div class="empty-state">
-                            <i class="bi bi-camera-reels"></i>
+                            <svg class="bi bi-camera-reels" aria-hidden="true"><use href="#bi-camera-reels"></use></svg>
                             <p>هنوز پستی منتشر نشده</p>
                         </div>
                     {% endif %}
@@ -1293,19 +1446,19 @@
                     {% if is_own_profile %}
                     <div class="bl-add-card">
                         <div class="bl-add-title">
-                            <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> اضافه کردن بازی
+                            <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-plus-circle-fill"></use></svg> اضافه کردن بازی
                         </div>
 
                         <!-- ── Tabs ── -->
                         <div class="bl-tabs">
                             <button class="bl-tab active" onclick="blSwitchTab('steam-url',this)">
-                                <i class="bi bi-steam"></i> لینک استیم
+                                <svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg> لینک استیم
                             </button>
                             <button class="bl-tab" onclick="blSwitchTab('steam-search',this)">
-                                <i class="bi bi-search"></i> جستجو
+                                <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجو
                             </button>
                             <button class="bl-tab" onclick="blSwitchTab('manual',this)">
-                                <i class="bi bi-pencil"></i> دستی
+                                <svg class="bi bi-pencil" aria-hidden="true"><use href="#bi-pencil"></use></svg> دستی
                             </button>
                         </div>
 
@@ -1318,13 +1471,13 @@
                                     oninput="blSteamUrlChanged()"
                                     style="flex:1;">
                                 <button onclick="blFetchSteam()" class="btn-red" style="white-space:nowrap; padding:9px 16px;">
-                                    <i class="bi bi-cloud-download-fill"></i> دریافت
+                                    <svg class="bi bi-cloud-download-fill" aria-hidden="true"><use href="#bi-cloud-download-fill"></use></svg> دریافت
                                 </button>
                             </div>
                             <!-- Preview -->
                             <div id="blSteamPreview" style="display:none; margin-top:12px;">
                                 <div style="display:flex; gap:14px; align-items:flex-start; background:var(--bg-card2); border-radius:12px; padding:12px;">
-                                    <img id="blSteamCover" src="" alt="" style="width:120px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                                    <img id="blSteamCover" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" style="display:none;width:120px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0;">
                                     <div style="flex:1; min-width:0;">
                                         <div id="blSteamName" style="font-weight:800; font-size:0.95rem; color:var(--text-white); margin-bottom:6px;"></div>
                                         <div id="blSteamDesc" style="font-size:0.78rem; color:var(--text-muted); line-height:1.5;"></div>
@@ -1344,13 +1497,13 @@
                                         <option value="xbox">Xbox</option>
                                     </select>
                                     <button onclick="blAddFromSteam()" class="btn-red" style="padding:9px 18px; white-space:nowrap;">
-                                        <i class="bi bi-plus-lg"></i> اضافه به بک‌لاگ
+                                        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> اضافه به بازی‌هام
                                     </button>
                                 </div>
                             </div>
                             <div id="blSteamError" style="display:none; color:#f87171; font-size:0.82rem; margin-top:8px; padding:8px 12px; background:rgba(248,113,113,0.08); border-radius:8px;"></div>
                             <div id="blSteamLoading" style="display:none; color:var(--text-muted); font-size:0.82rem; margin-top:8px;">
-                                <span style="display:inline-block; animation:spin 1s linear infinite;">⚙️</span> در حال دریافت اطلاعات از استیم...
+                                <svg style="display:inline-block; animation:spin 1s linear infinite; width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.475l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg> در حال دریافت اطلاعات از استیم...
                             </div>
                         </div>
 
@@ -1392,7 +1545,7 @@
                                     {% endif %}
                                 </select>
                                 <button onclick="blAdd()" class="btn-red" style="padding:9px 18px; border-radius:10px; white-space:nowrap;">
-                                    <i class="bi bi-plus-lg"></i> اضافه
+                                    <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> اضافه
                                 </button>
                             </div>
                         </div>
@@ -1403,12 +1556,12 @@
                     <div class="bl-toolbar">
                         <div class="bl-status-tabs">
                             <button class="bl-filter-btn active" onclick="blSetFilter('all',this)">همه <span class="bl-filter-cnt" id="bfc-all">0</span></button>
-                            <button class="bl-filter-btn" onclick="blSetFilter('playing',this)">🎮 بازی می‌کنم <span class="bl-filter-cnt" id="bfc-playing">0</span></button>
-                            <button class="bl-filter-btn" onclick="blSetFilter('want',this)">🎯 می‌خوام <span class="bl-filter-cnt" id="bfc-want">0</span></button>
-                            <button class="bl-filter-btn" onclick="blSetFilter('completed',this)">🏆 تموم کردم <span class="bl-filter-cnt" id="bfc-completed">0</span></button>
-                            <button class="bl-filter-btn" onclick="blSetFilter('dropped',this)">💔 رها کردم <span class="bl-filter-cnt" id="bfc-dropped">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('playing',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> بازی می‌کنم <span class="bl-filter-cnt" id="bfc-playing">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('want',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg> می‌خوام <span class="bl-filter-cnt" id="bfc-want">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('completed',this)"><svg style="width:1em;height:1em;fill:#ffd700;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg> تموم کردم <span class="bl-filter-cnt" id="bfc-completed">0</span></button>
+                            <button class="bl-filter-btn" onclick="blSetFilter('dropped',this)"><svg style="width:1em;height:1em;fill:#f87171;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/></svg> رها کردم <span class="bl-filter-cnt" id="bfc-dropped">0</span></button>
                         </div>
-                        <input type="text" id="blSearch" class="bl-search-input" placeholder="🔍 جستجو در بازی‌ها..." oninput="blFilterRender()">
+                        <input type="text" id="blSearch" class="bl-search-input" placeholder="جستجو در بازی‌ها..." oninput="blFilterRender()">
                     </div>
 
                     <!-- Data Table -->
@@ -1420,7 +1573,7 @@
                                     <th>وضعیت</th>
                                     <th>پلتفرم</th>
                                     <th>امتیاز ★</th>
-                                    <th>❤️</th>
+                                    <th><svg style="width:1em;height:1em;fill:#f87171;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01z"/></svg></th>
                                     {% if is_own_profile %}<th>ویرایش</th>{% endif %}
                                 </tr>
                             </thead>
@@ -1433,8 +1586,8 @@
                     <div id="blPagination"></div>
 
                     <div id="blEmpty" style="display:none; text-align:center; padding:48px 20px; color:var(--text-dim);">
-                        <i class="bi bi-collection-play" style="font-size:3rem; opacity:.2; display:block; margin-bottom:14px;"></i>
-                        <p>هنوز بازی‌ای به بک‌لاگ اضافه نشده</p>
+                        <svg class="bi bi-collection-play" aria-hidden="true" style="font-size:3rem; opacity:.2; display:block; margin-bottom:14px;"><use href="#bi-collection-play"></use></svg>
+                        <p>هنوز بازی‌ای اضافه نشده</p>
                     </div>
                 </div>
 
@@ -1446,15 +1599,15 @@
                             <div class="ga-card ga-{{ ga.platform }}" id="ga-card-{{ ga.platform }}">
                                 {% if is_own_profile %}
                                     <button class="ga-disconnect-btn" onclick="disconnectAccount('{{ ga.platform }}')">
-                                        <i class="bi bi-x-lg"></i>
+                                        <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg>
                                     </button>
                                 {% endif %}
                                 <span class="ga-icon">
-                                    {% if ga.platform == 'steam' %}<i class="bi bi-steam"></i>
-                                    {% elif ga.platform == 'xbox' %}<i class="bi bi-xbox"></i>
-                                    {% elif ga.platform == 'psn' %}<i class="bi bi-playstation"></i>
-                                    {% elif ga.platform == 'ea' %}<i class="bi bi-controller"></i>
-                                    {% elif ga.platform == 'epic' %}<i class="bi bi-joystick"></i>
+                                    {% if ga.platform == 'steam' %}<svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg>
+                                    {% elif ga.platform == 'xbox' %}<svg class="bi bi-xbox" aria-hidden="true"><use href="#bi-xbox"></use></svg>
+                                    {% elif ga.platform == 'psn' %}<svg class="bi bi-playstation" aria-hidden="true"><use href="#bi-playstation"></use></svg>
+                                    {% elif ga.platform == 'ea' %}<svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
+                                    {% elif ga.platform == 'epic' %}<svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg>
                                     {% endif %}
                                 </span>
                                 <div class="ga-platform-name">{{ ga.get_platform_display }}</div>
@@ -1464,7 +1617,7 @@
                                 <div class="ga-username">{{ ga.display_name|default:ga.username }}</div>
                                 {% if ga.profile_url %}
                                     <a href="{{ ga.profile_url }}" target="_blank" rel="noopener" class="ga-link-btn">
-                                        <i class="bi bi-box-arrow-up-right"></i> مشاهده پروفایل
+                                        <svg class="bi bi-box-arrow-up-right" aria-hidden="true"><use href="#bi-box-arrow-up-right"></use></svg> مشاهده پروفایل
                                     </a>
                                 {% endif %}
                                 {% if ga.last_synced %}
@@ -1486,7 +1639,7 @@
                     {% else %}
                         {% if not is_own_profile %}
                             <div class="empty-state">
-                                <i class="bi bi-plug"></i>
+                                <svg class="bi bi-plug" aria-hidden="true"><use href="#bi-plug"></use></svg>
                                 <p>هنوز اکانتی متصل نشده</p>
                             </div>
                         {% endif %}
@@ -1495,7 +1648,7 @@
                     {% if is_own_profile %}
                         <div class="ga-connect-section">
                             <div class="ga-connect-title">
-                                <i class="bi bi-plus-circle-fill" style="color:var(--purple);"></i>
+                                <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:var(--purple);"><use href="#bi-plus-circle-fill"></use></svg>
                                 اتصال اکانت جدید
                             </div>
                             <div class="ga-connect-form" id="gaConnectForm">
@@ -1508,7 +1661,7 @@
                                 </select>
                                 <input type="text" id="gaUsername" placeholder="نام کاربری یا ID">
                                 <button class="ga-connect-btn" id="gaConnectBtn" onclick="connectGamingAccount()">
-                                    <i class="bi bi-link-45deg"></i> اتصال
+                                    <svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg> اتصال
                                 </button>
                                 <div class="ga-connect-status" id="gaStatus"></div>
                             </div>
@@ -1533,7 +1686,7 @@
                         </div>
                     {% else %}
                         <div class="empty-state">
-                            <i class="bi bi-trophy"></i>
+                            <svg class="bi bi-trophy" aria-hidden="true"><use href="#bi-trophy"></use></svg>
                             <p>هنوز دستاوردی کسب نشده — بازی کن و به دست بیار!</p>
                         </div>
                     {% endif %}
@@ -1557,7 +1710,7 @@
                         </div>
                     {% else %}
                         <div class="empty-state">
-                            <i class="bi bi-people"></i>
+                            <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
                             <p>هنوز فالووری ندارد</p>
                         </div>
                     {% endif %}
@@ -1581,7 +1734,7 @@
                         </div>
                     {% else %}
                         <div class="empty-state">
-                            <i class="bi bi-person-check"></i>
+                            <svg class="bi bi-person-check" aria-hidden="true"><use href="#bi-person-check"></use></svg>
                             <p>هنوز کسی دنبال نشده</p>
                         </div>
                     {% endif %}
@@ -1592,30 +1745,10 @@
             <!-- SIDEBAR -->
             <div class="profile-sidebar">
 
-                <!-- Level card -->
-                <div class="sidebar-card">
-                    <div class="sidebar-card-title">
-                        <i class="bi bi-lightning-fill"></i> لول و XP
-                    </div>
-                    <div class="level-visual">
-                        <div class="level-num">{{ profile.level }}</div>
-                        <div class="level-label">لول گیمر</div>
-                        <div class="level-xp-bar">
-                            <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-bottom:5px;">
-                                <span>{{ profile.level_progress }}%</span>
-                                <span>{{ profile.xp }} XP</span>
-                            </div>
-                            <div class="xp-bar-track">
-                                <div class="xp-bar-fill" style="width:{{ profile.level_progress }}%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Info card -->
                 <div class="sidebar-card">
                     <div class="sidebar-card-title">
-                        <i class="bi bi-info-circle-fill"></i> اطلاعات
+                        <svg class="bi bi-info-circle-fill" aria-hidden="true"><use href="#bi-info-circle-fill"></use></svg> اطلاعات
                     </div>
                     {% for plt_code, plt_label, plt_icon in profile.get_platform_display_list %}
                     <div class="sidebar-info-row">
@@ -1625,25 +1758,25 @@
                     {% endfor %}
                     {% if profile.rank %}
                     <div class="sidebar-info-row">
-                        <i class="bi bi-star-fill"></i>
+                        <svg class="bi bi-star-fill" aria-hidden="true"><use href="#bi-star-fill"></use></svg>
                         <span>{{ profile.get_rank_display }}</span>
                     </div>
                     {% endif %}
                     {% if profile.gaming_style %}
                     <div class="sidebar-info-row">
-                        <i class="bi bi-joystick"></i>
+                        <svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg>
                         <span>{{ profile.get_gaming_style_display }}</span>
                     </div>
                     {% endif %}
                     {% if profile.city %}
                     <div class="sidebar-info-row">
-                        <i class="bi bi-geo-alt-fill"></i>
+                        <svg class="bi bi-geo-alt-fill" aria-hidden="true"><use href="#bi-geo-alt-fill"></use></svg>
                         <span>{{ profile.get_city_display }}</span>
                     </div>
                     {% endif %}
                     <div class="sidebar-info-row">
-                        <i class="bi bi-calendar3"></i>
-                        <span>عضو از {{ profile.created_at|date:"Y" }}</span>
+                        <svg class="bi bi-calendar3" aria-hidden="true"><use href="#bi-calendar3"></use></svg>
+                        <span>عضو از {{ profile_user.date_joined|jalali_date }}</span>
                     </div>
                 </div>
 
@@ -1651,16 +1784,16 @@
                 {% if gaming_accounts %}
                 <div class="sidebar-card">
                     <div class="sidebar-card-title">
-                        <i class="bi bi-plug-fill"></i> آی‌دی‌های گیمینگ
+                        <svg class="bi bi-plug-fill" aria-hidden="true"><use href="#bi-plug-fill"></use></svg> آی‌دی‌های گیمینگ
                     </div>
                     {% for ga in gaming_accounts %}
                     <div class="quick-ga-row">
                         <span class="quick-ga-icon">
-                            {% if ga.platform == 'steam' %}<i class="bi bi-steam" style="color:#66c0f4;"></i>
-                            {% elif ga.platform == 'xbox' %}<i class="bi bi-xbox" style="color:#52b043;"></i>
-                            {% elif ga.platform == 'psn' %}<i class="bi bi-playstation" style="color:#4d9ff5;"></i>
-                            {% elif ga.platform == 'ea' %}<i class="bi bi-controller" style="color:#ff6b35;"></i>
-                            {% elif ga.platform == 'epic' %}<i class="bi bi-joystick" style="color:#c8c8c8;"></i>
+                            {% if ga.platform == 'steam' %}<svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;"><use href="#bi-steam"></use></svg>
+                            {% elif ga.platform == 'xbox' %}<svg class="bi bi-xbox" aria-hidden="true" style="color:#52b043;"><use href="#bi-xbox"></use></svg>
+                            {% elif ga.platform == 'psn' %}<svg class="bi bi-playstation" aria-hidden="true" style="color:#4d9ff5;"><use href="#bi-playstation"></use></svg>
+                            {% elif ga.platform == 'ea' %}<svg class="bi bi-controller" aria-hidden="true" style="color:#ff6b35;"><use href="#bi-controller"></use></svg>
+                            {% elif ga.platform == 'epic' %}<svg class="bi bi-joystick" aria-hidden="true" style="color:#c8c8c8;"><use href="#bi-joystick"></use></svg>
                             {% endif %}
                         </span>
                         <div class="quick-ga-info">
@@ -1669,7 +1802,7 @@
                         </div>
                         {% if ga.profile_url %}
                             <a href="{{ ga.profile_url }}" target="_blank" class="quick-ga-link">
-                                <i class="bi bi-arrow-up-right-square"></i>
+                                <svg class="bi bi-arrow-up-right-square" aria-hidden="true"><use href="#bi-arrow-up-right-square"></use></svg>
                             </a>
                         {% endif %}
                     </div>
@@ -1681,16 +1814,16 @@
                 {% if not is_own_profile %}
                 <div class="sidebar-card" style="text-align:center; padding:22px 18px;">
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
-                        <i class="bi bi-person-plus-fill" style="color:var(--purple); font-size:1.5rem; display:block; margin-bottom:8px;"></i>
+                        <svg class="bi bi-person-plus-fill" aria-hidden="true" style="color:var(--purple); font-size:1.5rem; display:block; margin-bottom:8px;"><use href="#bi-person-plus-fill"></use></svg>
                         این گیمر رو دنبال کن تا از پست‌هاش باخبر بشی
                     </div>
                     <button class="btn-follow {% if is_following %}following{% endif %}"
                         style="width:100%; justify-content:center;"
                         onclick="handleFollow('{{ profile_user.username }}')">
                         {% if is_following %}
-                            <i class="bi bi-check-lg"></i> دنبال می‌کنی
+                            <svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> دنبال می‌کنی
                         {% else %}
-                            <i class="bi bi-plus-lg"></i> دنبال کن
+                            <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن
                         {% endif %}
                     </button>
                 </div>
@@ -1709,7 +1842,7 @@
             style="position:absolute; top:20px; right:20px; width:42px; height:42px; border-radius:50%;
                    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
                    color:white; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-        <i class="bi bi-x-lg"></i>
+        <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg>
     </button>
     <img id="profile-lightbox-img" src="" alt=""
          style="max-width:92vw; max-height:90vh; border-radius:14px; object-fit:contain;">
@@ -1768,7 +1901,7 @@ function switchTab(name) {
 }
 
 function handleFollow(username) {
-    fetch('/community/follow/' + username + '/', {
+    fetch('/follow/' + username + '/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF}
     })
@@ -1776,10 +1909,10 @@ function handleFollow(username) {
     .then(data => {
         document.querySelectorAll('#followBtn, .btn-follow').forEach(btn => {
             if (data.following) {
-                btn.innerHTML = '<i class="bi bi-check-lg"></i> دنبال می‌کنی';
+                btn.innerHTML = '<svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> دنبال می‌کنی';
                 btn.classList.add('following');
             } else {
-                btn.innerHTML = '<i class="bi bi-plus-lg"></i> دنبال کن';
+                btn.innerHTML = '<svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن';
                 btn.classList.remove('following');
             }
         });
@@ -1789,7 +1922,7 @@ function handleFollow(username) {
 }
 
 function toggleLike(postId, btn) {
-    fetch('/community/post/' + postId + '/like/', {
+    fetch('/post/' + postId + '/like/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF}
     })
@@ -1817,14 +1950,14 @@ function connectGamingAccount() {
     if (!username) { showStatus('نام کاربری را وارد کنید', 'error'); return; }
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> در حال اتصال...';
+    btn.innerHTML = '<svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> در حال اتصال...';
     status.style.display = 'none';
 
     const fd = new FormData();
     fd.append('platform', platform);
     fd.append('username', username);
 
-    fetch('/community/gaming/connect/', {
+    fetch('/gaming/connect/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF},
         body: fd
@@ -1832,7 +1965,7 @@ function connectGamingAccount() {
     .then(r => r.json())
     .then(data => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-link-45deg"></i> اتصال';
+        btn.innerHTML = '<svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg> اتصال';
         if (data.ok) {
             showStatus('اکانت با موفقیت متصل شد! صفحه را رفرش کنید.', 'success');
             document.getElementById('gaUsername').value = '';
@@ -1843,7 +1976,7 @@ function connectGamingAccount() {
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-link-45deg"></i> اتصال';
+        btn.innerHTML = '<svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg> اتصال';
         showStatus('خطای شبکه', 'error');
     });
 }
@@ -1860,7 +1993,7 @@ function disconnectAccount(platform) {
     if (!confirm('این اکانت قطع شود؟')) return;
     const fd = new FormData();
     fd.append('platform', platform);
-    fetch('/community/gaming/disconnect/', {
+    fetch('/gaming/disconnect/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF},
         body: fd
@@ -1885,7 +2018,7 @@ let blPage   = 1;
 const BL_PG  = 15;
 
 function blLoad() {
-    fetch('/community/backlog/' + BL_USERNAME + '/')
+    fetch('/backlog/' + BL_USERNAME + '/')
         .then(r => r.json()).then(d => {
             blItems = d.items;
             blPage  = 1;
@@ -2003,7 +2136,7 @@ function blAdd() {
     const platEl = document.getElementById('blPlatform');
     const platform = platEl ? platEl.value : '';
     if (!name) return;
-    fetch('/community/backlog/add/', {
+    fetch('/backlog/add/', {
         method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},
         body:`game_name=${encodeURIComponent(name)}&status=${status}&platform=${encodeURIComponent(platform)}`
     }).then(r=>r.json()).then(()=>{
@@ -2013,22 +2146,22 @@ function blAdd() {
 }
 
 function blChangeStatus(id, status) {
-    fetch(`/community/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`status=${status}`})
+    fetch(`/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`status=${status}`})
     .then(d=>d.json()).then(d=>{ const it=blItems.find(i=>i.id===id); if(it) it.status=d.status; blFilterRender(); });
 }
 
 function blRate(id, rating) {
-    fetch(`/community/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`rating=${rating}`})
+    fetch(`/backlog/${id}/update/`,{method:'POST',headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},body:`rating=${rating}`})
     .then(r=>r.json()).then(d=>{ const it=blItems.find(i=>i.id===id); if(it) it.rating=d.rating; blRender(); });
 }
 
 function blRemove(id) {
-    fetch(`/community/backlog/${id}/remove/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
+    fetch(`/backlog/${id}/remove/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
     .then(()=>{ blItems=blItems.filter(i=>i.id!==id); blFilterRender(); });
 }
 
 function blToggleFav(id, btn) {
-    fetch(`/community/backlog/${id}/favorite/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
+    fetch(`/backlog/${id}/favorite/`,{method:'POST',headers:{'X-CSRFToken':CSRF}})
     .then(r=>r.json()).then(d=>{
         const it=blItems.find(i=>i.id===id);
         if(it) it.is_favorite=d.is_favorite;
@@ -2124,7 +2257,7 @@ function blFetchSteam() {
     loadEl.style.display  = 'block';
     _steamData = null;
 
-    fetch(`/community/steam/fetch/?q=${encodeURIComponent(url)}`)
+    fetch(`/steam/fetch/?q=${encodeURIComponent(url)}`)
         .then(r => r.json())
         .then(data => {
             loadEl.style.display = 'none';
@@ -2151,7 +2284,7 @@ function blAddFromSteam() {
     const status   = document.getElementById('blSteamStatus').value;
     const platform = document.getElementById('blSteamPlatform').value;
 
-    fetch('/community/backlog/add/', {
+    fetch('/backlog/add/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
         body: `game_name=${encodeURIComponent(_steamData.name)}&status=${status}&platform=${platform}&cover_url=${encodeURIComponent(_steamData.cover_url)}`
@@ -2181,7 +2314,7 @@ function blDoSearch(q) {
     const res = document.getElementById('blSearchResults');
     res.innerHTML = '<div style="color:var(--text-dim);font-size:0.82rem;padding:8px;">در حال جستجو...</div>';
 
-    fetch(`/community/steam/search/?q=${encodeURIComponent(q)}`)
+    fetch(`/steam/search/?q=${encodeURIComponent(q)}`)
         .then(r => r.json())
         .then(data => {
             if (!data.results.length) {
@@ -2226,10 +2359,10 @@ function blPickSearchResult(nameEnc, coverEnc) {
                     <option value="mobile">موبایل</option>
                 </select>
                 <button class="btn-red" style="padding:8px 16px;" onclick="blAddFromSearch('${nameEnc}','${coverEnc}')">
-                    <i class="bi bi-plus-lg"></i> اضافه
+                    <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> اضافه
                 </button>
                 <button class="btn-ghost" style="padding:8px 12px;" onclick="blDoSearch(document.getElementById('blSearchInput').value)">
-                    <i class="bi bi-arrow-right"></i>
+                    <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg>
                 </button>
             </div>
         </div>
@@ -2242,7 +2375,7 @@ function blAddFromSearch(nameEnc, coverEnc) {
     const status   = document.getElementById('blSrStatus').value;
     const platform = document.getElementById('blSrPlatform').value;
 
-    fetch('/community/backlog/add/', {
+    fetch('/backlog/add/', {
         method: 'POST',
         headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
         body: `game_name=${encodeURIComponent(name)}&status=${status}&platform=${platform}&cover_url=${encodeURIComponent(coverUrl)}`
@@ -2252,6 +2385,110 @@ function blAddFromSearch(nameEnc, coverEnc) {
         blLoad();
         showToast('✅ ' + name + ' اضافه شد');
     });
+}
+
+/* ── Set Pinned Game ── */
+function setPinnedGame(gameName) {
+    fetch('/profile/set-pinned-game/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'game_name=' + encodeURIComponent(gameName)
+    }).then(r => r.json()).then(d => {
+        if (d.ok) location.reload();
+    });
+}
+
+/* ════ Banner Modal ════ */
+let _bmFile = null;
+
+function openBannerModal() {
+    document.getElementById('bmOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeBannerModal() {
+    document.getElementById('bmOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    _bmFile = null;
+    document.getElementById('bmFileInput').value = '';
+    document.getElementById('bmSaveBtn').disabled = true;
+    document.getElementById('bmErr').style.display = 'none';
+}
+function bmBgClick(e) {
+    if (e.target === document.getElementById('bmOverlay')) closeBannerModal();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBannerModal(); });
+
+function bmFileChosen(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { bmShowErr('حداکثر حجم ۵ مگابایت'); return; }
+    _bmFile = file;
+    document.getElementById('bmErr').style.display = 'none';
+    document.getElementById('bmSaveBtn').disabled = false;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('bmPreviewImg');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        document.getElementById('bmPreviewLabel').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+/* drag & drop */
+const _bmDrop = document.getElementById('bmDrop');
+if (_bmDrop) {
+    _bmDrop.addEventListener('dragover', e => { e.preventDefault(); _bmDrop.classList.add('drag'); });
+    _bmDrop.addEventListener('dragleave', () => _bmDrop.classList.remove('drag'));
+    _bmDrop.addEventListener('drop', e => {
+        e.preventDefault(); _bmDrop.classList.remove('drag');
+        const file = e.dataTransfer.files[0];
+        if (file) { document.getElementById('bmFileInput').files = e.dataTransfer.files; bmFileChosen(document.getElementById('bmFileInput')); }
+    });
+}
+
+function bmSave() {
+    if (!_bmFile) return;
+    const btn = document.getElementById('bmSaveBtn');
+    btn.disabled = true; btn.innerHTML = '<svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> در حال آپلود...';
+    const fd = new FormData();
+    fd.append('banner', _bmFile);
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fetch('{% url "community:update_banner" %}', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(r => {
+        if (!r.ok) return r.text().then(t => { throw new Error(t.substring(0,120)); });
+        return r.json();
+    })
+    .then(d => {
+        if (!d.ok) { bmShowErr(d.error || 'خطا'); btn.disabled = false; btn.innerHTML = '<svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg> ذخیره'; return; }
+        const bannerEl = document.querySelector('.profile-banner');
+        let img = bannerEl.querySelector('.profile-banner-img');
+        if (!img) { img = document.createElement('img'); img.className = 'profile-banner-img'; bannerEl.prepend(img); }
+        img.src = d.url + '?t=' + Date.now();
+        img.style.display = 'block';
+        closeBannerModal();
+    })
+    .catch(err => { bmShowErr(err.message || 'خطای شبکه'); btn.disabled = false; btn.innerHTML = '<svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg> ذخیره'; });
+}
+
+function bmRemove() {
+    if (!confirm('بنر حذف بشه؟')) return;
+    const fd = new FormData();
+    fd.append('remove', '1');
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fetch('{% url "community:update_banner" %}', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(d => {
+        if (!d.ok) return;
+        const img = document.querySelector('.profile-banner-img');
+        if (img) img.remove();
+        closeBannerModal();
+    });
+}
+
+function bmShowErr(msg) {
+    const el = document.getElementById('bmErr');
+    el.textContent = msg; el.style.display = 'block';
 }
 </script>
 {% endblock %}

@@ -1,75 +1,460 @@
-{% extends 'account/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود | GameBeat</title>
+    <link rel="stylesheet" href="{% static 'vendor/css/vazirmatn-font-face.css' %}">
+    <style>
+        svg.bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; }
 
-{% block title %}ورود - GameBeat{% endblock %}
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="main-container p-5">
-                <div class="text-center mb-5">
-                    <div class="login-icon mb-4">
-                        <i class="bi bi-shield-lock" style="font-size: 4rem; color: var(--primary-purple);"></i>
-                    </div>
-                    <h1 class="h2 fw-bold mb-3">
-                        ورود به حساب کاربری
-                    </h1>
-                    <p class="text-muted">به GameBeat خوش آمدید</p>
-                </div>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: #04000f;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
 
-                <form method="post" class="needs-validation" novalidate>
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label for="id_username" class="form-label fw-bold">
-                            <i class="bi bi-person"></i> نام کاربری
-                        </label>
-                        <input type="text" class="form-control form-control-lg" id="id_username" name="username" required>
-                        {% if form.username.errors %}
-                            <div class="text-danger small mt-2">
-                                {{ form.username.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
+        /* ══ PARTICLES CANVAS ══ */
+        #particles { position: fixed; inset: 0; z-index: 0; }
 
-                    <div class="mb-4">
-                        <label for="id_password" class="form-label fw-bold">
-                            <i class="bi bi-lock"></i> رمز عبور
-                        </label>
-                        <input type="password" class="form-control form-control-lg" id="id_password" name="password" required>
-                        {% if form.password.errors %}
-                            <div class="text-danger small mt-2">
-                                {{ form.password.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
+        /* ══ BG GLOW ══ */
+        .bg-glow {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 0%,   rgba(139,92,246,.22) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 80% 80%,  rgba(236,72,153,.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 20% 60%,  rgba(59,130,246,.06) 0%, transparent 60%);
+        }
 
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors.0 }}
-                        </div>
-                    {% endif %}
+        /* ══ CARD ══ */
+        .login-card {
+            position: relative; z-index: 10;
+            width: 420px;
+            background: rgba(255,255,255,.04);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            padding: 44px 40px 36px;
+            border: 1px solid rgba(255,255,255,.08);
 
-                    <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-box-arrow-in-right"></i> ورود
-                        </button>
-                    </div>
-                </form>
+            /* entrance animation */
+            animation: cardIn .5s cubic-bezier(.16,1,.3,1) both;
+        }
 
-                <div class="text-center mt-4">
-                    <p class="text-muted">
-                        حساب کاربری ندارید؟
-                        <a href="{% url 'account:register' %}" class="text-decoration-none" style="color: var(--primary-purple);">
-                            ثبت نام کنید
-                        </a>
-                    </p>
-                    <a href="{% url 'account:home' %}" class="text-decoration-none" style="color: var(--text-muted);">
-                        <i class="bi bi-arrow-right"></i> بازگشت به صفحه اصلی
-                    </a>
-                </div>
-            </div>
-        </div>
+        @keyframes cardIn {
+            from { opacity:0; transform: translateY(32px) scale(.96); }
+            to   { opacity:1; transform: translateY(0)    scale(1);   }
+        }
+
+        /* animated rainbow border */
+        .login-card::before {
+            content: '';
+            position: absolute; inset: -1px;
+            border-radius: 29px;
+            background: linear-gradient(135deg,
+                #7c3aed, #a855f7, #ec4899, #f97316, #a855f7, #7c3aed);
+            background-size: 300% 300%;
+            animation: borderSpin 4s linear infinite;
+            z-index: -1;
+            opacity: .6;
+        }
+        @keyframes borderSpin {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* inner mask so border shows only as ring */
+        .login-card::after {
+            content: '';
+            position: absolute; inset: 1px;
+            border-radius: 27px;
+            background: #0d0020;
+            z-index: -1;
+        }
+
+        /* ══ LOGO ══ */
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeUp .4s .1s cubic-bezier(.16,1,.3,1) both;
+        }
+        @keyframes fadeUp {
+            from { opacity:0; transform: translateY(16px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        .logo-icon {
+            width: 72px; height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 14px;
+            box-shadow: 0 0 40px rgba(139,92,246,.5);
+            animation: iconPop .5s .15s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        @keyframes iconPop {
+            from { opacity:0; transform: scale(.5) rotate(-10deg); }
+            to   { opacity:1; transform: scale(1)  rotate(0deg); }
+        }
+
+        .logo-name {
+            font-size: 1.7rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #c4b5fd, #fff, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -.02em;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .logo-sub {
+            font-size: .75rem;
+            color: rgba(255,255,255,.3);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        /* ══ ERROR ══ */
+        .login-error {
+            background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.25);
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-size: .83rem;
+            color: #fca5a5;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: shake .35s cubic-bezier(.36,.07,.19,.97);
+        }
+        @keyframes shake {
+            10%,90%  { transform: translateX(-3px); }
+            30%,70%  { transform: translateX(5px); }
+            50%      { transform: translateX(-5px); }
+        }
+
+        /* ══ FIELDS ══ */
+        .field-wrap {
+            margin-bottom: 18px;
+            animation: fadeUp .4s cubic-bezier(.16,1,.3,1) both;
+        }
+        .field-wrap:nth-child(1) { animation-delay: .18s; }
+        .field-wrap:nth-child(2) { animation-delay: .24s; }
+
+        .field-label {
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.4);
+            margin-bottom: 7px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .field-box {
+            position: relative;
+        }
+
+        .field-input {
+            width: 100%;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 14px;
+            padding: 13px 44px 13px 16px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: .95rem;
+            color: #fff;
+            outline: none;
+            transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .field-input::placeholder { color: rgba(255,255,255,.18); }
+        .field-input:focus {
+            border-color: rgba(139,92,246,.7);
+            background: rgba(139,92,246,.08);
+            box-shadow: 0 0 0 3px rgba(139,92,246,.15), 0 0 20px rgba(139,92,246,.1);
+        }
+
+        .field-icon {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,.2);
+            font-size: .95rem;
+            pointer-events: none;
+            transition: color .15s;
+        }
+        .field-box:focus-within .field-icon { color: #a78bfa; }
+
+        .toggle-pass {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: rgba(255,255,255,.2);
+            cursor: pointer; font-size: .9rem; padding: 0;
+            transition: color .15s;
+        }
+        .toggle-pass:hover { color: #a78bfa; }
+
+        .field-error {
+            font-size: .72rem; color: #f87171;
+            margin-top: 5px;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        /* ══ SUBMIT BUTTON ══ */
+        .submit-wrap {
+            animation: fadeUp .4s .3s cubic-bezier(.16,1,.3,1) both;
+            margin-top: 8px;
+        }
+
+        .submit-btn {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, #6d28d9, #9333ea, #7c3aed);
+            background-size: 200% 200%;
+            border: none; border-radius: 14px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem; font-weight: 800;
+            color: #fff; cursor: pointer;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 4px 24px rgba(139,92,246,.45);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            position: relative; overflow: hidden;
+            animation: btnPulse 2.5s 1s ease-in-out infinite;
+        }
+        @keyframes btnPulse {
+            0%,100% { box-shadow: 0 4px 24px rgba(139,92,246,.45); }
+            50%      { box-shadow: 0 4px 36px rgba(139,92,246,.7); }
+        }
+        .submit-btn::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 50%, transparent 100%);
+            transform: translateX(-100%);
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(139,92,246,.6);
+        }
+        .submit-btn:hover::after {
+            animation: shimmer .5s forwards;
+        }
+        @keyframes shimmer {
+            to { transform: translateX(100%); }
+        }
+        .submit-btn:active { transform: scale(.98); }
+
+        /* ══ FOOTER ══ */
+        .form-footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: .8rem;
+            color: rgba(255,255,255,.3);
+            animation: fadeUp .4s .35s cubic-bezier(.16,1,.3,1) both;
+        }
+        .form-footer a {
+            color: #a78bfa; text-decoration: none; font-weight: 700;
+            transition: color .12s;
+        }
+        .form-footer a:hover { color: #c4b5fd; }
+
+        .sep {
+            display: flex; align-items: center; gap: 10px;
+            color: rgba(255,255,255,.15); font-size: .7rem;
+            margin: 16px 0 14px;
+        }
+        .sep::before, .sep::after {
+            content:''; flex:1; height:1px; background:rgba(255,255,255,.08);
+        }
+
+        @media (max-width: 480px) {
+            .login-card { width: calc(100vw - 32px); padding: 36px 24px 28px; }
+        }
+    </style>
+</head>
+<body>
+{% include "community/icons_sprite.html" %}
+
+<canvas id="particles"></canvas>
+<div class="bg-glow"></div>
+
+<div class="login-card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+        <div class="logo-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></div>
+        <span class="logo-name">GameBeat</span>
+        <span class="logo-sub">Gaming Community</span>
     </div>
+
+    <!-- Errors -->
+    {% if form.non_field_errors %}
+    <div class="login-error">
+        <svg class="bi bi-exclamation-triangle-fill" aria-hidden="true"><use href="#bi-exclamation-triangle-fill"></use></svg>
+        {{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        <!-- Username -->
+        <div class="field-wrap">
+            <label class="field-label" for="id_username">نام کاربری</label>
+            <div class="field-box">
+                <input type="text" id="id_username" name="username"
+                       class="field-input" placeholder="username"
+                       value="{{ form.username.value|default:'' }}" autocomplete="username">
+                <svg class="bi bi-person field-icon" aria-hidden="true"><use href="#bi-person"></use></svg>
+            </div>
+            {% if form.username.errors %}
+            <div class="field-error"><svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.username.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div class="field-wrap">
+            <label class="field-label" for="id_password">رمز عبور</label>
+            <div class="field-box">
+                <input type="password" id="id_password" name="password"
+                       class="field-input" placeholder="••••••••"
+                       autocomplete="current-password" style="padding-left:44px;">
+                <svg class="bi bi-lock field-icon" aria-hidden="true"><use href="#bi-lock"></use></svg>
+                <button type="button" class="toggle-pass" onclick="togglePass()">
+                    <svg class="bi bi-eye" aria-hidden="true"><use href="#bi-eye"></use></svg>
+                </button>
+            </div>
+            {% if form.password.errors %}
+            <div class="field-error"><svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.password.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-wrap">
+            <button type="submit" class="submit-btn">
+                <svg class="bi bi-lightning-charge-fill" aria-hidden="true"><use href="#bi-lightning-charge-fill"></use></svg>
+                ورود به GameBeat
+            </button>
+        </div>
+    </form>
+
+    <div class="sep">یا</div>
+
+    <div class="form-footer">
+        حساب نداری؟ <a href="{% url 'account:register' %}">ثبت‌نام کن</a>
+    </div>
+    <div class="form-footer" style="margin-top:10px;">
+        <a href="{% url 'account:home' %}" style="color:rgba(255,255,255,.2);">
+            <svg class="bi bi-arrow-right" aria-hidden="true" style="font-size:.75rem;"><use href="#bi-arrow-right"></use></svg> صفحه اصلی
+        </a>
+    </div>
+
 </div>
-{% endblock %}
+
+<script>
+/* ── Toggle Password ── */
+function togglePass() {
+    const inp = document.getElementById('id_password');
+    const ico = document.getElementById('eyeIcon');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+/* ── Particle System ── */
+(function () {
+    const canvas = document.getElementById('particles');
+    const ctx    = canvas.getContext('2d');
+    let W, H, particles;
+
+    const COLORS = ['#7c3aed','#a855f7','#ec4899','#6366f1','#8b5cf6'];
+    const COUNT  = 90;
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function createParticles() {
+        particles = Array.from({ length: COUNT }, () => ({
+            x:     rand(0, W),
+            y:     rand(0, H),
+            r:     rand(.8, 2.2),
+            vx:    rand(-.3, .3),
+            vy:    rand(-.5, -.1),
+            alpha: rand(.3, .9),
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            twinkle: rand(0, Math.PI * 2),
+        }));
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const now = Date.now() * .001;
+
+        particles.forEach(p => {
+            p.twinkle += .04;
+            const a = p.alpha * (.6 + .4 * Math.sin(p.twinkle));
+
+            ctx.save();
+            ctx.globalAlpha = a;
+            ctx.fillStyle   = p.color;
+            ctx.shadowBlur  = 6;
+            ctx.shadowColor = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.y < -4)  { p.y = H + 4; p.x = rand(0, W); }
+            if (p.x < -4)  p.x = W + 4;
+            if (p.x > W+4) p.x = -4;
+        });
+
+        /* draw faint connection lines */
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 90) {
+                    ctx.save();
+                    ctx.globalAlpha = (1 - dist / 90) * .12;
+                    ctx.strokeStyle = '#a855f7';
+                    ctx.lineWidth   = .6;
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); createParticles(); });
+    resize();
+    createParticles();
+    draw();
+})();
+</script>
+</body>
+</html>

@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameBeat — پلتفرم کامیونیتی گیمرها</title>
     <link href="{% static 'vendor/css/bootstrap.rtl.min.css' %}" rel="stylesheet">
-    <link href="{% static 'vendor/css/bootstrap-icons.css' %}" rel="stylesheet">
     <link href="{% static 'vendor/css/vazirmatn-font-face.css' %}" rel="stylesheet">
     <style>
+        svg.bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; }
+
         :root {
             --bg-void: #0e0e16;
             --bg-dark: #13131e;
@@ -359,19 +360,20 @@
     </style>
 </head>
 <body>
+{% include "community/icons_sprite.html" %}
 
 <!-- Navbar -->
 <nav class="land-nav">
     <a href="/" class="land-nav-brand">
-        <i class="bi bi-controller"></i>
+        <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
         GameBeat
     </a>
     <div class="land-nav-actions">
         <a href="{% url 'account:login' %}" class="btn-login">
-            <i class="bi bi-box-arrow-in-right me-1"></i>ورود
+            <svg class="bi bi-box-arrow-in-right me-1" aria-hidden="true"><use href="#bi-box-arrow-in-right"></use></svg>ورود
         </a>
         <a href="{% url 'account:register' %}" class="btn-signup">
-            <i class="bi bi-person-plus me-1"></i>شروع رایگان
+            <svg class="bi bi-person-plus me-1" aria-hidden="true"><use href="#bi-person-plus"></use></svg>شروع رایگان
         </a>
     </div>
 </nav>
@@ -381,7 +383,7 @@
     <div class="hero-bg"></div>
     <div class="hero-inner">
         <div class="hero-badge">
-            <i class="bi bi-lightning-charge-fill"></i>
+            <svg class="bi bi-lightning-charge-fill" aria-hidden="true"><use href="#bi-lightning-charge-fill"></use></svg>
             پلتفرم کامیونیتی گیمرها در ایران
             <span>● LIVE</span>
         </div>
@@ -398,11 +400,11 @@
 
         <div class="hero-cta">
             <a href="{% url 'account:register' %}" class="cta-primary">
-                <i class="bi bi-rocket-takeoff-fill"></i>
+                <svg class="bi bi-rocket-takeoff-fill" aria-hidden="true"><use href="#bi-rocket-takeoff-fill"></use></svg>
                 همین الان شروع کن
             </a>
             <a href="{% url 'account:login' %}" class="cta-secondary">
-                <i class="bi bi-box-arrow-in-right"></i>
+                <svg class="bi bi-box-arrow-in-right" aria-hidden="true"><use href="#bi-box-arrow-in-right"></use></svg>
                 ورود به حساب
             </a>
         </div>
@@ -428,39 +430,39 @@
 <!-- Community Features -->
 <section>
     <p class="hero-badge text-center d-inline-block" style="margin: 0 auto 20px; display:flex !important; width:fit-content; margin: 0 auto 20px;">
-        <i class="bi bi-people-fill"></i> کامیونیتی گیمرها
+        <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> کامیونیتی گیمرها
     </p>
     <h2 class="sec-title">همه چیز برای گیمر ایرانی</h2>
-    <p class="sec-sub">از پروفایل گیمری تا LFG، از لیدربورد تا مدیریت بک‌لاگ</p>
+    <p class="sec-sub">از پروفایل گیمری تا LFG، از لیدربورد تا مدیریت بازی‌ها</p>
 
     <div class="features-grid">
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="feat-icon"><svg class="bi bi-person-badge-fill" aria-hidden="true"><use href="#bi-person-badge-fill"></use></svg></div>
             <div class="feat-title">پروفایل گیمری</div>
             <div class="feat-desc">پروفایل اختصاصی با تاریخچه بازی‌ها، دستاوردها، رتبه و اکانت‌های گیمینگت رو نمایش بده.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-collection-fill"></i></div>
+            <div class="feat-icon"><svg class="bi bi-collection-fill" aria-hidden="true"><use href="#bi-collection-fill"></use></svg></div>
             <div class="feat-title">مدیریت بازی‌ها</div>
             <div class="feat-desc">بازی‌هایی که داری، داری بازی می‌کنی یا تموم کردی رو ثبت کن. امتیاز بده، علاقه‌مندی نشون بده.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div class="feat-icon"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg></div>
             <div class="feat-title">لیدربورد ملی</div>
             <div class="feat-desc">با بهترین گیمرهای ایران رقابت کن. XP کسب کن و جایگاهت رو در لیدربورد ارتقا بده.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="feat-icon"><svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg></div>
             <div class="feat-title">LFG — دنبال تیم بگرد</div>
             <div class="feat-desc">تیم‌پلیر برای بازی موردعلاقه‌ات پیدا کن یا برای تیمت آدم جذب کن.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="feat-icon"><svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg></div>
             <div class="feat-title">پیام مستقیم</div>
             <div class="feat-desc">با گیمرها و دوست‌هات مستقیم چت کن، پروژه مشترک بزن، تیم بچین.</div>
         </div>
         <div class="feat-card">
-            <div class="feat-icon"><i class="bi bi-fire"></i></div>
+            <div class="feat-icon"><svg class="bi bi-fire" aria-hidden="true"><use href="#bi-fire"></use></svg></div>
             <div class="feat-title">فید اجتماعی</div>
             <div class="feat-desc">پست بذار، کلیپ و اسکرین‌شات بازی‌هات رو به اشتراک بذار. ریاکشن بده، کامنت کن.</div>
         </div>
@@ -472,16 +474,16 @@
     <div class="gamenet-inner">
         <div class="gamenet-text">
             <div class="hero-badge" style="width:fit-content; margin-bottom:20px;">
-                <i class="bi bi-hdd-network-fill"></i> مدیریت گیم‌نت
+                <svg class="bi bi-hdd-network-fill" aria-hidden="true"><use href="#bi-hdd-network-fill"></use></svg> مدیریت گیم‌نت
             </div>
             <h2>گیم‌نتت رو<br><span style="background:linear-gradient(135deg,var(--purple-light),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">حرفه‌ای</span> اداره کن</h2>
             <p>با سیستم مدیریت یکپارچه GameBeat، کنترل کامل گیم‌نتت رو داشته باش. از آمار لحظه‌ای تا مدیریت اشتراک مشتریان.</p>
             <ul class="gamenet-features">
-                <li><i class="bi bi-graph-up-arrow"></i> آمار لحظه‌ای بازدید و درآمد</li>
-                <li><i class="bi bi-pc-display"></i> مدیریت دستگاه‌ها و سیستم‌ها</li>
-                <li><i class="bi bi-credit-card-2-front-fill"></i> مدیریت اشتراک مشتریان</li>
-                <li><i class="bi bi-bell-fill"></i> اعلان‌های هوشمند</li>
-                <li><i class="bi bi-shield-check-fill"></i> کنترل دسترسی و امنیت</li>
+                <li><svg class="bi bi-graph-up-arrow" aria-hidden="true"><use href="#bi-graph-up-arrow"></use></svg> آمار لحظه‌ای بازدید و درآمد</li>
+                <li><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg> مدیریت دستگاه‌ها و سیستم‌ها</li>
+                <li><svg class="bi bi-credit-card-2-front-fill" aria-hidden="true"><use href="#bi-credit-card-2-front-fill"></use></svg> مدیریت اشتراک مشتریان</li>
+                <li><svg class="bi bi-bell-fill" aria-hidden="true"><use href="#bi-bell-fill"></use></svg> اعلان‌های هوشمند</li>
+                <li><svg class="bi bi-shield-check-fill" aria-hidden="true"><use href="#bi-shield-check-fill"></use></svg> کنترل دسترسی و امنیت</li>
             </ul>
         </div>
         <div class="gamenet-visual">
@@ -506,11 +508,11 @@
             <div class="gn-bar-title">حافظه</div>
             <div class="gn-bar-wrap"><div class="gn-bar-fill" style="width:61%; background:linear-gradient(90deg,#00ff88,#10b981);"></div></div>
             <div class="gn-device-row">
-                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-01</div>
-                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-02</div>
-                <div class="gn-device"><i class="bi bi-pc-display"></i>PC-03</div>
-                <div class="gn-device active"><i class="bi bi-pc-display"></i>PC-04</div>
-                <div class="gn-device"><i class="bi bi-pc-display"></i>PC-05</div>
+                <div class="gn-device active"><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>PC-01</div>
+                <div class="gn-device active"><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>PC-02</div>
+                <div class="gn-device"><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>PC-03</div>
+                <div class="gn-device active"><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>PC-04</div>
+                <div class="gn-device"><svg class="bi bi-pc-display" aria-hidden="true"><use href="#bi-pc-display"></use></svg>PC-05</div>
             </div>
         </div>
     </div>
@@ -539,8 +541,8 @@
             </div>
             <div class="pp-content">{{ post.content }}</div>
             <div class="pp-footer">
-                <span class="pp-stat"><i class="bi bi-heart-fill"></i>{{ post.likes.count }}</span>
-                <span class="pp-stat"><i class="bi bi-chat-fill"></i>{{ post.comments.count }}</span>
+                <span class="pp-stat"><svg class="bi bi-heart-fill" aria-hidden="true"><use href="#bi-heart-fill"></use></svg>{{ post.likes.count }}</span>
+                <span class="pp-stat"><svg class="bi bi-chat-fill" aria-hidden="true"><use href="#bi-chat-fill"></use></svg>{{ post.comments.count }}</span>
             </div>
         </div>
         {% endfor %}
@@ -553,7 +555,7 @@
     <h2 class="cta-title">آماده‌ای وارد بشی؟</h2>
     <p class="cta-desc">رایگانه. همیشه بود. همیشه خواهد بود.</p>
     <a href="{% url 'account:register' %}" class="cta-big">
-        <i class="bi bi-rocket-takeoff-fill"></i>
+        <svg class="bi bi-rocket-takeoff-fill" aria-hidden="true"><use href="#bi-rocket-takeoff-fill"></use></svg>
         همین الان ثبت نام کن
     </a>
 </section>
@@ -561,7 +563,7 @@
 <!-- Footer -->
 <footer class="land-footer">
     <div class="land-footer-brand">
-        <i class="bi bi-controller"></i> GameBeat
+        <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> GameBeat
     </div>
     <div class="land-footer-copy">© 2025 GameBeat — پلتفرم گیمرهای ایران</div>
 </footer>

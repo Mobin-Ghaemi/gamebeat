@@ -1,0 +1,754 @@
+{% extends 'community/base.html' %}
+{% block title %}{{ channel.name }} | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.messenger {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: calc(100vh - 64px);
+  background: #080810;
+  direction: rtl;
+  overflow: hidden;
+}
+
+/* ── Sidebar (same style) ── */
+.ms-sidebar {
+  display: flex; flex-direction: column;
+  background: #0d0d1a;
+  border-left: 1px solid rgba(139,92,246,.1);
+  overflow: hidden;
+}
+.ms-sidebar-head { padding: 16px 14px 10px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+.ms-sidebar-title { font-size:1rem;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:10px; }
+.ms-sidebar-title-icon { width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-size:.9rem; }
+.ms-tabs { display:flex;gap:4px;background:rgba(255,255,255,.03);border-radius:14px;padding:4px; }
+.ms-tab { flex:1;text-align:center;padding:7px 4px;font-size:.74rem;font-weight:700;color:#444;border-radius:10px;cursor:pointer;transition:all .2s;user-select:none;display:flex;align-items:center;justify-content:center;gap:4px; }
+.ms-tab.active { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.4); }
+.ms-tab:not(.active):hover { color:#888;background:rgba(255,255,255,.04); }
+.ms-tab-badge { background:#ef4444;color:#fff;border-radius:10px;min-width:16px;height:16px;padding:0 4px;font-size:.6rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center; }
+.ms-tab-panel { display:none;flex:1;overflow-y:auto;padding:4px 0; }
+.ms-tab-panel.active { display:flex;flex-direction:column; }
+.ms-tab-panel::-webkit-scrollbar { width:3px; }
+.ms-tab-panel::-webkit-scrollbar-thumb { background:#1a1a2e;border-radius:2px; }
+.ms-new-btn { display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 10px 4px;padding:10px;border-radius:12px;background:rgba(139,92,246,.1);border:1px dashed rgba(139,92,246,.3);color:#a78bfa;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s; }
+.ms-new-btn:hover { background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.6);color:#c4b5fd; }
+.ms-conv-item { display:flex;align-items:center;gap:12px;padding:10px 14px;margin:2px 8px;cursor:pointer;text-decoration:none;border-radius:14px;transition:all .18s;position:relative; }
+.ms-conv-item:hover { background:rgba(139,92,246,.1); }
+.ms-conv-item.active-conv { background:rgba(5,150,105,.12);border:1px solid rgba(5,150,105,.3); }
+.ms-av { width:42px;height:42px;border-radius:12px;flex-shrink:0;object-fit:cover; }
+.ms-av-ph { width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;background:linear-gradient(135deg,#4c1d95,#7c3aed); }
+.ms-av-group { width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,#1e3a5f,#2563eb); }
+.ms-av-channel { width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,#064e3b,#059669); }
+.ms-conv-body { flex:1;min-width:0; }
+.ms-conv-name { font-size:.84rem;font-weight:700;color:#c0c0d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px; }
+.ms-conv-preview { font-size:.74rem;color:#3d3d50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ms-conv-time { font-size:.66rem;color:#3a3a50; }
+.role-badge { font-size:.6rem;font-weight:800;padding:1px 6px;border-radius:6px; }
+.role-owner { background:rgba(234,179,8,.15);color:#fbbf24;border:1px solid rgba(234,179,8,.3); }
+.role-admin { background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3); }
+
+/* ── Channel Area ── */
+.ch-area { display:flex;flex-direction:column;overflow:hidden; flex:1; }
+
+/* Header */
+.ch-header {
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;
+  background:#0a0a18;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;
+}
+.ch-header-av {
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  background:linear-gradient(135deg,#064e3b,#059669);
+  box-shadow:0 4px 12px rgba(5,150,105,.3); overflow:hidden;
+}
+.ch-header-av img { width:100%;height:100%;object-fit:cover; }
+.ch-header-info { flex:1;min-width:0; }
+.ch-header-name { font-size:1rem;font-weight:900;color:#fff;margin-bottom:2px; display:flex;align-items:center;gap:8px; }
+.ch-header-username { font-size:.75rem;color:#059669; }
+.ch-header-meta { font-size:.74rem;color:#555; }
+.ch-header-actions { display:flex;gap:8px; }
+.ch-header-btn {
+  height:36px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  color:#666;font-size:.82rem;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;padding:0 14px;gap:6px;font-family:'Vazirmatn',sans-serif;
+  font-weight:700;text-decoration:none;
+}
+.ch-header-btn:hover { background:rgba(5,150,105,.15);border-color:rgba(5,150,105,.3);color:#34d399; }
+.ch-header-btn.active { background:rgba(5,150,105,.2);border-color:rgba(5,150,105,.5);color:#6ee7b7; }
+.ch-header-btn.subscribed { background:linear-gradient(135deg,#047857,#059669);border-color:#059669;color:#fff;box-shadow:0 4px 12px rgba(5,150,105,.3); }
+.ch-header-btn.subscribed:hover { background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#f87171; }
+
+/* Posts Feed */
+.ch-feed { flex:1;overflow-y:auto;padding:24px; }
+.ch-feed::-webkit-scrollbar { width:4px; }
+.ch-feed::-webkit-scrollbar-thumb { background:#1a1a2e;border-radius:2px; }
+
+.ch-post {
+  background:#0d0d1a;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:20px;padding:20px;
+  margin-bottom:16px;
+  transition:all .2s;
+}
+.ch-post:hover { border-color:rgba(5,150,105,.2); }
+
+.ch-post-header { display:flex;align-items:center;gap:12px;margin-bottom:14px; }
+.ch-post-av {
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:900;
+  background:linear-gradient(135deg,#064e3b,#059669);color:#fff;
+}
+.ch-post-av img { width:100%;height:100%;object-fit:cover; }
+.ch-post-author-name { font-size:.84rem;font-weight:800;color:#ccc; }
+.ch-post-badge { font-size:.65rem;padding:2px 8px;border-radius:8px;background:rgba(5,150,105,.15);color:#34d399;border:1px solid rgba(5,150,105,.25);font-weight:700; }
+.ch-post-time { font-size:.72rem;color:#3a3a50;margin-right:auto; }
+
+.ch-post-content { font-size:.9rem;color:#ddd;line-height:1.65;margin-bottom:14px; white-space:pre-wrap; word-break:break-word; }
+.ch-post-img { width:100%;max-height:400px;object-fit:cover;border-radius:14px;margin-bottom:14px;cursor:pointer;display:block; }
+
+/* Reactions */
+.ch-reactions { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.ch-react-btn {
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:20px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  font-size:.8rem;cursor:pointer;transition:all .18s;
+  color:#888;font-family:'Vazirmatn',sans-serif;
+  user-select:none;
+}
+.ch-react-btn:hover { background:rgba(5,150,105,.1);border-color:rgba(5,150,105,.3);color:#34d399; }
+.ch-react-btn.active { background:rgba(5,150,105,.18);border-color:rgba(5,150,105,.5);color:#6ee7b7; }
+.ch-react-count { font-size:.76rem;font-weight:700; }
+.ch-react-add {
+  width:32px;height:32px;border-radius:20px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:.9rem;color:#555;
+  transition:all .18s;
+}
+.ch-react-add:hover { background:rgba(5,150,105,.1);color:#34d399;border-color:rgba(5,150,105,.3); }
+
+/* Emoji picker — fixed to viewport so it never clips */
+.ch-emoji-picker {
+  position:fixed;
+  background:#12121f;border:1px solid rgba(5,150,105,.3);
+  border-radius:16px;padding:10px;
+  display:none;flex-wrap:wrap;gap:6px;width:220px;
+  z-index:9999;box-shadow:0 16px 48px rgba(0,0,0,.8);
+}
+.ch-emoji-picker.open { display:flex; }
+.ch-emoji-btn {
+  font-size:1.3rem;padding:7px;border-radius:10px;cursor:pointer;
+  transition:background .15s;
+}
+.ch-emoji-btn:hover { background:rgba(5,150,105,.2); }
+
+/* Empty state */
+.ch-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;color:#2a2a38; }
+.ch-empty-icon { font-size:3rem;opacity:.4; }
+
+/* Compose area */
+.ch-compose {
+  padding:14px 20px;
+  background:#0a0a18;
+  border-top:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;
+}
+.ch-compose-inner {
+  display:flex;align-items:flex-end;gap:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(5,150,105,.2);
+  border-radius:18px;padding:10px 14px;
+  transition:all .2s;
+}
+.ch-compose-inner:focus-within { border-color:rgba(5,150,105,.5);background:rgba(5,150,105,.05);box-shadow:0 0 0 3px rgba(5,150,105,.1); }
+.ch-compose-inner textarea {
+  flex:1;background:none;border:none;outline:none;
+  color:#e2e2e2;font-size:.88rem;resize:none;
+  font-family:'Vazirmatn',sans-serif;max-height:120px;line-height:1.5;
+}
+.ch-compose-inner textarea::placeholder { color:#2e2e48; }
+.ch-img-btn,.ch-post-btn {
+  height:36px;border-radius:10px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;
+}
+.ch-img-btn { width:36px;background:rgba(255,255,255,.05);color:#555;font-size:.9rem; }
+.ch-img-btn:hover { background:rgba(5,150,105,.15);color:#34d399; }
+.ch-post-btn { padding:0 16px;background:linear-gradient(135deg,#047857,#059669);color:#fff;font-size:.82rem;font-weight:800;font-family:'Vazirmatn',sans-serif;box-shadow:0 4px 12px rgba(5,150,105,.4);gap:6px; }
+.ch-post-btn:hover { transform:translateY(-2px);box-shadow:0 6px 18px rgba(5,150,105,.5); }
+.ch-img-preview { display:none;margin-bottom:8px;position:relative; }
+.ch-img-preview img { max-height:100px;border-radius:10px; }
+.ch-img-remove { position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center; }
+
+/* Toast */
+.inbox-toast { position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(10px);background:linear-gradient(135deg,#1a1a30,#16162a);border:1px solid rgba(139,92,246,.25);color:#e2e2e2;padding:12px 24px;border-radius:16px;font-size:.84rem;z-index:10000;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.inbox-toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+.ms-conv-more { display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#666;font-size:.85rem;cursor:pointer;position:absolute;left:8px;top:50%;transform:translateY(-50%);transition:all .15s; }
+.ms-conv-item:hover .ms-conv-more { display:flex; }
+.ms-conv-more:hover { background:rgba(139,92,246,.3);border-color:rgba(139,92,246,.6);color:#c084fc; }
+.ms-ctx-menu { display:none;flex-direction:column;position:fixed;z-index:9999;background:linear-gradient(145deg,#12121f,#0e0e1c);border:1px solid rgba(139,92,246,.2);border-radius:14px;padding:6px 0;min-width:200px;box-shadow:0 16px 48px rgba(0,0,0,.7),0 0 0 1px rgba(139,92,246,.08);backdrop-filter:blur(12px); }
+.ms-ctx-menu.open { display:flex; }
+.ms-ctx-item { padding:10px 16px;font-size:.82rem;color:#aaa;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .15s; }
+.ms-ctx-item:hover { background:rgba(139,92,246,.15);color:#e2e2e2; }
+.ms-ctx-item.active-item { color:#c084fc;font-weight:700; }
+.ms-ctx-item.danger { color:#f87171; }
+.ms-ctx-item.danger:hover { background:rgba(239,68,68,.12);color:#fca5a5; }
+.ms-ctx-sep { height:1px;background:rgba(255,255,255,.06);margin:4px 6px; }
+.ms-conv-meta { display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0; }
+.ms-unread-badge { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-radius:10px;min-width:18px;height:18px;padding:0 5px;font-size:.62rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center; }
+.ms-conv-icons { display:flex;gap:3px;margin-top:2px; }
+.role-badge { font-size:.6rem;font-weight:800;padding:1px 6px;border-radius:6px; }
+.role-owner { background:rgba(234,179,8,.15);color:#fbbf24;border:1px solid rgba(234,179,8,.3); }
+.role-admin { background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3); }
+.mute-badge { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:5px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);color:#a78bfa;font-size:.6rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="messenger">
+
+  <!-- ── Sidebar ── -->
+  <div class="ms-sidebar">
+    <div class="ms-sidebar-head">
+      <div class="ms-sidebar-title">
+        <div class="ms-sidebar-title-icon">💬</div>
+        پیام‌رسان
+      </div>
+      <div class="ms-tabs">
+        <div class="ms-tab active" data-tab="dm"      onclick="switchTab('dm',this)">💬 شخصی</div>
+        <div class="ms-tab" data-tab="group"   onclick="switchTab('group',this)">👥 گروه‌ها{% if group_unread_count %} <span class="ms-tab-badge">{{ group_unread_count }}</span>{% endif %}</div>
+        <div class="ms-tab" data-tab="channel" onclick="switchTab('channel',this)">📢 کانال‌ها{% if channel_unread_count %} <span class="ms-tab-badge">{{ channel_unread_count }}</span>{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="ms-tab-panel active" id="panel-dm">
+      {% for item in conv_data %}{% if item.other and item.other.username %}
+      <a href="{% url 'community:conversation' username=item.other.username %}"
+         class="ms-conv-item"
+         data-type="dm"
+         data-username="{{ item.other.username }}"
+         data-conv-id="{{ item.conv.id }}"
+         data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+         data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+         oncontextmenu="cvOpenCtxMenu(event,this)">
+        {% if item.other.username == 'admin' %}
+          <div class="ms-av-ph" style="background:linear-gradient(135deg,#3730a3,#6d28d9)">📣</div>
+        {% elif item.other.gamer_profile.avatar %}
+          <img src="{{ item.other.gamer_profile.avatar.url }}" class="ms-av">
+        {% else %}
+          <div class="ms-av-ph">{{ item.other.username|first|upper }}</div>
+        {% endif %}
+        <div class="ms-conv-body">
+          <div class="ms-conv-name">{{ item.other.get_full_name|default:item.other.username }}</div>
+          <div class="ms-conv-preview">{% if item.last %}{{ item.last.content|truncatechars:28 }}{% endif %}</div>
+          <div class="ms-conv-icons">
+            {% if item.is_pinned %}<span title="پین‌شده">📌</span>{% endif %}
+            {% if item.is_muted %}<span class="mute-badge" title="میوت"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+          </div>
+        </div>
+        <div class="ms-conv-meta">
+          {% if item.last %}<span class="ms-conv-time" style="font-size:.66rem;color:#3a3a50">{{ item.last.created_at|time:"H:i" }}</span>{% endif %}
+          {% if item.unread %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+        </div>
+        <div class="ms-conv-more" onclick="cvOpenCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
+      </a>
+      {% endif %}{% endfor %}
+    </div>
+
+    <div class="ms-tab-panel" id="panel-group">
+      <a href="{% url 'community:create_group' %}" class="ms-new-btn"><svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> گروه جدید</a>
+      {% for item in group_data %}
+      <a href="{% url 'community:group_chat' group_id=item.group.id %}"
+         class="ms-conv-item"
+         data-type="group"
+         data-group-id="{{ item.group.id }}"
+         data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+         data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+         oncontextmenu="cvOpenCtxMenu(event,this)">
+        {% if item.group.icon %}<img src="{{ item.group.icon.url }}" class="ms-av">
+        {% else %}<div class="ms-av-group">👥</div>{% endif %}
+        <div class="ms-conv-body">
+          <div class="ms-conv-name" style="display:flex;align-items:center;gap:5px;">
+            {{ item.group.name }}
+            {% if item.role == 'owner' %}<span class="role-badge role-owner">مالک</span>
+            {% elif item.role == 'admin' %}<span class="role-badge role-admin">ادمین</span>{% endif %}
+          </div>
+          <div class="ms-conv-preview">{% if item.last %}{{ item.last.content|truncatechars:28 }}{% else %}{{ item.group.member_count }} عضو{% endif %}</div>
+          <div class="ms-conv-icons">
+            {% if item.is_pinned %}<span title="پین‌شده">📌</span>{% endif %}
+            {% if item.is_muted %}<span class="mute-badge" title="میوت"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+          </div>
+        </div>
+        <div class="ms-conv-meta">
+          {% if item.unread %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+        </div>
+        <div class="ms-conv-more" onclick="cvOpenCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="ms-tab-panel" id="panel-channel">
+      <a href="{% url 'community:create_channel' %}" class="ms-new-btn"><svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> کانال جدید</a>
+      {% for item in channel_data %}
+      <a href="{% url 'community:channel_view' channel_username=item.channel.username %}"
+         class="ms-conv-item {% if item.channel.username == channel.username %}active-conv{% endif %}"
+         data-type="channel"
+         data-channel-username="{{ item.channel.username }}"
+         data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+         data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+         oncontextmenu="cvOpenCtxMenu(event,this)">
+        {% if item.channel.icon %}<img src="{{ item.channel.icon.url }}" class="ms-av">
+        {% else %}<div class="ms-av-channel">📢</div>{% endif %}
+        <div class="ms-conv-body">
+          <div class="ms-conv-name" style="display:flex;align-items:center;gap:5px;">
+            {{ item.channel.name }}
+            {% if item.role == 'owner' %}<span class="role-badge role-owner">مالک</span>
+            {% elif item.role == 'admin' %}<span class="role-badge role-admin">ادمین</span>{% endif %}
+          </div>
+          <div class="ms-conv-preview">@{{ item.channel.username }}</div>
+          <div class="ms-conv-icons">
+            {% if item.is_pinned %}<span title="پین‌شده">📌</span>{% endif %}
+            {% if item.is_muted %}<span class="mute-badge" title="میوت"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+          </div>
+        </div>
+        <div class="ms-conv-meta">
+          {% if item.unread %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+        </div>
+        <div class="ms-conv-more" onclick="cvOpenCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Channel Content ── -->
+  <div class="ch-area">
+
+    <!-- Header -->
+    <div class="ch-header">
+      <div class="ch-header-av">
+        {% if channel.icon %}<img src="{{ channel.icon.url }}">{% else %}📢{% endif %}
+      </div>
+      <div class="ch-header-info">
+        <div class="ch-header-name">
+          {{ channel.name }}
+          {% if not channel.is_public %}<span style="font-size:.7rem;background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.3);border-radius:8px;padding:2px 8px;">خصوصی</span>{% endif %}
+        </div>
+        <div class="ch-header-username">@{{ channel.username }}</div>
+        <div class="ch-header-meta"><span id="subCount">{{ channel.subscriber_count }}</span> مشترک</div>
+      </div>
+      <div class="ch-header-actions">
+        <!-- Pin -->
+        <button class="ch-header-btn {% if is_pinned %}active{% endif %}" onclick="togglePin()" title="پین">
+          <svg class="bi bi-pin{% if is_pinned %}-fill{% endif %}" aria-hidden="true"><use href="#bi-pin"></use></svg>
+        </button>
+        <!-- Mute -->
+        <button class="ch-header-btn {% if is_muted %}active{% endif %}" onclick="toggleMute()" title="میوت">
+          <svg class="bi bi-bell{% if is_muted %}-slash-fill{% else %}{% endif %}" aria-hidden="true"><use href="#bi-bell"></use></svg>
+        </button>
+        <!-- Subscribe -->
+        {% if is_subscribed %}
+        <button class="ch-header-btn subscribed" id="subBtn" onclick="toggleSubscribe()">
+          <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> عضو هستی
+        </button>
+        {% else %}
+        <button class="ch-header-btn" id="subBtn" onclick="toggleSubscribe()">
+          <svg class="bi bi-plus-circle" aria-hidden="true"><use href="#bi-plus-circle"></use></svg> عضو شو
+        </button>
+        {% endif %}
+        {% if can_post %}
+        <!-- Admin badge -->
+        <span style="padding:0 12px;height:36px;display:flex;align-items:center;border-radius:10px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);color:#a78bfa;font-size:.78rem;font-weight:800;">
+          {% if channel.owner == request.user %}👑 مالک{% else %}⚡ ادمین{% endif %}
+        </span>
+        {% endif %}
+        {% if channel.owner == request.user %}
+        <a href="{% url 'community:channel_settings' channel.username %}" class="ch-header-btn" title="تنظیمات">
+          <svg class="bi bi-gear-fill" aria-hidden="true"><use href="#bi-gear-fill"></use></svg>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Posts Feed -->
+    <div class="ch-feed" id="chFeed">
+      {% if posts %}
+        {% for post in posts %}
+        <div class="ch-post" id="post-{{ post.id }}">
+          <div class="ch-post-header">
+            <div class="ch-post-av">
+              {% if post.author.gamer_profile.avatar %}<img src="{{ post.author.gamer_profile.avatar.url }}">
+              {% else %}{{ post.author.username|first|upper }}{% endif %}
+            </div>
+            <div>
+              <div class="ch-post-author-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+              <span class="ch-post-badge">📢 {{ channel.name }}</span>
+            </div>
+            <div class="ch-post-time">{{ post.created_at|time:"H:i" }} — {{ post.created_at|date:"j M" }}</div>
+          </div>
+
+          {% if post.content %}
+          <div class="ch-post-content">{{ post.content }}</div>
+          {% endif %}
+          {% if post.image %}
+          <img src="{{ post.image.url }}" class="ch-post-img" onclick="window.open(this.src)">
+          {% endif %}
+
+          <!-- Reactions -->
+          <div class="ch-reactions" id="reactions-{{ post.id }}">
+            {% regroup post.channel_reactions.all by emoji as reaction_groups %}
+            {% for grp in reaction_groups %}
+            {% with rkey=post.id|stringformat:"s" %}
+            <button class="ch-react-btn {% if rkey|add:":"|add:grp.grouper in my_reactions %}active{% endif %}"
+                    onclick="react({{ post.id }}, '{{ grp.grouper }}', this)">
+              {{ grp.grouper }} <span class="ch-react-count">{{ grp.list|length }}</span>
+            </button>
+            {% endwith %}
+            {% endfor %}
+            {% if is_subscribed %}
+            <div class="ch-react-add" onclick="togglePicker({{ post.id }}, this)">
+              <svg class="bi bi-emoji-smile" aria-hidden="true"><use href="#bi-emoji-smile"></use></svg>
+              <div class="ch-emoji-picker" id="picker-{{ post.id }}">
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'🔥',null);closePickers()">🔥</span>
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'👍',null);closePickers()">👍</span>
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'❤️',null);closePickers()">❤️</span>
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'😂',null);closePickers()">😂</span>
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'😮',null);closePickers()">😮</span>
+                <span class="ch-emoji-btn" onclick="react({{ post.id }},'👏',null);closePickers()">👏</span>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="ch-empty">
+          <div class="ch-empty-icon">📢</div>
+          <div style="font-size:.9rem;font-weight:800;">هنوز پستی نیست</div>
+          {% if can_post %}<div style="font-size:.8rem;">اولین پست رو بنویس!</div>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Compose (only admin/owner) -->
+    {% if can_post %}
+    <div class="ch-compose">
+      <div class="ch-img-preview" id="imgPreview">
+        <img id="imgPreviewImg">
+        <button class="ch-img-remove" onclick="removeImg()">×</button>
+      </div>
+      <div class="ch-compose-inner">
+        <button class="ch-img-btn" onclick="document.getElementById('postImg').click()" title="تصویر"><svg class="bi bi-image" aria-hidden="true"><use href="#bi-image"></use></svg></button>
+        <textarea id="postInput" rows="1" placeholder="پست جدید بنویس..." oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&event.ctrlKey){publishPost();}"></textarea>
+        <button class="ch-post-btn" onclick="publishPost()"><svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg> انتشار</button>
+      </div>
+      <input type="file" id="postImg" accept="image/*" style="display:none" onchange="handleImg(this)">
+      <div style="font-size:.72rem;color:#3a3a50;margin-top:6px;padding-right:4px;">Ctrl+Enter برای ارسال سریع</div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ── Context Menu (DM) ── -->
+<div class="ms-ctx-menu" id="cvCtxMenu-dm">
+  <div class="ms-ctx-item" id="cv-dm-pin"     onclick="cvCtxAction('pin')">📌 پین مکالمه</div>
+  <div class="ms-ctx-item" id="cv-dm-mute"    onclick="cvCtxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item" id="cv-dm-profile" onclick="cvCtxAction('profile')"><svg class="bi bi-person-circle" aria-hidden="true" style="color:#60a5fa"><use href="#bi-person-circle"></use></svg> پروفایل</div>
+  <div class="ms-ctx-item danger" id="cv-dm-block" onclick="cvCtxAction('block')">🚫 بلاک</div>
+</div>
+<!-- ── Context Menu (Group) ── -->
+<div class="ms-ctx-menu" id="cvCtxMenu-group">
+  <div class="ms-ctx-item" id="cv-grp-pin"   onclick="cvCtxAction('pin')">📌 پین گروه</div>
+  <div class="ms-ctx-item" id="cv-grp-mute"  onclick="cvCtxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item danger" id="cv-grp-leave" onclick="cvCtxAction('leave')">🚪 خروج از گروه</div>
+</div>
+<!-- ── Context Menu (Channel) ── -->
+<div class="ms-ctx-menu" id="cvCtxMenu-channel">
+  <div class="ms-ctx-item" id="cv-ch-pin"    onclick="cvCtxAction('pin')">📌 پین کانال</div>
+  <div class="ms-ctx-item" id="cv-ch-mute"   onclick="cvCtxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item danger" id="cv-ch-unsub" onclick="cvCtxAction('unsub')">🚪 لغو اشتراک</div>
+</div>
+
+<div class="inbox-toast" id="inboxToast"></div>
+
+<script>
+const CSRF    = '{{ csrf_token }}';
+const CH_USER = '{{ channel.username }}';
+let postImgFile = null;
+let isSubbed  = {{ is_subscribed|yesno:"true,false" }};
+
+function showToast(msg) {
+  const t = document.getElementById('inboxToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+/* ── Subscribe ── */
+function toggleSubscribe() {
+  fetch(`/channels/${CH_USER}/subscribe/`, { method:'POST', headers:{'X-CSRFToken':CSRF} })
+  .then(r=>r.json()).then(d => {
+    if (!d.ok) return;
+    isSubbed = d.subscribed;
+    const btn = document.getElementById('subBtn');
+    document.getElementById('subCount').textContent = d.count;
+    if (d.subscribed) {
+      btn.className = 'ch-header-btn subscribed';
+      btn.innerHTML = '<svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> عضو هستی';
+      showToast('عضو شدی ✅');
+    } else {
+      btn.className = 'ch-header-btn';
+      btn.innerHTML = '<svg class="bi bi-plus-circle" aria-hidden="true"><use href="#bi-plus-circle"></use></svg> عضو شو';
+      showToast('لغو اشتراک شد');
+    }
+  });
+}
+
+/* ── Pin / Mute ── */
+function togglePin() {
+  fetch(`/channels/${CH_USER}/pin/`, {method:'POST',headers:{'X-CSRFToken':CSRF}})
+  .then(r=>r.json()).then(d=>showToast(d.is_pinned ? 'کانال پین شد 📌' : 'آنپین شد'));
+}
+function toggleMute() {
+  fetch(`/channels/${CH_USER}/mute/`, {method:'POST',headers:{'X-CSRFToken':CSRF}})
+  .then(r=>r.json()).then(d=>showToast(d.is_muted ? 'میوت شد 🔕' : 'آنمیوت شد 🔔'));
+}
+
+/* ── Publish Post ── */
+function handleImg(input) {
+  if (!input.files[0]) return;
+  postImgFile = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('imgPreviewImg').src = e.target.result;
+    document.getElementById('imgPreview').style.display = '';
+  };
+  reader.readAsDataURL(postImgFile);
+}
+function removeImg() {
+  postImgFile = null;
+  document.getElementById('postImg').value = '';
+  document.getElementById('imgPreview').style.display = 'none';
+}
+
+function publishPost() {
+  const content = document.getElementById('postInput').value.trim();
+  if (!content && !postImgFile) return;
+
+  const fd = new FormData();
+  fd.append('content', content);
+  if (postImgFile) fd.append('image', postImgFile);
+
+  fetch(`/channels/${CH_USER}/post/`, {method:'POST',headers:{'X-CSRFToken':CSRF},body:fd})
+  .then(r=>r.json()).then(d => {
+    if (d.ok) { showToast('پست منتشر شد 📢'); setTimeout(()=>location.reload(), 800); }
+  });
+}
+
+/* ── Reactions ── */
+function react(postId, emoji, btn) {
+  fetch(`/channels/post/${postId}/react/`, {
+    method:'POST',
+    headers:{'X-CSRFToken':CSRF,'Content-Type':'application/x-www-form-urlencoded'},
+    body:`emoji=${encodeURIComponent(emoji)}`
+  })
+  .then(r=>r.json()).then(d => {
+    if (!d.ok) return;
+    const container = document.getElementById(`reactions-${postId}`);
+    // rebuild reaction buttons
+    const addBtn = container.querySelector('.ch-react-add');
+    container.querySelectorAll('.ch-react-btn').forEach(b=>b.remove());
+    Object.entries(d.counts).forEach(([em, cnt]) => {
+      const b = document.createElement('button');
+      b.className = 'ch-react-btn' + (em === emoji && d.reacted ? ' active' : '');
+      b.onclick = () => react(postId, em, b);
+      b.innerHTML = `${em} <span class="ch-react-count">${cnt}</span>`;
+      container.insertBefore(b, addBtn);
+    });
+  });
+}
+
+function togglePicker(postId, el) {
+  closePickers();
+  const picker = document.getElementById(`picker-${postId}`);
+  const rect = el.getBoundingClientRect();
+  // موقعیت واقعی روی صفحه
+  picker.style.top  = (rect.top - picker.offsetHeight - 8) + 'px';
+  picker.style.left = (rect.left - 180) + 'px';
+  picker.classList.add('open');
+  // بعد از محاسبه offsetHeight واقعی
+  requestAnimationFrame(() => {
+    picker.style.top = (rect.top - picker.offsetHeight - 8) + 'px';
+  });
+  event.stopPropagation();
+}
+function closePickers() {
+  document.querySelectorAll('.ch-emoji-picker.open').forEach(p=>p.classList.remove('open'));
+}
+document.addEventListener('click', closePickers);
+
+/* ── Sidebar tabs ── */
+function switchTab(tab, el) {
+  document.querySelectorAll('.ms-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ms-tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  localStorage.setItem('ms_active_tab', tab);
+}
+
+// همیشه از تب شخصی شروع کن
+(function(){
+  const tabEl = document.querySelector('.ms-tab[data-tab="dm"]');
+  if (tabEl) switchTab('dm', tabEl);
+})();
+
+/* ══════════════════════════════════════
+   Sidebar Context Menu
+══════════════════════════════════════ */
+let cvCtxTarget  = null;
+let cvCtxType    = null;
+let _cvCtxOpenAt = 0;
+
+function cvOpenCtxMenu(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  cvShowMenu(e.clientX, e.clientY, el);
+}
+function cvOpenCtxMenuBtn(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  cvShowMenu(r.left, r.bottom + 4, el);
+}
+function cvCloseAllMenus() {
+  document.querySelectorAll('.ms-ctx-menu').forEach(m => m.classList.remove('open'));
+  cvCtxTarget = null;
+}
+function cvShowMenu(x, y, el) {
+  _cvCtxOpenAt = Date.now();
+  cvCloseAllMenus();
+  cvCtxTarget = el;
+  cvCtxType   = el.dataset.type || 'dm';
+  const isPinned = el.dataset.isPinned === 'true';
+  const isMuted  = el.dataset.isMuted  === 'true';
+  let menu;
+  if (cvCtxType === 'group') {
+    menu = document.getElementById('cvCtxMenu-group');
+    const pinEl  = document.getElementById('cv-grp-pin');
+    const muteEl = document.getElementById('cv-grp-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین گروه' : '📌 پین گروه';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+  } else if (cvCtxType === 'channel') {
+    menu = document.getElementById('cvCtxMenu-channel');
+    const pinEl  = document.getElementById('cv-ch-pin');
+    const muteEl = document.getElementById('cv-ch-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین کانال' : '📌 پین کانال';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+  } else {
+    menu = document.getElementById('cvCtxMenu-dm');
+    const isAdmin = el.dataset.username === 'admin';
+    const pinEl   = document.getElementById('cv-dm-pin');
+    const muteEl  = document.getElementById('cv-dm-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین مکالمه' : '📌 پین مکالمه';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+    document.getElementById('cv-dm-profile').style.display = isAdmin ? 'none' : '';
+    document.getElementById('cv-dm-block').style.display   = isAdmin ? 'none' : '';
+  }
+  menu.classList.add('open');
+  const mw = 210, mh = 180;
+  let left = x, top = y;
+  if (left + mw > window.innerWidth)  left = window.innerWidth  - mw - 8;
+  if (top  + mh > window.innerHeight) top  = window.innerHeight - mh - 8;
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+}
+document.addEventListener('mousedown', e => {
+  if (e.button === 2) return;
+  if (Date.now() - _cvCtxOpenAt < 150) return;
+  if (!e.target.closest('.ms-ctx-menu') && !e.target.closest('.ms-conv-more'))
+    cvCloseAllMenus();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cvCloseAllMenus(); });
+
+function cvCtxAction(action) {
+  cvCloseAllMenus();
+  if (!cvCtxTarget) return;
+  const el   = cvCtxTarget;
+  const type = cvCtxType;
+
+  if (action === 'profile') {
+    window.location.href = '/profile/' + el.dataset.username + '/';
+    return;
+  }
+
+  let url = '';
+  if (type === 'dm') {
+    const convId   = el.dataset.convId;
+    const username = el.dataset.username;
+    if (action === 'pin')   url = '/pin-conv/'  + convId + '/';
+    if (action === 'mute')  url = '/mute-conv/' + convId + '/';
+    if (action === 'block') url = '/block/'     + username + '/';
+  } else if (type === 'group') {
+    const gid = el.dataset.groupId;
+    if (action === 'pin')   url = '/groups/' + gid + '/pin/';
+    if (action === 'mute')  url = '/groups/' + gid + '/mute/';
+    if (action === 'leave') url = '/groups/' + gid + '/leave/';
+  } else if (type === 'channel') {
+    const cu = el.dataset.channelUsername;
+    if (action === 'pin')   url = '/channels/' + cu + '/pin/';
+    if (action === 'mute')  url = '/channels/' + cu + '/mute/';
+    if (action === 'unsub') url = '/channels/' + cu + '/subscribe/';
+  }
+
+  if (!url) return;
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.ok) return;
+    const msgs = {
+      pin:   data.is_pinned ? 'پین شد 📌' : 'آنپین شد',
+      mute:  data.is_muted  ? 'میوت شد 🔕' : 'آنمیوت شد 🔔',
+      block: data.is_blocked ? 'بلاک شد 🚫' : 'آنبلاک شد',
+      leave: 'از گروه خارج شدی 🚪',
+      unsub: 'اشتراک لغو شد 🚪',
+    };
+    showToast(msgs[action] || 'انجام شد');
+    if (action === 'leave' || action === 'unsub') {
+      setTimeout(() => window.location.href = '{% url "community:inbox" %}', 900);
+    } else {
+      setTimeout(() => window.location.reload(), 600);
+    }
+  })
+  .catch(() => showToast('خطا در انجام عملیات'));
+}
+</script>
+{% endblock %}

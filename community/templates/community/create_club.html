@@ -1,0 +1,103 @@
+{% extends 'community/base.html' %}
+{% block title %}ساخت گروه جدید | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.cc-wrap { max-width: 560px; margin: 0 auto; padding: 40px 16px 80px; }
+.cc-card {
+    background: #130826;
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 22px; padding: 32px;
+    box-shadow: 0 0 60px rgba(139,92,246,0.08);
+}
+.cc-title { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 6px; }
+.cc-subtitle { font-size: .82rem; color: rgba(255,255,255,0.35); margin-bottom: 28px; }
+
+.cc-label { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
+.cc-input {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-size: .9rem;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; font-family: 'Vazirmatn', sans-serif;
+    outline: none; transition: border-color .2s;
+    margin-bottom: 18px;
+}
+.cc-input:focus { border-color: #8b5cf6; }
+.cc-input::placeholder { color: rgba(255,255,255,0.2); }
+.cc-select {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-size: .88rem;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; font-family: 'Vazirmatn', sans-serif;
+    outline: none; cursor: pointer; margin-bottom: 18px;
+    appearance: none; -webkit-appearance: none;
+}
+.cc-select option { background: #130826; }
+.cc-textarea {
+    width: 100%; padding: 12px 14px; border-radius: 12px; font-size: .88rem;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; font-family: 'Vazirmatn', sans-serif;
+    outline: none; resize: vertical; min-height: 90px;
+    transition: border-color .2s; margin-bottom: 18px;
+}
+.cc-textarea:focus, .cc-input:focus { border-color: #8b5cf6; }
+
+.cc-submit {
+    width: 100%; padding: 14px; border-radius: 14px; font-size: .95rem; font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff; border: none; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: all .2s; box-shadow: 0 4px 20px rgba(139,92,246,0.35);
+}
+.cc-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(139,92,246,0.5); }
+
+.cc-error {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+    color: #f87171; border-radius: 10px; padding: 10px 14px;
+    font-size: .82rem; margin-bottom: 18px;
+}
+
+.cc-back {
+    display: inline-flex; align-items: center; gap: 7px;
+    color: rgba(255,255,255,0.3); font-size: .82rem; text-decoration: none;
+    margin-bottom: 20px; transition: color .15s;
+}
+.cc-back:hover { color: #a78bfa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cc-wrap">
+    <a href="{% url 'community:clubs_list' %}" class="cc-back">
+        <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg> بازگشت به گروه‌ها
+    </a>
+
+    <div class="cc-card">
+        <div class="cc-title"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> ساخت گروه جدید</div>
+        <div class="cc-subtitle">گروه گیمینگت رو بساز و دوستات رو دعوت کن</div>
+
+        {% if error %}
+        <div class="cc-error"><svg class="bi bi-exclamation-triangle me-1" aria-hidden="true"><use href="#bi-exclamation-triangle"></use></svg> {{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <label class="cc-label">نام گروه *</label>
+            <input type="text" name="name" class="cc-input" placeholder="مثلاً: گیمرهای تهران" required maxlength="100">
+
+            <label class="cc-label">توضیحات</label>
+            <textarea name="description" class="cc-textarea" placeholder="گروه درباره چیه؟ چه بازی‌هایی؟"></textarea>
+
+            <label class="cc-label">ژانر اصلی</label>
+            <select name="genre_tag" class="cc-select">
+                <option value="">— انتخاب ژانر (اختیاری) —</option>
+                {% for code, label in genre_choices %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="cc-submit">
+                <svg class="bi bi-plus-circle-fill me-1" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت گروه
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -133,7 +133,7 @@
         <!-- Hero -->
         <div class="hf-hero">
             <div class="hf-hero-inner">
-                <div class="hf-tag-badge"><i class="bi bi-hash"></i> هشتگ</div>
+                <div class="hf-tag-badge"><svg class="bi bi-hash" aria-hidden="true"><use href="#bi-hash"></use></svg> هشتگ</div>
                 <h1 class="hf-title">#<span>{{ hashtag.name }}</span></h1>
                 <p class="hf-meta"><b>{{ hashtag.post_count }}</b> پست با این هشتگ منتشر شده</p>
             </div>
@@ -159,7 +159,7 @@
                             <div class="post-author-sub">@{{ post.author.username }}</div>
                         </div>
                         {% if post.game_tag %}
-                            <span class="game-tag-chip">🎮 {{ post.game_tag }}</span>
+                            <span class="game-tag-chip"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> {{ post.game_tag }}</span>
                         {% endif %}
                         <span class="post-time">{{ post.created_at|timesince }} پیش</span>
                     </div>
@@ -178,17 +178,17 @@
                             {{ post.likes_count }}
                         </button>
                         <span class="post-action-btn">
-                            <i class="bi bi-chat-dots"></i> {{ post.comments_count }}
+                            <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> {{ post.comments_count }}
                         </span>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-hash"></i>
+                    <svg class="bi bi-hash" aria-hidden="true"><use href="#bi-hash"></use></svg>
                     <p>هنوز پستی با هشتگ <b>#{{ hashtag.name }}</b> منتشر نشده</p>
                     <a href="{% url 'community:create_post_page' %}" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;border-radius:12px;padding:9px 22px;text-decoration:none;font-weight:700;">
-                        <i class="bi bi-plus-lg"></i> اولین پست رو بذار
+                        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> اولین پست رو بذار
                     </a>
                 </div>
             {% endif %}
@@ -198,7 +198,7 @@
         <div class="hf-sidebar">
             {% if trending %}
             <div class="sb-card">
-                <div class="sb-title"><i class="bi bi-fire"></i> هشتگ‌های پرطرفدار</div>
+                <div class="sb-title"><svg class="bi bi-fire" aria-hidden="true"><use href="#bi-fire"></use></svg> هشتگ‌های پرطرفدار</div>
                 {% for tag in trending %}
                 <a href="{% url 'community:hashtag_feed' tag_name=tag.name %}" class="trend-item">
                     <span class="trend-name">#{{ tag.name }}</span>
@@ -211,7 +211,7 @@
             <div class="sb-card" style="text-align:center;">
                 <a href="{% url 'community:create_post_page' %}"
                    style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;border-radius:14px;padding:11px 24px;text-decoration:none;font-weight:800;font-size:0.95rem;width:100%;justify-content:center;">
-                    <i class="bi bi-plus-lg"></i> پست جدید با این هشتگ
+                    <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> پست جدید با این هشتگ
                 </a>
             </div>
         </div>
@@ -224,7 +224,7 @@
 <script>
 const CSRF = '{{ csrf_token }}';
 function toggleLike(postId, btn) {
-    fetch('/community/post/' + postId + '/like/', {
+    fetch('/post/' + postId + '/like/', {
         method: 'POST', headers: {'X-CSRFToken': CSRF}
     }).then(r => r.json()).then(data => {
         const icon = btn.querySelector('i');

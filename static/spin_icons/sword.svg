@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0c0c0"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+  </defs>
+  <!-- blade -->
+  <polygon fill="url(#sg)" points="30,8 34,8 38,48 26,48"/>
+  <!-- blade edge highlight -->
+  <polygon fill="rgba(255,255,255,0.5)" points="32,8 34,8 36,48 32,48"/>
+  <!-- crossguard -->
+  <rect fill="#60a5fa" x="18" y="46" width="28" height="6" rx="3"/>
+  <!-- handle -->
+  <rect fill="#7c3aed" x="29" y="52" width="6" height="10" rx="3"/>
+  <!-- pommel -->
+  <ellipse fill="#a78bfa" cx="32" cy="62" rx="5" ry="3"/>
+  <!-- tip glow -->
+  <polygon fill="rgba(147,197,253,0.6)" points="30,8 34,8 32,2"/>
+</svg>

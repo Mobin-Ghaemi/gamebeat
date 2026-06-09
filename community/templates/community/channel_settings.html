@@ -1,0 +1,472 @@
+{% extends 'community/base.html' %}
+{% block title %}تنظیمات @{{ channel.username }} | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.cs-wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 80px; direction: rtl; }
+
+.cs-back {
+    display: inline-flex; align-items: center; gap: 7px;
+    color: rgba(255,255,255,0.35); font-size: .8rem; text-decoration: none;
+    margin-bottom: 22px; transition: color .15s;
+    padding: 7px 14px; border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.03);
+}
+.cs-back:hover { color: #34d399; border-color: rgba(5,150,105,0.3); }
+
+/* Hero */
+.cs-hero {
+    background: linear-gradient(135deg, #001a10 0%, #00291a 40%, #001208 100%);
+    border: 1px solid rgba(5,150,105,0.3);
+    border-radius: 22px; padding: 24px 28px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 18px;
+    position: relative; overflow: hidden;
+}
+.cs-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(5,150,105,0.2) 0%, transparent 65%);
+    pointer-events:none;
+}
+.cs-hero-av {
+    width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0;
+    background: linear-gradient(135deg, #064e3b, #059669);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; overflow: hidden; position: relative; z-index: 1;
+    border: 2px solid rgba(5,150,105,0.4);
+}
+.cs-hero-av img { width:100%; height:100%; object-fit:cover; }
+.cs-hero-info { position: relative; z-index: 1; }
+.cs-hero-name { font-size: 1.3rem; font-weight: 900; color: #fff; }
+.cs-hero-user { font-size: .8rem; color: #059669; margin-top: 2px; }
+.cs-hero-stat { font-size: .75rem; color: rgba(255,255,255,0.35); margin-top: 4px; }
+
+/* Tabs */
+.cs-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.03); border-radius: 14px; padding: 4px; margin-bottom: 22px; }
+.cs-tab {
+    flex: 1; text-align: center; padding: 9px 8px; font-size: .78rem; font-weight: 700;
+    color: rgba(255,255,255,0.4); border-radius: 10px; cursor: pointer;
+    transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.cs-tab.active { background: linear-gradient(135deg, #047857, #059669); color: #fff; box-shadow: 0 4px 14px rgba(5,150,105,0.35); }
+.cs-tab:not(.active):hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
+.cs-panel { display: none; }
+.cs-panel.active { display: block; }
+
+/* Section */
+.cs-section {
+    background: #0d0d1a; border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px; padding: 22px 24px; margin-bottom: 16px;
+}
+.cs-section-title {
+    font-size: .78rem; font-weight: 800; color: #34d399;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.cs-section-title::after { content:''; flex:1; height:1px; background:linear-gradient(to left,transparent,rgba(5,150,105,0.2)); }
+
+/* Form fields */
+.cs-field { margin-bottom: 16px; }
+.cs-label { font-size: .78rem; font-weight: 700; color: rgba(255,255,255,0.5); display: block; margin-bottom: 7px; }
+.cs-input {
+    width: 100%; padding: 10px 14px; border-radius: 12px; font-size: .87rem;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; font-family: 'Vazirmatn', sans-serif; outline: none; box-sizing: border-box;
+    transition: border-color .2s;
+}
+.cs-input:focus { border-color: #059669; background: rgba(5,150,105,0.06); }
+textarea.cs-input { resize: vertical; min-height: 80px; }
+select.cs-input { appearance: none; -webkit-appearance: none; cursor: pointer; }
+
+/* Toggle switch */
+.cs-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.cs-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.cs-toggle-label { font-size: .85rem; font-weight: 600; color: rgba(255,255,255,0.7); }
+.cs-toggle-desc { font-size: .73rem; color: rgba(255,255,255,0.3); margin-top: 2px; }
+.cs-toggle {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+}
+.cs-toggle input { opacity: 0; width: 0; height: 0; }
+.cs-toggle-slider {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+    border-radius: 50px; cursor: pointer; transition: .3s;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+.cs-toggle-slider:before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 3px; top: 2px; background: rgba(255,255,255,0.4);
+    border-radius: 50%; transition: .3s;
+}
+.cs-toggle input:checked + .cs-toggle-slider { background: #059669; border-color: #059669; }
+.cs-toggle input:checked + .cs-toggle-slider:before { transform: translateX(20px); background: #fff; }
+
+/* Save button */
+.cs-save-btn {
+    padding: 11px 28px; border-radius: 12px; font-size: .88rem; font-weight: 800;
+    background: linear-gradient(135deg, #047857, #059669);
+    color: #fff; border: none; cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    box-shadow: 0 4px 16px rgba(5,150,105,0.35); transition: all .2s;
+    display: flex; align-items: center; gap: 7px;
+}
+.cs-save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(5,150,105,0.5); }
+
+/* Members list */
+.cs-member-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.cs-member-row:last-child { border-bottom: none; }
+.cs-member-av {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, #1a0a2e, #2d1154);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; font-weight: 800; color: #a78bfa;
+}
+.cs-member-av img { width:100%; height:100%; object-fit:cover; }
+.cs-member-name { flex: 1; font-size: .84rem; font-weight: 700; color: rgba(255,255,255,0.75); }
+.cs-role-badge {
+    font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: 50px;
+    background: rgba(5,150,105,0.1); border: 1px solid rgba(5,150,105,0.2); color: #34d399;
+}
+.cs-role-badge.owner { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.25); color: #fbbf24; }
+.cs-role-badge.admin { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+.cs-member-actions { display: flex; gap: 5px; }
+.cs-action-btn {
+    padding: 4px 10px; border-radius: 8px; font-size: .7rem; font-weight: 700;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif; border: 1px solid;
+    transition: all .15s;
+}
+.cs-action-btn.promote { border-color: rgba(139,92,246,0.35); color: #a78bfa; background: rgba(139,92,246,0.08); }
+.cs-action-btn.promote:hover { background: rgba(139,92,246,0.2); }
+.cs-action-btn.demote { border-color: rgba(251,191,36,0.35); color: #fbbf24; background: rgba(251,191,36,0.08); }
+.cs-action-btn.demote:hover { background: rgba(251,191,36,0.2); }
+.cs-action-btn.remove { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.06); }
+.cs-action-btn.remove:hover { background: rgba(239,68,68,0.15); }
+
+/* Join requests */
+.cs-jr-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;
+}
+.cs-jr-actions { display: flex; gap: 6px; margin-right: auto; }
+.cs-jr-accept { padding: 5px 12px; border-radius: 8px; font-size: .75rem; font-weight: 700; cursor: pointer; font-family: 'Vazirmatn',sans-serif; background: rgba(5,150,105,0.15); border: 1px solid rgba(5,150,105,0.35); color: #34d399; }
+.cs-jr-accept:hover { background: rgba(5,150,105,0.3); }
+.cs-jr-reject { padding: 5px 12px; border-radius: 8px; font-size: .75rem; font-weight: 700; cursor: pointer; font-family: 'Vazirmatn',sans-serif; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #f87171; }
+.cs-jr-reject:hover { background: rgba(239,68,68,0.18); }
+
+/* Toast */
+.cs-toast { position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:linear-gradient(135deg,#047857,#059669);color:#fff;padding:11px 24px;border-radius:50px;font-size:.84rem;z-index:9999;opacity:0;transition:all .3s;box-shadow:0 8px 24px rgba(5,150,105,.4);font-family:'Vazirmatn',sans-serif;font-weight:700; }
+.cs-toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+
+/* Danger zone */
+.cs-danger { background: rgba(239,68,68,0.04); border-color: rgba(239,68,68,0.15); }
+.cs-danger .cs-section-title { color: #f87171; }
+.cs-danger .cs-section-title::after { background: linear-gradient(to left,transparent,rgba(239,68,68,0.2)); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cs-wrap">
+
+    <a href="{% url 'community:channel_view' channel.username %}" class="cs-back">
+        <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg> بازگشت به کانال
+    </a>
+
+    <!-- Hero -->
+    <div class="cs-hero">
+        <div class="cs-hero-av">
+            {% if channel.icon %}<img src="{{ channel.icon.url }}">{% else %}📢{% endif %}
+        </div>
+        <div class="cs-hero-info">
+            <div class="cs-hero-name">{{ channel.name }}</div>
+            <div class="cs-hero-user">@{{ channel.username }}</div>
+            <div class="cs-hero-stat">{{ channel.subscriber_count }} مشترک</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="cs-tabs">
+        <div class="cs-tab active" onclick="switchTab('general', this)"><svg class="bi bi-sliders" aria-hidden="true"><use href="#bi-sliders"></use></svg> تنظیمات</div>
+        <div class="cs-tab" onclick="switchTab('members', this)"><svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg> اعضا <span style="background:rgba(255,255,255,0.1);border-radius:50px;padding:1px 7px;font-size:.7rem;">{{ members.count }}</span></div>
+        {% if join_requests %}
+        <div class="cs-tab" onclick="switchTab('requests', this)"><svg class="bi bi-person-plus" aria-hidden="true"><use href="#bi-person-plus"></use></svg> درخواست‌ها <span style="background:rgba(239,68,68,0.2);border-radius:50px;padding:1px 7px;font-size:.7rem;color:#f87171;">{{ join_requests.count }}</span></div>
+        {% endif %}
+    </div>
+
+    <!-- ═══ TAB: General Settings ═══ -->
+    <div class="cs-panel active" id="panel-general">
+
+        <!-- Info -->
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-pencil-square" aria-hidden="true"><use href="#bi-pencil-square"></use></svg> اطلاعات کانال</div>
+            <div class="cs-field">
+                <label class="cs-label">نام کانال</label>
+                <input type="text" class="cs-input" id="ch-name" value="{{ channel.name }}">
+            </div>
+            <div class="cs-field">
+                <label class="cs-label">توضیحات</label>
+                <textarea class="cs-input" id="ch-desc">{{ channel.description }}</textarea>
+            </div>
+            <div class="cs-field">
+                <label class="cs-label">آیکون (آپلود تصویر)</label>
+                <input type="file" id="ch-icon" accept="image/*" style="background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);padding:10px;border-radius:10px;width:100%;box-sizing:border-box;color:rgba(255,255,255,0.4);cursor:pointer;">
+            </div>
+        </div>
+
+        <!-- Access -->
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-shield-lock" aria-hidden="true"><use href="#bi-shield-lock"></use></svg> دسترسی و حریم خصوصی</div>
+            <div class="cs-toggle-row">
+                <div>
+                    <div class="cs-toggle-label">کانال عمومی</div>
+                    <div class="cs-toggle-desc">همه می‌توانند کانال را پیدا و عضو شوند</div>
+                </div>
+                <label class="cs-toggle">
+                    <input type="checkbox" id="ch-public" {% if channel.is_public %}checked{% endif %}>
+                    <span class="cs-toggle-slider"></span>
+                </label>
+            </div>
+            <div class="cs-toggle-row">
+                <div>
+                    <div class="cs-toggle-label">درخواست عضویت نیاز به تایید دارد</div>
+                    <div class="cs-toggle-desc">اعضای جدید باید توسط ادمین تایید شوند</div>
+                </div>
+                <label class="cs-toggle">
+                    <input type="checkbox" id="ch-approval" {% if channel.require_approval %}checked{% endif %}>
+                    <span class="cs-toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Posts -->
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> تنظیمات پست</div>
+            <div class="cs-toggle-row">
+                <div>
+                    <div class="cs-toggle-label">نمایش نام نویسنده</div>
+                    <div class="cs-toggle-desc">نام کسی که پست می‌زند در زیر پست نشان داده شود</div>
+                </div>
+                <label class="cs-toggle">
+                    <input type="checkbox" id="ch-author" {% if channel.show_author %}checked{% endif %}>
+                    <span class="cs-toggle-slider"></span>
+                </label>
+            </div>
+            <div class="cs-toggle-row">
+                <div>
+                    <div class="cs-toggle-label">ری‌اکشن فعال</div>
+                    <div class="cs-toggle-desc">مشترکین می‌توانند به پست‌ها ری‌اکشن بدهند</div>
+                </div>
+                <label class="cs-toggle">
+                    <input type="checkbox" id="ch-reactions" {% if channel.reactions_enabled %}checked{% endif %}>
+                    <span class="cs-toggle-slider"></span>
+                </label>
+            </div>
+            <div class="cs-toggle-row">
+                <div>
+                    <div class="cs-toggle-label">کامنت فعال</div>
+                    <div class="cs-toggle-desc">مشترکین می‌توانند زیر پست‌ها کامنت بزنند</div>
+                </div>
+                <label class="cs-toggle">
+                    <input type="checkbox" id="ch-comments" {% if channel.comments_enabled %}checked{% endif %}>
+                    <span class="cs-toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Linked Group -->
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-link-45deg" aria-hidden="true"><use href="#bi-link-45deg"></use></svg> اتصال به گروه</div>
+            <p style="font-size:.8rem;color:rgba(255,255,255,0.4);margin:0 0 12px;">با اتصال کانال به گروه، مشترکین می‌توانند روی پست‌ها کامنت بزنند</p>
+            <div class="cs-field">
+                <label class="cs-label">انتخاب گروه</label>
+                <select class="cs-input" id="ch-group">
+                    <option value="">— بدون گروه —</option>
+                    {% for g in my_groups %}
+                    <option value="{{ g.id }}" {% if channel.linked_group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="cs-save-btn" onclick="saveSettings()">
+                <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> ذخیره تنظیمات
+            </button>
+            <a href="{% url 'community:channel_view' channel.username %}"
+               style="padding:11px 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:.85rem;font-weight:700;text-decoration:none;transition:all .2s;background:rgba(255,255,255,0.03);display:flex;align-items:center;gap:6px;"
+               onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.25)'"
+               onmouseout="this.style.color='rgba(255,255,255,0.4)';this.style.borderColor='rgba(255,255,255,0.1)'">
+                <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg> بازگشت
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══ TAB: Members ═══ -->
+    <div class="cs-panel" id="panel-members">
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> لیست اعضا</div>
+            {% for m in members %}
+            <div class="cs-member-row" id="mr-{{ m.user.username }}">
+                <div class="cs-member-av">
+                    {% if m.user.gamer_profile.avatar %}
+                    <img src="{{ m.user.gamer_profile.avatar.url }}">
+                    {% else %}{{ m.user.username|first|upper }}{% endif %}
+                </div>
+                <div class="cs-member-name">
+                    <a href="{% url 'community:profile' m.user.username %}" style="color:inherit;text-decoration:none;">{{ m.user.username }}</a>
+                </div>
+                <span class="cs-role-badge {{ m.role }}">{{ m.get_role_display }}</span>
+                {% if m.role != 'owner' %}
+                <div class="cs-member-actions">
+                    {% if m.role == 'subscriber' %}
+                    <button class="cs-action-btn promote" onclick="memberAction('promote','{{ m.user.username }}',this)">
+                        <svg class="bi bi-arrow-up-circle" aria-hidden="true"><use href="#bi-arrow-up-circle"></use></svg> ادمین
+                    </button>
+                    {% else %}
+                    <button class="cs-action-btn demote" onclick="memberAction('demote','{{ m.user.username }}',this)">
+                        <svg class="bi bi-arrow-down-circle" aria-hidden="true"><use href="#bi-arrow-down-circle"></use></svg> کاهش رتبه
+                    </button>
+                    {% endif %}
+                    <button class="cs-action-btn remove" onclick="memberAction('remove_member','{{ m.user.username }}',this)">
+                        <svg class="bi bi-x-circle" aria-hidden="true"><use href="#bi-x-circle"></use></svg> حذف
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ═══ TAB: Join Requests ═══ -->
+    {% if join_requests %}
+    <div class="cs-panel" id="panel-requests">
+        <div class="cs-section">
+            <div class="cs-section-title"><svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> درخواست‌های عضویت</div>
+            {% for jr in join_requests %}
+            <div class="cs-jr-row" id="jr-{{ jr.id }}">
+                <div class="cs-member-av">
+                    {% if jr.user.gamer_profile.avatar %}
+                    <img src="{{ jr.user.gamer_profile.avatar.url }}">
+                    {% else %}{{ jr.user.username|first|upper }}{% endif %}
+                </div>
+                <div class="cs-member-name">{{ jr.user.username }}</div>
+                <div style="font-size:.72rem;color:rgba(255,255,255,0.3);">{{ jr.created_at|timesince }} پیش</div>
+                <div class="cs-jr-actions">
+                    <button class="cs-jr-accept" onclick="respondJoin({{ jr.id }}, 'accept', this)">
+                        <svg class="bi bi-check-lg me-1" aria-hidden="true"><use href="#bi-check-lg"></use></svg>تایید
+                    </button>
+                    <button class="cs-jr-reject" onclick="respondJoin({{ jr.id }}, 'reject', this)">
+                        <svg class="bi bi-x-lg me-1" aria-hidden="true"><use href="#bi-x-lg"></use></svg>رد
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<div class="cs-toast" id="csToast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+const CH_USER = '{{ channel.username }}';
+
+function showToast(msg, err=false) {
+    const t = document.getElementById('csToast');
+    t.textContent = msg;
+    t.style.background = err ? 'linear-gradient(135deg,#7f1d1d,#ef4444)' : 'linear-gradient(135deg,#047857,#059669)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function switchTab(name, el) {
+    document.querySelectorAll('.cs-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.cs-panel').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-'+name).classList.add('active');
+}
+
+function saveSettings() {
+    const fd = new FormData();
+    fd.append('action', 'save');
+    fd.append('name', document.getElementById('ch-name').value);
+    fd.append('description', document.getElementById('ch-desc').value);
+    fd.append('linked_group', document.getElementById('ch-group').value);
+    if (document.getElementById('ch-public').checked)    fd.append('is_public', 'on');
+    if (document.getElementById('ch-approval').checked)  fd.append('require_approval', 'on');
+    if (document.getElementById('ch-author').checked)    fd.append('show_author', 'on');
+    if (document.getElementById('ch-reactions').checked) fd.append('reactions_enabled', 'on');
+    if (document.getElementById('ch-comments').checked)  fd.append('comments_enabled', 'on');
+    const iconFile = document.getElementById('ch-icon').files[0];
+    if (iconFile) fd.append('icon', iconFile);
+
+    fetch(`/channels/${CH_USER}/settings/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    }).then(r=>r.json()).then(d => {
+        if (d.ok) {
+            showToast(d.msg || 'ذخیره شد ✓');
+            setTimeout(() => {
+                window.location.href = `/channels/${CH_USER}/`;
+            }, 900);
+        } else {
+            showToast('خطا در ذخیره', true);
+        }
+    }).catch(() => showToast('خطا در ارتباط', true));
+}
+
+function memberAction(action, username, btn) {
+    const fd = new FormData();
+    fd.append('action', action);
+    fd.append('username', username);
+    fetch(`/channels/${CH_USER}/settings/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    }).then(r=>r.json()).then(d => {
+        if (!d.ok) return showToast('خطا', true);
+        if (action === 'remove_member') {
+            const row = document.getElementById('mr-' + username);
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            row.style.transition = 'all .3s';
+            setTimeout(() => row.remove(), 300);
+            showToast('عضو حذف شد');
+        } else if (action === 'promote') {
+            showToast(username + ' ادمین شد ⚡');
+            setTimeout(() => location.reload(), 900);
+        } else {
+            showToast('رتبه کاهش یافت');
+            setTimeout(() => location.reload(), 900);
+        }
+    });
+}
+
+function respondJoin(requestId, response, btn) {
+    const fd = new FormData();
+    fd.append('action', 'respond_join');
+    fd.append('request_id', requestId);
+    fd.append('response', response);
+    fetch(`/channels/${CH_USER}/settings/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    }).then(r=>r.json()).then(d => {
+        if (!d.ok) return;
+        const row = document.getElementById('jr-' + requestId);
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+        showToast(response === 'accept' ? 'درخواست تایید شد ✓' : 'درخواست رد شد');
+    });
+}
+</script>
+{% endblock %}

@@ -8,6 +8,29 @@ from datetime import timedelta
 from .models import Subscription, UserProfile
 from django.urls import reverse
 
+def _get_community_data(user):
+    """اطلاعات community کاربر را برای داشبورد account برمی‌گردونه"""
+    try:
+        from community.models import GamerProfile, Post, PostLike, Follow
+        profile = GamerProfile.objects.filter(user=user).first()
+        posts = Post.objects.filter(author=user).select_related(
+            'author__gamer_profile'
+        ).prefetch_related('likes', 'comments').order_by('-created_at')[:12]
+        liked_ids = set(PostLike.objects.filter(user=user).values_list('post_id', flat=True))
+        followers_count  = Follow.objects.filter(following=user).count()
+        following_count  = Follow.objects.filter(follower=user).count()
+        posts_count      = Post.objects.filter(author=user).count()
+        return {
+            'gamer_profile': profile,
+            'recent_posts': posts,
+            'liked_ids': liked_ids,
+            'followers_count': followers_count,
+            'following_count': following_count,
+            'posts_count': posts_count,
+        }
+    except Exception:
+        return {}
+
 
 def home(request):
     """صفحه اصلی سایت"""
@@ -31,6 +54,7 @@ def register(request):
 
 def user_login(request):
     """ورود کاربر"""
+    next_url = request.POST.get('next') or request.GET.get('next', '')
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -39,10 +63,13 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                from django.utils.http import url_has_allowed_host_and_scheme
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                    return redirect(next_url)
                 return redirect(reverse('community:feed'))
     else:
         form = AuthenticationForm()
-    return render(request, 'account/login.html', {'form': form})
+    return render(request, 'account/login.html', {'form': form, 'next': next_url})
 
 
 def user_logout(request):
@@ -60,7 +87,8 @@ def dashboard(request):
     context = {
         'user_subscriptions': user_subscriptions,
         'gamenet_subscription': gamenet_subscription,
-        'has_active_gamenet': gamenet_subscription and not gamenet_subscription.is_expired
+        'has_active_gamenet': gamenet_subscription and not gamenet_subscription.is_expired,
+        **_get_community_data(request.user),
     }
     return render(request, 'account/dashboard.html', context)
 

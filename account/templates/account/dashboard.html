@@ -1,214 +1,356 @@
 {% extends 'account/base.html' %}
-
+{% load static %}
 {% block title %}داشبورد - GameBeat{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-12">
-            <div class="dashboard-header mb-5">
-                <h1 class="display-4 fw-bold text-center">
-                    <i class="bi bi-grid-fill"></i> 
-                    داشبورد کاربری
-                </h1>
-                <p class="lead text-center" style="color: var(--text-muted);">
-                    خوش آمدید {{ user.first_name|default:user.username }}! از خدمات گیمینگ ما استفاده کنید
-                </p>
+<style>
+.db-wrap {
+    max-width: 960px; margin: 0 auto;
+    padding: 36px 20px 80px;
+    direction: rtl;
+}
+
+/* ── Profile Card ── */
+.db-profile-card {
+    background: linear-gradient(145deg, #0f0f24, #12122a);
+    border: 1px solid rgba(139,92,246,.2);
+    border-radius: 22px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.db-profile-banner {
+    height: 110px;
+    background: linear-gradient(135deg,#0d0022,#1e0035,#08001a);
+    position: relative; overflow: hidden;
+}
+.db-profile-banner img {
+    width: 100%; height: 100%; object-fit: cover; opacity: .7;
+}
+.db-profile-body {
+    padding: 0 24px 22px;
+    display: flex; align-items: flex-end; gap: 18px;
+    flex-wrap: wrap;
+}
+.db-avatar-wrap {
+    margin-top: -36px; flex-shrink: 0;
+}
+.db-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid #0f0f24;
+    object-fit: cover;
+}
+.db-avatar-ph {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid #0f0f24;
+    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 800; color: #fff;
+}
+.db-profile-info { flex: 1; min-width: 0; padding-top: 10px; }
+.db-profile-name {
+    font-size: 1rem; font-weight: 800; color: #e0e0f5; margin-bottom: 2px;
+}
+.db-profile-username { font-size: .8rem; color: rgba(255,255,255,.35); }
+.db-profile-bio {
+    font-size: .8rem; color: rgba(255,255,255,.4);
+    margin-top: 5px; line-height: 1.5;
+}
+.db-profile-stats {
+    display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap;
+}
+.db-stat { text-align: center; }
+.db-stat-num { font-size: 1.05rem; font-weight: 800; color: #c4b5fd; }
+.db-stat-lbl { font-size: .7rem; color: rgba(255,255,255,.3); }
+.db-profile-actions {
+    display: flex; gap: 8px; align-items: flex-end; padding-top: 10px; flex-shrink: 0;
+}
+.db-btn {
+    padding: 7px 16px; border-radius: 10px; font-size: .82rem; font-weight: 700;
+    text-decoration: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: all .18s;
+}
+.db-btn-primary {
+    background: linear-gradient(135deg,#6d28d9,#8b5cf6);
+    color: #fff; box-shadow: 0 4px 14px rgba(139,92,246,.35);
+}
+.db-btn-primary:hover { box-shadow: 0 6px 20px rgba(139,92,246,.5); color: #fff; }
+.db-btn-outline {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.6);
+}
+.db-btn-outline:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+/* ── Grid ── */
+.db-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+}
+@media (max-width: 768px) {
+    .db-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Posts Column ── */
+.db-posts-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+}
+.db-posts-title {
+    font-size: .85rem; font-weight: 800; color: rgba(255,255,255,.5);
+    letter-spacing: .06em; text-transform: uppercase;
+}
+
+.db-post {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px; padding: 16px 18px;
+    margin-bottom: 12px;
+    transition: border-color .15s;
+}
+.db-post:hover { border-color: rgba(139,92,246,.2); }
+.db-post-text {
+    font-size: .88rem; color: #d0d0e8; line-height: 1.6;
+    margin-bottom: 12px; word-break: break-word;
+}
+.db-post-text img { max-width: 100%; border-radius: 10px; margin-top: 8px; }
+.db-post-footer {
+    display: flex; align-items: center; gap: 14px;
+}
+.db-post-time { font-size: .73rem; color: rgba(255,255,255,.25); flex: 1; }
+.db-like-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,.35); font-size: .82rem; font-weight: 700;
+    padding: 5px 10px; border-radius: 8px;
+    transition: all .15s;
+}
+.db-like-btn:hover { background: rgba(251,113,133,.1); color: #fb7185; }
+.db-like-btn.liked { color: #fb7185; }
+.db-like-btn i { font-size: .95rem; }
+.db-comment-btn {
+    display: flex; align-items: center; gap: 5px;
+    color: rgba(255,255,255,.25); font-size: .82rem;
+    text-decoration: none;
+    padding: 5px 10px; border-radius: 8px;
+    transition: all .15s;
+}
+.db-comment-btn:hover { background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); }
+
+/* ── Sidebar ── */
+.db-sidebar {}
+.db-side-card {
+    background: linear-gradient(145deg, #0f0f24, #12122a);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 18px; padding: 20px;
+    margin-bottom: 16px;
+}
+.db-side-title {
+    font-size: .78rem; font-weight: 800;
+    color: rgba(255,255,255,.3);
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 14px;
+}
+.db-service-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 12px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    margin-bottom: 8px; text-decoration: none;
+    transition: all .15s;
+}
+.db-service-item:hover { border-color: rgba(139,92,246,.25); background: rgba(139,92,246,.06); }
+.db-service-ico {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.25);
+}
+.db-service-name { font-size: .85rem; font-weight: 700; color: #d0d0e8; }
+.db-service-sub  { font-size: .72rem; color: rgba(255,255,255,.3); margin-top: 1px; }
+.db-service-badge {
+    margin-right: auto; padding: 3px 9px; border-radius: 20px; font-size: .68rem; font-weight: 800;
+}
+.badge-active { background: rgba(52,211,153,.1); color: #34d399; border: 1px solid rgba(52,211,153,.2); }
+.badge-buy    { background: rgba(139,92,246,.1); color: #a78bfa; border: 1px solid rgba(139,92,246,.2); }
+.badge-soon   { background: rgba(255,255,255,.05); color: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.08); }
+
+.db-empty {
+    text-align: center; padding: 40px 20px;
+    color: rgba(255,255,255,.2); font-size: .85rem;
+}
+.db-empty i { font-size: 2rem; display: block; margin-bottom: 10px; opacity: .3; }
+</style>
+
+<div class="db-wrap">
+
+    <!-- ── Profile Card ── -->
+    <div class="db-profile-card">
+        <div class="db-profile-banner">
+            {% if gamer_profile and gamer_profile.banner %}
+                <img src="{{ gamer_profile.banner.url }}" alt="">
+            {% endif %}
+        </div>
+        <div class="db-profile-body">
+            <div class="db-avatar-wrap">
+                {% if gamer_profile and gamer_profile.avatar %}
+                    <img src="{{ gamer_profile.avatar.url }}" class="db-avatar" alt="">
+                {% else %}
+                    <div class="db-avatar-ph">{{ user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="db-profile-info">
+                <div class="db-profile-name">{{ user.get_full_name|default:user.username }}</div>
+                <div class="db-profile-username">@{{ user.username }}</div>
+                {% if gamer_profile and gamer_profile.bio %}
+                    <div class="db-profile-bio">{{ gamer_profile.bio|truncatechars:80 }}</div>
+                {% endif %}
+                <div class="db-profile-stats">
+                    <div class="db-stat">
+                        <div class="db-stat-num">{{ posts_count|default:0 }}</div>
+                        <div class="db-stat-lbl">پست</div>
+                    </div>
+                    <div class="db-stat">
+                        <div class="db-stat-num">{{ followers_count|default:0 }}</div>
+                        <div class="db-stat-lbl">فالوور</div>
+                    </div>
+                    <div class="db-stat">
+                        <div class="db-stat-num">{{ following_count|default:0 }}</div>
+                        <div class="db-stat-lbl">دنبال‌شده</div>
+                    </div>
+                </div>
+            </div>
+            <div class="db-profile-actions">
+                <a href="{% url 'community:profile' username=user.username %}" class="db-btn db-btn-primary">
+                    <svg class="bi bi-person-fill" aria-hidden="true"><use href="#bi-person-fill"></use></svg> مشاهده پروفایل
+                </a>
+                <a href="{% url 'community:edit_profile' %}" class="db-btn db-btn-outline">
+                    <svg class="bi bi-pencil" aria-hidden="true"><use href="#bi-pencil"></use></svg> ویرایش
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mb-5">
-        <!-- GameNet Service Card -->
-        <div class="col-md-6 col-xl-4">
-            <div class="service-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="service-icon mb-3">
-                        <i class="bi bi-joystick"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">گیم‌نت</h5>
-                    <p class="card-text" style="color: var(--text-muted);">
-                        مدیریت کامل بازی‌ها، دستگاه‌ها و جلسات بازی
-                    </p>
-                    
-                    {% if has_active_gamenet %}
-                        <div class="subscription-badge mb-3">
-                            <i class="bi bi-check-circle"></i> اشتراک فعال
-                        </div>
-                        <p class="small" style="color: var(--text-muted);">
-                            تا {{ gamenet_subscription.end_date|date:"Y/m/d" }}
-                        </p>
-                        <a href="{% url 'gamenet:dashboard' %}" class="btn btn-primary btn-lg w-100">
-                            <i class="bi bi-arrow-left-circle"></i> ورود به گیم‌نت
-                        </a>
-                    {% else %}
-                        <a href="{% url 'account:purchase_subscription' service_type='gamenet' %}" class="btn btn-primary btn-lg w-100">
-                            <i class="bi bi-cart-plus"></i> خرید اشتراک
-                        </a>
+    <div class="db-grid">
+
+        <!-- ── Posts ── -->
+        <div>
+            <div class="db-posts-head">
+                <div class="db-posts-title">پست‌های اخیر</div>
+                <a href="{% url 'community:feed' %}" class="db-btn db-btn-outline" style="font-size:.78rem;padding:5px 12px;">
+                    فید کامل <svg class="bi bi-arrow-left" aria-hidden="true"><use href="#bi-arrow-left"></use></svg>
+                </a>
+            </div>
+
+            {% if recent_posts %}
+                {% for post in recent_posts %}
+                <div class="db-post" id="dp-{{ post.id }}">
+                    <div class="db-post-text">{{ post.content|truncatechars:200 }}</div>
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" style="max-width:100%;border-radius:10px;margin-bottom:10px;">
                     {% endif %}
+                    <div class="db-post-footer">
+                        <span class="db-post-time">{{ post.created_at|timesince }} پیش</span>
+                        <a href="{% url 'community:profile' username=user.username %}" class="db-comment-btn">
+                            <svg class="bi bi-chat" aria-hidden="true"><use href="#bi-chat"></use></svg> {{ post.comments.count }}
+                        </a>
+                        <button class="db-like-btn {% if post.id in liked_ids %}liked{% endif %}"
+                                onclick="dbLike({{ post.id }}, this)"
+                                data-liked="{% if post.id in liked_ids %}1{% else %}0{% endif %}">
+                            <svg class="bi bi-heart{% if post.id in liked_ids %}-fill{% endif %}" aria-hidden="true"><use href="#bi-heart"></use></svg>
+                            <span>{{ post.likes_count }}</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+                {% endfor %}
+            {% else %}
+                <div class="db-empty">
+                    <svg class="bi bi-pencil-square" aria-hidden="true"><use href="#bi-pencil-square"></use></svg>
+                    هنوز پستی نگذاشتی
+                </div>
+            {% endif %}
         </div>
 
-        <!-- Future Service Placeholder -->
-        <div class="col-md-6 col-xl-4">
-            <div class="future-service-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="service-icon mb-3">
-                        <i class="bi bi-hourglass-split"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">خدمت جدید</h5>
-                    <p class="card-text" style="color: var(--text-muted);">
-                        بزودی خدمات جدید گیمینگ اضافه خواهد شد
-                    </p>
-                    <button class="btn btn-outline-secondary btn-lg w-100" disabled>
-                        <i class="bi bi-clock"></i> بزودی
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- ── Sidebar ── -->
+        <div class="db-sidebar">
 
-        <!-- Future Service Placeholder -->
-        <div class="col-md-6 col-xl-4">
-            <div class="future-service-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="service-icon mb-3">
-                        <i class="bi bi-hourglass-split"></i>
+            <!-- Services -->
+            <div class="db-side-card">
+                <div class="db-side-title">خدمات</div>
+
+                {% if has_active_gamenet %}
+                <a href="{% url 'gamenet:dashboard' %}" class="db-service-item">
+                    <div class="db-service-ico"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></div>
+                    <div>
+                        <div class="db-service-name">گیم‌نت</div>
+                        <div class="db-service-sub">تا {{ gamenet_subscription.end_date|date:"Y/m/d" }}</div>
                     </div>
-                    <h5 class="card-title fw-bold">خدمت جدید</h5>
-                    <p class="card-text" style="color: var(--text-muted);">
-                        بزودی خدمات جدید گیمینگ اضافه خواهد شد
-                    </p>
-                    <button class="btn btn-outline-secondary btn-lg w-100" disabled>
-                        <i class="bi bi-clock"></i> بزودی
-                    </button>
+                    <span class="db-service-badge badge-active">فعال</span>
+                </a>
+                {% else %}
+                <a href="{% url 'account:purchase_subscription' service_type='gamenet' %}" class="db-service-item">
+                    <div class="db-service-ico"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></div>
+                    <div>
+                        <div class="db-service-name">گیم‌نت</div>
+                        <div class="db-service-sub">مدیریت بازی‌ها</div>
+                    </div>
+                    <span class="db-service-badge badge-buy">خرید</span>
+                </a>
+                {% endif %}
+
+                <div class="db-service-item" style="opacity:.45;cursor:default;">
+                    <div class="db-service-ico" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">⏳</div>
+                    <div>
+                        <div class="db-service-name" style="color:rgba(255,255,255,.4);">خدمت جدید</div>
+                        <div class="db-service-sub">به‌زودی</div>
+                    </div>
+                    <span class="db-service-badge badge-soon">بزودی</span>
                 </div>
             </div>
+
+            <!-- Quick Links -->
+            <div class="db-side-card">
+                <div class="db-side-title">دسترسی سریع</div>
+                <a href="{% url 'community:feed' %}" class="db-service-item">
+                    <div class="db-service-ico" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.22);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg></div>
+                    <div><div class="db-service-name">فید اصلی</div></div>
+                </a>
+                <a href="{% url 'community:inbox' %}" class="db-service-item">
+                    <div class="db-service-ico" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.2);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/></svg></div>
+                    <div><div class="db-service-name">پیام‌ها</div></div>
+                </a>
+                <a href="{% url 'community:notifications' %}" class="db-service-item">
+                    <div class="db-service-ico" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.2);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6a5 5 0 0 1 10 0c0 .88.32 4.2 1.22 6"/></svg></div>
+                    <div><div class="db-service-name">اعلان‌ها</div></div>
+                </a>
+                <a href="{% url 'community:settings' %}" class="db-service-item">
+                    <div class="db-service-ico" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.22);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg></div>
+                    <div><div class="db-service-name">تنظیمات</div></div>
+                </a>
+            </div>
+
         </div>
     </div>
-
-    {% if user_subscriptions %}
-    <div class="row">
-        <div class="col-12">
-            <div class="main-container p-4">
-                <h3 class="mb-4 fw-bold">
-                    <i class="bi bi-list-check"></i> اشتراک‌های من
-                </h3>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>خدمت</th>
-                                <th>مدت اشتراک</th>
-                                <th>تاریخ شروع</th>
-                                <th>تاریخ پایان</th>
-                                <th>وضعیت</th>
-                                <th>عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for subscription in user_subscriptions %}
-                            <tr>
-                                <td>
-                                    <i class="bi bi-joystick text-primary"></i>
-                                    {{ subscription.get_service_type_display }}
-                                </td>
-                                <td>{{ subscription.get_duration_display }}</td>
-                                <td>{{ subscription.start_date|date:"Y/m/d" }}</td>
-                                <td>{{ subscription.end_date|date:"Y/m/d" }}</td>
-                                <td>
-                                    {% if subscription.is_expired %}
-                                        <span class="badge bg-danger">منقضی شده</span>
-                                    {% elif subscription.is_active %}
-                                        <span class="badge bg-success">فعال</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">غیرفعال</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if subscription.service_type == 'gamenet' and not subscription.is_expired and subscription.is_active %}
-                                        <a href="{% url 'gamenet:dashboard' %}" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-arrow-right-circle"></i> ورود
-                                        </a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
-<style>
-.dashboard-header {
-    position: relative;
-    text-align: center;
-    padding: 40px 0;
-}
+<script>
+const DB_CSRF = '{{ csrf_token }}';
 
-.service-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    overflow: hidden;
+function dbLike(postId, btn) {
+    const isLiked = btn.dataset.liked === '1';
+    fetch(`/post/${postId}/like/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': DB_CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(d => {
+        btn.dataset.liked = d.liked ? '1' : '0';
+        btn.classList.toggle('liked', d.liked);
+        btn.querySelector('i').className = d.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+        btn.querySelector('span').textContent = d.count;
+    })
+    .catch(() => {});
 }
-
-.service-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
-    border-color: var(--primary-purple);
-}
-
-.future-service-card {
-    background: var(--darker-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    opacity: 0.7;
-}
-
-.service-icon {
-    font-size: 4rem;
-    color: var(--primary-purple);
-}
-
-.future-service-card .service-icon {
-    color: var(--text-muted);
-}
-
-.table-dark {
-    background-color: var(--darker-bg);
-    border-color: var(--border-color);
-}
-
-.table-dark th {
-    background-color: var(--card-bg);
-    border-color: var(--border-color);
-    color: var(--text-light);
-}
-
-.table-dark td {
-    border-color: var(--border-color);
-    color: var(--text-light);
-}
-
-.table-hover tbody tr:hover {
-    background-color: var(--card-hover);
-}
-
-.btn-outline-secondary {
-    border-color: var(--border-color);
-    color: var(--text-muted);
-}
-
-.btn-outline-secondary:disabled {
-    opacity: 0.5;
-}
-</style>
+</script>
 {% endblock %}

@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+
+    <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#200404"/>
+      <stop offset="100%" stop-color="#050000"/>
+    </radialGradient>
+
+    <linearGradient id="ecgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#dc2626" stop-opacity="0"/>
+      <stop offset="12%"  stop-color="#dc2626"/>
+      <stop offset="44%"  stop-color="#fca5a5"/>
+      <stop offset="56%"  stop-color="#fca5a5"/>
+      <stop offset="88%"  stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="ecgGlow" x="-20%" y="-300%" width="140%" height="800%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="dotGlow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="4.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="textGlow" x="-8%" y="-50%" width="116%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+  </defs>
+
+  <!-- ── Background ── -->
+  <rect width="400" height="400" rx="32" fill="url(#bg)"/>
+  <rect width="400" height="400" rx="32" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-opacity="0.42"/>
+  <rect x="8" y="8" width="384" height="384" rx="26" fill="none" stroke="#dc2626" stroke-width="0.5" stroke-opacity="0.12"/>
+
+  <!-- ── Corner pixel-grid dots ── -->
+  <g fill="#ef4444" opacity="0.22">
+    <circle cx="26" cy="24" r="2.5"/><circle cx="38" cy="24" r="2.5"/><circle cx="50" cy="24" r="2.5"/>
+    <circle cx="26" cy="36" r="2.5"/><circle cx="38" cy="36" r="2.5"/><circle cx="50" cy="36" r="2.5"/>
+    <circle cx="350" cy="24" r="2.5"/><circle cx="362" cy="24" r="2.5"/><circle cx="374" cy="24" r="2.5"/>
+    <circle cx="350" cy="36" r="2.5"/><circle cx="362" cy="36" r="2.5"/><circle cx="374" cy="36" r="2.5"/>
+    <circle cx="26" cy="364" r="2.5"/><circle cx="38" cy="364" r="2.5"/><circle cx="50" cy="364" r="2.5"/>
+    <circle cx="26" cy="376" r="2.5"/><circle cx="38" cy="376" r="2.5"/><circle cx="50" cy="376" r="2.5"/>
+    <circle cx="350" cy="364" r="2.5"/><circle cx="362" cy="364" r="2.5"/><circle cx="374" cy="364" r="2.5"/>
+    <circle cx="350" cy="376" r="2.5"/><circle cx="362" cy="376" r="2.5"/><circle cx="374" cy="376" r="2.5"/>
+  </g>
+
+  <!-- ══════════════════════════════════
+       2D FLAT WHITE CONTROLLER
+       Body: x=78-322, y=120-202
+       Grips: left x=58-146, right x=254-342, y=148-240
+  ══════════════════════════════════ -->
+
+  <!-- Shoulder buttons -->
+  <rect x="70"  y="105" width="66" height="20" rx="10" fill="#e8e8f2"/>
+  <rect x="264" y="105" width="66" height="20" rx="10" fill="#e8e8f2"/>
+
+  <!-- Grip areas (slightly darker for flat depth) -->
+  <rect x="58"  y="148" width="86" height="92" rx="16" fill="#dcdce8"/>
+  <rect x="256" y="148" width="86" height="92" rx="16" fill="#dcdce8"/>
+
+  <!-- Main body (top layer, lighter) -->
+  <rect x="78"  y="120" width="244" height="82" rx="18" fill="#f0f0f8"/>
+
+  <!-- Shoulder L/R labels -->
+  <text x="103" y="119" text-anchor="middle" fill="#1a1a2e"
+        font-size="11" font-weight="900"
+        font-family="Impact,'Arial Black',sans-serif">L</text>
+  <text x="297" y="119" text-anchor="middle" fill="#1a1a2e"
+        font-size="11" font-weight="900"
+        font-family="Impact,'Arial Black',sans-serif">R</text>
+
+  <!-- ── D-pad (center x=112, y=168) ── -->
+  <rect x="93"  y="164" width="38" height="8" rx="2" fill="#1a1a2e"/>
+  <rect x="108" y="149" width="8"  height="38" rx="2" fill="#1a1a2e"/>
+  <!-- D-pad center highlight -->
+  <rect x="108" y="164" width="8" height="8" rx="1" fill="#2e2e44"/>
+
+  <!-- ── ABXY buttons (center x=288, y=168) ── -->
+  <!-- Y -->
+  <circle cx="288" cy="149" r="10" fill="#dc2626"/>
+  <text x="288" y="153" text-anchor="middle" fill="white"
+        font-size="10" font-weight="900" font-family="Impact,sans-serif">Y</text>
+  <!-- B -->
+  <circle cx="308" cy="169" r="10" fill="#ef4444"/>
+  <text x="308" y="173" text-anchor="middle" fill="white"
+        font-size="10" font-weight="900" font-family="Impact,sans-serif">B</text>
+  <!-- A -->
+  <circle cx="288" cy="189" r="10" fill="#dc2626"/>
+  <text x="288" y="193" text-anchor="middle" fill="white"
+        font-size="10" font-weight="900" font-family="Impact,sans-serif">A</text>
+  <!-- X -->
+  <circle cx="268" cy="169" r="10" fill="#b91c1c"/>
+  <text x="268" y="173" text-anchor="middle" fill="#fca5a5"
+        font-size="10" font-weight="900" font-family="Impact,sans-serif">X</text>
+
+  <!-- Select / Start -->
+  <rect x="164" y="165" width="20" height="8" rx="4" fill="#b0b0c8"/>
+  <rect x="216" y="165" width="20" height="8" rx="4" fill="#b0b0c8"/>
+
+  <!-- Center home button -->
+  <circle cx="200" cy="169" r="11" fill="#dcdce8"/>
+  <circle cx="200" cy="169" r="6"  fill="#c8c8dc"/>
+
+  <!-- Thumbstick pads in grips -->
+  <circle cx="101" cy="205" r="20" fill="#c8c8dc"/>
+  <circle cx="101" cy="205" r="12" fill="#b8b8cc"/>
+  <circle cx="299" cy="205" r="20" fill="#c8c8dc"/>
+  <circle cx="299" cy="205" r="12" fill="#b8b8cc"/>
+
+  <!-- ══════════════════════════════════
+       RED ECG / HEARTBEAT LINE
+       Runs across controller at y=165
+       Spike pierces upward through body
+  ══════════════════════════════════ -->
+  <path d="M 68,165
+           L 142,165
+           L 154,154 L 163,165
+           L 172,174 L 200,102 L 228,196 L 237,165
+           L 332,165"
+        stroke="url(#ecgGrad)"
+        stroke-width="3.5" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"
+        filter="url(#ecgGlow)"/>
+
+  <!-- Bright dot at ECG peak -->
+  <circle cx="200" cy="102" r="5.5" fill="#fca5a5" filter="url(#dotGlow)"/>
+
+  <!-- ── GAME text ── -->
+  <text x="200" y="308"
+        text-anchor="middle"
+        fill="#ef4444"
+        font-size="60" font-weight="900"
+        font-family="Impact,'Arial Black','Helvetica Neue',sans-serif"
+        letter-spacing="10"
+        filter="url(#textGlow)">GAME</text>
+
+  <!-- Separator -->
+  <line x1="122" y1="320" x2="278" y2="320"
+        stroke="#dc2626" stroke-width="0.8" stroke-opacity="0.3"/>
+  <circle cx="122" cy="320" r="2.5" fill="#dc2626" opacity="0.4"/>
+  <circle cx="200" cy="320" r="2"   fill="#dc2626" opacity="0.45"/>
+  <circle cx="278" cy="320" r="2.5" fill="#dc2626" opacity="0.4"/>
+
+  <!-- ── BEAT text ── -->
+  <text x="200" y="342"
+        text-anchor="middle"
+        fill="#dc2626"
+        font-size="30" font-weight="900"
+        font-family="Impact,'Arial Black',sans-serif"
+        letter-spacing="24"
+        opacity="0.82">BEAT</text>
+
+  <!-- HP bar -->
+  <g>
+    <circle cx="156" cy="366" r="5" fill="#ef4444" opacity="0.90" filter="url(#dotGlow)"/>
+    <circle cx="172" cy="366" r="5" fill="#ef4444" opacity="0.90" filter="url(#dotGlow)"/>
+    <circle cx="188" cy="366" r="5" fill="#ef4444" opacity="0.90" filter="url(#dotGlow)"/>
+    <circle cx="204" cy="366" r="5" fill="none" stroke="#dc2626" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="220" cy="366" r="5" fill="none" stroke="#dc2626" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="236" cy="366" r="5" fill="none" stroke="#dc2626" stroke-width="1.5" opacity="0.3"/>
+  </g>
+
+</svg>

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
@@ -13,6 +14,26 @@ import urllib.parse
 import os
 from .models import Game, GENRE_CHOICES, PLATFORM_CHOICES
 from community.models import Post, Comment, Hashtag, GamerProfile, PostLike, PostReaction, GameBacklog
+from community.models import Notification, Conversation, Message, ScoreSettings
+from community.models import ZarbanWallet, ZarbanTransaction
+from community.models import SpinWheel, SpinWheelItem, SpinRecord
+from community.models import PremiumPlan, PremiumSubscription
+
+
+def _int(val, default=0):
+    """تبدیل امن رشته به int — رشته خالی یا None را به default تبدیل می‌کند."""
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
+def _float(val, default=0.0):
+    """تبدیل امن رشته به float."""
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
 
 
 def _download_steam_cover(url, game_name):
@@ -161,6 +182,7 @@ def user_toggle_ban(request, user_id):
 def post_list(request):
     q = request.GET.get('q', '').strip()
     filter_type = request.GET.get('filter', 'all')
+    tab = request.GET.get('tab', 'pending')
 
     posts = Post.objects.select_related('author').annotate(
         likes_count_ann=Count('likes', distinct=True),
@@ -173,6 +195,14 @@ def post_list(request):
     if filter_type != 'all':
         posts = posts.filter(post_type=filter_type)
 
+    pending_count = posts.filter(is_approved=False).count()
+    approved_count = posts.filter(is_approved=True).count()
+
+    if tab == 'approved':
+        posts = posts.filter(is_approved=True)
+    else:
+        posts = posts.filter(is_approved=False)
+
     paginator = Paginator(posts, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -182,7 +212,19 @@ def post_list(request):
         'q': q,
         'filter_type': filter_type,
         'post_type_choices': Post.POST_TYPES,
+        'tab': tab,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def post_approve(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    post.is_approved = True
+    post.save(update_fields=['is_approved'])
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard:posts'))
 
 
 @login_required
@@ -199,11 +241,20 @@ def post_delete(request, post_id):
 @user_passes_test(is_admin)
 def comment_list(request):
     q = request.GET.get('q', '').strip()
+    tab = request.GET.get('tab', 'pending')
 
     comments = Comment.objects.select_related('post', 'author').order_by('-created_at')
 
     if q:
         comments = comments.filter(Q(content__icontains=q) | Q(author__username__icontains=q))
+
+    pending_count = comments.filter(is_approved=False).count()
+    approved_count = comments.filter(is_approved=True).count()
+
+    if tab == 'approved':
+        comments = comments.filter(is_approved=True)
+    else:
+        comments = comments.filter(is_approved=False)
 
     paginator = Paginator(comments, 20)
     page_number = request.GET.get('page')
@@ -212,7 +263,19 @@ def comment_list(request):
     return render(request, 'dashboard/comments.html', {
         'page_obj': page_obj,
         'q': q,
+        'tab': tab,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def comment_approve(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    comment.is_approved = True
+    comment.save(update_fields=['is_approved'])
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard:comments'))
 
 
 @login_required
@@ -228,16 +291,50 @@ def comment_delete(request, comment_id):
 @login_required
 @user_passes_test(is_admin)
 def hashtag_list(request):
+    # Handle inline hashtag creation (POST on the same page)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip().lstrip('#')
+        if name:
+            hashtag, created = Hashtag.objects.get_or_create(
+                name=name.lower(),
+                defaults={'is_approved': True}
+            )
+            if not created:
+                hashtag.is_approved = True
+                hashtag.save(update_fields=['is_approved'])
+        return redirect('dashboard:hashtags')
+
     q = request.GET.get('q', '').strip()
+    tab = request.GET.get('tab', 'pending')
     hashtags = Hashtag.objects.order_by('-post_count')
 
     if q:
         hashtags = hashtags.filter(name__icontains=q)
 
+    pending_count = hashtags.filter(is_approved=False).count()
+    approved_count = hashtags.filter(is_approved=True).count()
+
+    if tab == 'approved':
+        hashtags = hashtags.filter(is_approved=True)
+    else:
+        hashtags = hashtags.filter(is_approved=False)
+
     return render(request, 'dashboard/hashtags.html', {
         'hashtags': hashtags,
         'q': q,
+        'tab': tab,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def hashtag_approve(request, pk):
+    hashtag = get_object_or_404(Hashtag, pk=pk)
+    hashtag.is_approved = True
+    hashtag.save(update_fields=['is_approved'])
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard:hashtags'))
 
 
 @login_required
@@ -284,6 +381,8 @@ def game_add(request):
         g.release_year = request.POST.get('release_year') or None
         g.description = request.POST.get('description', '')
         g.is_featured = 'is_featured' in request.POST
+        g.is_online       = 'is_online'       in request.POST
+        g.is_crack_online = 'is_crack_online' in request.POST
         g.platforms = request.POST.getlist('platforms')
         if request.FILES.get('cover'):
             g.cover = request.FILES['cover']
@@ -311,6 +410,7 @@ def game_edit(request, game_id):
         game.release_year = request.POST.get('release_year') or None
         game.description = request.POST.get('description', '')
         game.is_featured = 'is_featured' in request.POST
+        game.is_online   = 'is_online'   in request.POST
         game.platforms = request.POST.getlist('platforms')
         if request.FILES.get('cover'):
             game.cover = request.FILES['cover']
@@ -336,6 +436,30 @@ def game_delete(request, game_id):
         game.delete()
         messages.success(request, f'بازی «{name}» حذف شد.')
     return redirect('dashboard:games')
+
+
+@login_required
+@user_passes_test(is_admin)
+def game_toggle_active(request, game_id):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+    game = get_object_or_404(Game, pk=game_id)
+    game.is_active = not game.is_active
+    game.save(update_fields=['is_active'])
+    return JsonResponse({'is_active': game.is_active})
+
+
+@login_required
+@user_passes_test(is_admin)
+def game_toggle_online(request, game_id):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+    game = get_object_or_404(Game, pk=game_id)
+    game.is_online = not game.is_online
+    game.save(update_fields=['is_online'])
+    return JsonResponse({'is_online': game.is_online})
 
 
 # ─── User Detail ───────────────────────────────────────────────────────────────
@@ -394,6 +518,186 @@ def post_bulk_delete(request):
 
 @login_required
 @user_passes_test(is_admin)
+def user_search_api(request):
+    """AJAX: search users by username / email / phone — for notify autocomplete."""
+    q = request.GET.get('q', '').strip()
+    if len(q) < 1:
+        return JsonResponse({'results': []})
+
+    # phone را جدا subquery می‌کنیم تا JOIN روی gamer_profile
+    # کاربرانی که profile ندارند (مثل superuserها) را drop نکند
+    phone_ids = GamerProfile.objects.filter(
+        phone__istartswith=q
+    ).values_list('user_id', flat=True)
+
+    users = (
+        User.objects
+        .filter(is_active=True)
+        .filter(
+            Q(username__istartswith=q) |
+            Q(email__icontains=q) |
+            Q(pk__in=phone_ids)
+        )
+        .select_related('gamer_profile')
+        .distinct()[:12]
+    )
+
+    results = []
+    for u in users:
+        phone = ''
+        try:
+            phone = u.gamer_profile.phone or ''
+        except Exception:
+            pass
+        results.append({
+            'id':           u.pk,
+            'username':     u.username,
+            'email':        u.email or '',
+            'phone':        phone,
+            'initial':      u.username[0].upper() if u.username else '?',
+            'is_staff':     u.is_staff,
+            'is_superuser': u.is_superuser,
+        })
+
+    return JsonResponse({'results': results})
+
+
+@login_required
+@user_passes_test(is_admin)
+def notify_center(request):
+    """Send notification or DM to one or all users from admin panel."""
+    if request.method == 'POST':
+        target    = request.POST.get('target', '').strip()   # user id or 'all'
+        text      = request.POST.get('text', '').strip()
+        send_type = request.POST.get('send_type', 'notif')   # notif | dm | both
+
+        if not text:
+            messages.error(request, 'متن پیام خالی است.')
+            return redirect('dashboard:notify')
+
+        # Build recipient list
+        if target == 'all':
+            recipients = list(User.objects.filter(is_active=True).exclude(pk=request.user.pk))
+        else:
+            try:
+                recipients = [User.objects.get(pk=int(target))]
+            except (User.DoesNotExist, ValueError):
+                messages.error(request, 'کاربر یافت نشد.')
+                return redirect('dashboard:notify')
+
+        # پیام‌ها از طرف یوزر admin (مدیریت گیم‌بیت) ارسال میشه
+        try:
+            admin_sender = User.objects.get(username='admin')
+        except User.DoesNotExist:
+            admin_sender = request.user
+
+        sent = 0
+        for user in recipients:
+            if user == admin_sender:
+                continue
+            if send_type in ('notif', 'both'):
+                Notification.objects.create(
+                    recipient=user,
+                    sender=admin_sender,
+                    notif_type='admin',
+                    custom_text=text,
+                )
+            if send_type in ('dm', 'both'):
+                conv = (
+                    Conversation.objects
+                    .filter(participants=admin_sender)
+                    .filter(participants=user)
+                    .first()
+                )
+                if not conv:
+                    conv = Conversation.objects.create()
+                    conv.participants.add(admin_sender, user)
+                Message.objects.create(conversation=conv, sender=admin_sender, content=text)
+                conv.save()
+                Notification.objects.create(
+                    recipient=user,
+                    sender=admin_sender,
+                    notif_type='dm',
+                    custom_text=text[:100],
+                )
+            sent += 1
+
+        messages.success(request, f'پیام با موفقیت به {sent} کاربر ارسال شد.')
+        return redirect('dashboard:notify')
+
+    # GET
+    try:
+        admin_sender = User.objects.get(username='admin')
+    except User.DoesNotExist:
+        admin_sender = request.user
+    active_qs = User.objects.filter(is_active=True).exclude(pk=admin_sender.pk)
+    recent = (
+        Notification.objects
+        .filter(notif_type__in=('admin', 'dm'), sender=admin_sender)
+        .select_related('recipient', 'recipient__gamer_profile')
+        .order_by('-created_at')[:30]
+    )
+    return render(request, 'dashboard/notify.html', {
+        'total_active': active_qs.count(),
+        'total_staff':  active_qs.filter(Q(is_staff=True) | Q(is_superuser=True)).count(),
+        'recent': recent,
+        'send_types': [
+            ('notif', '🔔', 'اعلان'),
+            ('dm',    '💬', 'پیام خصوصی'),
+            ('both',  '📣', 'هر دو'),
+        ],
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def comment_reject(request, pk):
+    """Reject (delete) a comment and optionally send a message to its author."""
+    if request.method == 'POST':
+        comment   = get_object_or_404(Comment, pk=pk)
+        author    = comment.author
+        text      = request.POST.get('message', '').strip()
+        send_type = request.POST.get('send_type', '')   # notif | dm | both | ''
+
+        if text and send_type:
+            if send_type in ('notif', 'both'):
+                Notification.objects.create(
+                    recipient=author,
+                    sender=request.user,
+                    notif_type='admin',
+                    custom_text=text,
+                )
+            if send_type in ('dm', 'both'):
+                conv = (
+                    Conversation.objects
+                    .filter(participants=request.user)
+                    .filter(participants=author)
+                    .first()
+                )
+                if not conv:
+                    conv = Conversation.objects.create()
+                    conv.participants.add(request.user, author)
+                Message.objects.create(conversation=conv, sender=request.user, content=text)
+                conv.save()
+                Notification.objects.create(
+                    recipient=author,
+                    sender=request.user,
+                    notif_type='dm',
+                    custom_text=text[:100],
+                )
+
+        comment.delete()
+        msg = 'کامنت رد شد'
+        if text and send_type:
+            msg += ' و پیام ارسال شد'
+        msg += '.'
+        messages.success(request, msg)
+
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard:comments'))
+
+
+@login_required
+@user_passes_test(is_admin)
 def comment_bulk_delete(request):
     if request.method == 'POST':
         ids = request.POST.getlist('ids')
@@ -403,3 +707,376 @@ def comment_bulk_delete(request):
         else:
             messages.error(request, 'هیچ کامنتی انتخاب نشده.')
     return redirect('dashboard:comments')
+
+
+@login_required
+@user_passes_test(is_admin)
+def score_settings_view(request):
+    cfg, _ = ScoreSettings.objects.get_or_create(pk=1)
+    if request.method == 'POST':
+        try:
+            cfg.post_score        = max(0, int(request.POST.get('post_score',        cfg.post_score)))
+            cfg.comment_score     = max(0, int(request.POST.get('comment_score',     cfg.comment_score)))
+            cfg.active_day_score  = max(0, int(request.POST.get('active_day_score',  cfg.active_day_score)))
+            cfg.online_hour_score = max(0, int(request.POST.get('online_hour_score', cfg.online_hour_score)))
+            cfg.save()
+            messages.success(request, 'تنظیمات امتیاز ذخیره شد ✓')
+        except (ValueError, TypeError):
+            messages.error(request, 'مقادیر وارد شده معتبر نیستند.')
+        return redirect('dashboard:score_settings')
+    return render(request, 'dashboard/score_settings.html', {'cfg': cfg})
+
+
+# ═══════════════════════════════════════════════════════
+#  💜 مدیریت ضربان
+# ═══════════════════════════════════════════════════════
+
+@login_required
+@user_passes_test(is_admin)
+def zarban_list(request):
+    """لیست کاربران + موجودی ضربان + فرم اعطا/کسر"""
+    search = request.GET.get('q', '').strip()
+    sort   = request.GET.get('sort', 'balance')   # balance | username | date
+
+    users_qs = User.objects.select_related('zarban_wallet', 'gamer_profile').all()
+    if search:
+        users_qs = users_qs.filter(
+            Q(username__icontains=search) |
+            Q(email__icontains=search)    |
+            Q(gamer_profile__phone__icontains=search)
+        )
+
+    # Attach wallet eagerly (get_or_create for users with no wallet)
+    user_list = list(users_qs)
+    for u in user_list:
+        if not hasattr(u, 'zarban_balance'):
+            try:
+                u.zarban_balance = u.zarban_wallet.balance
+            except ZarbanWallet.DoesNotExist:
+                u.zarban_balance = 0
+
+    if sort == 'balance':
+        user_list.sort(key=lambda u: u.zarban_balance, reverse=True)
+    elif sort == 'username':
+        user_list.sort(key=lambda u: u.username.lower())
+    else:
+        user_list.sort(key=lambda u: u.date_joined, reverse=True)
+
+    paginator   = Paginator(user_list, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj    = paginator.get_page(page_number)
+
+    # Stats
+    from django.db.models import Sum
+    total_zarban = ZarbanWallet.objects.aggregate(s=Sum('balance'))['s'] or 0
+    total_tx     = ZarbanTransaction.objects.count()
+    total_wallets = ZarbanWallet.objects.count()
+
+    # Recent transactions (last 30)
+    recent_tx = ZarbanTransaction.objects.select_related(
+        'wallet__user', 'admin'
+    ).order_by('-created_at')[:30]
+
+    return render(request, 'dashboard/zarban.html', {
+        'page_obj':      page_obj,
+        'search':        search,
+        'sort':          sort,
+        'total_zarban':  total_zarban,
+        'total_tx':      total_tx,
+        'total_wallets': total_wallets,
+        'recent_tx':     recent_tx,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def zarban_manage(request, user_id):
+    """اعطا یا کسر ضربان از یک کاربر مشخص"""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'method not allowed'}, status=405)
+
+    target_user = get_object_or_404(User, pk=user_id)
+    wallet      = ZarbanWallet.get_or_create_for(target_user)
+
+    try:
+        action = request.POST.get('action')   # 'add' یا 'deduct'
+        amount = int(request.POST.get('amount', 0))
+        reason = request.POST.get('reason', '').strip()
+        notify = request.POST.get('notify') == '1'
+
+        if amount <= 0:
+            return JsonResponse({'ok': False, 'error': 'مقدار باید مثبت باشد'})
+
+        if action == 'add':
+            wallet.balance += amount
+            tx_type = ZarbanTransaction.TX_CREDIT
+        elif action == 'deduct':
+            wallet.balance = max(0, wallet.balance - amount)
+            tx_type = ZarbanTransaction.TX_DEBIT
+        else:
+            return JsonResponse({'ok': False, 'error': 'action نامعتبر'})
+
+        wallet.save()
+
+        ZarbanTransaction.objects.create(
+            wallet=wallet, amount=amount, tx_type=tx_type,
+            reason=reason, admin=request.user
+        )
+
+        # اعلان به کاربر
+        if notify:
+            if action == 'add':
+                text = f'ادمین {amount} ضربان 💜 به کیف پول شما اضافه کرد'
+                if reason:
+                    text += f' — {reason}'
+            else:
+                text = f'ادمین {amount} ضربان 💜 از کیف پول شما کسر کرد'
+                if reason:
+                    text += f' — {reason}'
+
+            Notification.objects.create(
+                recipient=target_user,
+                sender=request.user,
+                notif_type='zarban',
+                custom_text=text,
+            )
+
+        return JsonResponse({
+            'ok': True,
+            'new_balance': wallet.balance,
+            'action': action,
+            'amount': amount,
+        })
+
+    except (ValueError, TypeError) as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
+
+
+# ══════════════════════════════════════════════════════════
+#  🎰  مدیریت گردونه شانس
+# ══════════════════════════════════════════════════════════
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_list(request):
+    wheels = SpinWheel.objects.annotate(item_count=Count('items')).order_by('order', '-created_at')
+    return render(request, 'dashboard/spin_wheels.html', {'wheels': wheels})
+
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_add(request):
+    if request.method == 'POST':
+        wheel = SpinWheel()
+        wheel.name             = request.POST.get('name', '').strip()
+        wheel.description      = request.POST.get('description', '').strip()
+        wheel.cooldown_hours   = max(0, _int(request.POST.get('cooldown_hours'), 24))
+        wheel.cost_zarban      = max(0, _int(request.POST.get('cost_zarban'), 50))
+        wheel.order            = _int(request.POST.get('order'), 0)
+        wheel.is_active        = request.POST.get('is_active') == 'on'
+        wheel.save()
+        messages.success(request, f'گردونه «{wheel.name}» ساخته شد ✓')
+        return redirect('dashboard:spin_wheel_edit', wheel_id=wheel.pk)
+    return render(request, 'dashboard/spin_wheel_form.html', {'action': 'add', 'wheel': None})
+
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_edit(request, wheel_id):
+    wheel = get_object_or_404(SpinWheel, pk=wheel_id)
+    if request.method == 'POST':
+        wheel.name             = request.POST.get('name', wheel.name).strip()
+        wheel.description      = request.POST.get('description', '').strip()
+        wheel.cooldown_hours   = max(0, _int(request.POST.get('cooldown_hours'), 24))
+        wheel.cost_zarban      = max(0, _int(request.POST.get('cost_zarban'), 0))
+        wheel.order            = _int(request.POST.get('order'), 0)
+        wheel.is_active        = request.POST.get('is_active') == 'on'
+        wheel.save()
+        messages.success(request, 'تغییرات ذخیره شد ✓')
+        return redirect('dashboard:spin_wheel_edit', wheel_id=wheel.pk)
+    items = wheel.items.order_by('order', 'id')
+    total_prob = sum(i.probability for i in items if i.is_active)
+    return render(request, 'dashboard/spin_wheel_form.html', {
+        'action': 'edit', 'wheel': wheel, 'items': items,
+        'total_prob': total_prob,
+        'reward_types': SpinWheelItem.REWARD_TYPES,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_delete(request, wheel_id):
+    wheel = get_object_or_404(SpinWheel, pk=wheel_id)
+    if request.method == 'POST':
+        name = wheel.name
+        wheel.delete()
+        messages.success(request, f'گردونه «{name}» حذف شد.')
+        return redirect('dashboard:spin_wheels')
+    return render(request, 'dashboard/spin_wheel_form.html', {'action': 'delete', 'wheel': wheel})
+
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_toggle(request, wheel_id):
+    wheel = get_object_or_404(SpinWheel, pk=wheel_id)
+    wheel.is_active = not wheel.is_active
+    wheel.save()
+    return JsonResponse({'ok': True, 'is_active': wheel.is_active})
+
+
+@login_required
+@user_passes_test(is_admin)
+def spin_wheel_items(request, wheel_id):
+    """AJAX: مدیریت آیتم‌های یک گردونه (add / edit / delete)"""
+    wheel = get_object_or_404(SpinWheel, pk=wheel_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add':
+            item = SpinWheelItem(wheel=wheel)
+            item.name          = request.POST.get('name', '').strip()
+            item.probability   = _float(request.POST.get('probability'), 10)
+            item.reward_type   = request.POST.get('reward_type', SpinWheelItem.REWARD_NOTHING)
+            item.reward_amount = _int(request.POST.get('reward_amount'), 0)
+            item.color         = request.POST.get('color', '#6d28d9')
+            item.emoji         = request.POST.get('emoji', '🎁')
+            item.order         = _int(request.POST.get('order'), 0)
+            item.is_active     = True
+            item.save()
+            total = sum(i.probability for i in wheel.items.filter(is_active=True))
+            return JsonResponse({'ok': True, 'item_id': item.pk, 'total_prob': round(total, 2)})
+
+        elif action == 'edit':
+            item = get_object_or_404(SpinWheelItem, pk=request.POST.get('item_id'), wheel=wheel)
+            item.name          = request.POST.get('name', item.name).strip()
+            item.probability   = _float(request.POST.get('probability'), item.probability)
+            item.reward_type   = request.POST.get('reward_type', item.reward_type)
+            item.reward_amount = _int(request.POST.get('reward_amount'), item.reward_amount)
+            item.color         = request.POST.get('color', item.color)
+            item.emoji         = request.POST.get('emoji', item.emoji)
+            item.order         = _int(request.POST.get('order'), item.order)
+            item.is_active     = request.POST.get('is_active', 'true') == 'true'
+            item.save()
+            total = sum(i.probability for i in wheel.items.filter(is_active=True))
+            return JsonResponse({'ok': True, 'total_prob': round(total, 2)})
+
+        elif action == 'delete':
+            item = get_object_or_404(SpinWheelItem, pk=request.POST.get('item_id'), wheel=wheel)
+            item.delete()
+            total = sum(i.probability for i in wheel.items.filter(is_active=True))
+            return JsonResponse({'ok': True, 'total_prob': round(total, 2)})
+
+    return JsonResponse({'ok': False, 'error': 'invalid'}, status=400)
+
+
+@login_required
+@user_passes_test(is_admin)
+def upload_spin_icon(request):
+    if request.method != 'POST' or 'svg' not in request.FILES:
+        return JsonResponse({'ok': False, 'error': 'فایل ارسال نشد'})
+    f = request.FILES['svg']
+    if not f.name.lower().endswith('.svg') and f.content_type not in ('image/svg+xml', 'text/plain'):
+        return JsonResponse({'ok': False, 'error': 'فقط فایل SVG قبول میشه'})
+    if f.size > 200 * 1024:
+        return JsonResponse({'ok': False, 'error': 'حداکثر ۲۰۰ کیلوبایت'})
+    import uuid
+    from django.conf import settings
+    icon_dir = os.path.join(settings.MEDIA_ROOT, 'spin_icons')
+    os.makedirs(icon_dir, exist_ok=True)
+    fname = f'custom_{uuid.uuid4().hex[:8]}.svg'
+    fpath = os.path.join(icon_dir, fname)
+    with open(fpath, 'wb') as out:
+        for chunk in f.chunks():
+            out.write(chunk)
+    url = settings.MEDIA_URL + 'spin_icons/' + fname
+    return JsonResponse({'ok': True, 'url': url})
+
+
+# ═══════════════════════════════════════════════════════════════
+#  PREMIUM
+# ═══════════════════════════════════════════════════════════════
+
+@login_required
+@user_passes_test(is_admin)
+def premium_index(request):
+    plans = PremiumPlan.objects.all()
+    active_subs = PremiumSubscription.objects.filter(
+        is_active=True, end_date__gt=timezone.now()
+    ).select_related('user', 'plan').order_by('-created_at')
+    expired_subs = PremiumSubscription.objects.filter(
+        is_active=True, end_date__lte=timezone.now()
+    ).select_related('user', 'plan').order_by('-end_date')[:20]
+    return render(request, 'dashboard/premium.html', {
+        'plans': plans,
+        'active_subs': active_subs,
+        'expired_subs': expired_subs,
+        'active_count': active_subs.count(),
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def premium_plan_save(request):
+    if request.method != 'POST':
+        return redirect('dashboard:premium')
+    plan_id  = request.POST.get('plan_id')
+    plan     = get_object_or_404(PremiumPlan, pk=plan_id) if plan_id else PremiumPlan()
+    plan.name        = request.POST.get('name', '').strip()
+    plan.duration    = request.POST.get('duration', '1_month')
+    plan.price       = int(request.POST.get('price', 0) or 0)
+    plan.description = request.POST.get('description', '').strip()
+    plan.features    = request.POST.get('features', '').strip()
+    plan.is_active   = request.POST.get('is_active') == 'on'
+    plan.save()
+    messages.success(request, 'پلن ذخیره شد.')
+    return redirect('dashboard:premium')
+
+
+@login_required
+@user_passes_test(is_admin)
+def premium_plan_delete(request, plan_id):
+    plan = get_object_or_404(PremiumPlan, pk=plan_id)
+    plan.delete()
+    messages.success(request, 'پلن حذف شد.')
+    return redirect('dashboard:premium')
+
+
+@login_required
+@user_passes_test(is_admin)
+def premium_assign(request):
+    if request.method != 'POST':
+        return redirect('dashboard:premium')
+    username = request.POST.get('username', '').strip()
+    plan_id  = request.POST.get('plan_id')
+    note     = request.POST.get('note', '').strip()
+    user = User.objects.filter(username=username).first()
+    if not user:
+        messages.error(request, f'کاربر «{username}» پیدا نشد.')
+        return redirect('dashboard:premium')
+    plan  = get_object_or_404(PremiumPlan, pk=plan_id)
+    start = timezone.now()
+    end   = start + timedelta(days=plan.duration_days)
+    PremiumSubscription.objects.create(
+        user=user, plan=plan, start_date=start, end_date=end,
+        is_active=True, assigned_by=request.user, note=note
+    )
+    superuser = User.objects.filter(is_superuser=True).first()
+    if superuser:
+        Notification.objects.create(
+            recipient=user, sender=superuser,
+            notif_type='admin',
+            custom_text=f'🌟 اشتراک پریمیوم «{plan.name}» برای شما فعال شد! تا {end.strftime("%Y/%m/%d")} معتبر است.'
+        )
+    messages.success(request, f'اشتراک پریمیوم برای «{username}» فعال شد.')
+    return redirect('dashboard:premium')
+
+
+@login_required
+@user_passes_test(is_admin)
+def premium_revoke(request, sub_id):
+    sub = get_object_or_404(PremiumSubscription, pk=sub_id)
+    sub.is_active = False
+    sub.save(update_fields=['is_active'])
+    messages.success(request, f'اشتراک «{sub.user.username}» لغو شد.')
+    return redirect('dashboard:premium')

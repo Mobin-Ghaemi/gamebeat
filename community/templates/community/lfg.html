@@ -1,5 +1,5 @@
 {% extends 'community/base.html' %}
-{% block title %}LFG - جستجوی تیم | GameBeat Community{% endblock %}
+{% block title %}پیدا کردن هم‌بازی | GameBeat{% endblock %}
 {% block nav_lfg %}active{% endblock %}
 
 {% block extra_css %}
@@ -261,6 +261,301 @@
     .lfg-sidebar { position: static; }
     .form-grid-2 { grid-template-columns: 1fr; }
 }
+
+/* ── searchable game select ── */
+.gs-wrap { position: relative; }
+.gs-trigger {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-white); border-radius: 10px; padding: 10px 14px;
+    width: 100%; font-family: 'Vazirmatn', sans-serif; font-size: .9rem;
+    cursor: pointer; display: flex; justify-content: space-between;
+    align-items: center; transition: border-color .2s; box-sizing: border-box;
+    user-select: none;
+}
+.gs-trigger:hover, .gs-trigger.open {
+    border-color: var(--red-primary);
+    box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+}
+.gs-trigger .gs-ph { color: var(--text-dim); }
+.gs-trigger .gs-arrow { font-size:.72rem; opacity:.6; transition: transform .2s; }
+.gs-trigger.open .gs-arrow { transform: rotate(180deg); }
+.gs-dropdown {
+    position: absolute; top: calc(100% + 4px); right: 0; left: 0;
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 10px; z-index: 300; display: none; flex-direction: column;
+    max-height: 280px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+}
+.gs-dropdown.open { display: flex; }
+.gs-search-box {
+    padding: 8px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.gs-search-input {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text-white); padding: 7px 12px;
+    width: 100%; font-family: 'Vazirmatn', sans-serif; font-size: .85rem;
+    box-sizing: border-box; outline: none; direction: rtl;
+}
+.gs-search-input:focus { border-color: var(--red-primary); }
+.gs-list {
+    overflow-y: auto; flex: 1; margin: 0; padding: 4px 0; list-style: none;
+}
+.gs-list::-webkit-scrollbar { width: 4px; }
+.gs-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.gs-item {
+    padding: 9px 14px; cursor: pointer; font-size: .88rem;
+    color: var(--text-white); transition: background .1s; direction: rtl;
+}
+.gs-item:hover { background: rgba(139,92,246,.22); }
+.gs-item.gs-selected { color: #a855f7; font-weight: 700; }
+.gs-item.gs-hidden { display: none; }
+.gs-empty {
+    padding: 16px; text-align: center; color: var(--text-dim);
+    font-size: .83rem; display: none;
+}
+
+/* ── join row ── */
+.lfg-join-row {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.lfg-join-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: .88rem;
+    font-weight: 700;
+    transition: all .18s;
+}
+.lfg-join-btn:disabled { cursor: default; opacity: .85; }
+
+/* open / direct join */
+.lfg-btn-open {
+    background: rgba(0,212,255,.13);
+    color: var(--blue-accent);
+    border: 1px solid rgba(0,212,255,.35);
+}
+.lfg-btn-open:hover:not(:disabled) {
+    background: rgba(0,212,255,.25);
+    box-shadow: 0 0 12px rgba(0,212,255,.25);
+}
+
+/* request type */
+.lfg-btn-request {
+    background: rgba(139,92,246,.13);
+    color: #a855f7;
+    border: 1px solid rgba(139,92,246,.35);
+}
+.lfg-btn-request:hover:not(:disabled) {
+    background: rgba(139,92,246,.25);
+    box-shadow: 0 0 12px rgba(139,92,246,.2);
+}
+
+/* states */
+.lfg-btn-full    { background: rgba(255,255,255,.05); color: var(--text-dim);  border: 1px solid var(--border); }
+.lfg-btn-joined  { background: rgba(34,197,94,.12);   color: #22c55e;          border: 1px solid rgba(34,197,94,.3); }
+.lfg-btn-pending { background: rgba(251,191,36,.1);   color: #fbbf24;          border: 1px solid rgba(251,191,36,.3); }
+.lfg-btn-rejected{ background: rgba(239,68,68,.08);   color: #f87171;          border: 1px solid rgba(239,68,68,.2); }
+
+/* ── pending requests panel (owner view) ── */
+.lfg-requests-panel {
+    margin-top: 14px;
+    padding: 14px;
+    background: rgba(139,92,246,.06);
+    border: 1px solid rgba(139,92,246,.2);
+    border-radius: 12px;
+}
+.lfg-req-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #a855f7;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+.lfg-req-badge {
+    background: #a855f7;
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 800;
+    border-radius: 20px;
+    padding: 1px 8px;
+    margin-right: 2px;
+}
+.lfg-req-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(139,92,246,.12);
+    transition: opacity .2s;
+}
+.lfg-req-item:last-child { border-bottom: none; }
+.lfg-req-name { font-size: .85rem; color: var(--text-white); font-weight: 600; flex: 1; }
+
+.lfg-req-btn {
+    padding: 5px 13px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    transition: all .15s;
+}
+.lfg-req-accept {
+    background: rgba(34,197,94,.15);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,.3);
+}
+.lfg-req-accept:hover:not(:disabled) { background: rgba(34,197,94,.3); }
+.lfg-req-reject {
+    background: rgba(239,68,68,.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,.2);
+}
+.lfg-req-reject:hover:not(:disabled) { background: rgba(239,68,68,.22); }
+.lfg-req-btn:disabled { opacity: .5; cursor: default; }
+
+/* ── Complete party animation ── */
+@keyframes lcoFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes lcoCheckBounce {
+  0%   { transform:scale(0) rotate(-30deg); opacity:0; }
+  55%  { transform:scale(1.3) rotate(8deg);  opacity:1; }
+  75%  { transform:scale(.92) rotate(-4deg); }
+  100% { transform:scale(1) rotate(0);       opacity:1; }
+}
+@keyframes lcoTitleSlideUp {
+  0%   { opacity:0; transform:translateY(22px); }
+  100% { opacity:1; transform:translateY(0); }
+}
+@keyframes lcoGreenGlow {
+  0%,100% {
+    text-shadow: 0 0 12px rgba(34,197,94,.5),
+                 0 0 28px rgba(34,197,94,.3),
+                 0 0 50px rgba(74,222,128,.15);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(34,197,94,.9),
+                 0 0 45px rgba(34,197,94,.6),
+                 0 0 90px rgba(74,222,128,.35),
+                 0 0 120px rgba(21,128,61,.2);
+  }
+}
+@keyframes lcoBorderPulse {
+  0%,100% { border-color:rgba(34,197,94,.4); box-shadow:0 0 0 rgba(34,197,94,0); }
+  50%     { border-color:rgba(34,197,94,.9); box-shadow:0 0 24px rgba(34,197,94,.3), 0 0 50px rgba(34,197,94,.1); }
+}
+@keyframes lcoParticle {
+  0%   { opacity:1; transform:translate(0,0) scale(1); }
+  100% { opacity:0; transform:translate(var(--px),var(--py)) scale(0); }
+}
+@keyframes lcoBarDrain {
+  from { transform:scaleX(1); }
+  to   { transform:scaleX(0); }
+}
+@keyframes lcoExitBlast {
+  0%   { opacity:1; transform:scale(1); filter:blur(0); }
+  40%  { opacity:1; transform:scale(1.04); filter:blur(0); }
+  100% { opacity:0; transform:scale(.94); filter:blur(6px); }
+}
+@keyframes lcoCollapseCard {
+  0%   { max-height:600px; margin-bottom:14px; padding-top:20px; padding-bottom:20px; }
+  100% { max-height:0;     margin-bottom:0;    padding-top:0;     padding-bottom:0; }
+}
+
+.lfg-complete-overlay {
+  position:absolute; inset:0; z-index:20; border-radius:15px;
+  background:linear-gradient(160deg,
+    rgba(0,10,4,.95) 0%,
+    rgba(5,20,10,.97) 50%,
+    rgba(2,14,6,.95) 100%
+  );
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; overflow:hidden;
+  animation:lcoFadeIn .35s ease both;
+}
+/* green border on the card */
+.lfg-post-card.completing {
+  border-color:rgba(34,197,94,.4) !important;
+  animation:lcoBorderPulse 1.6s ease-in-out infinite;
+  overflow:hidden;
+}
+/* scanline effect */
+.lfg-complete-overlay::before {
+  content:'';
+  position:absolute; inset:0; z-index:0; border-radius:15px;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(34,197,94,.018) 3px,
+    rgba(34,197,94,.018) 4px
+  );
+  pointer-events:none;
+}
+/* corner glow */
+.lfg-complete-overlay::after {
+  content:'';
+  position:absolute; inset:0; border-radius:15px;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(34,197,94,.12) 0%, transparent 65%);
+  pointer-events:none;
+}
+.lco-inner {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.lco-icon {
+  width:64px; height:64px; border-radius:50%;
+  background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(21,128,61,.25));
+  border:2px solid rgba(34,197,94,.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem;
+  animation:lcoCheckBounce .7s .1s cubic-bezier(.2,.8,.4,1.2) both;
+  box-shadow:0 0 20px rgba(34,197,94,.25), inset 0 0 12px rgba(34,197,94,.1);
+}
+.lco-title {
+  font-size:1.5rem; font-weight:900; letter-spacing:.6px;
+  color:#4ade80;
+  animation:
+    lcoTitleSlideUp .5s .35s ease both,
+    lcoGreenGlow 2s 1s ease-in-out infinite;
+  font-family:'Vazirmatn',sans-serif;
+}
+.lco-sub {
+  font-size:.78rem; color:rgba(74,222,128,.55); letter-spacing:.3px;
+  animation:lcoTitleSlideUp .5s .5s ease both;
+}
+/* countdown bar */
+.lco-bar-wrap {
+  width:160px; height:3px; border-radius:2px;
+  background:rgba(34,197,94,.15);
+  overflow:hidden;
+  animation:lcoTitleSlideUp .5s .65s ease both;
+}
+.lco-bar {
+  height:100%; width:100%; border-radius:2px;
+  background:linear-gradient(90deg,#16a34a,#4ade80,#86efac);
+  transform-origin:right center;
+  animation:lcoBarDrain linear both;
+}
+/* floating particles */
+.lco-particle {
+  position:absolute; pointer-events:none; font-size:.75rem; z-index:2;
+  animation:lcoParticle ease-out both;
+}
 </style>
 {% endblock %}
 
@@ -270,15 +565,15 @@
     <!-- Hero -->
     <div class="lfg-hero">
         <div class="lfg-hero-content">
-            <div class="lfg-title"><i class="bi bi-people-fill" style="color: var(--blue-accent);"></i> <span>LFG</span> — دنبال تیم می‌گردی؟</div>
-            <p style="color: var(--text-muted); font-size: 0.93rem; margin: 0;">پست بذار، تیم پیدا کن، بزن بریم!</p>
+            <div class="lfg-title"><svg class="bi bi-controller" aria-hidden="true" style="color: var(--blue-accent);"><use href="#bi-controller"></use></svg> <span>پیدا کردن هم‌بازی</span></div>
+            <p style="color: var(--text-muted); font-size: 0.93rem; margin: 0;">پست بذار، هم‌بازی پیدا کن، بزن بریم!</p>
         </div>
     </div>
 
     <!-- Filters -->
     <form method="get" id="lfgFilterForm">
         <div class="lfg-filters">
-            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><i class="bi bi-funnel-fill" style="color:var(--blue-accent);"></i> پلتفرم:</span>
+            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-funnel-fill" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-funnel-fill"></use></svg> پلتفرم:</span>
             <a href="{% url 'community:lfg' %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
             {% for val, label in platform_choices %}
                 <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter }}{% endif %}"
@@ -293,13 +588,30 @@
             <!-- Create Post -->
             <div class="create-lfg-card">
                 <div class="create-lfg-title">
-                    <i class="bi bi-plus-circle-fill"></i> پست LFG جدید
+                    <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> دنبال هم‌بازی هستم
                 </div>
                 <form method="post" action="{% url 'community:create_lfg' %}">
                     {% csrf_token %}
                     <div style="margin-bottom: 12px;">
                         <label class="g-label">نام بازی *</label>
-                        <input type="text" name="game_name" class="g-input" placeholder="مثلاً: Valorant, FIFA 25, Call of Duty" required>
+                        <div class="gs-wrap" id="gs-wrap">
+                            <div class="gs-trigger" id="gs-trigger" tabindex="0">
+                                <span id="gs-label" class="gs-ph">انتخاب بازی...</span>
+                                <svg class="bi bi-chevron-down gs-arrow" aria-hidden="true"><use href="#bi-chevron-down"></use></svg>
+                            </div>
+                            <div class="gs-dropdown" id="gs-dropdown">
+                                <div class="gs-search-box">
+                                    <input type="text" class="gs-search-input" id="gs-search" placeholder="جستجو..." autocomplete="off">
+                                </div>
+                                <ul class="gs-list" id="gs-list">
+                                    {% for game in game_choices %}
+                                    <li class="gs-item" data-value="{{ game }}">{{ game }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="gs-empty" id="gs-empty">نتیجه‌ای یافت نشد</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="game_name" id="gs-value">
                     </div>
                     <div class="form-grid-2">
                         <div>
@@ -345,8 +657,15 @@
                         <label class="g-label">توضیحات (اختیاری)</label>
                         <textarea name="description" class="g-input" style="min-height: 70px;" placeholder="رنک، ساعت بازی، یا هر چیزی که بخوای بگی..."></textarea>
                     </div>
+                    <div style="margin-bottom:12px;">
+                        <label class="g-label">نوع پیوستن</label>
+                        <select name="join_type" class="g-input">
+                            <option value="open">⚡ مستقیم — هر کسی می‌تواند بپیوندد</option>
+                            <option value="request">📩 درخواستی — باید تأیید شود</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn-red w-100" style="padding: 12px;">
-                        <i class="bi bi-people-fill"></i> پست LFG بده
+                        <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> دنبال هم‌بازی می‌گردم
                     </button>
                 </form>
             </div>
@@ -354,11 +673,11 @@
             <!-- LFG Posts -->
             {% if lfg_posts %}
                 {% for post in lfg_posts %}
-                <div class="lfg-post-card">
+                <div class="lfg-post-card" id="lfg-card-{{ post.pk }}">
                     <div class="lfg-post-header">
                         <div>
                             <div class="lfg-game-name">
-                                <i class="bi bi-controller" style="color: var(--blue-accent);"></i>
+                                <svg class="bi bi-controller" aria-hidden="true" style="color: var(--blue-accent);"><use href="#bi-controller"></use></svg>
                                 {{ post.game_name }}
                             </div>
                             <div class="lfg-badges">
@@ -395,17 +714,87 @@
                             {% endfor %}
                         </div>
                         <span class="spots-text">
-                            <span class="spots-count">{{ post.spots_left }}</span> جای خالی از {{ post.max_players }}
+                            <span class="spots-count">{{ post.current_players }}</span> از {{ post.max_players }} نفر
+                            &nbsp;·&nbsp;
+                            <span class="spots-count">{{ post.spots_left }}</span> جای خالی
                         </span>
                     </div>
 
-                    <div class="lfg-time"><i class="bi bi-clock"></i> {{ post.created_at|timesince }} پیش</div>
+                    <div class="lfg-time"><svg class="bi bi-clock" aria-hidden="true"><use href="#bi-clock"></use></svg> {{ post.created_at|timesince }} پیش</div>
+
+                    <!-- ── join row ── -->
+                    {% if request.user.is_authenticated %}
+                    {% if request.user != post.author %}
+                        <div class="lfg-join-row" id="join-row-{{ post.pk }}">
+                            {% if post.spots_left <= 0 %}
+                                <button class="lfg-join-btn lfg-btn-full" disabled><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg> ظرفیت تکمیل شد</button>
+                            {% elif post.pk in joined_ids %}
+                                <button class="lfg-join-btn lfg-btn-joined" disabled><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg> پیوستید</button>
+                            {% elif post.pk in pending_ids %}
+                                <button class="lfg-join-btn lfg-btn-pending" disabled>⏳ در انتظار تأیید</button>
+                            {% elif post.pk in rejected_ids %}
+                                <button class="lfg-join-btn lfg-btn-rejected" disabled>❌ رد شد</button>
+                            {% elif post.join_type == 'open' %}
+                                <button class="lfg-join-btn lfg-btn-open"
+                                        data-post="{{ post.pk }}" data-jtype="open"
+                                        onclick="joinLFG(this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/></svg> بپیوند</button>
+                            {% else %}
+                                <button class="lfg-join-btn lfg-btn-request"
+                                        data-post="{{ post.pk }}" data-jtype="request"
+                                        onclick="joinLFG(this)">📩 درخواست پیوستن</button>
+                            {% endif %}
+                            {% if post.party_group_obj %}
+                            <a href="{% url 'community:group_chat' post.party_group_obj.pk %}" class="lfg-join-btn" style="background:rgba(139,92,246,.15);color:#a855f7;border:1px solid rgba(139,92,246,.3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+                              <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> چت پارتی
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- owner: pending requests panel -->
+                        {% if post.pending_reqs %}
+                        <div class="lfg-requests-panel" id="req-panel-{{ post.pk }}">
+                            <div class="lfg-req-title">
+                                <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> درخواست‌های پیوستن
+                                <span class="lfg-req-badge">{{ post.pending_reqs|length }}</span>
+                            </div>
+                            {% for req in post.pending_reqs %}
+                            <div class="lfg-req-item" id="req-item-{{ req.pk }}">
+                                {% if req.user.gamer_profile.avatar %}
+                                    <img src="{{ req.user.gamer_profile.avatar.url }}" class="avatar avatar-xs">
+                                {% else %}
+                                    <div class="avatar-placeholder avatar-xs" style="font-size:.65rem">{{ req.user.username|first|upper }}</div>
+                                {% endif %}
+                                <span class="lfg-req-name">{{ req.user.username }}</span>
+                                <div style="display:flex;gap:6px;margin-right:auto">
+                                    <button class="lfg-req-btn lfg-req-accept"
+                                            onclick="respondJoin({{ req.pk }},'accept',{{ post.pk }},this)">✓ قبول</button>
+                                    <button class="lfg-req-btn lfg-req-reject"
+                                            onclick="respondJoin({{ req.pk }},'reject',{{ post.pk }},this)">✕ رد</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if post.party_group_obj %}
+                        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <a href="{% url 'community:group_chat' post.party_group_obj.pk %}" class="lfg-join-btn" style="background:rgba(139,92,246,.15);color:#a855f7;border:1px solid rgba(139,92,246,.3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+                              <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> چت پارتی
+                            </a>
+                            <button onclick="deletePartyGroup({{ post.pk }}, this)"
+                                    class="lfg-join-btn"
+                                    style="background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.25);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+                              <svg class="bi bi-trash3-fill" aria-hidden="true"><use href="#bi-trash3-fill"></use></svg> حذف گروه
+                            </button>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
                 <div style="text-align:center; padding:60px 20px; color: var(--text-muted);">
-                    <i class="bi bi-people" style="font-size:4rem; color:var(--blue-accent); opacity:0.3; display:block; margin-bottom:16px;"></i>
-                    <h5 style="color: var(--text-white);">هیچ LFG فعالی نیست</h5>
+                    <svg class="bi bi-people" aria-hidden="true" style="font-size:4rem; color:var(--blue-accent); opacity:0.3; display:block; margin-bottom:16px;"><use href="#bi-people"></use></svg>
+                    <h5 style="color: var(--text-white);">هنوز کسی دنبال هم‌بازی نگشته</h5>
                     <p>اولین نفر باش و پست بذار!</p>
                 </div>
             {% endif %}
@@ -414,23 +803,341 @@
         <!-- Sidebar -->
         <aside class="lfg-sidebar">
             <div class="lfg-tip-card">
-                <div class="tip-title"><i class="bi bi-lightbulb-fill"></i> راهنمای LFG</div>
-                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> رنک و سطح مهارتت رو دقیق بنویس</div>
-                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> ساعت‌هایی که آنلاینی رو بذار</div>
-                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> پلتفرم رو درست انتخاب کن</div>
-                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> اگه سرور خاصی بازی می‌کنی بنویس</div>
-                <div class="tip-item"><i class="bi bi-check-circle-fill"></i> استایل بازیت رو توضیح بده</div>
+                <div class="tip-title"><svg class="bi bi-lightbulb-fill" aria-hidden="true"><use href="#bi-lightbulb-fill"></use></svg> راهنمای پیدا کردن هم‌بازی</div>
+                <div class="tip-item"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> رنک و سطح مهارتت رو دقیق بنویس</div>
+                <div class="tip-item"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> ساعت‌هایی که آنلاینی رو بذار</div>
+                <div class="tip-item"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> پلتفرم رو درست انتخاب کن</div>
+                <div class="tip-item"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> اگه سرور خاصی بازی می‌کنی بنویس</div>
+                <div class="tip-item"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> استایل بازیت رو توضیح بده</div>
             </div>
 
             <div class="lfg-tip-card">
-                <div class="tip-title"><i class="bi bi-fire" style="color:var(--red-primary);"></i> داغ‌ترین بازی‌ها</div>
+                <div class="tip-title"><svg class="bi bi-fire" aria-hidden="true" style="color:var(--red-primary);"><use href="#bi-fire"></use></svg> داغ‌ترین بازی‌ها</div>
                 {% for game in popular_games %}
                 <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted);">
-                    <i class="bi bi-controller" style="color:var(--red-primary);"></i> {{ game }}
+                    <svg class="bi bi-controller" aria-hidden="true" style="color:var(--red-primary);"><use href="#bi-controller"></use></svg> {{ game }}
                 </div>
                 {% endfor %}
             </div>
         </aside>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var wrap     = document.getElementById('gs-wrap');
+  var trigger  = document.getElementById('gs-trigger');
+  var dropdown = document.getElementById('gs-dropdown');
+  var search   = document.getElementById('gs-search');
+  var list     = document.getElementById('gs-list');
+  var label    = document.getElementById('gs-label');
+  var hidden   = document.getElementById('gs-value');
+  var empty    = document.getElementById('gs-empty');
+  if(!wrap) return;
+
+  function open(){
+    dropdown.classList.add('open');
+    trigger.classList.add('open');
+    search.value = '';
+    filter('');
+    setTimeout(function(){ search.focus(); }, 40);
+  }
+  function close(){
+    dropdown.classList.remove('open');
+    trigger.classList.remove('open');
+  }
+
+  trigger.addEventListener('click', function(){
+    dropdown.classList.contains('open') ? close() : open();
+  });
+  trigger.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+  });
+  document.addEventListener('click', function(e){
+    if(!wrap.contains(e.target)) close();
+  });
+
+  search.addEventListener('input', function(){ filter(this.value.trim()); });
+
+  function filter(q){
+    var items = list.querySelectorAll('.gs-item');
+    var lower = q.toLowerCase();
+    var n = 0;
+    items.forEach(function(item){
+      var show = item.textContent.toLowerCase().indexOf(lower) !== -1;
+      item.classList.toggle('gs-hidden', !show);
+      if(show) n++;
+    });
+    empty.style.display = n === 0 ? 'block' : 'none';
+  }
+
+  list.addEventListener('click', function(e){
+    var item = e.target.closest('.gs-item');
+    if(!item || item.classList.contains('gs-hidden')) return;
+    list.querySelectorAll('.gs-selected').forEach(function(el){ el.classList.remove('gs-selected'); });
+    item.classList.add('gs-selected');
+    hidden.value = item.dataset.value;
+    label.textContent = item.dataset.value;
+    label.classList.remove('gs-ph');
+    close();
+  });
+
+  // اگه بدون انتخاب بازی فرم ارسال شد
+  var form = hidden.closest('form');
+  if(form){
+    form.addEventListener('submit', function(e){
+      if(!hidden.value){
+        e.preventDefault();
+        trigger.style.borderColor = '#ef4444';
+        trigger.style.boxShadow = '0 0 0 3px rgba(239,68,68,.25)';
+        open();
+        setTimeout(function(){ trigger.style.borderColor=''; trigger.style.boxShadow=''; }, 2000);
+      }
+    });
+  }
+})();
+
+/* ──────────────────────────────────────────
+   LFG join helpers
+   ────────────────────────────────────────── */
+function _csrf(){
+  var m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+/* update the player-dots and spots text inside a post card */
+function _getCard(postId) {
+  return document.getElementById('lfg-card-' + postId);
+}
+
+function _updateSpots(postId, current, max){
+  var card = _getCard(postId);
+  if(!card) return;
+
+  var dots = card.querySelectorAll('.player-dot');
+  dots.forEach(function(dot, idx){
+    dot.className = 'player-dot ' + (idx < current ? 'filled' : 'open');
+  });
+
+  var txt = card.querySelector('.spots-text');
+  if(txt){
+    txt.innerHTML =
+      '<span class="spots-count">' + current + '</span> از ' + max +
+      ' نفر &nbsp;·&nbsp; <span class="spots-count">' + (max - current) +
+      '</span> جای خالی';
+  }
+
+  if(current >= max){
+    setTimeout(function(){ _triggerCompleteAnim(postId); }, 350);
+  }
+}
+
+function _triggerCompleteAnim(postId){
+  var card = _getCard(postId);
+  if(!card || card.querySelector('.lfg-complete-overlay')) return;
+
+  var HOLD    = 10000; // ۱۰ ثانیه نمایش
+  var EXIT_MS = 700;   // مدت انیمیشن خروج overlay
+  var COLL_MS = 600;   // مدت collapse کارت
+
+  card.classList.add('completing');
+
+  // ── Overlay HTML ──
+  var ov = document.createElement('div');
+  ov.className = 'lfg-complete-overlay';
+  ov.innerHTML =
+    '<div class="lco-inner">' +
+      '<div class="lco-icon">✅</div>' +
+      '<div class="lco-title">گروه تکمیل شد</div>' +
+      '<div class="lco-sub">🎮 پارتی کامل شد — گروه چت ساخته شد</div>' +
+      '<div class="lco-bar-wrap">' +
+        '<div class="lco-bar" id="lco-bar-' + postId + '"></div>' +
+      '</div>' +
+    '</div>';
+  card.appendChild(ov);
+
+  // start countdown bar (duration = HOLD ms)
+  var bar = document.getElementById('lco-bar-' + postId);
+  if(bar){
+    bar.style.animationDuration  = HOLD + 'ms';
+    bar.style.animationDelay     = '0ms';
+    bar.style.animationFillMode  = 'both';
+    bar.style.animationName      = 'lcoBarDrain';
+  }
+
+  // ── floating particles ──
+  var parts = ['✦','◆','▲','●','■'];
+  for(var i=0;i<10;i++){
+    (function(idx){
+      var delay = 300 + idx * 280;
+      setTimeout(function(){
+        if(!card.isConnected) return;
+        var p = document.createElement('span');
+        p.className = 'lco-particle';
+        var px = (Math.random()*140 - 70) + 'px';
+        var py = (-30 - Math.random()*70) + 'px';
+        p.style.cssText =
+          'bottom:' + (15+Math.random()*60) + '%;' +
+          'left:'   + (10+Math.random()*80) + '%;' +
+          '--px:' + px + ';--py:' + py + ';' +
+          'color:rgba(74,222,128,' + (.4+Math.random()*.5) + ');' +
+          'animation-duration:' + (1.0+Math.random()*.8) + 's;' +
+          'animation-fill-mode:both;' +
+          'animation-name:lcoParticle;';
+        p.textContent = parts[idx % parts.length];
+        ov.appendChild(p);
+      }, delay);
+    })(i);
+  }
+
+  // ── Exit after HOLD ms ──
+  setTimeout(function(){
+    if(!card.isConnected) return;
+    // 1. animate overlay out
+    ov.style.transition = 'none';
+    ov.style.animation  = 'lcoExitBlast ' + EXIT_MS + 'ms ease both';
+    setTimeout(function(){
+      if(!card.isConnected) return;
+      // 2. collapse card height
+      card.style.overflow       = 'hidden';
+      card.style.transition     =
+        'max-height ' + COLL_MS + 'ms cubic-bezier(.4,0,.2,1),' +
+        'margin-bottom ' + COLL_MS + 'ms cubic-bezier(.4,0,.2,1),' +
+        'padding ' + COLL_MS + 'ms cubic-bezier(.4,0,.2,1),' +
+        'opacity ' + (COLL_MS*.7) + 'ms ease';
+      card.style.maxHeight      = card.scrollHeight + 'px'; // pin current height first
+      card.offsetHeight; // reflow
+      card.style.maxHeight      = '0';
+      card.style.marginBottom   = '0';
+      card.style.paddingTop     = '0';
+      card.style.paddingBottom  = '0';
+      card.style.opacity        = '0';
+      setTimeout(function(){ card.remove(); }, COLL_MS + 50);
+    }, EXIT_MS);
+  }, HOLD);
+}
+
+function deletePartyGroup(postId, btn){
+  if(!confirm('گروه پارتی حذف بشه؟ پیام‌ها هم پاک میشن.')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> در حال حذف...';
+  var fd = new FormData();
+  fd.append('csrfmiddlewaretoken', _csrf());
+  fetch('/lfg/' + postId + '/delete-party-group/', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        var groupRow = btn.closest('div[style]');
+        if(groupRow) groupRow.remove();
+        btn.closest('.lfg-post-card') && (function(c){
+          // brief flash green then nothing
+          c.style.transition = 'border-color .3s';
+          c.style.borderColor = 'rgba(34,197,94,.4)';
+          setTimeout(function(){ c.style.borderColor = ''; }, 800);
+        })(_getCard(postId) || btn.closest('.lfg-post-card'));
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="bi bi-trash3-fill" aria-hidden="true"><use href="#bi-trash3-fill"></use></svg> حذف گروه';
+        showToast(d.error || 'خطایی رخ داد', 'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="bi bi-trash3-fill" aria-hidden="true"><use href="#bi-trash3-fill"></use></svg> حذف گروه';
+    });
+}
+
+/* called when a visitor clicks ⚡ بپیوند or 📩 درخواست پیوستن */
+function joinLFG(btn){
+  var postId = btn.dataset.post;
+  var jtype  = btn.dataset.jtype;
+  btn.disabled = true;
+  var origText = btn.textContent;
+  btn.textContent = '...';
+
+  var fd = new FormData();
+  fd.append('csrfmiddlewaretoken', _csrf());
+
+  fetch('/lfg/' + postId + '/join/', { method:'POST', body: fd })
+    .then(function(r){
+      if(!r.ok && r.status !== 200) return r.json().then(function(e){ return Object.assign(e,{_httpErr:true}); });
+      return r.json();
+    })
+    .then(function(d){
+      if(d.ok){
+        var row = document.getElementById('join-row-' + postId);
+        if(d.type === 'joined'){
+          if(row) row.innerHTML = '<button class="lfg-join-btn lfg-btn-joined" disabled>✅ پیوستید</button>';
+          _updateSpots(postId, d.current, d.max);
+          /* اگر گروه ساخته شد، لینک چت پارتی رو اضافه کن */
+          if(d.party_group_id && row){
+            var chatLink = document.createElement('a');
+            chatLink.href = '/groups/' + d.party_group_id + '/';
+            chatLink.className = 'lfg-join-btn';
+            chatLink.style.cssText = 'background:rgba(139,92,246,.15);color:#a855f7;border:1px solid rgba(139,92,246,.3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;margin-right:6px';
+            chatLink.innerHTML = '<svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> چت پارتی';
+            row.appendChild(chatLink);
+          }
+        } else {
+          /* requested */
+          var row2 = document.getElementById('join-row-' + postId);
+          if(row2) row2.innerHTML = '<button class="lfg-join-btn lfg-btn-pending" disabled>⏳ در انتظار تأیید</button>';
+        }
+      } else {
+        btn.disabled = false;
+        btn.textContent = origText;
+        showToast(d.error || 'خطایی رخ داد', 'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = origText;
+      showToast('خطا در اتصال به سرور', 'error');
+    });
+}
+
+/* called when the post owner clicks ✓ قبول or ✕ رد */
+function respondJoin(reqId, action, postId, btn){
+  btn.disabled = true;
+  var row  = btn.closest('.lfg-req-item');
+  var orig = btn.textContent;
+
+  var fd = new FormData();
+  fd.append('csrfmiddlewaretoken', _csrf());
+  fd.append('action', action);
+
+  fetch('/lfg/join-requests/' + reqId + '/respond/', { method:'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        row.style.opacity = '.45';
+        row.style.pointerEvents = 'none';
+        var nameEl = row.querySelector('.lfg-req-name');
+        if(action === 'accept'){
+          nameEl.innerHTML += ' <span style="color:#22c55e;font-size:.8rem">✅ قبول شد</span>';
+          _updateSpots(postId, d.current, d.max);
+        } else {
+          nameEl.innerHTML += ' <span style="color:#f87171;font-size:.8rem">❌ رد شد</span>';
+        }
+        /* update badge count */
+        var panel = document.getElementById('req-panel-' + postId);
+        if(panel){
+          var remaining = panel.querySelectorAll('.lfg-req-item:not([style*="opacity"])').length;
+          var badge = panel.querySelector('.lfg-req-badge');
+          if(badge) badge.textContent = remaining;
+        }
+      } else {
+        btn.disabled = false;
+        btn.textContent = orig;
+        showToast(d.error || 'خطایی رخ داد', 'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = orig;
+    });
+}
+</script>
 {% endblock %}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="spg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <!-- outer glow ring -->
+  <circle fill="rgba(124,58,237,0.15)" cx="32" cy="32" r="30"/>
+  <!-- circular arrow - top arc (clockwise, 270 degrees) -->
+  <path fill="none" stroke="url(#spg)" stroke-width="8" stroke-linecap="round"
+        d="M 32 8 A 24 24 0 1 1 9 40"/>
+  <!-- arrowhead pointing clockwise at the end -->
+  <polygon fill="#7c3aed" points="9,40 2,34 16,30"/>
+  <!-- center circle -->
+  <circle fill="rgba(124,58,237,0.3)" cx="32" cy="32" r="8"/>
+  <circle fill="#a78bfa" cx="32" cy="32" r="5"/>
+</svg>

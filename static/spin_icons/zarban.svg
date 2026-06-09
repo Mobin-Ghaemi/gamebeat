@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- background glow -->
+  <rect fill="rgba(239,68,68,0.1)" x="2" y="2" width="60" height="60" rx="14"/>
+  <!-- ECG / heartbeat pulse line -->
+  <path fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+        d="M4 32 L14 32 L18 20 L22 44 L26 28 L30 36 L34 32 L60 32"/>
+  <!-- left glow dot -->
+  <circle fill="rgba(239,68,68,0.4)" cx="4" cy="32" r="3"/>
+  <!-- right glow dot -->
+  <circle fill="rgba(239,68,68,0.4)" cx="60" cy="32" r="3"/>
+  <!-- center peak highlight -->
+  <circle fill="rgba(239,68,68,0.6)" cx="22" cy="44" r="2.5"/>
+  <circle fill="rgba(239,68,68,0.6)" cx="18" cy="20" r="2.5"/>
+  <!-- border -->
+  <rect fill="none" stroke="rgba(239,68,68,0.35)" stroke-width="1.5" x="2" y="2" width="60" height="60" rx="14"/>
+</svg>

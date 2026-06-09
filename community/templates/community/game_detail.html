@@ -1,0 +1,963 @@
+{% extends 'community/base.html' %}
+{% block title %}{{ game.name }} | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════
+   GAME DETAIL — ULTRA GAMER STYLE
+═══════════════════════════════════════════ */
+
+.gd-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 80px; }
+
+/* ── HERO ── */
+.gd-hero {
+    position: relative; overflow: hidden; border-radius: 0 0 28px 28px;
+    margin: 0 -16px 32px; min-height: 380px;
+    display: flex; align-items: flex-end;
+}
+.gd-hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+}
+.gd-hero-bg img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: blur(3px) brightness(0.38) saturate(1.4);
+    transform: scale(1.06);
+}
+.gd-hero-bg-fallback {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0a001e 0%, #1e0035 50%, #0d0022 100%);
+}
+.gd-hero-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(10,0,30,0.98) 0%, rgba(10,0,30,0.5) 50%, rgba(10,0,30,0.1) 100%);
+}
+.gd-hero-glow {
+    position: absolute; inset: 0; z-index: 1;
+    background: radial-gradient(ellipse at 60% 80%, rgba(139,92,246,0.25) 0%, transparent 65%);
+}
+
+.gd-hero-content {
+    position: relative; z-index: 2;
+    display: flex; gap: 28px; align-items: flex-end;
+    padding: 28px 32px 32px; width: 100%; box-sizing: border-box;
+}
+
+.gd-cover-box {
+    flex-shrink: 0;
+    width: 150px; height: 200px;
+    border-radius: 16px; overflow: hidden;
+    border: 2px solid rgba(139,92,246,0.5);
+    box-shadow: 0 0 40px rgba(139,92,246,0.35), 0 20px 60px rgba(0,0,0,0.6);
+    background: #0a001e;
+    display: flex; align-items: center; justify-content: center;
+}
+.gd-cover-box img { width: 100%; height: 100%; object-fit: cover; }
+.gd-cover-box i { font-size: 3.5rem; color: rgba(139,92,246,0.3); }
+
+.gd-hero-info { flex: 1; min-width: 0; }
+
+.gd-breadcrumb {
+    font-size: .72rem; color: rgba(255,255,255,0.35); margin-bottom: 10px;
+}
+.gd-breadcrumb a { color: rgba(255,255,255,0.35); text-decoration: none; }
+.gd-breadcrumb a:hover { color: #a78bfa; }
+
+.gd-title {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 900; color: #fff; margin: 0 0 10px;
+    line-height: 1.15; text-shadow: 0 0 40px rgba(139,92,246,0.4);
+}
+
+.gd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.gd-tag {
+    padding: 4px 12px; border-radius: 50px; font-size: .72rem; font-weight: 700;
+    border: 1px solid rgba(139,92,246,0.4); background: rgba(139,92,246,0.12);
+    color: #c4b5fd;
+}
+.gd-tag.plat {
+    border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.1); color: #93c5fd;
+}
+.gd-tag.year {
+    border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); color: #fbbf24;
+}
+
+.gd-meta-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.gd-meta-item { font-size: .78rem; color: rgba(255,255,255,0.45); }
+.gd-meta-item strong { color: rgba(255,255,255,0.75); font-weight: 700; }
+
+/* Featured ribbon */
+.gd-featured {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.08));
+    border: 1px solid rgba(251,191,36,0.45); color: #fbbf24;
+    padding: 4px 12px; border-radius: 50px; font-size: .72rem; font-weight: 800;
+}
+
+/* ── BADGES ROW ── */
+.gd-badges-row {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 28px; align-items: stretch;
+}
+
+.gd-badge-card {
+    background: #130826; border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 16px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 100px; flex: 1;
+    transition: border-color .2s, box-shadow .2s;
+}
+.gd-badge-card:hover { border-color: rgba(139,92,246,0.35); box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+
+.gd-badge-icon { font-size: 1.4rem; margin-bottom: 2px; }
+.gd-badge-val { font-size: 1.3rem; font-weight: 900; color: #fff; }
+.gd-badge-lbl { font-size: .68rem; color: rgba(255,255,255,0.35); font-weight: 600; text-align: center; }
+
+/* metacritic special */
+.gd-mc {
+    background: linear-gradient(135deg, rgba(74,222,128,0.08), rgba(74,222,128,0.03));
+    border-color: rgba(74,222,128,0.2);
+}
+.gd-mc .gd-badge-val { color: #4ade80; }
+.gd-mc.warn { background: linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.03)); border-color:rgba(251,191,36,.2); }
+.gd-mc.warn .gd-badge-val { color: #fbbf24; }
+.gd-mc.bad { background: linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.03)); border-color:rgba(239,68,68,.2); }
+.gd-mc.bad .gd-badge-val { color: #ef4444; }
+
+/* steam */
+.gd-steam-card {
+    background: linear-gradient(135deg, rgba(30,97,166,0.15), rgba(30,97,166,0.05));
+    border-color: rgba(30,97,166,0.35);
+}
+.gd-steam-card .gd-badge-val { color: #60a5fa; font-size: 1rem; }
+
+/* ── BODY LAYOUT ── */
+.gd-body { display: grid; grid-template-columns: 1fr 300px; gap: 22px; }
+@media (max-width: 768px) { .gd-body { grid-template-columns: 1fr; } }
+
+/* ── SECTION ── */
+.gd-section {
+    background: #130826; border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px; padding: 22px 24px; margin-bottom: 18px;
+}
+.gd-section-title {
+    font-size: .8rem; font-weight: 800; color: #a78bfa;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.gd-section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to left, transparent, rgba(139,92,246,0.2));
+}
+
+.gd-description {
+    font-size: .88rem; color: rgba(255,255,255,0.62); line-height: 1.85;
+}
+
+/* ── SCREENSHOTS ── */
+.gd-screenshots {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+.gd-screenshot {
+    border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;
+    border: 1px solid rgba(255,255,255,0.07); cursor: pointer;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.gd-screenshot:hover {
+    transform: scale(1.03); border-color: rgba(139,92,246,0.5);
+    box-shadow: 0 8px 28px rgba(0,0,0,.5);
+}
+.gd-screenshot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Lightbox */
+.gd-lightbox {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.92); display: none;
+    align-items: center; justify-content: center;
+    cursor: zoom-out;
+}
+.gd-lightbox.open { display: flex; }
+.gd-lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 10px; pointer-events: none; }
+.gd-lightbox-close {
+    position: absolute; top: 20px; left: 20px;
+    color: rgba(255,255,255,0.5); font-size: 1.5rem; cursor: pointer;
+    background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+    width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+}
+.gd-lightbox-close:hover { background: rgba(255,255,255,0.15); }
+
+/* ── SIDEBAR ── */
+.gd-sidebar {}
+
+.gd-backlog-card {
+    background: linear-gradient(135deg, #1a0535, #0d0022);
+    border: 1px solid rgba(139,92,246,0.3); border-radius: 18px;
+    padding: 22px; margin-bottom: 18px;
+    box-shadow: 0 0 40px rgba(139,92,246,0.08);
+}
+.gd-backlog-title { font-size: .85rem; font-weight: 800; color: #fff; margin-bottom: 16px; text-align: center; }
+
+.gd-bl-btn {
+    width: 100%; padding: 12px; border-radius: 12px; font-size: .85rem; font-weight: 700;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    border: 1px solid rgba(139,92,246,0.4);
+    background: rgba(139,92,246,0.15); color: #a78bfa;
+    transition: all .18s; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.gd-bl-btn:hover { background: rgba(139,92,246,0.3); color: #fff; transform: translateY(-1px); }
+.gd-bl-btn.playing { border-color: rgba(250,204,21,0.5); background: rgba(250,204,21,0.1); color: #facc15; }
+.gd-bl-btn.playing:hover { background: rgba(250,204,21,0.2); }
+.gd-bl-btn.completed { border-color: rgba(74,222,128,0.5); background: rgba(74,222,128,0.1); color: #4ade80; }
+.gd-bl-btn.completed:hover { background: rgba(74,222,128,0.2); }
+.gd-bl-btn.want { border-color: rgba(96,165,250,0.5); background: rgba(96,165,250,0.1); color: #60a5fa; }
+.gd-bl-btn.want:hover { background: rgba(96,165,250,0.2); }
+
+.gd-bl-select {
+    width: 100%; padding: 9px 12px; border-radius: 10px; font-size: .82rem;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font-family: 'Vazirmatn', sans-serif; outline: none; cursor: pointer;
+    margin-bottom: 8px; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: left 12px center;
+}
+.gd-bl-select:focus { border-color: #8b5cf6; }
+.gd-bl-select option { background: #130826; }
+
+.gd-bl-remove {
+    width: 100%; padding: 8px; border-radius: 10px; font-size: .75rem; font-weight: 600;
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+    border: 1px solid rgba(239,68,68,0.2); background: transparent; color: rgba(239,68,68,0.5);
+    transition: all .15s;
+}
+.gd-bl-remove:hover { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.08); color: #ef4444; }
+
+/* Steam button */
+.gd-steam-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 11px; border-radius: 12px; font-size: .83rem; font-weight: 700;
+    background: linear-gradient(135deg, rgba(30,97,166,0.3), rgba(30,97,166,0.15));
+    border: 1px solid rgba(30,97,166,0.5); color: #93c5fd;
+    text-decoration: none; transition: all .18s; font-family: 'Vazirmatn', sans-serif;
+    margin-top: 12px;
+}
+.gd-steam-btn:hover { background: linear-gradient(135deg, rgba(30,97,166,0.5), rgba(30,97,166,0.25)); color: #fff; transform: translateY(-1px); }
+
+/* Community stats */
+.gd-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.gd-stat-row:last-child { border-bottom: none; }
+.gd-stat-lbl { font-size: .78rem; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 6px; }
+.gd-stat-val { font-size: .85rem; font-weight: 800; color: #fff; }
+
+/* Pulse dot for playing */
+.gd-pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:#facc15; box-shadow:0 0 6px #facc15; animation: gpulse 1.5s infinite; }
+@keyframes gpulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(1.3);} }
+
+/* Star rating buttons */
+.gd-star-btn {
+    width: 34px; height: 34px; border-radius: 8px; font-size: .8rem; font-weight: 800;
+    border: 1px solid rgba(251,191,36,0.25); background: rgba(251,191,36,0.06); color: rgba(251,191,36,0.5);
+    cursor: pointer; font-family: 'Vazirmatn', sans-serif; transition: all .15s;
+}
+.gd-star-btn:hover, .gd-star-btn.active {
+    background: rgba(251,191,36,0.2); border-color: rgba(251,191,36,0.6); color: #fbbf24;
+}
+
+/* Back btn */
+.gd-back {
+    display: inline-flex; align-items: center; gap: 7px;
+    color: rgba(255,255,255,0.35); font-size: .8rem; text-decoration: none;
+    margin-bottom: 20px; transition: color .15s;
+    padding: 8px 16px; border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.03);
+}
+.gd-back:hover { color: #a78bfa; border-color: rgba(139,92,246,0.3); }
+
+/* ── REVIEWS ── */
+.gd-reviews-section { }
+
+.gd-review-form {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+.gd-review-form textarea {
+    width: 100%; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    color: #e2e8f0; font-family: 'Vazirmatn', sans-serif;
+    font-size: .85rem; padding: 12px 14px; resize: vertical;
+    min-height: 90px; outline: none; transition: border-color .18s;
+    box-sizing: border-box;
+}
+.gd-review-form textarea:focus { border-color: rgba(139,92,246,0.5); }
+.gd-review-form textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+.gd-review-stars {
+    display: flex; gap: 5px; flex-wrap: wrap;
+    margin: 10px 0;
+}
+.gd-rv-star {
+    width: 32px; height: 32px; border-radius: 8px;
+    font-size: .78rem; font-weight: 800; cursor: pointer;
+    border: 1px solid rgba(251,191,36,0.2);
+    background: rgba(251,191,36,0.04); color: rgba(251,191,36,0.4);
+    font-family: 'Vazirmatn', sans-serif; transition: all .12s;
+}
+.gd-rv-star:hover, .gd-rv-star.sel {
+    background: rgba(251,191,36,0.18); border-color: rgba(251,191,36,0.55); color: #fbbf24;
+}
+.gd-rv-star.sel { box-shadow: 0 0 8px rgba(251,191,36,0.25); }
+
+.gd-review-submit {
+    margin-top: 10px; padding: 10px 24px; border-radius: 50px;
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(139,92,246,0.15));
+    border: 1px solid rgba(139,92,246,0.45); color: #a78bfa;
+    font-size: .82rem; font-weight: 700; cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif; transition: all .18s;
+}
+.gd-review-submit:hover { background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(139,92,246,0.3)); color: #fff; }
+.gd-review-submit:disabled { opacity: .4; cursor: default; }
+
+/* review item */
+.gd-review-item {
+    padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; gap: 12px;
+}
+.gd-review-item:last-child { border-bottom: none; }
+.gd-rv-av {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    overflow: hidden; background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800; color: #a78bfa;
+}
+.gd-rv-av img { width: 100%; height: 100%; object-fit: cover; }
+.gd-rv-body { flex: 1; min-width: 0; }
+.gd-rv-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.gd-rv-name { font-size: .82rem; font-weight: 700; color: #e2e8f0; }
+.gd-rv-stars { display: flex; gap: 2px; }
+.gd-rv-star-filled { color: #fbbf24; font-size: .72rem; }
+.gd-rv-date { font-size: .7rem; color: rgba(255,255,255,0.25); margin-right: auto; }
+.gd-rv-text { font-size: .83rem; color: rgba(255,255,255,0.6); line-height: 1.7; }
+.gd-rv-delete {
+    background: none; border: none; cursor: pointer;
+    color: rgba(239,68,68,0.35); font-size: .72rem; padding: 0;
+    transition: color .15s; font-family: 'Vazirmatn', sans-serif;
+}
+.gd-rv-delete:hover { color: #ef4444; }
+.gd-rv-no-score { color: rgba(255,255,255,0.2); font-size: .72rem; font-style: italic; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load community_tags %}
+<div class="gd-wrap">
+
+    <!-- Breadcrumb back -->
+    <a href="{% url 'community:games_ranking' %}" class="gd-back">
+        <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg> بازگشت به کتابخانه
+    </a>
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <div class="gd-hero">
+        <div class="gd-hero-bg">
+            {% if game.cover %}
+            <img src="{{ game.cover.url }}" alt="">
+            {% else %}
+            <div class="gd-hero-bg-fallback"></div>
+            {% endif %}
+        </div>
+        <div class="gd-hero-overlay"></div>
+        <div class="gd-hero-glow"></div>
+
+        <div class="gd-hero-content">
+            <!-- Cover -->
+            <div class="gd-cover-box">
+                {% if game.cover %}
+                <img src="{{ game.cover.url }}" alt="{{ game.name }}">
+                {% else %}
+                <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
+                {% endif %}
+            </div>
+
+            <!-- Info -->
+            <div class="gd-hero-info">
+                <div class="gd-breadcrumb">
+                    <a href="{% url 'community:games_ranking' %}">کتابخانه</a>
+                    <svg class="bi bi-chevron-left mx-1" aria-hidden="true" style="font-size:.6rem;"><use href="#bi-chevron-left"></use></svg>
+                    {{ game.name }}
+                </div>
+
+                <h1 class="gd-title">{{ game.name }}</h1>
+
+                <div class="gd-tags">
+                    {% for g in game.get_genres_display %}
+                    <span class="gd-tag">{{ g }}</span>
+                    {% endfor %}
+                    {% for plat in game.get_platform_labels %}
+                    <span class="gd-tag plat">{{ plat }}</span>
+                    {% endfor %}
+                    {% if game.release_year %}
+                    <span class="gd-tag year"><svg class="bi bi-calendar3 me-1" aria-hidden="true"><use href="#bi-calendar3"></use></svg>{{ game.release_year }}</span>
+                    {% endif %}
+                    {% if game.is_featured %}
+                    <span class="gd-featured"><svg class="bi bi-star-fill" aria-hidden="true"><use href="#bi-star-fill"></use></svg> بازی ویژه</span>
+                    {% endif %}
+                </div>
+
+                <div class="gd-meta-row">
+                    {% if game.developer %}
+                    <div class="gd-meta-item"><svg class="bi bi-cpu me-1" aria-hidden="true"><use href="#bi-cpu"></use></svg><strong>سازنده:</strong> {{ game.developer }}</div>
+                    {% endif %}
+                    {% if game.publisher %}
+                    <div class="gd-meta-item"><svg class="bi bi-building me-1" aria-hidden="true"><use href="#bi-building"></use></svg><strong>ناشر:</strong> {{ game.publisher }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ BADGES ═══════════ -->
+    <div class="gd-badges-row">
+
+        {% if game.metacritic %}
+        {% if game.metacritic >= 75 %}
+        <div class="gd-badge-card gd-mc">
+        {% elif game.metacritic >= 50 %}
+        <div class="gd-badge-card gd-mc warn">
+        {% else %}
+        <div class="gd-badge-card gd-mc bad">
+        {% endif %}
+            <div class="gd-badge-icon">🏅</div>
+            <div class="gd-badge-val">{{ game.metacritic }}</div>
+            <div class="gd-badge-lbl">Metacritic</div>
+        </div>
+        {% endif %}
+
+        {% if game.steam_price %}
+        <div class="gd-badge-card gd-steam-card">
+            <div class="gd-badge-icon"><svg class="bi bi-steam" aria-hidden="true" style="font-size:1.3rem;color:#60a5fa;"><use href="#bi-steam"></use></svg></div>
+            <div class="gd-badge-val">{{ game.steam_price }}</div>
+            <div class="gd-badge-lbl">قیمت استیم</div>
+        </div>
+        {% endif %}
+
+        <div class="gd-badge-card">
+            <div class="gd-badge-icon">🎮</div>
+            <div class="gd-badge-val">{{ backlog_count }}</div>
+            <div class="gd-badge-lbl">در لیست بازی‌های گیمرها</div>
+        </div>
+
+        <div class="gd-badge-card">
+            <div class="gd-badge-icon">⚡</div>
+            <div class="gd-badge-val">{{ playing_count }}</div>
+            <div class="gd-badge-lbl">در حال بازی</div>
+        </div>
+
+        <div class="gd-badge-card">
+            <div class="gd-badge-icon">✅</div>
+            <div class="gd-badge-val">{{ completed_count }}</div>
+            <div class="gd-badge-lbl">تموم کرده</div>
+        </div>
+
+        {% if avg_rating %}
+        <div class="gd-badge-card" style="background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.03));border-color:rgba(251,191,36,0.3);">
+            <div class="gd-badge-icon">⭐</div>
+            <div class="gd-badge-val" style="color:#fbbf24;">{{ avg_rating|floatformat:1 }}/5</div>
+            <div class="gd-badge-lbl">امتیاز گیمرها ({{ rating_count }} نفر)</div>
+        </div>
+        {% endif %}
+
+        {% if review_avg %}
+        <div class="gd-badge-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(139,92,246,0.03));border-color:rgba(139,92,246,0.3);">
+            <div class="gd-badge-icon">💬</div>
+            <div class="gd-badge-val" id="review-avg-badge" style="color:#a78bfa;">{{ review_avg }}/5</div>
+            <div class="gd-badge-lbl" id="review-avg-badge-lbl">امتیاز نظرات ({{ review_rating_count }} نفر)</div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ═══════════ BODY ═══════════ -->
+    <div class="gd-body">
+
+        <!-- ── Main Column ── -->
+        <div class="gd-main">
+
+            {% if game.description %}
+            <div class="gd-section">
+                <div class="gd-section-title"><svg class="bi bi-file-text" aria-hidden="true"><use href="#bi-file-text"></use></svg> درباره بازی</div>
+                <div class="gd-description">{{ game.description|linebreaks }}</div>
+            </div>
+            {% endif %}
+
+            {% if game.screenshots %}
+            <div class="gd-section">
+                <div class="gd-section-title"><svg class="bi bi-images" aria-hidden="true"><use href="#bi-images"></use></svg> اسکرین‌شات‌ها</div>
+                <div class="gd-screenshots">
+                    {% for shot in game.screenshots %}
+                    <div class="gd-screenshot" onclick="openLightbox('{{ shot }}')">
+                        <img src="{{ shot }}" alt="screenshot" loading="lazy">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ── Reviews ── -->
+            <div class="gd-section gd-reviews-section" id="reviews-section">
+                <div class="gd-section-title"><svg class="bi bi-chat-square-text-fill" aria-hidden="true"><use href="#bi-chat-square-text-fill"></use></svg> نظرات گیمرها
+                    <span id="reviews-count-badge" style="font-size:.72rem;font-weight:700;color:#64748b;background:rgba(255,255,255,0.05);padding:2px 9px;border-radius:50px;">{{ reviews|length }}</span>
+                </div>
+
+                <!-- Write review form -->
+                {% if user.is_authenticated %}
+                <div class="gd-review-form" id="review-form-wrap">
+                    <div style="font-size:.8rem;font-weight:700;color:#a78bfa;margin-bottom:10px;">
+                        {% if my_review %}✏️ ویرایش نظر تو{% else %}💬 نظر بده{% endif %}
+                    </div>
+
+                    <!-- Star selector -->
+                    <div style="font-size:.75rem;color:rgba(255,255,255,0.3);margin-bottom:6px;">امتیاز (اختیاری):</div>
+                    <div class="gd-review-stars" id="rv-stars">
+                        {% for i in "12345" %}{% with n=forloop.counter %}
+                        <button type="button" class="gd-rv-star {% if my_review and my_review.rating and my_review.rating >= n %}sel{% endif %}"
+                            data-n="{{ n }}" onclick="rvStarClick({{ n }})">{{ n }}</button>
+                        {% endwith %}{% endfor %}
+                    </div>
+                    <input type="hidden" id="rv-rating-val" value="{{ my_review.rating|default:'' }}">
+
+                    <textarea id="rv-body" placeholder="نظرت رو اینجا بنویس…" maxlength="1000">{{ my_review.body|default:'' }}</textarea>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                        <button class="gd-review-submit" id="rv-submit-btn" onclick="submitReview()">
+                            {% if my_review %}به‌روزرسانی{% else %}ارسال نظر{% endif %}
+                        </button>
+                        <span id="rv-char-count" style="font-size:.7rem;color:rgba(255,255,255,0.2);">0/1000</span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center;padding:14px;background:rgba(255,255,255,0.02);border-radius:12px;margin-bottom:16px;">
+                    <a href="{% url 'account:login' %}?next={{ request.path }}" style="color:#a78bfa;font-size:.83rem;text-decoration:none;">
+                        <svg class="bi bi-person-fill me-1" aria-hidden="true"><use href="#bi-person-fill"></use></svg>برای نظر دادن وارد شو
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Reviews list -->
+                <div id="reviews-list">
+                    {% for rv in reviews %}
+                    <div class="gd-review-item" id="rv-{{ rv.id }}">
+                        <div class="gd-rv-av">
+                            {% if rv.user.gamer_profile.avatar %}
+                            <img src="{{ rv.user.gamer_profile.avatar.url }}" alt="">
+                            {% else %}
+                            {{ rv.user.get_full_name|default:rv.user.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="gd-rv-body">
+                            <div class="gd-rv-head">
+                                <span class="gd-rv-name">{{ rv.user.get_full_name|default:rv.user.username }}</span>
+                                {% if rv.rating %}
+                                <span class="gd-rv-stars" title="{{ rv.rating }}/5">
+                                    {% for i in "12345" %}{% with n=forloop.counter %}
+                                    {% if rv.rating >= n %}<svg class="bi bi-star-fill gd-rv-star-filled" aria-hidden="true"><use href="#bi-star-fill"></use></svg>{% endif %}
+                                    {% endwith %}{% endfor %}
+                                    <span style="font-size:.7rem;color:#fbbf24;font-weight:700;margin-right:3px;">{{ rv.rating }}/5</span>
+                                </span>
+                                {% else %}
+                                <span class="gd-rv-no-score">بدون امتیاز</span>
+                                {% endif %}
+                                <span class="gd-rv-date">{{ rv.created_at|date:"Y/m/d" }}</span>
+                                {% if user == rv.user %}
+                                <button class="gd-rv-delete" onclick="deleteReview({{ rv.id }})"><svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف</button>
+                                {% endif %}
+                            </div>
+                            <div class="gd-rv-text">{{ rv.body }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div id="rv-empty-msg" style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:.83rem;">هنوز نظری ثبت نشده — اول باش! 🎮</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Sidebar ── -->
+        <div class="gd-sidebar">
+
+            <!-- Backlog card -->
+            {% if user.is_authenticated %}
+            <div class="gd-backlog-card">
+                <div class="gd-backlog-title">
+                    <svg class="bi bi-bookmark-star-fill me-2" aria-hidden="true" style="color:#a78bfa;"><use href="#bi-bookmark-star-fill"></use></svg>بازی‌های من
+                </div>
+
+                {% if my_backlog_item %}
+                    <div style="text-align:center;margin-bottom:12px;">
+                        <span style="font-size:.75rem;color:rgba(255,255,255,0.4);">وضعیت فعلی:</span>
+                        <span id="bl-status-label" style="font-size:.8rem;font-weight:700;color:#a78bfa;margin-right:4px;">
+                            {% if my_backlog_item.status == 'playing' %}🟡 در حال بازی
+                            {% elif my_backlog_item.status == 'completed' %}🟢 تموم کردم
+                            {% elif my_backlog_item.status == 'want' %}🔵 می‌خوام بازی کنم
+                            {% elif my_backlog_item.status == 'dropped' %}🔴 رها کردم
+                            {% else %}{{ my_backlog_item.status }}{% endif %}
+                        </span>
+                    </div>
+                    <select class="gd-bl-select" onchange="gdUpdateBacklog({{ my_backlog_item.id }}, this.value)">
+                        <option value="want"      {% if my_backlog_item.status == 'want' %}selected{% endif %}>🔵 می‌خوام بازی کنم</option>
+                        <option value="playing"   {% if my_backlog_item.status == 'playing' %}selected{% endif %}>🟡 در حال بازی</option>
+                        <option value="completed" {% if my_backlog_item.status == 'completed' %}selected{% endif %}>🟢 تموم کردم</option>
+                        <option value="dropped"   {% if my_backlog_item.status == 'dropped' %}selected{% endif %}>🔴 رها کردم</option>
+                    </select>
+                    <button class="gd-bl-remove" onclick="gdRemoveBacklog({{ my_backlog_item.id }})">
+                        <svg class="bi bi-trash3 me-1" aria-hidden="true"><use href="#bi-trash3"></use></svg>حذف از بازی‌هام
+                    </button>
+                {% else %}
+                    <button class="gd-bl-btn want" id="bl-add-btn" onclick="gdAddBacklog({{ game.pk }}, '{{ game.name|escapejs }}', 'want')">
+                        <svg class="bi bi-plus-circle" aria-hidden="true"><use href="#bi-plus-circle"></use></svg> می‌خوام بازی کنم
+                    </button>
+                    <button class="gd-bl-btn playing" onclick="gdAddBacklog({{ game.pk }}, '{{ game.name|escapejs }}', 'playing')">
+                        <svg class="bi bi-play-circle" aria-hidden="true"><use href="#bi-play-circle"></use></svg> الان دارم بازی می‌کنم
+                    </button>
+                    <button class="gd-bl-btn completed" onclick="gdAddBacklog({{ game.pk }}, '{{ game.name|escapejs }}', 'completed')">
+                        <svg class="bi bi-check-circle" aria-hidden="true"><use href="#bi-check-circle"></use></svg> تموم کردم
+                    </button>
+                {% endif %}
+
+                {% if game.steam_url %}
+                <a href="{{ game.steam_url }}" target="_blank" rel="noopener" class="gd-steam-btn">
+                    <svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg> مشاهده در استیم
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="gd-backlog-card">
+                <div class="gd-backlog-title">
+                    <svg class="bi bi-bookmark-star-fill me-2" aria-hidden="true" style="color:#a78bfa;"><use href="#bi-bookmark-star-fill"></use></svg>بازی‌های من
+                </div>
+                <a href="{% url 'account:login' %}?next={{ request.path }}" class="gd-bl-btn want" style="text-decoration:none;">
+                    <svg class="bi bi-plus-circle" aria-hidden="true"><use href="#bi-plus-circle"></use></svg> می‌خوام بازی کنم
+                </a>
+                <a href="{% url 'account:login' %}?next={{ request.path }}" class="gd-bl-btn playing" style="text-decoration:none;">
+                    <svg class="bi bi-play-circle" aria-hidden="true"><use href="#bi-play-circle"></use></svg> الان دارم بازی می‌کنم
+                </a>
+                <a href="{% url 'account:login' %}?next={{ request.path }}" class="gd-bl-btn completed" style="text-decoration:none;">
+                    <svg class="bi bi-check-circle" aria-hidden="true"><use href="#bi-check-circle"></use></svg> تموم کردم
+                </a>
+                {% if game.steam_url %}
+                <a href="{{ game.steam_url }}" target="_blank" rel="noopener" class="gd-steam-btn">
+                    <svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg> مشاهده در استیم
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Rating UI — only if user has this game as completed -->
+            {% if user.is_authenticated and my_backlog_item and my_backlog_item.status == 'completed' %}
+            <div class="gd-section" id="rating-section">
+                <div class="gd-section-title"><svg class="bi bi-star-fill" aria-hidden="true" style="color:#fbbf24;"><use href="#bi-star-fill"></use></svg> امتیازت رو بده</div>
+                <div style="text-align:center;margin-bottom:12px;">
+                    <div id="star-display" style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                        {% for i in "12345" %}
+                        {% with num=forloop.counter %}
+                        <button class="gd-star-btn {% if my_backlog_item.rating and my_backlog_item.rating >= num %}active{% endif %}"
+                            data-score="{{ num }}" onclick="rateGame({{ num }})">
+                            {{ num }}
+                        </button>
+                        {% endwith %}
+                        {% endfor %}
+                    </div>
+                    <div id="rating-msg" style="font-size:.75rem;color:rgba(255,255,255,0.35);">
+                        {% if my_backlog_item.rating %}امتیاز فعلی تو: {{ my_backlog_item.rating }}/5{% else %}کلیک کن تا امتیاز بدی{% endif %}
+                    </div>
+                    <div id="avg-rating-display" style="font-size:.75rem;color:rgba(255,255,255,0.25);margin-top:4px;">
+                        {% if avg_rating %}میانگین جامعه: {{ avg_rating|floatformat:1 }}/5 ({{ rating_count }} نفر){% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Community stats -->
+            <div class="gd-section">
+                <div class="gd-section-title"><svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg> جامعه گیمرها</div>
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-bookmark-heart" aria-hidden="true"><use href="#bi-bookmark-heart"></use></svg> کل لیست بازی</span>
+                    <span class="gd-stat-val" id="stat-backlog">{{ backlog_count }}</span>
+                </div>
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><span class="gd-pulse"></span> در حال بازی</span>
+                    <span class="gd-stat-val">{{ playing_count }}</span>
+                </div>
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-trophy" aria-hidden="true" style="color:#4ade80;"><use href="#bi-trophy"></use></svg> تموم کرده</span>
+                    <span class="gd-stat-val">{{ completed_count }}</span>
+                </div>
+            </div>
+
+            <!-- Game details panel -->
+            <div class="gd-section">
+                <div class="gd-section-title"><svg class="bi bi-info-circle" aria-hidden="true"><use href="#bi-info-circle"></use></svg> جزئیات</div>
+                {% if game.developer %}
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-cpu" aria-hidden="true"><use href="#bi-cpu"></use></svg> سازنده</span>
+                    <span class="gd-stat-val" style="font-size:.78rem;">{{ game.developer }}</span>
+                </div>
+                {% endif %}
+                {% if game.publisher %}
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-building" aria-hidden="true"><use href="#bi-building"></use></svg> ناشر</span>
+                    <span class="gd-stat-val" style="font-size:.78rem;">{{ game.publisher }}</span>
+                </div>
+                {% endif %}
+                {% if game.release_year %}
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-calendar3" aria-hidden="true"><use href="#bi-calendar3"></use></svg> سال انتشار</span>
+                    <span class="gd-stat-val">{{ game.release_year }}</span>
+                </div>
+                {% endif %}
+                {% if game.metacritic %}
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-bar-chart-fill" aria-hidden="true"><use href="#bi-bar-chart-fill"></use></svg> Metacritic</span>
+                    <span class="gd-stat-val" style="{% if game.metacritic >= 75 %}color:#4ade80;{% elif game.metacritic >= 50 %}color:#fbbf24;{% else %}color:#ef4444;{% endif %}">{{ game.metacritic }}/100</span>
+                </div>
+                {% endif %}
+                {% if game.steam_price %}
+                <div class="gd-stat-row">
+                    <span class="gd-stat-lbl"><svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg> قیمت استیم</span>
+                    <span class="gd-stat-val" style="font-size:.78rem;color:#60a5fa;">{{ game.steam_price }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="gd-lightbox" id="gdLightbox" onclick="closeLightbox()">
+    <button class="gd-lightbox-close" onclick="closeLightbox()"><svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg></button>
+    <img id="gdLightboxImg" src="" alt="">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = typeof csrfToken !== 'undefined' ? csrfToken : '{{ csrf_token }}';
+
+/* ── Lightbox ── */
+function openLightbox(src) {
+    document.getElementById('gdLightboxImg').src = src;
+    document.getElementById('gdLightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('gdLightbox').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+
+/* ── Toast ── */
+function gdToast(msg, color='#4ade80') {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:${color};color:#fff;padding:10px 22px;border-radius:50px;font-size:.85rem;z-index:99999;opacity:0;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'Vazirmatn',sans-serif;font-weight:700;`;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';});
+    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';setTimeout(()=>t.remove(),260);},2200);
+}
+
+/* ── Backlog add ── */
+function gdAddBacklog(gameId, name, status) {
+    fetch('/backlog/add/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'game_id='+gameId+'&game_name='+encodeURIComponent(name)+'&status='+status
+    }).then(r=>r.json()).then(d => {
+        gdToast('بازی به لیستت اضافه شد ✓');
+        setTimeout(()=>location.reload(), 900);
+    }).catch(()=>gdToast('خطا در ارتباط','#ef4444'));
+}
+
+/* ── Backlog update ── */
+function gdUpdateBacklog(itemId, newStatus) {
+    fetch('/backlog/'+itemId+'/update/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'status='+newStatus
+    }).then(r=>r.json()).then(()=>{
+        gdToast('وضعیت بازی آپدیت شد ✓');
+    }).catch(()=>gdToast('خطا','#ef4444'));
+}
+
+/* ── Rate game ── */
+function rateGame(score) {
+    fetch('/games/{{ game.pk }}/rate/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'score=' + score
+    }).then(r => r.json()).then(d => {
+        if (d.ok) {
+            // Update star buttons
+            document.querySelectorAll('.gd-star-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.score) <= score);
+            });
+            document.getElementById('rating-msg').textContent = 'امتیاز تو: ' + score + '/5 ✓';
+            if (d.avg_rating) {
+                document.getElementById('avg-rating-display').textContent = 'میانگین جامعه: ' + d.avg_rating + '/5 (' + d.rating_count + ' نفر)';
+            }
+            gdToast('امتیاز ثبت شد ⭐');
+        }
+    }).catch(()=>gdToast('خطا در ثبت امتیاز','#ef4444'));
+}
+
+/* ── Backlog remove ── */
+function gdRemoveBacklog(itemId) {
+    if (!confirm('از لیست بازی‌هات حذف شود؟')) return;
+    fetch('/backlog/'+itemId+'/remove/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF}
+    }).then(r=>r.json()).then(()=>{
+        gdToast('از لیست بازی‌هات حذف شد','#f87171');
+        setTimeout(()=>location.reload(), 900);
+    }).catch(()=>gdToast('خطا','#ef4444'));
+}
+
+/* ── Reviews ── */
+let rvSelectedRating = {{ my_review.rating|default:'0' }};
+
+function rvStarClick(n) {
+    if (rvSelectedRating === n) {
+        // deselect
+        rvSelectedRating = 0;
+    } else {
+        rvSelectedRating = n;
+    }
+    document.getElementById('rv-rating-val').value = rvSelectedRating || '';
+    document.querySelectorAll('.gd-rv-star').forEach(btn => {
+        btn.classList.toggle('sel', parseInt(btn.dataset.n) <= rvSelectedRating);
+    });
+}
+
+// char counter
+const rvBodyEl = document.getElementById('rv-body');
+const rvCharEl = document.getElementById('rv-char-count');
+if (rvBodyEl && rvCharEl) {
+    rvCharEl.textContent = rvBodyEl.value.length + '/1000';
+    rvBodyEl.addEventListener('input', () => {
+        rvCharEl.textContent = rvBodyEl.value.length + '/1000';
+    });
+}
+
+function submitReview() {
+    const body = (document.getElementById('rv-body')?.value || '').trim();
+    const rating = document.getElementById('rv-rating-val')?.value || '';
+    if (!body) { gdToast('متن نظر رو بنویس', '#ef4444'); return; }
+
+    const btn = document.getElementById('rv-submit-btn');
+    btn.disabled = true; btn.textContent = 'در حال ارسال...';
+
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fd.append('body', body);
+    if (rating) fd.append('rating', rating);
+
+    fetch('/games/{{ game.pk }}/reviews/add/', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.ok) { gdToast(d.error || 'خطا', '#ef4444'); btn.disabled = false; btn.textContent = 'ارسال نظر'; return; }
+
+            // Update badge count
+            const badge = document.getElementById('reviews-count-badge');
+            if (badge) badge.textContent = d.review_count;
+
+            // Update or insert review item
+            const existing = document.getElementById('rv-' + d.review.id);
+            const emptyMsg = document.getElementById('rv-empty-msg');
+            if (emptyMsg) emptyMsg.remove();
+
+            const html = buildReviewHtml(d.review, true);
+            if (existing) {
+                existing.outerHTML = html;
+            } else {
+                document.getElementById('reviews-list').insertAdjacentHTML('afterbegin', html);
+            }
+
+            btn.textContent = 'به‌روزرسانی';
+            btn.disabled = false;
+            gdToast(d.created ? 'نظر ثبت شد ✓' : 'نظر ویرایش شد ✓');
+
+            // Update avg badge
+            if (d.review_avg) {
+                updateReviewAvgBadge(d.review_avg, d.review_rating_count);
+            }
+        })
+        .catch(() => { gdToast('خطا در ارسال', '#ef4444'); btn.disabled = false; btn.textContent = 'ارسال نظر'; });
+}
+
+function buildReviewHtml(rv, canDelete) {
+    const initials = rv.user ? rv.user[0].toUpperCase() : '?';
+    const avatarHtml = rv.avatar
+        ? `<img src="${rv.avatar}" alt="">`
+        : initials;
+    const starsHtml = rv.rating
+        ? `<span class="gd-rv-stars" title="${rv.rating}/5">${'<svg class="bi bi-star-fill gd-rv-star-filled" aria-hidden="true"><use href="#bi-star-fill"></use></svg>'.repeat(rv.rating)}<span style="font-size:.7rem;color:#fbbf24;font-weight:700;margin-right:3px;">${rv.rating}/5</span></span>`
+        : `<span class="gd-rv-no-score">بدون امتیاز</span>`;
+    const deleteBtn = canDelete ? `<button class="gd-rv-delete" onclick="deleteReview(${rv.id})"><svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف</button>` : '';
+    return `<div class="gd-review-item" id="rv-${rv.id}">
+        <div class="gd-rv-av">${avatarHtml}</div>
+        <div class="gd-rv-body">
+            <div class="gd-rv-head">
+                <span class="gd-rv-name">${rv.user}</span>
+                ${starsHtml}
+                <span class="gd-rv-date">${rv.created_at}</span>
+                ${deleteBtn}
+            </div>
+            <div class="gd-rv-text">${rv.body}</div>
+        </div>
+    </div>`;
+}
+
+function deleteReview(reviewId) {
+    if (!confirm('نظر حذف شود؟')) return;
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fetch('/games/{{ game.pk }}/reviews/' + reviewId + '/delete/', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.ok) { gdToast('خطا', '#ef4444'); return; }
+            const el = document.getElementById('rv-' + reviewId);
+            if (el) el.remove();
+            const badge = document.getElementById('reviews-count-badge');
+            if (badge) badge.textContent = d.review_count;
+            // Reset form
+            const bodyEl = document.getElementById('rv-body');
+            const ratingEl = document.getElementById('rv-rating-val');
+            if (bodyEl) bodyEl.value = '';
+            if (ratingEl) ratingEl.value = '';
+            rvSelectedRating = 0;
+            document.querySelectorAll('.gd-rv-star').forEach(b => b.classList.remove('sel'));
+            const submitBtn = document.getElementById('rv-submit-btn');
+            if (submitBtn) submitBtn.textContent = 'ارسال نظر';
+            if (!document.querySelectorAll('.gd-review-item').length) {
+                document.getElementById('reviews-list').innerHTML = '<div id="rv-empty-msg" style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:.83rem;">هنوز نظری ثبت نشده — اول باش! 🎮</div>';
+            }
+            if (d.review_avg) updateReviewAvgBadge(d.review_avg, d.review_rating_count);
+            gdToast('نظر حذف شد', '#f87171');
+        })
+        .catch(() => gdToast('خطا', '#ef4444'));
+}
+
+function updateReviewAvgBadge(avg, count) {
+    // Update the hero badge if it exists
+    const badge = document.getElementById('review-avg-badge');
+    if (badge) badge.textContent = avg + '/5';
+    const badgeLbl = document.getElementById('review-avg-badge-lbl');
+    if (badgeLbl) badgeLbl.textContent = 'امتیاز نظرات (' + count + ' نفر)';
+}
+</script>
+{% endblock %}

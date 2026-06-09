@@ -1,0 +1,331 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}تنظیمات امتیاز | داشبورد{% endblock %}
+{% block page_title %}تنظیمات امتیاز{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Score Grid ── */
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-bottom: 24px;
+}
+@media (max-width: 580px) { .score-grid { grid-template-columns: 1fr; } }
+
+.score-card {
+    border-radius: 18px;
+    padding: 26px 22px 20px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    background: var(--bg-card);
+}
+.score-card::before {
+    content: '';
+    position: absolute; top: 0; right: 0; left: 0; height: 3px;
+}
+.score-card.orange::before { background: linear-gradient(90deg, #f97316, #fb923c, #fdba74); }
+.score-card.blue::before   { background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc); }
+.score-card.purple::before { background: linear-gradient(90deg, var(--purple), var(--purple-light)); }
+.score-card.green::before  { background: linear-gradient(90deg, #059669, #10b981, #34d399); }
+
+.score-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 32px rgba(0,0,0,.3);
+}
+.score-card.orange:hover { border-color: rgba(249,115,22,.35); }
+.score-card.blue:hover   { border-color: rgba(14,165,233,.35); }
+.score-card.purple:hover { border-color: rgba(139,92,246,.35); }
+.score-card.green:hover  { border-color: rgba(16,185,129,.35); }
+
+/* Icon badge */
+.score-card-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; margin-bottom: 14px;
+}
+.score-card.orange .score-card-icon { background: rgba(249,115,22,.12); }
+.score-card.blue   .score-card-icon { background: rgba(14,165,233,.12); }
+.score-card.purple .score-card-icon { background: rgba(139,92,246,.12); }
+.score-card.green  .score-card-icon { background: rgba(16,185,129,.12); }
+
+.score-card-label {
+    font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; margin-bottom: 16px;
+    color: var(--text-faint);
+}
+
+/* Number stepper */
+.stepper {
+    display: flex; align-items: stretch;
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    transition: border-color .15s;
+}
+.score-card.orange .stepper:focus-within { border-color: rgba(249,115,22,.5); }
+.score-card.blue   .stepper:focus-within { border-color: rgba(14,165,233,.5); }
+.score-card.purple .stepper:focus-within { border-color: rgba(139,92,246,.5); }
+.score-card.green  .stepper:focus-within { border-color: rgba(16,185,129,.5); }
+
+.stepper-btn {
+    width: 44px; background: none; border: none; cursor: pointer;
+    font-size: 1.15rem; font-weight: 300; color: var(--text-faint);
+    transition: all .15s; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.stepper-btn:hover { color: var(--text-main); background: rgba(255,255,255,.05); }
+.score-card.orange .stepper-btn:hover { color: #fb923c; }
+.score-card.blue   .stepper-btn:hover { color: #38bdf8; }
+.score-card.purple .stepper-btn:hover { color: var(--purple-light); }
+.score-card.green  .stepper-btn:hover { color: #34d399; }
+
+.stepper-input {
+    flex: 1; background: none; border: none; outline: none;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 2.2rem; font-weight: 900; text-align: center;
+    padding: 12px 0; min-width: 0;
+    -moz-appearance: textfield;
+}
+.stepper-input::-webkit-inner-spin-button,
+.stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.score-card.orange .stepper-input { color: #fb923c; }
+.score-card.blue   .stepper-input { color: #38bdf8; }
+.score-card.purple .stepper-input { color: var(--purple-light); }
+.score-card.green  .stepper-input { color: #34d399; }
+
+.score-card-hint {
+    font-size: .73rem; color: var(--text-faint); margin-top: 12px;
+}
+
+/* ── Live Formula ── */
+.formula-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px 26px;
+    margin-bottom: 20px;
+}
+.formula-title {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-faint); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+}
+.formula-eq {
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 18px;
+}
+.formula-part {
+    display: flex; align-items: baseline; gap: 4px;
+}
+.formula-num {
+    font-size: 1.8rem; font-weight: 900; line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: color .2s;
+}
+.fp-post   .formula-num { color: #fb923c; }
+.fp-cmnt   .formula-num { color: #38bdf8; }
+.fp-day    .formula-num { color: var(--purple-light); }
+.fp-online .formula-num { color: #34d399; }
+.formula-x    { font-size: .82rem; color: var(--text-faint); margin: 0 1px; }
+.formula-name { font-size: .8rem; color: var(--text-muted); font-weight: 600; }
+.formula-op   { font-size: 1.2rem; color: var(--border); font-weight: 300; }
+
+.formula-example {
+    background: var(--bg-card2);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.fe-label { font-size: .72rem; color: var(--text-faint); font-weight: 600; white-space: nowrap; }
+.fe-calc  { font-size: .8rem; color: var(--text-muted); flex: 1; }
+.fe-score {
+    font-size: .95rem; font-weight: 900;
+    color: var(--purple-light);
+    background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.2);
+    border-radius: 8px; padding: 3px 12px;
+    white-space: nowrap;
+}
+
+/* ── Save ── */
+.save-row {
+    display: flex; align-items: center; gap: 14px;
+}
+.save-btn {
+    flex: 1; padding: 14px;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple));
+    color: #fff; border: none; border-radius: 12px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .95rem; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 16px var(--purple-glow);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,.45); }
+.save-btn:active { transform: scale(.98); }
+.save-updated {
+    font-size: .72rem; color: var(--text-faint);
+    white-space: nowrap;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="max-width:860px; margin:0 auto;">
+
+    <div class="page-header" style="margin-bottom:28px;">
+        <div>
+            <div class="page-title">تنظیمات امتیاز</div>
+            <div class="page-subtitle">ضریب امتیاز هر فعالیت را تنظیم کنید — لیدربورد بر اساس این مقادیر محاسبه می‌شود</div>
+        </div>
+    </div>
+
+    <form method="post" id="scForm">
+        {% csrf_token %}
+
+        <!-- ── ۴ کارت امتیاز ── -->
+        <div class="score-grid">
+
+            <!-- پست -->
+            <div class="score-card orange">
+                <div class="score-card-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4 0h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM4.5 4h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1m0 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1m0 2h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1"/></svg></div>
+                <div class="score-card-label">امتیاز هر پست</div>
+                <div class="stepper">
+                    <button type="button" class="stepper-btn" onclick="step('post_score',-1)">−</button>
+                    <input type="number" id="post_score" name="post_score"
+                           value="{{ cfg.post_score }}" min="0" max="999"
+                           oninput="syncAll()" class="stepper-input">
+                    <button type="button" class="stepper-btn" onclick="step('post_score',1)">+</button>
+                </div>
+                <div class="score-card-hint">به ازای هر پست منتشرشده</div>
+            </div>
+
+            <!-- کامنت -->
+            <div class="score-card blue">
+                <div class="score-card-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/></svg></div>
+                <div class="score-card-label">امتیاز هر کامنت</div>
+                <div class="stepper">
+                    <button type="button" class="stepper-btn" onclick="step('comment_score',-1)">−</button>
+                    <input type="number" id="comment_score" name="comment_score"
+                           value="{{ cfg.comment_score }}" min="0" max="999"
+                           oninput="syncAll()" class="stepper-input">
+                    <button type="button" class="stepper-btn" onclick="step('comment_score',1)">+</button>
+                </div>
+                <div class="score-card-hint">به ازای هر کامنت ثبت‌شده</div>
+            </div>
+
+            <!-- روز فعال -->
+            <div class="score-card purple">
+                <div class="score-card-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/></svg></div>
+                <div class="score-card-label">امتیاز روز فعال</div>
+                <div class="stepper">
+                    <button type="button" class="stepper-btn" onclick="step('active_day_score',-1)">−</button>
+                    <input type="number" id="active_day_score" name="active_day_score"
+                           value="{{ cfg.active_day_score }}" min="0" max="999"
+                           oninput="syncAll()" class="stepper-input">
+                    <button type="button" class="stepper-btn" onclick="step('active_day_score',1)">+</button>
+                </div>
+                <div class="score-card-hint">به ازای هر روزی که پست یا کامنت داشت</div>
+            </div>
+
+            <!-- ساعت آنلاین -->
+            <div class="score-card green">
+                <div class="score-card-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71zM8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/></svg></div>
+                <div class="score-card-label">امتیاز هر ساعت آنلاین</div>
+                <div class="stepper">
+                    <button type="button" class="stepper-btn" onclick="step('online_hour_score',-1)">−</button>
+                    <input type="number" id="online_hour_score" name="online_hour_score"
+                           value="{{ cfg.online_hour_score }}" min="0" max="999"
+                           oninput="syncAll()" class="stepper-input">
+                    <button type="button" class="stepper-btn" onclick="step('online_hour_score',1)">+</button>
+                </div>
+                <div class="score-card-hint">به ازای هر ساعتی که کاربر آنلاین بوده</div>
+            </div>
+
+        </div>
+
+        <!-- ── فرمول زنده ── -->
+        <div class="formula-card">
+            <div class="formula-title">
+                <svg class="bi bi-lightning-charge-fill" aria-hidden="true" style="color:var(--purple-light);"><use href="#bi-lightning-charge-fill"></use></svg>
+                فرمول امتیاز — زنده
+            </div>
+            <div class="formula-eq">
+                <div class="formula-part fp-post">
+                    <span class="formula-num" id="fv-post">{{ cfg.post_score }}</span>
+                    <span class="formula-x">×</span>
+                    <span class="formula-name">پست</span>
+                </div>
+                <span class="formula-op">+</span>
+                <div class="formula-part fp-cmnt">
+                    <span class="formula-num" id="fv-comment">{{ cfg.comment_score }}</span>
+                    <span class="formula-x">×</span>
+                    <span class="formula-name">کامنت</span>
+                </div>
+                <span class="formula-op">+</span>
+                <div class="formula-part fp-day">
+                    <span class="formula-num" id="fv-day">{{ cfg.active_day_score }}</span>
+                    <span class="formula-x">×</span>
+                    <span class="formula-name">روز فعال</span>
+                </div>
+                <span class="formula-op">+</span>
+                <div class="formula-part fp-online">
+                    <span class="formula-num" id="fv-online">{{ cfg.online_hour_score }}</span>
+                    <span class="formula-x">×</span>
+                    <span class="formula-name">ساعت آنلاین</span>
+                </div>
+            </div>
+
+            <div class="formula-example">
+                <span class="fe-label">مثال ←</span>
+                <span class="fe-calc" id="fe-calc">...</span>
+                <span class="fe-score" id="fe-score">...</span>
+            </div>
+        </div>
+
+        <!-- ── ذخیره ── -->
+        <div class="save-row">
+            <button type="submit" class="save-btn">
+                <svg class="bi bi-check-lg" aria-hidden="true" style="font-size:1rem;"><use href="#bi-check-lg"></use></svg>
+                ذخیره تنظیمات
+            </button>
+            <div class="save-updated">
+                <div style="margin-bottom:2px;"><svg class="bi bi-clock-history" aria-hidden="true" style="margin-left:4px;"><use href="#bi-clock-history"></use></svg>آخرین ذخیره</div>
+                <div style="color:var(--text-muted);">{{ cfg.updated_at|date:"Y/m/d — H:i" }}</div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script>
+function getVal(id) { return Math.max(0, parseInt(document.getElementById(id).value) || 0); }
+
+function step(id, d) {
+    const el = document.getElementById(id);
+    el.value = Math.max(0, (parseInt(el.value) || 0) + d);
+    syncAll();
+}
+
+function syncAll() {
+    const p = getVal('post_score');
+    const c = getVal('comment_score');
+    const d = getVal('active_day_score');
+    const o = getVal('online_hour_score');
+
+    document.getElementById('fv-post').textContent    = p;
+    document.getElementById('fv-comment').textContent = c;
+    document.getElementById('fv-day').textContent     = d;
+    document.getElementById('fv-online').textContent  = o;
+
+    // مثال: ۳ پست، ۷ کامنت، ۴ روز فعال، ۲ ساعت آنلاین
+    const score = 3*p + 7*c + 4*d + 2*o;
+    document.getElementById('fe-calc').textContent =
+        `۳ پست (${3*p}) + ۷ کامنت (${7*c}) + ۴ روز فعال (${4*d}) + ۲ ساعت آنلاین (${2*o})`;
+    document.getElementById('fe-score').textContent = score + ' امتیاز';
+}
+
+syncAll();
+</script>
+{% endblock %}

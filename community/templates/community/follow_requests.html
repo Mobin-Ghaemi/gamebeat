@@ -1,0 +1,222 @@
+{% extends "community/base.html" %}
+{% block title %}درخواست‌های دنبال کردن — GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+body { background: #080810; }
+.fr-page {
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 16px;
+    direction: rtl;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.fr-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+.fr-header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #e2e2f0;
+    margin: 0;
+}
+.fr-badge {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 50px;
+}
+.fr-item {
+    background: #0d0d1a;
+    border: 1px solid rgba(139,92,246,0.14);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s, opacity 0.3s;
+}
+.fr-item:hover { border-color: rgba(139,92,246,0.3); }
+.fr-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(139,92,246,0.3);
+    flex-shrink: 0;
+}
+.fr-avatar-placeholder {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    border: 2px solid rgba(139,92,246,0.3);
+    flex-shrink: 0;
+}
+.fr-info {
+    flex: 1;
+    min-width: 0;
+}
+.fr-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e2f0;
+    text-decoration: none;
+    display: block;
+}
+.fr-name:hover { color: #a78bfa; }
+.fr-uname {
+    font-size: 0.82rem;
+    color: #8b5cf6;
+    margin-top: 2px;
+    display: block;
+}
+.fr-time {
+    font-size: 0.75rem;
+    color: #55556a;
+    margin-top: 4px;
+    display: block;
+}
+.fr-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.btn-accept {
+    padding: 9px 18px;
+    background: linear-gradient(135deg, #059669, #10b981);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: opacity 0.2s;
+}
+.btn-accept:hover { opacity: 0.85; }
+.btn-reject {
+    padding: 9px 18px;
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 50px;
+    color: #f87171;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: background 0.2s;
+}
+.btn-reject:hover { background: rgba(248,113,113,0.2); }
+.fr-empty {
+    text-align: center;
+    padding: 64px 0;
+    color: #55556a;
+}
+.fr-empty i { font-size: 3rem; margin-bottom: 16px; display: block; }
+.fr-empty p { font-size: 1rem; margin: 0; }
+.fade-out {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.35s, transform 0.35s;
+    pointer-events: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fr-page">
+    <div class="fr-header">
+        <svg class="bi bi-person-plus-fill" aria-hidden="true" style="font-size:1.6rem; color:#8b5cf6;"><use href="#bi-person-plus-fill"></use></svg>
+        <h1>درخواست‌های دنبال کردن</h1>
+        {% if requests_list %}
+            <span class="fr-badge">{{ requests_list|length }}</span>
+        {% endif %}
+    </div>
+
+    {% if requests_list %}
+        <div id="requests-container">
+            {% for fr in requests_list %}
+            <div class="fr-item" id="fr-{{ fr.id }}">
+                {% if fr.from_user.gamer_profile.avatar %}
+                    <img src="{{ fr.from_user.gamer_profile.avatar.url }}" class="fr-avatar" alt="{{ fr.from_user.username }}">
+                {% else %}
+                    <div class="fr-avatar-placeholder">{{ fr.from_user.username|first|upper }}</div>
+                {% endif %}
+
+                <div class="fr-info">
+                    <a href="{% url 'community:profile' username=fr.from_user.username %}" class="fr-name">
+                        {{ fr.from_user.get_full_name|default:fr.from_user.username }}
+                    </a>
+                    <span class="fr-uname">@{{ fr.from_user.username }}</span>
+                    <span class="fr-time">{{ fr.created_at|timesince }} پیش</span>
+                </div>
+
+                <div class="fr-actions">
+                    <button class="btn-accept" onclick="respond({{ fr.id }}, 'accept')">
+                        <svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg> قبول
+                    </button>
+                    <button class="btn-reject" onclick="respond({{ fr.id }}, 'reject')">
+                        <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg> رد
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="fr-empty">
+            <svg class="bi bi-inbox" aria-hidden="true"><use href="#bi-inbox"></use></svg>
+            <p>درخواستی وجود ندارد</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+const csrf = '{{ csrf_token }}';
+
+function respond(requestId, action) {
+    fetch(`/follow-requests/${requestId}/respond/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrf,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=${action}`,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const item = document.getElementById(`fr-${requestId}`);
+            if (item) {
+                item.classList.add('fade-out');
+                setTimeout(() => {
+                    item.remove();
+                    // Check if container is empty
+                    const container = document.getElementById('requests-container');
+                    if (container && container.children.length === 0) {
+                        container.outerHTML = `
+                            <div class="fr-empty">
+                                <svg class="bi bi-inbox" aria-hidden="true" style="font-size:3rem; margin-bottom:16px; display:block; color:#55556a;"><use href="#bi-inbox"></use></svg>
+                                <p style="color:#55556a; font-size:1rem;">درخواستی وجود ندارد</p>
+                            </div>`;
+                    }
+                }, 380);
+            }
+        }
+    })
+    .catch(console.error);
+}
+</script>
+{% endblock %}

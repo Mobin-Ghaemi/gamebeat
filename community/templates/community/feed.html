@@ -59,9 +59,6 @@
 .mini-stat { background:var(--bg-card2); padding:10px 4px; text-align:center; }
 .mini-stat .v { font-size:1.05rem; font-weight:800; color:var(--text-white); }
 .mini-stat .l { font-size:0.68rem; color:var(--text-dim); margin-top:2px; }
-.xp-mini { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:10px; }
-.xp-mini-fill { height:100%; background:linear-gradient(90deg,#7c3aed,#a855f7,#c084fc); border-radius:2px; transition:width 1s ease; }
-
 .side-link {
     display:flex; align-items:center; gap:10px;
     padding:10px 12px; border-radius:12px;
@@ -171,6 +168,15 @@
 }
 .ptb-achievement { background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
 .ptb-highlight   { background:rgba(168,85,247,0.12);  color:#c084fc;  border:1px solid rgba(168,85,247,0.25); }
+.ptb-lfg         { background:rgba(0,212,255,0.10);   color:#00d4ff;  border:1px solid rgba(0,212,255,0.28); }
+
+/* LFG feed card */
+.lfg-feed-card { border-right:3px solid rgba(0,212,255,0.45) !important; }
+.lfg-feed-game { font-size:1.05rem; font-weight:800; color:var(--text-white); margin-bottom:10px; }
+.lfg-feed-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.lfg-feed-badges span { background:rgba(0,212,255,0.07); border:1px solid rgba(0,212,255,0.2); color:#06b6d4; border-radius:20px; padding:2px 10px; font-size:0.72rem; font-weight:600; }
+.lfg-slots { display:inline-flex; align-items:center; gap:5px; font-size:0.78rem; color:var(--text-dim); margin-top:9px; }
+.lfg-join-btn { color:#00d4ff !important; border-color:rgba(0,212,255,0.3) !important; }
 
 .post-head {
     display:flex; align-items:center; justify-content:space-between;
@@ -214,6 +220,43 @@
 .pf-btn.liked { color:#f87171; }
 .pf-btn.liked i { color:#f87171; }
 .pf-btn .btn-icon { display:inline-flex; }
+.like-count-btn { transition: all .15s; }
+.like-count-btn:hover { background:rgba(248,113,113,.1); color:#f87171; }
+.like-count-btn.liked { color:#f87171; }
+.like-count-btn.liked span { color:#f87171; }
+
+/* ── Like Button Animations ── */
+@keyframes likePop {
+  0%   { transform:scale(1); }
+  20%  { transform:scale(0.7) rotate(-12deg); }
+  50%  { transform:scale(1.55) rotate(8deg); }
+  70%  { transform:scale(0.9) rotate(-4deg); }
+  85%  { transform:scale(1.12) rotate(2deg); }
+  100% { transform:scale(1) rotate(0); }
+}
+@keyframes likeRipple {
+  0%   { width:0;height:0;opacity:.55;margin-top:0;margin-right:0; }
+  100% { width:70px;height:70px;opacity:0;margin-top:-35px;margin-right:-35px; }
+}
+@keyframes likeFloat {
+  0%   { opacity:1;transform:translate(0,0) scale(1); }
+  100% { opacity:0;transform:translate(var(--fx),var(--fy)) scale(.4); }
+}
+.like-pop { animation:likePop .48s cubic-bezier(.36,.07,.19,.97) both !important; }
+.like-ripple-wrap {
+  position:absolute; top:50%; right:50%;
+  border-radius:50%;
+  width:0; height:0;
+  pointer-events:none;
+  background:radial-gradient(circle, rgba(248,113,113,.4) 0%, rgba(248,113,113,0) 70%);
+}
+.like-ripple-wrap.ripple { animation:likeRipple .52s ease-out forwards; }
+.pf-btn.liked .like-count { color:#f87171; font-weight:800; }
+.like-float {
+  position:absolute; pointer-events:none; font-size:.85rem;
+  animation:likeFloat .7s ease-out forwards;
+  user-select:none;
+}
 
 /* ══════════════ COMMENTS ══════════════ */
 .comment-box {
@@ -231,6 +274,136 @@
 .c-author { font-size:0.8rem; font-weight:700; color:#a78bfa; margin-bottom:3px; }
 .c-text { font-size:0.86rem; color:var(--text-white); line-height:1.6; }
 .c-input-row { display:flex; gap:8px; margin-top:10px; }
+
+/* ══════════════ LIKES MODAL ══════════════ */
+.lm-overlay {
+    display:none; position:fixed; inset:0; z-index:8500;
+    background:rgba(0,0,0,.72); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center; padding:16px;
+}
+.lm-overlay.open { display:flex; animation:lmFade .15s ease; }
+@keyframes lmFade { from{opacity:0} to{opacity:1} }
+
+.lm-modal {
+    background:#1a1a1a; border:1px solid #2a2a2a;
+    border-radius:22px; width:100%; max-width:360px;
+    /* ارتفاع ثابت — هرچقدر لایک زیاد باشه بزرگ نمیشه */
+    height:520px; max-height:90vh;
+    display:flex; flex-direction:column;
+    box-shadow:0 32px 90px rgba(0,0,0,.85);
+    animation:lmPop .22s cubic-bezier(.34,1.45,.64,1);
+    overflow:hidden;
+}
+@keyframes lmPop { from{transform:scale(.86) translateY(10px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+/* ── header ── */
+.lm-head {
+    display:flex; align-items:center; gap:10px;
+    padding:15px 16px 13px; border-bottom:1px solid #242424; flex-shrink:0;
+}
+.lm-icon { font-size:1.1rem; }
+.lm-title { font-size:.95rem; font-weight:800; color:#f2f2f2; flex:1; }
+.lm-total { font-size:.75rem; color:#555; background:#252525; border-radius:20px; padding:3px 10px; }
+.lm-close {
+    width:28px;height:28px;border-radius:8px;background:#252525;
+    border:none;color:#555;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;font-size:.78rem;
+    transition:all .14s;
+}
+.lm-close:hover { background:#ef4444;color:#fff; }
+
+/* ── tabs ── */
+.lm-tabs {
+    display:flex; gap:0; overflow-x:auto; flex-shrink:0;
+    border-bottom:1px solid #1f1f1f; padding:0 4px;
+    scrollbar-width:none;
+}
+.lm-tabs::-webkit-scrollbar { display:none; }
+.lm-tab-btn {
+    display:flex; align-items:center; gap:5px; white-space:nowrap;
+    padding:9px 14px; background:none; border:none; color:#444;
+    font-family:'Vazirmatn',sans-serif; font-size:.82rem; font-weight:700;
+    cursor:pointer; border-bottom:2px solid transparent;
+    margin-bottom:-1px; transition:all .16s; flex-shrink:0;
+}
+.lm-tab-btn:hover { color:#888; }
+.lm-tab-btn.active { color:#f87171; border-color:#f87171; }
+.lm-tab-btn.active.rxn { color:#a78bfa; border-color:#8b5cf6; }
+.lm-tab-cnt {
+    font-size:.68rem; background:rgba(255,255,255,.06);
+    border-radius:20px; padding:1px 7px;
+}
+
+/* ── search ── */
+.lm-search {
+    padding:10px 14px; border-bottom:1px solid #1f1f1f; flex-shrink:0;
+    position:relative;
+}
+.lm-search-in {
+    width:100%; background:#252525; border:1px solid #2e2e2e;
+    border-radius:10px; padding:8px 36px 8px 12px;
+    color:#f0f0f0; font-family:'Vazirmatn',sans-serif; font-size:.85rem;
+    outline:none; transition:border-color .15s;
+}
+.lm-search-in:focus { border-color:rgba(248,113,113,.4); }
+.lm-search-in::placeholder { color:#3a3a3a; }
+.lm-search-ico {
+    position:absolute; left:24px; top:50%; transform:translateY(-50%);
+    color:#3a3a3a; font-size:.82rem; pointer-events:none;
+}
+
+/* ── list ── */
+.lm-list { flex:1; overflow-y:auto; min-height:0; }
+.lm-list::-webkit-scrollbar { width:4px; }
+.lm-list::-webkit-scrollbar-track { background:transparent; }
+.lm-list::-webkit-scrollbar-thumb { background:#2e2e2e; border-radius:4px; }
+
+.lm-user {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 16px; text-decoration:none;
+    transition:background .12s;
+    border-bottom:1px solid rgba(255,255,255,.025);
+}
+.lm-user:last-child { border-bottom:none; }
+.lm-user:hover { background:rgba(248,113,113,.05); }
+.lm-uinfo { flex:1; min-width:0; }
+.lm-uname { font-size:.87rem; font-weight:700; color:#f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lm-uhandle { font-size:.71rem; color:#3d3d3d; margin-top:1px; }
+/* ── pagination ── */
+.lm-pages {
+    display:flex; align-items:center; justify-content:center; gap:4px;
+    padding:10px 14px; border-top:1px solid #1f1f1f; flex-shrink:0;
+}
+.lm-page-btn {
+    min-width:32px; height:32px; border-radius:8px;
+    border:1px solid #2a2a2a; background:#222; color:#666;
+    font-family:'Vazirmatn',sans-serif; font-size:.78rem; font-weight:700;
+    cursor:pointer; transition:all .13s; padding:0 8px;
+    display:flex; align-items:center; justify-content:center;
+}
+.lm-page-btn:hover { background:#2e2e2e; color:#bbb; }
+.lm-page-btn.active { background:rgba(248,113,113,.15); border-color:rgba(248,113,113,.4); color:#f87171; }
+.lm-page-btn:disabled { opacity:.3; cursor:not-allowed; }
+.lm-page-dots { color:#333; font-size:.8rem; padding:0 4px; }
+
+/* ── states ── */
+.lm-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#333; padding:32px; }
+.lm-empty i { font-size:2.4rem; margin-bottom:10px; }
+.lm-empty p { font-size:.85rem; }
+.lm-spinner { flex:1; display:flex; align-items:center; justify-content:center; }
+.lm-spin-icon { width:30px;height:30px;border-radius:50%;border:2.5px solid #222;border-top-color:#f87171;animation:spin .65s linear infinite; }
+
+/* aliases برای inline comment box */
+.lc-comment { padding:11px 18px; border-bottom:1px solid rgba(255,255,255,.04); }
+.lc-comment:last-child { border-bottom:none; }
+.lc-comment-head { display:flex; align-items:center; gap:9px; margin-bottom:5px; }
+.lc-comment-meta { flex:1; }
+.lc-comment-author { font-size:.82rem; font-weight:700; color:#a78bfa; }
+.lc-comment-time { font-size:.68rem; color:#3a3a3a; margin-top:1px; }
+.lc-comment-text { font-size:.85rem; color:#d0d0d0; line-height:1.65; }
+.lc-empty { text-align:center; padding:44px 20px; color:#3a3a3a; }
+.lc-empty i { font-size:2.2rem; display:block; margin-bottom:10px; }
+.lc-empty p { font-size:.85rem; }
 
 /* ══════════════ IMAGE LIGHTBOX ══════════════ */
 .lightbox-overlay {
@@ -332,22 +505,17 @@
                     <div class="mini-stat"><div class="v">{{ my_profile.followers_count }}</div><div class="l">فالوور</div></div>
                     <div class="mini-stat"><div class="v">{{ my_profile.following_count }}</div><div class="l">دنبال</div></div>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.73rem; color:var(--text-dim); margin-bottom:5px;">
-                    <span style="color:#a78bfa; font-weight:600;">⚡ Level {{ my_profile.level }}</span>
-                    <span style="color:#c084fc;">{{ my_profile.xp }} XP</span>
-                </div>
-                <div class="xp-mini"><div class="xp-mini-fill" style="width:{{ my_profile.level_progress }}%;"></div></div>
             </div>
         </div>
 
         <!-- Nav Links (authenticated) -->
         <div class="mini-card" style="padding:10px;">
             <a href="{% url 'community:create_post_page' %}" class="side-link" style="color:#a78bfa; font-weight:700; background:rgba(139,92,246,0.07); margin-bottom:4px;">
-                <i class="bi bi-plus-circle-fill" style="color:#8b5cf6;"></i> پست جدید
+                <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-plus-circle-fill"></use></svg> پست جدید
             </a>
-            <a href="{% url 'community:search' %}" class="side-link"><i class="bi bi-search"></i> جستجوی گیمر</a>
-            <a href="{% url 'community:lfg' %}" class="side-link"><i class="bi bi-people-fill"></i> تابلوی LFG</a>
-            <a href="{% url 'community:leaderboard' %}" class="side-link"><i class="bi bi-trophy-fill"></i> لیدربورد</a>
+            <a href="{% url 'community:search' %}" class="side-link"><svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی گیمر</a>
+            <a href="{% url 'community:lfg' %}" class="side-link"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> پیدا کردن هم‌بازی</a>
+            <a href="{% url 'community:leaderboard' %}" class="side-link"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> لیدربورد</a>
         </div>
 
         {% else %}
@@ -355,7 +523,7 @@
         <div class="mini-card">
             <div class="mini-banner" style="background: linear-gradient(135deg, #1a0a30 0%, #2d1b6b 50%, #0e0e25 100%);">
                 <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-                    <i class="bi bi-controller" style="font-size:2.2rem; color:rgba(139,92,246,0.6);"></i>
+                    <svg class="bi bi-controller" aria-hidden="true" style="font-size:2.2rem; color:rgba(139,92,246,0.6);"><use href="#bi-controller"></use></svg>
                 </div>
             </div>
             <div class="mini-body" style="padding:16px 14px 18px;">
@@ -369,7 +537,7 @@
                     <div class="mini-stat"><div class="v">∞</div><div class="l">ماجرا</div></div>
                 </div>
                 <a href="{% url 'account:register' %}" class="btn-red" style="display:block; text-align:center; margin-bottom:8px; text-decoration:none;">
-                    <i class="bi bi-person-plus-fill"></i> ثبت نام رایگان
+                    <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> ثبت نام رایگان
                 </a>
                 <a href="{% url 'account:login' %}" class="btn-ghost" style="display:block; text-align:center; text-decoration:none;">
                     ورود به حساب
@@ -379,10 +547,10 @@
 
         <!-- Nav Links (guest) -->
         <div class="mini-card" style="padding:10px;">
-            <a href="{% url 'community:search' %}" class="side-link"><i class="bi bi-search"></i> جستجوی گیمر</a>
-            <a href="{% url 'community:lfg' %}" class="side-link"><i class="bi bi-people-fill"></i> تابلوی LFG</a>
-            <a href="{% url 'community:leaderboard' %}" class="side-link"><i class="bi bi-trophy-fill"></i> لیدربورد</a>
-            <a href="{% url 'community:games_ranking' %}" class="side-link"><i class="bi bi-joystick"></i> بازی‌ها</a>
+            <a href="{% url 'community:search' %}" class="side-link"><svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی گیمر</a>
+            <a href="{% url 'community:lfg' %}" class="side-link"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> پیدا کردن هم‌بازی</a>
+            <a href="{% url 'community:leaderboard' %}" class="side-link"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> لیدربورد</a>
+            <a href="{% url 'community:games_ranking' %}" class="side-link"><svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg> بازی‌ها</a>
         </div>
         {% endif %}
 
@@ -394,7 +562,7 @@
         {% if is_discover %}
         <!-- Discover Banner -->
         <div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(168,85,247,0.06)); border:1px solid rgba(139,92,246,0.25); border-radius:16px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
-            <span style="font-size:1.8rem;">🔭</span>
+            <svg style="width:1.8rem;height:1.8rem;fill:currentColor;vertical-align:-.125em;flex-shrink:0" viewBox="0 0 16 16"><path d="M.5 10.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1zM2 9.5a.5.5 0 0 0 .5.5h4.792l-1.44 2.88A.5.5 0 0 0 6.29 13H7.5v.5a.5.5 0 0 0 1 0V13h1.21a.5.5 0 0 0 .438-.72L8.708 10H13.5a.5.5 0 0 0 0-1h-11a.5.5 0 0 0-.5.5M14.53 5.92 11.11.44a.5.5 0 0 0-.88 0L7.28 5.63 5.96 3.02a.5.5 0 0 0-.88 0L2.93 7.6A.5.5 0 0 0 3.35 8.3l8.5-1.5a.5.5 0 0 0 .27-.84z"/></svg>
             <div>
                 <div style="font-weight:800; font-size:0.95rem; color:var(--text-white); margin-bottom:3px;">حالت کشف — محبوب‌ترین گیمرها</div>
                 <div style="font-size:0.82rem; color:var(--text-muted);">هنوز کسی رو دنبال نکردی. اینا پست‌های گیمرهای پرطرفداره — دنبالشون کن تا فید شخصی ببینی!</div>
@@ -402,8 +570,9 @@
         </div>
         {% endif %}
 
-        {% if posts %}
-            {% for post in posts %}
+        {% if combined_feed %}
+            {% for item in combined_feed %}
+            {% with post=item.obj %}
             <div class="post-card t-{{ post.post_type }}">
 
                 <div class="post-head">
@@ -426,15 +595,15 @@
                     </a>
                     <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
                         {% if post.post_type == 'achievement' %}
-                            <span class="post-type-badge ptb-achievement"><i class="bi bi-trophy-fill"></i> دستاورد</span>
+                            <span class="post-type-badge ptb-achievement"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاورد</span>
                         {% elif post.post_type == 'highlight' %}
-                            <span class="post-type-badge ptb-highlight"><i class="bi bi-lightning-fill"></i> هایلایت</span>
+                            <span class="post-type-badge ptb-highlight"><svg class="bi bi-lightning-fill" aria-hidden="true"><use href="#bi-lightning-fill"></use></svg> هایلایت</span>
                         {% endif %}
                         {% if is_discover and user.is_authenticated %}
                         <button class="follow-btn" id="fbtn-{{ post.author.id }}"
                             data-username="{{ post.author.username }}"
                             onclick="followUser('{{ post.author.username }}', this)">
-                            <i class="bi bi-person-plus-fill"></i> دنبال کردن
+                            <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> دنبال کردن
                         </button>
                         {% endif %}
                     </div>
@@ -462,39 +631,67 @@
 
                 <div class="post-foot">
                     {% if user.is_authenticated %}
+                    <!-- ─ Like: heart toggles, count opens modal ─ -->
+                    <div style="display:flex;align-items:center;gap:0;">
+                        <button class="pf-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                                id="like-btn-{{ post.id }}"
+                                onclick="toggleLike({{ post.id }}, this)"
+                                style="padding-left:6px; gap:5px;">
+                            <span class="like-ripple-wrap"></span>
+                            <i class="bi {% if post.id in liked_post_ids %}bi-heart-fill{% else %}bi-heart{% endif %}" style="font-size:1rem;transition:color .2s;"></i>
+                        </button>
+                        <button class="pf-btn like-count-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                                id="like-count-{{ post.id }}"
+                                onclick="showLikesModal({{ post.id }})"
+                                title="نمایش لایک‌ها"
+                                style="padding:7px 10px 7px 4px; gap:0; border-radius:8px;">
+                            <span class="like-count" style="font-size:.88rem; font-weight:700; min-width:14px; display:inline-block; text-align:center;">{{ post.likes_count }}</span>
+                        </button>
+                    </div>
                     <!-- Reaction button -->
                     <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
                         <button class="pf-btn" id="rxn-main-{{ post.id }}"
-                            onclick="toggleReactionPicker({{ post.id }}); buildReactionPicker({{ post.id }}, '{{ post.my_reaction }}')">
+                            data-my-reaction="{{ post.my_reaction }}"
+                            onclick="toggleReactionPicker({{ post.id }})">
                             {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.8rem;">خفن</span>
                             {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.8rem;">GG</span>
-                            {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.8rem;">Tryhard</span>
+                            {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.8rem;">عصبانی</span>
                             {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.8rem;">لجند</span>
                             {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.8rem;">GG EZ</span>
-                            {% else %}<i class="bi bi-hand-thumbs-up"></i> واکنش{% endif %}
+                            {% elif post.my_reaction == 'cry' %}😢 <span style="font-size:.8rem;">گریه</span>
+                            {% elif post.my_reaction == 'sob' %}😭 <span style="font-size:.8rem;">اشک</span>
+                            {% else %}<svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> واکنش{% endif %}
                         </button>
                         <div class="reaction-picker"></div>
                     </div>
-                    <button class="pf-btn" onclick="toggleComments({{ post.id }})">
-                        <i class="bi bi-chat-dots"></i>
-                        <span>{{ post.comments_count }}</span>
-                    </button>
+                    <!-- ─ Comment: chat icon toggles box, count opens modal ─ -->
+                    <div style="display:flex;align-items:center;gap:0;">
+                        <button class="pf-btn" onclick="toggleComments({{ post.id }})" style="padding-left:6px; gap:5px;" title="کامنت‌ها">
+                            <svg class="bi bi-chat-dots" aria-hidden="true" style="font-size:1rem;"><use href="#bi-chat-dots"></use></svg>
+                        </button>
+                        <button class="pf-btn" onclick="showCommentsModal({{ post.id }})"
+                                title="نمایش کامنت‌ها"
+                                style="padding:7px 10px 7px 4px; gap:0; border-radius:8px;">
+                            <span style="font-size:.88rem; font-weight:700; min-width:14px; display:inline-block; text-align:center;">{{ post.comments_count }}</span>
+                        </button>
+                    </div>
                     {% else %}
                     <!-- Guest: show login prompt -->
                     <a href="{% url 'account:login' %}?next=/" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
-                        <i class="bi bi-hand-thumbs-up"></i> ورود برای واکنش
+                        <svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> ورود برای واکنش
                     </a>
                     <a href="{% url 'account:login' %}?next=/" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
-                        <i class="bi bi-chat-dots"></i>
+                        <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg>
                         <span>{{ post.comments_count }}</span>
                     </a>
                     {% endif %}
                     <button class="pf-btn" onclick="sharePost({{ post.id }})">
-                        <i class="bi bi-share"></i>
+                        <svg class="bi bi-share" aria-hidden="true"><use href="#bi-share"></use></svg>
                     </button>
                 </div>
 
                 <div class="comment-box" id="c-{{ post.id }}">
+                    <div class="c-list" id="cl-{{ post.id }}">
                     {% for comment in post.comments.all %}
                     <div class="c-item">
                         {% if comment.author.gamer_profile.avatar %}
@@ -508,30 +705,37 @@
                         </div>
                     </div>
                     {% endfor %}
+                    </div>
                     {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'community:add_comment' post.id %}" class="c-input-row">
+                    <form class="c-input-row" onsubmit="submitComment(event, {{ post.id }}, this)">
                         {% csrf_token %}
                         {% if my_profile.avatar %}
                             <img src="{{ my_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
                         {% else %}
                             <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; flex-shrink:0; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ user.username|first|upper }}</div>
                         {% endif %}
-                        <input type="text" name="content" class="g-input" style="padding:8px 14px; border-radius:50px;" placeholder="کامنت بذار...">
-                        <button type="submit" class="btn-red" style="padding:8px 16px; flex-shrink:0; border-radius:50px;"><i class="bi bi-send-fill"></i></button>
+                        <input type="text" name="content" class="g-input"
+                               style="padding:8px 14px; border-radius:50px;"
+                               placeholder="کامنت بذار..."
+                               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.closest('form').requestSubmit();}">
+                        <button type="submit" class="btn-red" style="padding:8px 16px; flex-shrink:0; border-radius:50px;">
+                            <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>
+                        </button>
                     </form>
                     {% else %}
                     <a href="{% url 'account:login' %}?next=/" class="c-input-row" style="text-decoration:none; padding:10px 14px; justify-content:center; color:var(--text-dim); font-size:0.85rem;">
-                        <i class="bi bi-lock-fill" style="color:#8b5cf6; margin-left:6px;"></i> برای کامنت گذاشتن ورود کن
+                        <svg class="bi bi-lock-fill" aria-hidden="true" style="color:#8b5cf6; margin-left:6px;"><use href="#bi-lock-fill"></use></svg> برای کامنت گذاشتن ورود کن
                     </a>
                     {% endif %}
                 </div>
 
             </div>
+            {% endwith %}
             {% endfor %}
 
         {% else %}
             <div class="empty-feed">
-                <span class="ef-icon">🎮</span>
+                <span class="ef-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></span>
                 <div style="color:var(--text-white); font-size:1.15rem; font-weight:800; margin-bottom:10px;">
                     {% if user.is_authenticated %}فید خالیه!{% else %}به دنیای گیمرها خوش اومدی{% endif %}
                 </div>
@@ -541,9 +745,9 @@
                 <div style="display:flex; gap:10px; justify-content:center;">
                     <a href="{% url 'community:search' %}" class="btn-ghost">جستجوی گیمر</a>
                     {% if user.is_authenticated %}
-                    <a href="{% url 'community:create_post_page' %}" class="btn-red"><i class="bi bi-plus"></i> پست جدید</a>
+                    <a href="{% url 'community:create_post_page' %}" class="btn-red"><svg class="bi bi-plus" aria-hidden="true"><use href="#bi-plus"></use></svg> پست جدید</a>
                     {% else %}
-                    <a href="{% url 'account:register' %}" class="btn-red"><i class="bi bi-person-plus-fill"></i> ثبت نام</a>
+                    <a href="{% url 'account:register' %}" class="btn-red"><svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> ثبت نام</a>
                     {% endif %}
                 </div>
             </div>
@@ -557,7 +761,7 @@
         {% if suggested_gamers %}
         <div class="sb-panel">
             <div class="sb-panel-title">
-                <i class="bi bi-people-fill" style="color:#8b5cf6;"></i> گیمرها رو بشناس
+                <svg class="bi bi-people-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-people-fill"></use></svg> گیمرها رو بشناس
                 <a href="{% url 'community:search' %}" style="font-size:0.75rem; color:#8b5cf6; margin-right:auto; text-decoration:none;">همه →</a>
             </div>
             {% for gamer in suggested_gamers %}
@@ -569,7 +773,10 @@
                 {% endif %}
                 <div class="sug-info">
                     <a href="{% url 'community:profile' username=gamer.username %}" class="sug-name">{{ gamer.username }}</a>
-                    <div class="sug-meta">{{ gamer.gamer_profile.get_platform_display }}</div>
+                    <div class="sug-meta">
+                        {{ gamer.gamer_profile.get_platform_display }}
+                        {% if gamer.followers_count %} · {{ gamer.followers_count }} دنبال‌کننده{% endif %}
+                    </div>
                 </div>
                 <button class="follow-btn" onclick="followUser('{{ gamer.username }}', this)">دنبال</button>
             </div>
@@ -577,25 +784,9 @@
         </div>
         {% endif %}
 
-        {% if active_lfg %}
-        <div class="sb-panel">
-            <div class="sb-panel-title">
-                <i class="bi bi-people-fill" style="color:#00d4ff;"></i>
-                <span style="color:#00d4ff;">LFG فعال</span>
-                <a href="{% url 'community:lfg' %}" style="font-size:0.75rem; color:#00d4ff; margin-right:auto; text-decoration:none;">همه →</a>
-            </div>
-            {% for lfg in active_lfg %}
-            <div class="lfg-row">
-                <div class="lfg-game">{{ lfg.game_name }}</div>
-                <div class="lfg-meta"><i class="bi bi-person"></i> {{ lfg.author.username }} · {{ lfg.current_players }}/{{ lfg.max_players }}</div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
         <!-- Trending hashtags placeholder -->
         <div class="sb-panel">
-            <div class="sb-panel-title"><i class="bi bi-fire" style="color:#f97316;"></i> ترند هشتگ‌ها</div>
+            <div class="sb-panel-title"><svg class="bi bi-fire" aria-hidden="true" style="color:#f97316;"><use href="#bi-fire"></use></svg> ترند هشتگ‌ها</div>
             <div style="color:var(--text-dim); font-size:0.82rem; text-align:center; padding:12px 0;">به زودی ...</div>
         </div>
 
@@ -604,49 +795,347 @@
 
 <!-- Image Lightbox -->
 <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
-    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <button class="lightbox-close" onclick="closeLightbox()"><svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg></button>
     <img id="lightbox-img" src="" alt="">
 </div>
+
+<!-- ═══ Interactions Modal ═══ -->
+<div class="lm-overlay" id="lmOverlay" onclick="closeLmModal()">
+<div class="lm-modal" onclick="event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="lm-head">
+        <span class="lm-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.281 8.717 2.01z"/></svg></span>
+        <span class="lm-title">لایک‌ها و واکنش‌ها</span>
+        <span class="lm-total" id="lmTotal">…</span>
+        <button class="lm-close" onclick="closeLmModal()"><svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg></button>
+    </div>
+
+    <!-- Tabs (filled dynamically) -->
+    <div class="lm-tabs" id="lmTabs"></div>
+
+    <!-- Search -->
+    <div class="lm-search">
+        <input type="text" class="lm-search-in" id="lmSearchIn"
+               placeholder="جستجوی نام یا یوزرنیم..."
+               oninput="lmOnSearch(this.value)">
+        <svg class="bi bi-search lm-search-ico" aria-hidden="true"><use href="#bi-search"></use></svg>
+    </div>
+
+    <!-- User list -->
+    <div class="lm-list" id="lmList">
+        <div class="lm-spinner"><div class="lm-spin-icon"></div></div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="lm-pages" id="lmPages" style="display:none;"></div>
+
+</div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 /* ──── Like with animation ──── */
 function toggleLike(postId, btn) {
-    fetch(`/community/post/${postId}/like/`, {
+    fetch(`/post/${postId}/like/`, {
         method:'POST', headers:{'X-CSRFToken':csrfToken}
     }).then(r=>r.json()).then(data=>{
-        const icon   = btn.querySelector('i');
-        const count  = btn.querySelector('.like-count');
-        const wrap   = btn.querySelector('.like-ripple-wrap');
+        const icon = btn.querySelector('i');
+        const wrap = btn.querySelector('.like-ripple-wrap');
 
         btn.classList.toggle('liked', data.liked);
         icon.className = data.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
-        if (typeof data.count !== 'undefined') count.textContent = data.count;
+        icon.style.fontSize = '1rem';
 
-        /* pop animation */
+        /* ── آپدیت عدد در دکمه شمارش (جداست از دکمه heart) ── */
+        const countBtn = document.getElementById('like-count-' + postId);
+        if (countBtn) {
+            countBtn.classList.toggle('liked', data.liked);
+            const sp = countBtn.querySelector('.like-count');
+            if (sp && typeof data.count !== 'undefined') {
+                sp.textContent = data.count;
+                /* bounce روی عدد */
+                sp.animate(
+                    [{transform:'scale(1.5)', color:'#f87171'}, {transform:'scale(1)', color:''}],
+                    {duration:320, easing:'cubic-bezier(.34,1.56,.64,1)'}
+                );
+            }
+        }
+
+        /* ── heart pop ── */
         icon.classList.remove('like-pop');
-        void icon.offsetWidth; /* reflow */
+        void icon.offsetWidth;
         icon.classList.add('like-pop');
 
-        /* ripple only on like */
-        if (data.liked && wrap) {
-            wrap.classList.remove('ripple');
-            void wrap.offsetWidth;
-            wrap.classList.add('ripple');
-            setTimeout(()=>wrap.classList.remove('ripple'), 520);
+        if (data.liked) {
+            /* ripple */
+            if (wrap) {
+                wrap.classList.remove('ripple');
+                void wrap.offsetWidth;
+                wrap.classList.add('ripple');
+                setTimeout(()=>wrap.classList.remove('ripple'), 540);
+            }
+            /* floating mini-hearts */
+            const emojis = ['❤️','🩷','💖','💗','✨'];
+            for (let i = 0; i < 6; i++) {
+                setTimeout(()=>{
+                    const f = document.createElement('span');
+                    f.className = 'like-float';
+                    f.textContent = emojis[i % emojis.length];
+                    const angle = (Math.random() * 160 - 80);
+                    const dist  = 28 + Math.random() * 28;
+                    f.style.setProperty('--fx', Math.sin(angle*Math.PI/180)*dist + 'px');
+                    f.style.setProperty('--fy', (-dist - Math.random()*16) + 'px');
+                    f.style.right  = (30 + Math.random()*20) + '%';
+                    f.style.bottom = '60%';
+                    f.style.animationDuration = (.55 + Math.random()*.3) + 's';
+                    f.style.animationDelay    = (i * 55) + 'ms';
+                    btn.appendChild(f);
+                    setTimeout(()=>f.remove(), 1000);
+                }, i * 55);
+            }
         }
     });
 }
 
-/* ──── Comments ──── */
+/* ──── Comments (inline toggle) ──── */
 function toggleComments(id) {
     document.getElementById('c-'+id).classList.toggle('show');
 }
 
+/* ──── Submit comment via AJAX ──── */
+function submitComment(e, postId, form) {
+    e.preventDefault();
+    const input  = form.querySelector('input[name="content"]');
+    const btn    = form.querySelector('button[type="submit"]');
+    const content = input.value.trim();
+    if (!content) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="bi bi-arrow-repeat" aria-hidden="true" style="animation:spin .6s linear infinite;display:inline-block;"><use href="#bi-arrow-repeat"></use></svg>';
+
+    const fd = new FormData(form);
+
+    fetch(`/post/${postId}/comment/`, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>';
+
+        if (data.ok) {
+            input.value = '';
+            // کامنت جدید را به لیست اضافه کن (بدون رفرش)
+            const list = document.getElementById('cl-' + postId);
+            if (list) {
+                const item = _buildCommentEl(data.comment);
+                list.appendChild(item);
+                // اسکرول به کامنت جدید
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            // باکس کامنت باز بماند
+            document.getElementById('c-' + postId).classList.add('show');
+            // آپدیت تعداد
+            _updateCommentCount(postId, data.total);
+        } else {
+            showToast(data.error || 'خطا در ارسال', '#ef4444');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>';
+        showToast('خطا در اتصال به سرور', '#ef4444');
+    });
+}
+
+/* ساخت المان کامنت جدید */
+function _buildCommentEl(c) {
+    const div = document.createElement('div');
+    div.className = 'c-item';
+    div.style.cssText = 'animation:thumbIn .22s ease;';
+    const av = c.avatar
+        ? `<img src="${c.avatar}" class="avatar avatar-sm">`
+        : `<div class="avatar-placeholder avatar-sm" style="font-size:.7rem;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;">${c.username.charAt(0).toUpperCase()}</div>`;
+    div.innerHTML = `${av}
+        <div class="c-bubble">
+            <div class="c-author">@${c.username}
+                <span style="font-size:.65rem;color:#3a3a3a;font-weight:400;margin-right:6px;">${c.created_at}</span>
+            </div>
+            <div class="c-text">${_escHtml(c.content)}</div>
+        </div>`;
+    return div;
+}
+
+/* آپدیت شمارنده کامنت در فوتر پست */
+function _updateCommentCount(postId, total) {
+    // دکمه count modal
+    document.querySelectorAll(`button[onclick="showCommentsModal(${postId})"]`).forEach(btn => {
+        const sp = btn.querySelector('span');
+        if (sp) sp.textContent = total;
+    });
+    // دکمه toggle inline (در صورت وجود)
+    const toggleArea = document.querySelector(`button[onclick="toggleComments(${postId})"]`);
+    if (toggleArea) {
+        const sp = toggleArea.querySelector('span');
+        if (sp) sp.textContent = total;
+    }
+}
+
+/* ══════════ INTERACTIONS MODAL ══════════ */
+let _lmPostId  = null;
+let _lmTab     = 'all';
+let _lmPage    = 1;
+let _lmQuery   = '';
+let _lmSearchT = null;
+const _LM_RXN_KEYS = ['fire','dead','tryhard','legend','ggez','cry','sob'];
+
+function showLikesModal(postId) {
+    _lmPostId = postId;
+    _lmTab    = 'all';
+    _lmPage   = 1;
+    _lmQuery  = '';
+    document.getElementById('lmSearchIn').value = '';
+    document.getElementById('lmTabs').innerHTML = '';
+    document.getElementById('lmTotal').textContent = '…';
+    document.getElementById('lmOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    _lmLoad();
+}
+
+/* کامنت عدد → inline box را toggle می‌کند */
+function showCommentsModal(postId) {
+    const box = document.getElementById('c-' + postId);
+    if (box) box.classList.toggle('show');
+}
+
+function closeLmModal() {
+    document.getElementById('lmOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function lmOnSearch(val) {
+    clearTimeout(_lmSearchT);
+    _lmSearchT = setTimeout(() => { _lmQuery = val.trim(); _lmPage = 1; _lmLoad(); }, 280);
+}
+
+function lmSwitchTab(tab) {
+    _lmTab  = tab;
+    _lmPage = 1;
+    _lmLoad();
+}
+
+function lmGoPage(p) {
+    _lmPage = p;
+    _lmLoad();
+    document.getElementById('lmList').scrollTop = 0;
+}
+
+function _lmLoad() {
+    const list  = document.getElementById('lmList');
+    const pages = document.getElementById('lmPages');
+    list.innerHTML      = '<div class="lm-spinner"><div class="lm-spin-icon"></div></div>';
+    pages.style.display = 'none';
+
+    const params = new URLSearchParams({ tab: _lmTab, page: _lmPage });
+    if (_lmQuery) params.set('q', _lmQuery);
+
+    fetch(`/post/${_lmPostId}/interactions/?${params}`)
+        .then(r => r.json())
+        .then(data => {
+            /* ── render tabs (first load only) ── */
+            const tabsEl = document.getElementById('lmTabs');
+            if (tabsEl.children.length === 0 && data.tabs) {
+                tabsEl.innerHTML = data.tabs.map(t => {
+                    const isRxn = _LM_RXN_KEYS.includes(t.key);
+                    return `<button class="lm-tab-btn ${isRxn ? 'rxn' : ''} ${t.key === _lmTab ? 'active' : ''}"
+                                    id="lmTab-${t.key}"
+                                    onclick="lmSwitchTab('${t.key}')">
+                        ${t.emoji} ${t.label}
+                        <span class="lm-tab-cnt">${t.count}</span>
+                    </button>`;
+                }).join('');
+            } else if (data.tabs) {
+                /* just update active class */
+                data.tabs.forEach(t => {
+                    const btn = document.getElementById('lmTab-' + t.key);
+                    if (btn) btn.classList.toggle('active', t.key === _lmTab);
+                });
+            }
+
+            /* ── header total ── */
+            const allTab = data.tabs ? data.tabs.find(t => t.key === 'all') : null;
+            document.getElementById('lmTotal').textContent =
+                _lmQuery ? `${data.filtered} نتیجه` : (allTab ? allTab.count : data.filtered);
+
+            /* ── empty ── */
+            if (!data.users || !data.users.length) {
+                list.innerHTML = `<div class="lm-empty">
+                    <svg class="bi" aria-hidden="true" style="color:#2a2a2a;width:1em;height:1em;"><use href="#bi-${_lmQuery ? 'search' : 'heart'}"></use></svg>
+                    <p>${_lmQuery ? 'کسی پیدا نشد' : 'هنوز تعاملی ثبت نشده'}</p>
+                </div>`;
+                return;
+            }
+
+            /* ── user rows ── */
+            list.innerHTML = data.users.map(u => `
+                <a class="lm-user" href="/profile/${u.username}/" onclick="closeLmModal()">
+                    ${u.avatar
+                        ? `<img src="${u.avatar}" class="avatar avatar-sm" style="border:2px solid rgba(248,113,113,.22);flex-shrink:0;">`
+                        : `<div class="avatar-placeholder avatar-sm" style="font-size:.75rem;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;flex-shrink:0;">${u.username.charAt(0).toUpperCase()}</div>`
+                    }
+                    <div class="lm-uinfo">
+                        <div class="lm-uname">${u.full_name}
+                            <span style="font-size:.9rem;margin-right:4px;">${u.badge}</span>
+                        </div>
+                        <div class="lm-uhandle">@${u.username}</div>
+                    </div>
+                </a>`).join('');
+
+            /* ── pagination ── */
+            if (data.pages > 1) {
+                pages.style.display = 'flex';
+                pages.innerHTML     = _lmPagerHTML(data.page, data.pages);
+            }
+        })
+        .catch(() => {
+            list.innerHTML = `<div class="lm-empty"><svg class="bi bi-wifi-off" aria-hidden="true"><use href="#bi-wifi-off"></use></svg><p>خطا در بارگذاری</p></div>`;
+        });
+}
+
+function _lmPagerHTML(cur, total) {
+    let h = `<button class="lm-page-btn" onclick="lmGoPage(${cur-1})" ${cur===1?'disabled':''}><svg class="bi bi-chevron-right" aria-hidden="true"><use href="#bi-chevron-right"></use></svg></button>`;
+    const range = [];
+    if (total <= 7) { for (let i=1;i<=total;i++) range.push(i); }
+    else {
+        range.push(1);
+        if (cur > 3) range.push('…');
+        for (let i=Math.max(2,cur-1); i<=Math.min(total-1,cur+1); i++) range.push(i);
+        if (cur < total-2) range.push('…');
+        range.push(total);
+    }
+    range.forEach(r => {
+        h += r === '…'
+            ? `<span class="lm-page-dots">…</span>`
+            : `<button class="lm-page-btn${r===cur?' active':''}" onclick="lmGoPage(${r})">${r}</button>`;
+    });
+    h += `<button class="lm-page-btn" onclick="lmGoPage(${cur+1})" ${cur===total?'disabled':''}><svg class="bi bi-chevron-left" aria-hidden="true"><use href="#bi-chevron-left"></use></svg></button>`;
+    return h;
+}
+
+function _escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLmModal(); });
+
 /* ──── Share ──── */
 function sharePost(postId) {
-    const url = window.location.origin + '/community/post/' + postId + '/';
+    const url = window.location.origin + '/post/' + postId + '/';
     navigator.clipboard.writeText(url).then(()=> showToast('لینک کپی شد ✓'));
 }
 
@@ -664,21 +1153,21 @@ function showToast(msg, color='#7c3aed') {
 
 /* ──── Follow ──── */
 function followUser(username, btn) {
-    fetch(`/community/follow/${username}/`, {
+    fetch(`/follow/${username}/`, {
         method:'POST', headers:{'X-CSRFToken':csrfToken}
     }).then(r=>r.json()).then(data=>{
         if (data.following) {
-            btn.innerHTML = '<i class="bi bi-check2"></i> دنبال می‌کنی';
+            btn.innerHTML = '<svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg> دنبال می‌کنی';
             btn.classList.add('following');
             // Also update ALL follow buttons for this user on the page
             document.querySelectorAll(`[id^="fbtn-"]`).forEach(b => {
                 if (b.dataset.username === username) {
-                    b.innerHTML = '<i class="bi bi-check2"></i> دنبال می‌کنی';
+                    b.innerHTML = '<svg class="bi bi-check2" aria-hidden="true"><use href="#bi-check2"></use></svg> دنبال می‌کنی';
                     b.classList.add('following');
                 }
             });
         } else {
-            btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> دنبال کردن';
+            btn.innerHTML = '<svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> دنبال کردن';
             btn.classList.remove('following');
         }
     });
@@ -695,5 +1184,6 @@ function closeLightbox() {
     document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+
 </script>
 {% endblock %}

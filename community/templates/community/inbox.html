@@ -3,125 +3,793 @@
 
 {% block extra_css %}
 <style>
-.inbox-page { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
-
-.inbox-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 24px;
-}
-.inbox-header h1 {
-    font-size: 1.4rem; font-weight: 900; color: var(--text-white);
-    display: flex; align-items: center; gap: 10px;
-}
-.inbox-header h1 i { color: #8b5cf6; }
-
-.conv-list {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
+.messenger {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: calc(100vh - 64px);
+  background: #080810;
+  direction: rtl;
+  overflow: hidden;
 }
 
-.conv-item {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    text-decoration: none;
-    transition: background 0.15s;
-    position: relative;
+/* ── Sidebar ── */
+.ms-sidebar {
+  display: flex; flex-direction: column;
+  background: #0d0d1a;
+  border-left: 1px solid rgba(139,92,246,.1);
+  overflow: hidden;
 }
-.conv-item:last-child { border-bottom: none; }
-.conv-item:hover { background: rgba(139,92,246,0.06); }
-.conv-item.has-unread { background: rgba(139,92,246,0.04); }
-.conv-item.has-unread::before {
-    content:''; position:absolute; right:0; top:0; bottom:0;
-    width:3px; background:linear-gradient(to bottom,#8b5cf6,#a855f7);
-    border-radius:0 3px 3px 0;
+.ms-sidebar-head {
+  padding: 16px 14px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  flex-shrink: 0;
+}
+.ms-sidebar-title {
+  font-size: 1rem; font-weight: 900; color: #fff;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+}
+.ms-sidebar-title-icon {
+  width:32px;height:32px;border-radius:10px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;box-shadow:0 4px 12px rgba(139,92,246,.4);
+}
+.ms-search {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.04); border-radius: 14px;
+  padding: 9px 14px; border: 1px solid rgba(255,255,255,.07);
+  transition: all .2s; margin-bottom: 12px;
+}
+.ms-search:focus-within {
+  border-color: rgba(139,92,246,.5);
+  background: rgba(139,92,246,.06);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+}
+.ms-search i { color: #444; font-size: .85rem; flex-shrink: 0; }
+.ms-search input {
+  background: none; border: none; outline: none;
+  color: #e2e2e2; font-size: .84rem; width: 100%;
+  font-family: 'Vazirmatn', sans-serif;
+}
+.ms-search input::placeholder { color: #2e2e40; }
+
+/* ── Tabs ── */
+.ms-tabs {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,.03);
+  border-radius: 14px; padding: 4px;
+}
+.ms-tab {
+  flex: 1; text-align: center; padding: 8px 4px;
+  font-size: .75rem; font-weight: 700; color: #444;
+  border-radius: 10px; cursor: pointer;
+  transition: all .2s; user-select: none;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.ms-tab.active {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(139,92,246,.4);
+}
+.ms-tab:not(.active):hover { color: #888; background: rgba(255,255,255,.04); }
+.ms-tab-badge {
+  background: #ef4444; color: #fff; border-radius: 10px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  font-size: .6rem; font-weight: 900;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 
-.conv-av-img {
-    width:52px; height:52px; border-radius:50%;
-    object-fit:cover; border:2px solid var(--border); flex-shrink:0;
+/* ── New button ── */
+.ms-new-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 8px 10px 4px;
+  padding: 10px; border-radius: 12px;
+  background: rgba(139,92,246,.1);
+  border: 1px dashed rgba(139,92,246,.3);
+  color: #a78bfa; font-size: .82rem; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: all .2s;
 }
-.conv-av-ph {
-    width:52px; height:52px; border-radius:50%;
-    background:linear-gradient(135deg,#4c1d95,#6d28d9);
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.2rem; font-weight:900; color:#fff; flex-shrink:0;
-}
-.conv-body { flex:1; min-width:0; }
-.conv-name { font-size:0.93rem; font-weight:700; color:var(--text-white); margin-bottom:3px; }
-.conv-preview {
-    font-size:0.8rem; color:var(--text-dim);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.conv-meta { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
-.conv-time { font-size:0.72rem; color:var(--text-dim); }
-.conv-unread-badge {
-    background:#8b5cf6; color:white;
-    border-radius:50%; min-width:20px; height:20px;
-    font-size:0.68rem; font-weight:800;
-    display:flex; align-items:center; justify-content:center; padding:0 4px;
+.ms-new-btn:hover {
+  background: rgba(139,92,246,.2);
+  border-color: rgba(139,92,246,.6);
+  color: #c4b5fd;
 }
 
-.empty-inbox {
-    text-align:center; padding:64px 20px; color:var(--text-dim);
+/* ── Tab Panels ── */
+.ms-tab-panel { display: none; flex: 1; overflow-y: auto; padding: 4px 0; }
+.ms-tab-panel.active { display: flex; flex-direction: column; }
+.ms-tab-panel::-webkit-scrollbar { width: 3px; }
+.ms-tab-panel::-webkit-scrollbar-thumb { background: #1a1a2e; border-radius: 2px; }
+
+/* ── Conv Item ── */
+.ms-conv-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; margin: 2px 8px;
+  cursor: pointer; text-decoration: none;
+  border-radius: 14px; transition: all .18s;
+  position: relative;
 }
-.empty-inbox i { font-size:3.5rem; opacity:0.2; display:block; margin-bottom:16px; }
+.ms-conv-item:hover { background: rgba(139,92,246,.1); }
+.ms-conv-item.has-unread .ms-conv-name { color: #fff; font-weight: 800; }
+
+.ms-conv-more {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(15,15,30,.95);
+  border: 1px solid rgba(139,92,246,.25);
+  color: #888; font-size: 1rem; font-weight: 900;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+  z-index: 5; user-select: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.ms-conv-item:hover .ms-conv-more { display: flex; }
+.ms-conv-more:hover {
+  background: rgba(139,92,246,.3);
+  border-color: rgba(139,92,246,.6);
+  color: #c084fc;
+}
+
+/* Avatars */
+.ms-av { width:46px;height:46px;border-radius:14px;flex-shrink:0;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.4); }
+.ms-av-ph {
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#4c1d95,#7c3aed);
+  box-shadow:0 2px 8px rgba(139,92,246,.3);
+}
+.ms-av-group {
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:linear-gradient(135deg,#1e3a5f,#2563eb);
+  box-shadow:0 2px 12px rgba(37,99,235,.4);
+}
+.ms-av-channel {
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:linear-gradient(135deg,#064e3b,#059669);
+  box-shadow:0 2px 12px rgba(5,150,105,.4);
+}
+.ms-av-admin {
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  box-shadow:0 2px 12px rgba(139,92,246,.4);
+}
+
+.ms-conv-body { flex:1;min-width:0;padding-left:4px; }
+.ms-conv-name {
+  font-size:.86rem;font-weight:700;color:#c0c0d0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;
+}
+.ms-conv-preview {
+  font-size:.76rem;color:#3d3d50;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ms-conv-meta { display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0; }
+.ms-conv-time { font-size:.68rem;color:#3a3a50; }
+.ms-unread-badge {
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  color:#fff;border-radius:20px;min-width:20px;height:20px;
+  padding:0 6px;font-size:.65rem;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(239,68,68,.4);
+}
+.ms-conv-icons { display:flex;gap:4px;font-size:.72rem;margin-top:2px;align-items:center; }
+
+.mute-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 6px;
+  background: linear-gradient(135deg, rgba(139,92,246,.18), rgba(168,85,247,.1));
+  border: 1px solid rgba(139,92,246,.3);
+  color: #a78bfa; font-size: .65rem;
+  box-shadow: 0 0 6px rgba(139,92,246,.2);
+  flex-shrink: 0;
+}
+
+/* ── Plus button ── */
+.ms-new-plus-btn {
+  width: 30px; height: 30px; border-radius: 10px;
+  background: rgba(139,92,246,.15);
+  border: 1px solid rgba(139,92,246,.3);
+  color: #a78bfa; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s;
+}
+.ms-new-plus-btn:hover {
+  background: rgba(139,92,246,.3);
+  border-color: rgba(139,92,246,.6);
+  color: #c4b5fd;
+  transform: rotate(90deg);
+}
+.ms-new-dropdown {
+  position: absolute; top: 36px; left: 0;
+  background: #12121f;
+  border: 1px solid rgba(139,92,246,.2);
+  border-radius: 16px; padding: 8px;
+  min-width: 170px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.7);
+  z-index: 9999;
+  display: none; flex-direction: column; gap: 2px;
+  animation: ctxIn .15s cubic-bezier(.34,1.56,.64,1);
+}
+.ms-new-dropdown.open { display: flex; }
+.ms-new-dropdown-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px;
+  font-size: .84rem; color: #b0b0c0;
+  text-decoration: none; transition: all .15s;
+  font-family: 'Vazirmatn', sans-serif;
+}
+.ms-new-dropdown-item:hover { background: rgba(139,92,246,.12); color: #e2e2e2; }
+.ms-new-dropdown-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+
+/* ── Role badge ── */
+.role-badge {
+  font-size: .6rem; font-weight: 800; padding: 1px 6px; border-radius: 6px;
+}
+.role-owner { background: rgba(234,179,8,.15); color: #fbbf24; border: 1px solid rgba(234,179,8,.3); }
+.role-admin { background: rgba(139,92,246,.15); color: #a78bfa; border: 1px solid rgba(139,92,246,.3); }
+
+/* ── Context Menu ── */
+.ms-ctx-menu {
+  position: fixed;
+  background: #12121f;
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: 16px; padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(139,92,246,.08);
+  z-index: 9999;
+  display: none; flex-direction: column; gap: 2px;
+  animation: ctxIn .15s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes ctxIn {
+  from { opacity:0;transform:scale(.93); }
+  to   { opacity:1;transform:scale(1); }
+}
+.ms-ctx-menu.open { display: flex; }
+.ms-ctx-item {
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:12px;
+  font-size:.84rem;color:#b0b0c0;cursor:pointer;
+  transition:all .15s;
+  font-family:'Vazirmatn',sans-serif;
+  user-select:none;
+}
+.ms-ctx-item:hover { background:rgba(139,92,246,.15);color:#e2e2e2; }
+.ms-ctx-item.active-item { color:#c084fc;font-weight:700; }
+.ms-ctx-item.danger { color:#f87171; }
+.ms-ctx-item.danger:hover { background:rgba(239,68,68,.12);color:#fca5a5; }
+.ms-ctx-sep { height:1px;background:rgba(255,255,255,.06);margin:4px 6px; }
+
+/* ── Empty Panel ── */
+.ms-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%; gap: 16px;
+  background: #080810;
+}
+.ms-empty-icon {
+  width:96px;height:96px;border-radius:28px;
+  background:linear-gradient(135deg,rgba(109,40,217,.15),rgba(139,92,246,.08));
+  border:1px solid rgba(139,92,246,.2);
+  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+  box-shadow:0 8px 32px rgba(139,92,246,.15);
+}
+.ms-empty h3 { font-size:1rem;font-weight:800;color:#3a3a50; }
+.ms-empty p  { font-size:.82rem;color:#2a2a38;text-align:center; }
+
+/* ── Pin animation ── */
+@keyframes pinGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+  30%  { box-shadow: 0 0 0 8px rgba(139,92,246,.35); background: rgba(139,92,246,.12); transform: scale(1.025); }
+  100% { box-shadow: none; background: transparent; transform: scale(1); }
+}
+.pin-animate { animation: pinGlow .55s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* Toast */
+.inbox-toast {
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:linear-gradient(135deg,#1a1a30,#16162a);
+  border:1px solid rgba(139,92,246,.25);
+  color:#e2e2e2;padding:12px 24px;border-radius:16px;
+  font-size:.84rem;z-index:10000;opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.inbox-toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+
+/* ── Empty list inside tab ── */
+.ms-list-empty {
+  text-align: center; padding: 32px 16px;
+  color: #2e2e40; font-size: .82rem;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="inbox-page">
-    <div class="inbox-header">
-        <h1><i class="bi bi-chat-dots-fill"></i> پیام‌ها</h1>
-        <span style="font-size:0.82rem; color:var(--text-dim);">{{ conv_data|length }} مکالمه</span>
+<div class="messenger">
+
+  <!-- ── Sidebar ── -->
+  <div class="ms-sidebar">
+    <div class="ms-sidebar-head">
+      <div class="ms-sidebar-title">
+        <div class="ms-sidebar-title-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM0 5a1 1 0 0 1 1-1h1v1H1v7.5A1.5 1.5 0 0 0 2.5 14H14v1H2.5A2.5 2.5 0 0 1 0 12.5z"/></svg></div>
+        پیام‌رسان
+        <div style="margin-right:auto;position:relative;">
+          <button class="ms-new-plus-btn" id="newPlusBtn" onclick="toggleNewMenu(event)" title="جدید">
+            <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg>
+          </button>
+          <div class="ms-new-dropdown" id="newDropdown">
+            <a href="{% url 'community:search' %}" class="ms-new-dropdown-item">
+              <span class="ms-new-dropdown-icon" style="background:linear-gradient(135deg,#7c3aed,#a855f7);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM0 5a1 1 0 0 1 1-1h1v1H1v7.5A1.5 1.5 0 0 0 2.5 14H14v1H2.5A2.5 2.5 0 0 1 0 12.5z"/></svg></span>
+              پیام جدید
+            </a>
+            <a href="{% url 'community:create_group' %}" class="ms-new-dropdown-item">
+              <span class="ms-new-dropdown-icon" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg></span>
+              گروه جدید
+            </a>
+            <a href="{% url 'community:create_channel' %}" class="ms-new-dropdown-item">
+              <span class="ms-new-dropdown-icon" style="background:linear-gradient(135deg,#064e3b,#059669);"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg></span>
+              کانال جدید
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="ms-search">
+        <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+        <input type="text" id="convSearch" placeholder="جستجو...">
+      </div>
+      <!-- Tabs -->
+      <div class="ms-tabs">
+        <div class="ms-tab active" data-tab="dm" onclick="switchTab('dm', this)">
+          <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM0 5a1 1 0 0 1 1-1h1v1H1v7.5A1.5 1.5 0 0 0 2.5 14H14v1H2.5A2.5 2.5 0 0 1 0 12.5z"/></svg> شخصی
+          {% if dm_unread_count %}<span class="ms-tab-badge" id="tab-badge-dm">{{ dm_unread_count }}</span>{% endif %}
+        </div>
+        <div class="ms-tab" data-tab="group" onclick="switchTab('group', this)">
+          <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg> گروه‌ها
+          {% if group_unread_count %}<span class="ms-tab-badge" id="tab-badge-group">{{ group_unread_count }}</span>{% endif %}
+        </div>
+        <div class="ms-tab" data-tab="channel" onclick="switchTab('channel', this)">
+          <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg> کانال‌ها
+          {% if channel_unread_count %}<span class="ms-tab-badge" id="tab-badge-channel">{{ channel_unread_count }}</span>{% endif %}
+        </div>
+      </div>
     </div>
 
-    {% if conv_data %}
-    <div class="conv-list">
-        {% for item in conv_data %}
+    <!-- ── DM Panel ── -->
+    <div class="ms-tab-panel active" id="panel-dm">
+      {% if conv_data %}
+        {% for item in conv_data %}{% if item.other and item.other.username %}
         <a href="{% url 'community:conversation' username=item.other.username %}"
-           class="conv-item {% if item.unread %}has-unread{% endif %}">
+           class="ms-conv-item {% if item.unread %}has-unread{% endif %}"
+           data-type="dm"
+           data-username="{{ item.other.username }}"
+           data-conv-id="{{ item.conv.id }}"
+           data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+           data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+           data-timestamp="{{ item.conv.updated_at|date:'U' }}"
+           data-unread="{{ item.unread|default:0 }}"
+           oncontextmenu="openCtxMenu(event,this)">
 
-            {% if item.other.gamer_profile.avatar %}
-                <img src="{{ item.other.gamer_profile.avatar.url }}" class="conv-av-img">
-            {% else %}
-                <div class="conv-av-ph">{{ item.other.username|first|upper }}</div>
-            {% endif %}
+          {% if item.other.username == 'admin' %}
+            <div class="ms-av-admin"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg></div>
+          {% elif item.other.gamer_profile.avatar %}
+            <img src="{{ item.other.gamer_profile.avatar.url }}" class="ms-av">
+          {% else %}
+            <div class="ms-av-ph">{{ item.other.username|first|upper }}</div>
+          {% endif %}
 
-            <div class="conv-body">
-                <div class="conv-name">{{ item.other.get_full_name|default:item.other.username }}</div>
-                <div class="conv-preview">
-                    {% if item.last %}
-                        {% if item.last.sender == request.user %}شما: {% endif %}
-                        {{ item.last.content|truncatechars:55 }}
-                    {% else %}
-                        مکالمه جدید
-                    {% endif %}
-                </div>
+          <div class="ms-conv-body">
+            <div class="ms-conv-name">
+              {% if item.other.username == 'admin' %}
+                <span style="color:#c084fc">مدیریت گیم بیت</span>
+              {% else %}
+                {{ item.other.get_full_name|default:item.other.username }}
+              {% endif %}
             </div>
-
-            <div class="conv-meta">
-                {% if item.last %}
-                <span class="conv-time">{{ item.last.created_at|timesince }}</span>
-                {% endif %}
-                {% if item.unread %}
-                <span class="conv-unread-badge">{{ item.unread }}</span>
-                {% endif %}
+            <div class="ms-conv-preview">
+              {% if item.last %}
+                {% if item.last.sender == request.user %}<span style="color:#8b5cf6">شما:</span> {% endif %}
+                {% if item.last.image %}🖼 عکس{% elif item.last.file %}📎 فایل{% else %}{{ item.last.content|truncatechars:34 }}{% endif %}
+              {% else %}مکالمه جدید{% endif %}
             </div>
+            <div class="ms-conv-icons">
+              {% if item.is_pinned %}<span data-key="pin" title="پین"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg></span>{% endif %}
+              {% if item.is_muted %}<span data-key="mute" class="mute-badge" title="میوت"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+            </div>
+          </div>
+
+          <div class="ms-conv-meta">
+            {% if item.last %}<span class="ms-conv-time">{{ item.last.created_at|time:"H:i" }}</span>{% endif %}
+            {% if item.unread and not item.is_muted %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+          </div>
+          <div class="ms-conv-more" onclick="openCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
+        </a>
+        {% endif %}{% endfor %}
+      {% else %}
+        <div class="ms-list-empty">هنوز پیامی نداری</div>
+      {% endif %}
+    </div>
+
+    <!-- ── Group Panel ── -->
+    <div class="ms-tab-panel" id="panel-group">
+      <a href="{% url 'community:create_group' %}" class="ms-new-btn">
+        <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت گروه جدید
+      </a>
+      {% if group_data %}
+        {% for item in group_data %}
+        <a href="{% url 'community:group_chat' group_id=item.group.id %}"
+           class="ms-conv-item"
+           data-type="group"
+           data-group-id="{{ item.group.id }}"
+           data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+           data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+           data-timestamp="{{ item.group.updated_at|date:'U' }}"
+           oncontextmenu="openCtxMenu(event,this)">
+
+          {% if item.group.icon %}
+            <img src="{{ item.group.icon.url }}" class="ms-av">
+          {% else %}
+            <div class="ms-av-group"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg></div>
+          {% endif %}
+
+          <div class="ms-conv-body">
+            <div class="ms-conv-name" style="display:flex;align-items:center;gap:6px;">
+              {{ item.group.name }}
+              {% if item.role == 'owner' %}<span class="role-badge role-owner">مالک</span>
+              {% elif item.role == 'admin' %}<span class="role-badge role-admin">ادمین</span>{% endif %}
+            </div>
+            <div class="ms-conv-preview">
+              {% if item.last %}
+                <span style="color:#8b5cf6">{{ item.last.sender.username }}:</span>
+                {% if item.last.image %}🖼{% elif item.last.file %}📎{% else %}{{ item.last.content|truncatechars:28 }}{% endif %}
+              {% else %}{{ item.group.member_count }} عضو{% endif %}
+            </div>
+            <div class="ms-conv-icons">
+              {% if item.is_pinned %}<span data-key="pin" title="پین"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg></span>{% endif %}
+              {% if item.is_muted %}<span data-key="mute" class="mute-badge"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+            </div>
+          </div>
+
+          <div class="ms-conv-meta">
+            {% if item.last %}<span class="ms-conv-time">{{ item.last.created_at|time:"H:i" }}</span>{% endif %}
+            {% if item.unread and not item.is_muted %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+          </div>
+          <div class="ms-conv-more" onclick="openCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
         </a>
         {% endfor %}
+      {% else %}
+        <div class="ms-list-empty">هنوز عضو گروهی نیستی</div>
+      {% endif %}
     </div>
-    {% else %}
-    <div class="empty-inbox">
-        <i class="bi bi-chat-dots"></i>
-        <p>هنوز مکالمه‌ای نداری</p>
-        <p style="margin-top:6px; font-size:0.82rem;">از پروفایل هر گیمری می‌تونی بهش پیام بدی</p>
-        <a href="{% url 'community:search' %}" class="btn-red" style="display:inline-flex; gap:7px; margin-top:18px; text-decoration:none; padding:10px 22px; border-radius:12px;">
-            <i class="bi bi-search"></i> جستجوی گیمر
+
+    <!-- ── Channel Panel ── -->
+    <div class="ms-tab-panel" id="panel-channel">
+      <a href="{% url 'community:create_channel' %}" class="ms-new-btn">
+        <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت کانال جدید
+      </a>
+      {% if channel_data %}
+        {% for item in channel_data %}
+        <a href="{% url 'community:channel_view' channel_username=item.channel.username %}"
+           class="ms-conv-item"
+           data-type="channel"
+           data-channel-username="{{ item.channel.username }}"
+           data-is-pinned="{{ item.is_pinned|yesno:'true,false' }}"
+           data-is-muted="{{ item.is_muted|yesno:'true,false' }}"
+           data-timestamp="{{ item.channel.updated_at|date:'U' }}"
+           oncontextmenu="openCtxMenu(event,this)">
+
+          {% if item.channel.icon %}
+            <img src="{{ item.channel.icon.url }}" class="ms-av">
+          {% else %}
+            <div class="ms-av-channel"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35C10.72 4.555 8.297 5.1 5.862 5.272L4.303 5.362l-.054.012a.5.5 0 0 0-.3.463v4.35a.5.5 0 0 0 .3.463l.054.012 1.559.09c2.434.172 4.858.717 7.138 1.922zm-11 4.15v2a1.014 1.014 0 0 0 0-2m6.433 8.418 1.068.016a.25.25 0 0 0 .228-.36l-.437-.815a.44.44 0 0 0-.413-.241h-.348z"/></svg></div>
+          {% endif %}
+
+          <div class="ms-conv-body">
+            <div class="ms-conv-name" style="display:flex;align-items:center;gap:6px;">
+              {{ item.channel.name }}
+              {% if item.role == 'owner' %}<span class="role-badge role-owner">مالک</span>
+              {% elif item.role == 'admin' %}<span class="role-badge role-admin">ادمین</span>{% endif %}
+            </div>
+            <div class="ms-conv-preview">
+              @{{ item.channel.username }} · {{ item.channel.subscriber_count }} مشترک
+            </div>
+            <div class="ms-conv-icons">
+              {% if item.is_pinned %}<span data-key="pin" title="پین"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg></span>{% endif %}
+              {% if item.is_muted %}<span data-key="mute" class="mute-badge"><svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg></span>{% endif %}
+            </div>
+          </div>
+
+          <div class="ms-conv-meta">
+            {% if item.last %}<span class="ms-conv-time">{{ item.last.created_at|time:"H:i" }}</span>{% endif %}
+            {% if item.unread and not item.is_muted %}<span class="ms-unread-badge">{{ item.unread }}</span>{% endif %}
+          </div>
+          <div class="ms-conv-more" onclick="openCtxMenuBtn(event,this.closest('.ms-conv-item'))">⋯</div>
         </a>
+        {% endfor %}
+      {% else %}
+        <div class="ms-list-empty">هنوز کانالی نداری</div>
+      {% endif %}
     </div>
-    {% endif %}
+
+  </div>
+
+  <!-- ── Empty State ── -->
+  <div class="ms-empty"></div>
+
 </div>
+
+<!-- ── Context Menu (DM) ── -->
+<div class="ms-ctx-menu" id="ctxMenu-dm">
+  <div class="ms-ctx-item" id="dm-ctx-pin"    onclick="ctxAction('pin')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg> پین مکالمه</div>
+  <div class="ms-ctx-item" id="dm-ctx-mute"   onclick="ctxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item" id="dm-ctx-profile" onclick="ctxAction('profile')"><svg class="bi bi-person-circle" aria-hidden="true" style="color:#60a5fa"><use href="#bi-person-circle"></use></svg> پروفایل</div>
+  <div class="ms-ctx-item danger" id="dm-ctx-block" onclick="ctxAction('block')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708"/></svg> بلاک</div>
+</div>
+
+<!-- ── Context Menu (Group) ── -->
+<div class="ms-ctx-menu" id="ctxMenu-group">
+  <div class="ms-ctx-item" id="grp-ctx-pin"  onclick="ctxAction('pin')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg> پین گروه</div>
+  <div class="ms-ctx-item" id="grp-ctx-mute" onclick="ctxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item danger" id="grp-ctx-leave" onclick="ctxAction('leave')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg> خروج از گروه</div>
+</div>
+
+<!-- ── Context Menu (Channel) ── -->
+<div class="ms-ctx-menu" id="ctxMenu-channel">
+  <div class="ms-ctx-item" id="ch-ctx-pin"         onclick="ctxAction('pin')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.833V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354"/></svg> پین کانال</div>
+  <div class="ms-ctx-item" id="ch-ctx-mute"        onclick="ctxAction('mute')"><svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت</div>
+  <div class="ms-ctx-sep"></div>
+  <div class="ms-ctx-item danger" id="ch-ctx-unsub" onclick="ctxAction('unsub')"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg> لغو اشتراک</div>
+</div>
+
+<!-- Toast -->
+<div class="inbox-toast" id="inboxToast"></div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+let ctxTarget = null;
+let ctxType   = null;
+
+/* ── Toast ── */
+function showToast(msg, ms=2500) {
+  const t = document.getElementById('inboxToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ── Plus dropdown ── */
+function toggleNewMenu(e) {
+  e.stopPropagation();
+  document.getElementById('newDropdown').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('newDropdown')?.classList.remove('open');
+});
+
+/* ── Tab switching ── */
+function switchTab(tab, el) {
+  document.querySelectorAll('.ms-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ms-tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  localStorage.setItem('ms_active_tab', tab);
+}
+
+// همیشه از تب شخصی شروع کن
+(function(){
+  const tabEl = document.querySelector('.ms-tab[data-tab="dm"]');
+  if (tabEl) switchTab('dm', tabEl);
+})();
+
+/* ── باز کردن منو ── */
+let _ctxOpenedAt = 0;
+
+function openCtxMenu(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  showMenu(e.clientX, e.clientY, el);
+}
+function openCtxMenuBtn(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  showMenu(r.left, r.bottom + 4, el);
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.ms-ctx-menu').forEach(m => m.classList.remove('open'));
+  ctxTarget = null;
+}
+
+function showMenu(x, y, el) {
+  _ctxOpenedAt = Date.now();
+  closeAllMenus();
+  ctxTarget = el;
+  ctxType   = el.dataset.type || 'dm';
+
+  const isPinned = el.dataset.isPinned === 'true';
+  const isMuted  = el.dataset.isMuted  === 'true';
+
+  let menu;
+  if (ctxType === 'group') {
+    menu = document.getElementById('ctxMenu-group');
+    const pinEl  = document.getElementById('grp-ctx-pin');
+    const muteEl = document.getElementById('grp-ctx-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین گروه' : '📌 پین گروه';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+  } else if (ctxType === 'channel') {
+    menu = document.getElementById('ctxMenu-channel');
+    const pinEl  = document.getElementById('ch-ctx-pin');
+    const muteEl = document.getElementById('ch-ctx-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین کانال' : '📌 پین کانال';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+  } else {
+    menu = document.getElementById('ctxMenu-dm');
+    const isAdmin = el.dataset.username === 'admin';
+    const pinEl   = document.getElementById('dm-ctx-pin');
+    const muteEl  = document.getElementById('dm-ctx-mute');
+    pinEl.textContent = isPinned ? '📌 آنپین مکالمه' : '📌 پین مکالمه';
+    pinEl.className   = 'ms-ctx-item' + (isPinned ? ' active-item' : '');
+    muteEl.innerHTML  = isMuted
+      ? '<svg class="bi bi-bell-fill" aria-hidden="true" style="color:#4ade80"><use href="#bi-bell-fill"></use></svg> آنمیوت'
+      : '<svg class="bi bi-bell-slash-fill" aria-hidden="true" style="color:#a78bfa"><use href="#bi-bell-slash-fill"></use></svg> میوت';
+    muteEl.className  = 'ms-ctx-item' + (isMuted ? ' active-item' : '');
+    document.getElementById('dm-ctx-profile').style.display = isAdmin ? 'none' : '';
+    document.getElementById('dm-ctx-block').style.display   = isAdmin ? 'none' : '';
+  }
+
+  menu.classList.add('open');
+  const mw = 210, mh = 180;
+  let left = x, top = y;
+  if (left + mw > window.innerWidth)  left = window.innerWidth  - mw - 8;
+  if (top  + mh > window.innerHeight) top  = window.innerHeight - mh - 8;
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+}
+
+document.addEventListener('mousedown', e => {
+  if (e.button === 2) return;
+  if (Date.now() - _ctxOpenedAt < 150) return;
+  if (!e.target.closest('.ms-ctx-menu') && !e.target.closest('.ms-conv-more'))
+    closeAllMenus();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllMenus(); });
+
+/* ── آیکون sidebar ── */
+function setSidebarIcon(el, key, on, title) {
+  const icons = el.querySelector('.ms-conv-icons');
+  if (!icons) return;
+  let span = icons.querySelector(`[data-key="${key}"]`);
+  if (on) {
+    if (!span) { span = document.createElement('span'); span.dataset.key = key; icons.appendChild(span); }
+    span.title = title;
+    if (key === 'mute') {
+      span.className = 'mute-badge';
+      span.innerHTML = '<svg class="bi bi-bell-slash-fill" aria-hidden="true"><use href="#bi-bell-slash-fill"></use></svg>';
+    } else {
+      span.className = ''; span.textContent = on;
+    }
+  } else {
+    if (span) span.remove();
+  }
+}
+
+/* ── اجرای عمل ── */
+function ctxAction(action) {
+  closeAllMenus();
+  if (!ctxTarget) return;
+  const el = ctxTarget;
+  const type = ctxType;
+
+  if (action === 'profile') {
+    window.location.href = '/profile/' + el.dataset.username + '/';
+    return;
+  }
+
+  let url = '';
+  if (type === 'dm') {
+    const convId = el.dataset.convId;
+    const username = el.dataset.username;
+    if (action === 'pin')   url = '/pin-conv/'  + convId + '/';
+    if (action === 'mute')  url = '/mute-conv/' + convId + '/';
+    if (action === 'block') url = '/block/'     + username + '/';
+  } else if (type === 'group') {
+    const gid = el.dataset.groupId;
+    if (action === 'pin')   url = '/groups/' + gid + '/pin/';
+    if (action === 'mute')  url = '/groups/' + gid + '/mute/';
+    if (action === 'leave') url = '/groups/' + gid + '/leave/';
+  } else if (type === 'channel') {
+    const cu = el.dataset.channelUsername;
+    if (action === 'pin')   url = '/channels/' + cu + '/pin/';
+    if (action === 'mute')  url = '/channels/' + cu + '/mute/';
+    if (action === 'unsub') url = '/channels/' + cu + '/subscribe/';
+  }
+
+  if (!url) return;
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.ok) return;
+
+    if (action === 'pin') {
+      const pinned = data.is_pinned;
+      el.dataset.isPinned = pinned ? 'true' : 'false';
+      setSidebarIcon(el, 'pin', pinned ? '📌' : null, 'پین');
+      showToast(pinned ? 'پین شد 📌' : 'آنپین شد');
+    }
+    if (action === 'mute') {
+      const muted = data.is_muted;
+      el.dataset.isMuted = muted ? 'true' : 'false';
+      setSidebarIcon(el, 'mute', muted ? '🔕' : null, 'میوت');
+      showToast(muted ? 'میوت شد 🔕' : 'آنمیوت شد 🔔');
+    }
+    if (action === 'leave' || action === 'unsub') {
+      el.style.transition = 'opacity .3s, transform .3s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(20px)';
+      setTimeout(() => el.remove(), 300);
+      showToast(action === 'leave' ? 'از گروه خارج شدی 🚪' : 'لغو اشتراک شد 🚪');
+    }
+    if (action === 'block') {
+      el.style.opacity = '.3'; el.style.pointerEvents = 'none';
+      showToast('بلاک شد 🚫');
+    }
+  })
+  .catch(() => showToast('خطا در ارتباط'));
+}
+
+/* ── جستجو ── */
+document.getElementById('convSearch').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  document.querySelectorAll('.ms-conv-item').forEach(item => {
+    const name = item.querySelector('.ms-conv-name')?.textContent.toLowerCase() || '';
+    const prev = item.querySelector('.ms-conv-preview')?.textContent.toLowerCase() || '';
+    item.style.display = (!q || name.includes(q) || prev.includes(q)) ? '' : 'none';
+  });
+});
+
+/* ── سین: بعد کلیک روی مکالمه، badge نخونده رو برمی‌داره ── */
+document.querySelectorAll('.ms-conv-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const badge = this.querySelector('.ms-unread-badge');
+    if (!badge) return;
+    badge.remove();
+    this.classList.remove('has-unread');
+    // تعداد badge های باقیمانده در این پنل
+    const panel = this.closest('.ms-tab-panel');
+    if (!panel) return;
+    const tabId = panel.id.replace('panel-', '');
+    const remaining = panel.querySelectorAll('.ms-unread-badge').length;
+    const tabBadgeEl = document.getElementById('tab-badge-' + tabId);
+    if (remaining === 0) {
+      if (tabBadgeEl) tabBadgeEl.remove();
+    } else if (tabBadgeEl) {
+      tabBadgeEl.textContent = remaining;
+    }
+  });
+});
+</script>
 {% endblock %}

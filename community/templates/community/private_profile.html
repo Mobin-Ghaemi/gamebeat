@@ -1,0 +1,312 @@
+{% extends "community/base.html" %}
+{% block title %}پروفایل خصوصی — {{ profile_user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+body { background: #080810; }
+.private-page {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    direction: rtl;
+    font-family: 'Vazirmatn', sans-serif;
+    padding: 48px 16px;
+}
+.private-card {
+    background: #0d0d1a;
+    border: 1px solid rgba(139,92,246,0.18);
+    border-radius: 28px;
+    padding: 48px 40px 40px;
+    text-align: center;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 8px 48px rgba(139,92,246,0.10);
+}
+.private-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(139,92,246,0.45);
+    margin: 0 auto 18px;
+    display: block;
+}
+.private-avatar-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 auto 18px;
+    border: 3px solid rgba(139,92,246,0.45);
+}
+.private-display-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #e2e2f0;
+    margin-bottom: 4px;
+}
+.private-username {
+    font-size: 0.9rem;
+    color: #8b5cf6;
+    margin-bottom: 18px;
+}
+/* Stats row */
+.private-stats {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    border-top: 1px solid rgba(139,92,246,0.1);
+    border-bottom: 1px solid rgba(139,92,246,0.1);
+    margin: 0 -8px 24px;
+    padding: 14px 0;
+}
+.stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 0 12px;
+    border-left: 1px solid rgba(139,92,246,0.1);
+}
+.stat-item:last-child { border-left: none; }
+.stat-num {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #a78bfa;
+    display: block;
+}
+.stat-label {
+    font-size: 0.72rem;
+    color: #6b6b8a;
+    margin-top: 2px;
+    display: block;
+}
+/* Lock section */
+.lock-section {
+    margin-bottom: 22px;
+}
+.lock-icon {
+    font-size: 2.4rem;
+    color: #8b5cf6;
+    display: block;
+    margin-bottom: 10px;
+}
+.private-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #c4c4e0;
+    margin-bottom: 8px;
+}
+.private-sub {
+    font-size: 0.83rem;
+    color: #6b6b8a;
+    line-height: 1.7;
+}
+/* Buttons */
+.btn-send-request {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 36px;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+    text-decoration: none;
+}
+.btn-send-request:hover { opacity: 0.88; transform: translateY(-1px); color: #fff; }
+.btn-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 50px;
+    color: #a78bfa;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: background 0.2s;
+}
+.btn-pending:hover { background: rgba(139,92,246,0.15); }
+.btn-cancel {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #6b6b8a;
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.btn-cancel:hover { color: #f87171; }
+.btn-login-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 32px;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    border-radius: 50px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.btn-login-link:hover { opacity: 0.88; color: #fff; }
+.status-msg {
+    font-size: 0.82rem;
+    padding: 8px 16px;
+    border-radius: 50px;
+    margin-top: 10px;
+    display: inline-block;
+}
+.status-msg.success { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+.status-msg.error { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="private-page">
+    <div class="private-card">
+        <!-- Avatar -->
+        {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" class="private-avatar" alt="{{ profile_user.username }}">
+        {% else %}
+            <div class="private-avatar-placeholder">{{ profile_user.username|first|upper }}</div>
+        {% endif %}
+
+        <!-- Name & Username -->
+        {% if profile_user.get_full_name %}
+            <div class="private-display-name">{{ profile_user.get_full_name }}</div>
+        {% endif %}
+        <div class="private-username">@{{ profile_user.username }}</div>
+
+        <!-- Stats -->
+        <div class="private-stats">
+            <div class="stat-item">
+                <span class="stat-num">{{ posts_count }}</span>
+                <span class="stat-label">پست</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">{{ followers_count }}</span>
+                <span class="stat-label">دنبال‌کننده</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">{{ following_count }}</span>
+                <span class="stat-label">دنبال‌شونده</span>
+            </div>
+        </div>
+
+        <!-- Lock -->
+        <div class="lock-section">
+            <svg class="bi bi-lock-fill lock-icon" aria-hidden="true"><use href="#bi-lock-fill"></use></svg>
+            <div class="private-title">این پروفایل خصوصی است</div>
+            <div class="private-sub">
+                برای دیدن پست‌ها، لیست بازی‌ها و اطلاعات این گیمر، درخواست دنبال کردن بفرست
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div id="follow-action">
+            {% if user.is_authenticated %}
+                {% if follow_request %}
+                    {% if follow_request.status == 'pending' %}
+                        <button class="btn-pending" onclick="handleFollowRequest()">
+                            <svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> درخواست ارسال شد
+                        </button>
+                        <br>
+                        <button class="btn-cancel" onclick="handleFollowRequest()">لغو درخواست</button>
+                    {% elif follow_request.status == 'accepted' %}
+                        <script>window.location.href = "{% url 'community:profile' username=profile_user.username %}";</script>
+                    {% endif %}
+                {% else %}
+                    <button class="btn-send-request" onclick="handleFollowRequest()">
+                        <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> ارسال درخواست دنبال کردن
+                    </button>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'account:login' %}" class="btn-login-link">
+                    <svg class="bi bi-box-arrow-in-right" aria-hidden="true"><use href="#bi-box-arrow-in-right"></use></svg> ورود برای دنبال کردن
+                </a>
+            {% endif %}
+        </div>
+
+        <div id="status-msg"></div>
+    </div>
+</div>
+
+<script>
+const followUrl = '/follow/{{ profile_user.username }}/';
+const csrfToken = '{{ csrf_token }}';
+
+// Current state from server
+let currentStatus = '{% if follow_request %}{{ follow_request.status }}{% else %}none{% endif %}';
+
+function handleFollowRequest() {
+    fetch(followUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: '',
+    })
+    .then(r => r.json())
+    .then(data => {
+        const actionDiv = document.getElementById('follow-action');
+        const msgDiv = document.getElementById('status-msg');
+
+        if (data.status === 'requested') {
+            currentStatus = 'pending';
+            actionDiv.innerHTML = `
+                <button class="btn-pending" onclick="handleFollowRequest()">
+                    <svg class="bi bi-hourglass-split" aria-hidden="true"><use href="#bi-hourglass-split"></use></svg> درخواست ارسال شد
+                </button>
+                <br>
+                <button class="btn-cancel" onclick="handleFollowRequest()">لغو درخواست</button>
+            `;
+            showMsg('درخواست دنبال کردن ارسال شد', 'success');
+        } else if (data.status === 'cancelled') {
+            currentStatus = 'none';
+            actionDiv.innerHTML = `
+                <button class="btn-send-request" onclick="handleFollowRequest()">
+                    <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> ارسال درخواست دنبال کردن
+                </button>
+            `;
+            showMsg('درخواست لغو شد', 'error');
+        } else if (data.status === 'unfollowed') {
+            currentStatus = 'none';
+            actionDiv.innerHTML = `
+                <button class="btn-send-request" onclick="handleFollowRequest()">
+                    <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> ارسال درخواست دنبال کردن
+                </button>
+            `;
+            showMsg('آنفالو شدی', 'error');
+        }
+    })
+    .catch(() => {
+        showMsg('خطا در اتصال', 'error');
+    });
+}
+
+function showMsg(text, type) {
+    const msgDiv = document.getElementById('status-msg');
+    msgDiv.innerHTML = `<span class="status-msg ${type}">${text}</span>`;
+    setTimeout(() => { msgDiv.innerHTML = ''; }, 3000);
+}
+</script>
+{% endblock %}

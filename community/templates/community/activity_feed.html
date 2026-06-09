@@ -1,0 +1,130 @@
+{% extends 'community/base.html' %}
+{% block title %}فید فعالیت | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.af-wrap { max-width: 700px; margin: 0 auto; padding: 30px 16px 80px; }
+.af-header { text-align: center; margin-bottom: 32px; }
+.af-title { font-size: 1.8rem; font-weight: 900; color: #fff; }
+.af-subtitle { font-size: .85rem; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
+.af-card {
+    background: #130826;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    display: flex; align-items: flex-start; gap: 14px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.af-card:hover { border-color: rgba(139,92,246,0.3); box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+
+.af-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 2px solid rgba(139,92,246,0.4);
+    object-fit: cover; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a0a2e, #2d1154);
+    font-size: 1.1rem; font-weight: 900; color: #a78bfa;
+    overflow: hidden;
+}
+.af-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.af-body { flex: 1; min-width: 0; }
+
+.af-text { font-size: .9rem; color: rgba(255,255,255,0.85); line-height: 1.6; }
+.af-text strong { color: #fff; font-weight: 800; }
+.af-text .game-link { color: #a78bfa; text-decoration: none; font-weight: 700; }
+.af-text .game-link:hover { color: #c4b5fd; }
+
+.af-meta { font-size: .72rem; color: rgba(255,255,255,0.3); margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+
+.af-icon { font-size: 1.6rem; flex-shrink: 0; width: 36px; text-align: center; }
+
+.af-empty {
+    text-align: center; padding: 60px 20px;
+    color: rgba(255,255,255,0.3);
+}
+.af-empty i { font-size: 3rem; color: rgba(139,92,246,0.3); display: block; margin-bottom: 14px; }
+
+.af-badge {
+    display: inline-block;
+    padding: 2px 10px; border-radius: 50px;
+    font-size: .7rem; font-weight: 700;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    color: #c4b5fd; margin-right: 6px;
+}
+.af-badge.rated { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load humanize %}
+<div class="af-wrap">
+    <div class="af-header">
+        <div class="af-title"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg> فید فعالیت</div>
+        <div class="af-subtitle">آخرین فعالیت‌های دوستانت</div>
+    </div>
+
+    {% if activities %}
+        {% for act in activities %}
+        <div class="af-card">
+            <div class="af-icon">
+                {% if act.activity_type == 'started_playing' %}<svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg>
+                {% elif act.activity_type == 'completed' %}<svg style="width:1em;height:1em;fill:#ffd700;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg>
+                {% elif act.activity_type == 'added_to_list' %}<svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>
+                {% elif act.activity_type == 'dropped' %}<svg style="width:1em;height:1em;fill:#f87171;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/></svg>
+                {% elif act.activity_type == 'rated' %}<svg style="width:1em;height:1em;fill:#fbbf24;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.950l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.950l-3.522 3.356.83 4.73c.078.443-.36.790-.746.592L8 13.187l-4.389 2.256z"/></svg>
+                {% endif %}
+            </div>
+
+            <div class="af-avatar">
+                {% if act.user.gamer_profile.avatar %}
+                <img src="{{ act.user.gamer_profile.avatar.url }}" alt="">
+                {% else %}
+                {{ act.user.username|first|upper }}
+                {% endif %}
+            </div>
+
+            <div class="af-body">
+                <div class="af-text">
+                    <a href="{% url 'community:profile' act.user.username %}" style="color:#fff;text-decoration:none;font-weight:800;">{{ act.user.username }}</a>
+                    {% if act.activity_type == 'started_playing' %}
+                    شروع کرد به بازی کردن
+                    {% elif act.activity_type == 'completed' %}
+                    تموم کرد
+                    {% elif act.activity_type == 'added_to_list' %}
+                    اضافه کرد به لیستش
+                    {% elif act.activity_type == 'dropped' %}
+                    رها کرد
+                    {% elif act.activity_type == 'rated' %}
+                    امتیاز داد
+                    <span class="af-badge rated"><svg style="width:1em;height:1em;fill:#fbbf24;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.950l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.950l-3.522 3.356.83 4.73c.078.443-.36.790-.746.592L8 13.187l-4.389 2.256z"/></svg> {{ act.extra.rating }}/10</span>
+                    {% endif %}
+                    &nbsp;
+                    {% if act.game_id %}
+                    <a href="{% url 'community:game_detail' act.game_id %}" class="game-link">{{ act.game_name }}</a>
+                    {% else %}
+                    <span class="game-link">{{ act.game_name }}</span>
+                    {% endif %}
+                </div>
+                <div class="af-meta">
+                    <svg class="bi bi-clock" aria-hidden="true"><use href="#bi-clock"></use></svg>
+                    {{ act.created_at|timesince }} پیش
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="af-empty">
+        <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
+        <div style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:8px;">هنوز فعالیتی وجود نداره</div>
+        <div style="font-size:.85rem;">دنبال گیمرهای دیگه برو تا فعالیت‌هاشون رو اینجا ببینی</div>
+        <a href="{% url 'community:search' %}" style="display:inline-block;margin-top:16px;padding:10px 24px;border-radius:50px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:#a78bfa;text-decoration:none;font-weight:700;font-size:.85rem;">
+            <svg class="bi bi-search me-1" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی گیمر
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

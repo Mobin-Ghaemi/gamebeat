@@ -73,8 +73,9 @@ def _patch_pyc_files():
     except AttributeError:
         pass
 
-    # project directory
-    search_paths.append(base_dir)
+    # Project source files are intentionally excluded: patching them to
+    # unchecked_hash mode prevents Python from noticing edits during
+    # development (urls.py, views.py, etc. would never reload properly).
 
     for base in search_paths:
         for root, dirs, files in os.walk(base):

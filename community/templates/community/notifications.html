@@ -29,6 +29,7 @@
     text-decoration: none;
     transition: background 0.15s;
     position: relative;
+    color: inherit;
 }
 .notif-item:last-child { border-bottom: none; }
 .notif-item:hover { background: rgba(139,92,246,0.05); }
@@ -41,6 +42,7 @@
     border-radius: 0 3px 3px 0;
 }
 
+/* Avatar */
 .notif-avatar { position: relative; flex-shrink: 0; }
 .notif-av-img {
     width: 46px; height: 46px; border-radius: 50%;
@@ -57,57 +59,102 @@
     width: 20px; height: 20px; border-radius: 50%;
     background: var(--bg-card2);
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem;
     border: 2px solid var(--bg-card);
+    font-size: 0.65rem;
 }
-.ni-like    .notif-type-icon { background: rgba(239,68,68,0.2); }
-.ni-comment .notif-type-icon { background: rgba(139,92,246,0.2); }
-.ni-follow  .notif-type-icon { background: rgba(74,222,128,0.2); }
-.ni-mention .notif-type-icon { background: rgba(251,191,36,0.2); }
+/* رنگ پس‌زمینه آیکون بر اساس نوع */
+.ni-like       .notif-type-icon { background: rgba(239,68,68,0.25); }
+.ni-comment    .notif-type-icon { background: rgba(139,92,246,0.25); }
+.ni-follow     .notif-type-icon { background: rgba(74,222,128,0.2); }
+.ni-follow_request .notif-type-icon { background: rgba(74,222,128,0.2); }
+.ni-mention    .notif-type-icon { background: rgba(251,191,36,0.2); }
+.ni-admin      .notif-type-icon { background: rgba(139,92,246,0.25); }
+.ni-lfg_party  .notif-type-icon { background: rgba(251,191,36,0.25); }
+.ni-lfg_join   .notif-type-icon { background: rgba(74,222,128,0.2); }
+.ni-lfg_req    .notif-type-icon { background: rgba(139,92,246,0.25); }
+.ni-lfg_ok     .notif-type-icon { background: rgba(74,222,128,0.2); }
+.ni-group_add  .notif-type-icon { background: rgba(139,92,246,0.25); }
 
+/* Body */
 .notif-body { flex: 1; min-width: 0; }
-.notif-text {
-    font-size: 0.9rem; color: var(--text-white);
-    line-height: 1.4; margin-bottom: 3px;
-}
+.notif-text { font-size: 0.88rem; color: var(--text-white); line-height: 1.45; margin-bottom: 3px; }
 .notif-text b { color: #c084fc; }
-.notif-time { font-size: 0.75rem; color: var(--text-dim); }
+.notif-text .notif-action { color: var(--text-white); font-weight: 400; }
+.notif-text .notif-preview {
+    display: block; margin-top: 4px;
+    font-size: 0.78rem; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.notif-time { font-size: 0.72rem; color: var(--text-dim); }
 
+/* Post thumbnail */
 .notif-post-thumb {
-    width: 46px; height: 46px; border-radius: 10px;
+    width: 48px; height: 48px; border-radius: 10px;
     object-fit: cover; flex-shrink: 0;
     border: 1px solid var(--border);
 }
 .notif-post-text {
-    width: 46px; height: 46px; border-radius: 10px;
+    width: 48px; height: 48px; border-radius: 10px;
     background: var(--bg-card2); border: 1px solid var(--border);
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    color: var(--text-dim); font-size: 0.7rem; text-align: center; padding: 4px;
-    overflow: hidden;
+    color: var(--text-dim); font-size: 0.68rem; text-align: center;
+    padding: 5px; overflow: hidden; line-height: 1.3;
 }
 
-.empty-notif {
-    text-align: center; padding: 64px 20px;
-    color: var(--text-dim);
-}
+/* Empty */
+.empty-notif { text-align: center; padding: 64px 20px; color: var(--text-dim); }
 .empty-notif i { font-size: 3.5rem; opacity: 0.2; display: block; margin-bottom: 16px; }
 .empty-notif p { font-size: 0.95rem; }
+
+.btn-mark-all {
+    display: flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid rgba(139,92,246,.35);
+    color: #a78bfa; border-radius: 8px;
+    padding: 6px 14px; font-size: .8rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: .15s;
+}
+.btn-mark-all:hover { background: rgba(139,92,246,.12); border-color: #a78bfa; }
+.btn-mark-all:disabled { opacity: .4; cursor: default; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="notif-page">
     <div class="notif-header">
-        <h1><i class="bi bi-bell-fill"></i> اعلان‌ها</h1>
-        <span style="font-size:0.82rem; color:var(--text-dim);">همه به عنوان خوانده شده علامت زده شدند</span>
+        <h1><svg class="bi bi-bell-fill" aria-hidden="true"><use href="#bi-bell-fill"></use></svg> اعلان‌ها</h1>
+        {% if has_unread %}
+        <button class="btn-mark-all" id="markAllBtn" onclick="markAllRead()">
+            <svg class="bi bi-check2-all" aria-hidden="true"><use href="#bi-check2-all"></use></svg> خواندن همه
+        </button>
+        {% endif %}
     </div>
 
     {% if notifs %}
     <div class="notif-card">
         {% for n in notifs %}
-        <a href="{% if n.post %}{% url 'community:profile' username=n.post.author.username %}{% else %}{% url 'community:profile' username=n.sender.username %}{% endif %}"
-           class="notif-item ni-{{ n.notif_type }} {% if not n.is_read %}unread{% endif %}">
 
+        {# ── ادمین ── #}
+        {% if n.notif_type == 'admin' %}
+        <div class="notif-item ni-admin {% if not n.is_read %}unread{% endif %}" style="cursor:default">
+            <div class="notif-avatar">
+                <div class="notif-av-ph" style="background:linear-gradient(135deg,#6d28d9,#4c1d95)">
+                    <span style="font-size:.9rem"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35c-2.344 1.205-5.209 1.842-8 2.033v4.233q.27.04.537.06c2.677.188 5.22.bulk 8 2.122zm-9.761 5.175-.004.09-.003.009-.002-.001-.001-.001a.3.3 0 0 1-.154.09L3.5 9.5v-3a.3.3 0 0 1 .154.09l.003.009.004.09c.005.06.012.145.022.25.016.164.038.383.06.6.043.433.09.836.134 1.136q.044.3.062.44z"/></svg></span>
+                </div>
+                <div class="notif-type-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35c-2.344 1.205-5.209 1.842-8 2.033v4.233q.27.04.537.06c2.677.188 5.22.bulk 8 2.122zm-9.761 5.175-.004.09-.003.009-.002-.001-.001-.001a.3.3 0 0 1-.154.09L3.5 9.5v-3a.3.3 0 0 1 .154.09l.003.009.004.09c.005.06.012.145.022.25.016.164.038.383.06.6.043.433.09.836.134 1.136q.044.3.062.44z"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>مدیریت گیم بیت</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </div>
+
+        {# ── لایک ── #}
+        {% elif n.notif_type == 'like' %}
+        <a href="{% if n.post %}{% url 'community:profile' username=n.post.author.username %}{% else %}{% url 'community:profile' username=n.sender.username %}{% endif %}"
+           class="notif-item ni-like {% if not n.is_read %}unread{% endif %}">
             <div class="notif-avatar">
                 {% if n.sender.gamer_profile.avatar %}
                     <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
@@ -115,43 +162,340 @@
                     <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
                 {% endif %}
                 <div class="notif-type-icon">
-                    {% if n.notif_type == 'like' %}❤️
-                    {% elif n.notif_type == 'comment' %}💬
-                    {% elif n.notif_type == 'follow' %}👤
-                    {% elif n.notif_type == 'mention' %}📢
-                    {% endif %}
+                    <svg class="bi bi-heart-fill" aria-hidden="true" style="color:#ef4444;font-size:.6rem"><use href="#bi-heart-fill"></use></svg>
                 </div>
             </div>
-
             <div class="notif-body">
                 <div class="notif-text">
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
-                    {% if n.notif_type == 'like' %} پستت رو لایک کرد
-                    {% elif n.notif_type == 'comment' %} روی پستت کامنت گذاشت
-                    {% elif n.notif_type == 'follow' %} شروع کرد به دنبال کردنت
-                    {% elif n.notif_type == 'mention' %} تو رو منشن کرد
+                    <span class="notif-action"> پست شما را لایک کرد</span>
+                    {% if n.post %}
+                    <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
                     {% endif %}
                 </div>
                 <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
             </div>
-
             {% if n.post %}
                 {% if n.post.image %}
                     <img src="{{ n.post.image.url }}" class="notif-post-thumb">
                 {% else %}
-                    <div class="notif-post-text">{{ n.post.content|truncatechars:30 }}</div>
+                    <div class="notif-post-text">{{ n.post.content|truncatechars:28 }}</div>
                 {% endif %}
             {% endif %}
-
         </a>
+
+        {# ── کامنت ── #}
+        {% elif n.notif_type == 'comment' %}
+        <a href="{% if n.post %}{% url 'community:profile' username=n.post.author.username %}{% else %}{% url 'community:profile' username=n.sender.username %}{% endif %}"
+           class="notif-item ni-comment {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-chat-fill" aria-hidden="true" style="color:#a78bfa;font-size:.6rem"><use href="#bi-chat-fill"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> روی پست شما کامنت گذاشت</span>
+                    {% if n.custom_text %}
+                    <span class="notif-preview">💬 {{ n.custom_text|truncatechars:55 }}</span>
+                    {% elif n.post %}
+                    <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
+                    {% endif %}
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+            {% if n.post %}
+                {% if n.post.image %}
+                    <img src="{{ n.post.image.url }}" class="notif-post-thumb">
+                {% else %}
+                    <div class="notif-post-text">{{ n.post.content|truncatechars:28 }}</div>
+                {% endif %}
+            {% endif %}
+        </a>
+
+        {# ── فالو ── #}
+        {% elif n.notif_type == 'follow' %}
+        <a href="{% url 'community:profile' username=n.sender.username %}"
+           class="notif-item ni-follow {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-person-fill-check" aria-hidden="true" style="color:#4ade80;font-size:.6rem"><use href="#bi-person-fill-check"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> شما را دنبال کرد</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── درخواست فالو ── #}
+        {% elif n.notif_type == 'follow_request' %}
+        <a href="{% url 'community:profile' username=n.sender.username %}"
+           class="notif-item ni-follow_request {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-person-plus-fill" aria-hidden="true" style="color:#4ade80;font-size:.55rem"><use href="#bi-person-plus-fill"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> درخواست دنبال کردن فرستاد</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── پذیرش درخواست فالو ── #}
+        {% elif n.notif_type == 'follow_accepted' %}
+        <a href="{% url 'community:profile' username=n.sender.username %}"
+           class="notif-item ni-follow {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-person-check-fill" aria-hidden="true" style="color:#4ade80;font-size:.55rem"><use href="#bi-person-check-fill"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#4ade80;font-weight:700">پذیرفت</span></span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── رد درخواست فالو ── #}
+        {% elif n.notif_type == 'follow_rejected' %}
+        <a href="{% url 'community:profile' username=n.sender.username %}"
+           class="notif-item ni-follow {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-person-x-fill" aria-hidden="true" style="color:#f87171;font-size:.55rem"><use href="#bi-person-x-fill"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#f87171;font-weight:700">رد کرد</span></span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── منشن ── #}
+        {% elif n.notif_type == 'mention' %}
+        <a href="{% if n.post %}{% url 'community:profile' username=n.post.author.username %}{% else %}{% url 'community:profile' username=n.sender.username %}{% endif %}"
+           class="notif-item ni-mention {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon">
+                    <svg class="bi bi-at" aria-hidden="true" style="color:#fbbf24;font-size:.7rem;font-weight:900"><use href="#bi-at"></use></svg>
+                </div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> شما را منشن کرد</span>
+                    {% if n.post %}
+                    <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
+                    {% endif %}
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+            {% if n.post %}
+                {% if n.post.image %}
+                    <img src="{{ n.post.image.url }}" class="notif-post-thumb">
+                {% else %}
+                    <div class="notif-post-text">{{ n.post.content|truncatechars:28 }}</div>
+                {% endif %}
+            {% endif %}
+        </a>
+
+        {# ── LFG: پارتی کامل شد ── #}
+        {% elif n.notif_type == 'lfg_party' %}
+        <a href="{% url 'community:lfg' %}" class="notif-item ni-lfg_party {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                <div class="notif-av-ph" style="background:linear-gradient(135deg,#92400e,#b45309)">
+                    <span style="font-size:.9rem"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></span>
+                </div>
+                <div class="notif-type-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>پیدا کردن هم‌بازی</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── LFG: کسی پیوست ── #}
+        {% elif n.notif_type == 'lfg_join' %}
+        <a href="{% url 'community:lfg' %}" class="notif-item ni-lfg_join {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── LFG: درخواست پیوستن ── #}
+        {% elif n.notif_type == 'lfg_req' %}
+        <a href="{% url 'community:lfg' %}" class="notif-item ni-lfg_req {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11z"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── LFG: درخواست تأیید شد ── #}
+        {% elif n.notif_type == 'lfg_ok' %}
+        <a href="{% url 'community:lfg' %}" class="notif-item ni-lfg_ok {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon" style="font-size:.7rem;"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── اضافه شدن به گروه ── #}
+        {% elif n.notif_type == 'group_add' %}
+        <a href="{% url 'community:inbox' %}" class="notif-item ni-group_add {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-avatar">
+                {% if n.sender.gamer_profile.avatar %}
+                    <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img">
+                {% else %}
+                    <div class="notif-av-ph">{{ n.sender.username|first|upper }}</div>
+                {% endif %}
+                <div class="notif-type-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.555.132-1.757 1.06-2.641A4.1 4.1 0 0 1 4.92 10M1 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6m3-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">
+                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <span class="notif-action"> — {{ n.custom_text }}</span>
+                </div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </a>
+
+        {# ── گردونه شانس ── #}
+        {% elif n.notif_type == 'spin' %}
+        <div class="notif-item ni-spin {% if not n.is_read %}unread{% endif %}" style="cursor:default">
+            <div class="notif-avatar">
+                <div class="notif-av-ph" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+                    <span style="font-size:.9rem"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg></span>
+                </div>
+                <div class="notif-type-icon" style="background:rgba(124,58,237,.25)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg></div>
+            </div>
+            <div class="notif-body">
+                <div class="notif-text">{{ n.custom_text }}</div>
+                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+            </div>
+        </div>
+
+        {% endif %}
         {% endfor %}
     </div>
     {% else %}
     <div class="empty-notif">
-        <i class="bi bi-bell-slash"></i>
+        <svg class="bi bi-bell-slash" aria-hidden="true"><use href="#bi-bell-slash"></use></svg>
         <p>هنوز اعلانی نداری</p>
         <p style="margin-top:6px; font-size:0.82rem;">وقتی کسی پستت رو لایک کنه یا دنبالت کنه اینجا نشون داده میشه</p>
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+localStorage.removeItem('gb_notif_c');
+if (window.refreshBadges) window.refreshBadges();
+
+function markAllRead() {
+    const btn = document.getElementById('markAllBtn');
+    if (!btn) return;
+    btn.disabled = true;
+
+    fetch("{% url 'community:notifications_mark_all_read' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.ok) {
+            document.querySelectorAll('.notif-item.unread').forEach(el => {
+                el.classList.remove('unread');
+            });
+            btn.innerHTML = '<svg class="bi bi-check2-all" aria-hidden="true"><use href="#bi-check2-all"></use></svg> همه خوانده شد';
+            localStorage.removeItem('gb_notif_c');
+            if (window.refreshBadges) window.refreshBadges();
+        }
+    })
+    .catch(() => { btn.disabled = false; });
+}
+</script>
 {% endblock %}

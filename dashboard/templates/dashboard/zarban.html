@@ -1,0 +1,853 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}مدیریت ضربان | GameBeat{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+    --zarban: #a855f7;
+    --zarban-dark: #7c3aed;
+    --zarban-glow: rgba(168,85,247,.32);
+    --zarban-soft: rgba(168,85,247,.1);
+}
+
+/* ── ECG icon ── */
+.zb-ecg {
+    overflow: visible;
+    color: #f87171;
+    filter: drop-shadow(0 0 4px rgba(239,68,68,.8));
+    animation: zbEcgPulse 2.4s ease-in-out infinite;
+    flex-shrink: 0; display: inline-block; vertical-align: middle;
+}
+@keyframes zbEcgPulse {
+    0%,100% { filter: drop-shadow(0 0 4px rgba(239,68,68,.8)); opacity: 1; }
+    50%      { filter: drop-shadow(0 0 9px rgba(239,68,68,1)); opacity: .7; }
+}
+
+/* ── Stats ── */
+.zb-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.zb-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px;
+    position: relative; overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+}
+.zb-stat-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top left, var(--zarban-soft) 0%, transparent 60%);
+    pointer-events: none;
+}
+.zb-stat-card:hover { border-color: rgba(168,85,247,.4); box-shadow: 0 8px 24px rgba(168,85,247,.12); }
+.zb-stat-icon  { font-size: 1.8rem; margin-bottom: 10px; display: block; }
+.zb-stat-val   { font-size: 2rem; font-weight: 900; color: var(--zarban); line-height: 1; margin-bottom: 4px; }
+.zb-stat-label { font-size: .78rem; color: var(--text-muted); font-weight: 600; }
+
+/* ── Table card ── */
+.zb-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+/* ── Search bar ── */
+.zb-search-bar {
+    padding: 16px 20px 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.zb-search-wrap {
+    position: relative;
+    flex: 1; min-width: 220px;
+}
+.zb-search-wrap i {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint); font-size: .9rem; pointer-events: none;
+}
+.zb-search {
+    width: 100%;
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-main); border-radius: 10px;
+    padding: 9px 36px 9px 12px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .85rem;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.zb-search:focus { border-color: var(--zarban); box-shadow: 0 0 0 3px var(--zarban-glow); }
+.zb-search::placeholder { color: var(--text-faint); }
+.zb-select {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-main); border-radius: 10px; padding: 9px 12px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .82rem;
+    outline: none; cursor: pointer; flex-shrink: 0;
+}
+.zb-search-meta {
+    padding: 8px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
+}
+.zb-search-hint { font-size: .72rem; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+.zb-count-badge {
+    font-size: .72rem; background: var(--zarban-soft); color: var(--zarban);
+    border: 1px solid rgba(168,85,247,.25); border-radius: 20px;
+    padding: 2px 9px; font-weight: 700;
+}
+
+/* ── Table ── */
+.zb-table-wrap { overflow-x: auto; }
+.zb-table { width: 100%; border-collapse: collapse; }
+.zb-table thead th {
+    padding: 10px 16px;
+    font-size: .7rem; font-weight: 800;
+    color: var(--text-faint); text-align: right;
+    background: rgba(255,255,255,.02);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap; letter-spacing: .05em; text-transform: uppercase;
+}
+.zb-table thead th:first-child { padding-right: 20px; }
+.zb-table thead th.col-actions { text-align: center; width: 100px; }
+
+.zb-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    transition: background .12s;
+}
+.zb-table tbody tr:last-child { border-bottom: none; }
+.zb-table tbody tr:hover { background: rgba(168,85,247,.04); }
+.zb-table tbody tr.selected { background: rgba(168,85,247,.09) !important; }
+
+.zb-table td { padding: 11px 16px; vertical-align: middle; font-size: .85rem; }
+.zb-table td:first-child { padding-right: 20px; }
+
+.zb-row-idx { color: var(--text-faint); font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.zb-user-cell { display: flex; align-items: center; gap: 10px; }
+.zb-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--zarban-dark), var(--zarban));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; font-weight: 800; color: #fff;
+    flex-shrink: 0; overflow: hidden;
+}
+.zb-avatar img { width: 36px; height: 36px; object-fit: cover; }
+.zb-username { font-weight: 700; color: var(--text-main); font-size: .88rem; }
+.zb-joined   { font-size: .68rem; color: var(--text-faint); margin-top: 1px; }
+.zb-cell-text  { color: var(--text-muted); font-size: .82rem; }
+.zb-cell-empty { color: var(--text-faint); font-size: .78rem; }
+
+.zb-balance-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--zarban-soft); border: 1px solid rgba(168,85,247,.3);
+    border-radius: 20px; padding: 3px 10px;
+    font-size: .82rem; font-weight: 800; color: var(--zarban);
+    white-space: nowrap; transition: all .2s;
+}
+.zb-balance-chip.zero { color: var(--text-faint); background: rgba(255,255,255,.03); border-color: var(--border); }
+
+/* Action buttons on row */
+.zb-actions { display: flex; gap: 6px; justify-content: center; }
+.zb-btn {
+    width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; transition: all .15s;
+}
+.zb-btn-add  { background: rgba(34,197,94,.12);  color: #4ade80; }
+.zb-btn-add:hover  { background: rgba(34,197,94,.25);  transform: scale(1.12); }
+.zb-btn-ded  { background: rgba(239,68,68,.1);   color: #f87171; }
+.zb-btn-ded:hover  { background: rgba(239,68,68,.22);  transform: scale(1.12); }
+
+.zb-empty { padding: 56px 20px; text-align: center; color: var(--text-faint); }
+.zb-empty-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; }
+
+/* ── Pagination ── */
+.zb-pagination {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-top: 1px solid var(--border); gap: 8px;
+}
+.zb-page-info  { font-size: .78rem; color: var(--text-faint); }
+.zb-page-btns  { display: flex; gap: 4px; }
+.zb-page-btn {
+    min-width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg-card2);
+    color: var(--text-muted); font-family: 'Vazirmatn', sans-serif;
+    font-size: .8rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; transition: all .13s; padding: 0 6px;
+}
+.zb-page-btn:hover    { border-color: var(--zarban); color: var(--zarban); }
+.zb-page-btn.active   { background: var(--zarban-soft); border-color: rgba(168,85,247,.4); color: var(--zarban); }
+.zb-page-btn.disabled { opacity: .3; pointer-events: none; }
+
+/* ── Recent Tx (full width) ── */
+.zb-tx-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+}
+.zb-tx-head {
+    padding: 14px 20px 12px; border-bottom: 1px solid var(--border);
+    font-size: .92rem; font-weight: 800;
+    display: flex; align-items: center; gap: 8px;
+}
+.zb-tx-table { width: 100%; border-collapse: collapse; }
+.zb-tx-table thead th {
+    padding: 8px 16px; font-size: .68rem; font-weight: 800;
+    color: var(--text-faint); text-align: right;
+    background: rgba(255,255,255,.015); border-bottom: 1px solid var(--border);
+    white-space: nowrap; letter-spacing: .05em; text-transform: uppercase;
+}
+.zb-tx-table thead th:first-child { padding-right: 20px; }
+.zb-tx-table tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); }
+.zb-tx-table tbody tr:last-child { border-bottom: none; }
+.zb-tx-table tbody tr:hover { background: rgba(255,255,255,.02); }
+.zb-tx-table td { padding: 10px 16px; font-size: .82rem; vertical-align: middle; }
+.zb-tx-table td:first-child { padding-right: 20px; }
+.zb-tx-sign {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .85rem; font-weight: 900;
+}
+.zb-tx-sign.plus  { background: rgba(34,197,94,.12); color: #4ade80; }
+.zb-tx-sign.minus { background: rgba(239,68,68,.1);  color: #f87171; }
+.zb-tx-amt.plus   { color: #4ade80; font-weight: 800; }
+.zb-tx-amt.minus  { color: #f87171; font-weight: 800; }
+.zb-tx-note { color: var(--text-faint); font-size: .74rem; margin-top: 2px; }
+.zb-tx-time { color: var(--text-faint); font-size: .74rem; white-space: nowrap; }
+
+/* ══ MODAL ══ */
+.zb-modal-backdrop {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease;
+}
+.zb-modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+.zb-modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(168,85,247,.25);
+    border-radius: 20px;
+    width: 100%; max-width: 460px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(168,85,247,.08);
+    transform: scale(.94) translateY(12px);
+    transition: transform .26s cubic-bezier(.34,1.42,.64,1);
+    overflow: hidden;
+    position: relative;
+}
+.zb-modal-backdrop.open .zb-modal { transform: scale(1) translateY(0); }
+
+/* purple top-edge glow line */
+.zb-modal::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--zarban), transparent);
+}
+
+/* Modal header */
+.zb-modal-header {
+    padding: 22px 22px 18px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(168,85,247,.07), transparent);
+    position: relative;
+}
+.zb-modal-close {
+    position: absolute; left: 18px; top: 18px;
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg-card2);
+    color: var(--text-faint); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; transition: all .15s;
+}
+.zb-modal-close:hover { border-color: var(--zarban); color: var(--zarban); background: var(--zarban-soft); }
+
+.zb-modal-avatar {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--zarban-dark), var(--zarban));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 900; color: #fff;
+    overflow: hidden;
+    box-shadow: 0 0 0 3px rgba(168,85,247,.2);
+}
+.zb-modal-avatar img { width: 52px; height: 52px; object-fit: cover; }
+.zb-modal-user-name { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+.zb-modal-balance   {
+    margin-top: 4px; font-size: .82rem;
+    display: flex; align-items: center; gap: 6px;
+}
+.zb-modal-bal-num {
+    background: var(--zarban-soft); border: 1px solid rgba(168,85,247,.3);
+    color: var(--zarban); border-radius: 20px; padding: 1px 10px;
+    font-weight: 800; font-size: .82rem;
+}
+
+/* Modal body */
+.zb-modal-body { padding: 22px; }
+
+/* Action toggle */
+.zb-toggle {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 20px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 5px;
+}
+.zb-toggle-btn {
+    padding: 10px 8px; border-radius: 9px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-family: 'Vazirmatn', sans-serif; font-size: .88rem; font-weight: 700;
+    cursor: pointer; transition: all .18s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.zb-toggle-btn.is-add {
+    background: rgba(34,197,94,.18); color: #4ade80;
+    box-shadow: 0 2px 8px rgba(34,197,94,.15);
+}
+.zb-toggle-btn.is-ded {
+    background: rgba(239,68,68,.16); color: #f87171;
+    box-shadow: 0 2px 8px rgba(239,68,68,.15);
+}
+
+.zb-field { margin-bottom: 16px; }
+.zb-label {
+    display: block; font-size: .72rem; font-weight: 800;
+    color: var(--text-muted); margin-bottom: 7px;
+    letter-spacing: .05em; text-transform: uppercase;
+}
+.zb-input {
+    width: 100%; background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-main); border-radius: 10px; padding: 10px 13px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .92rem; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    box-sizing: border-box;
+}
+.zb-input:focus { border-color: var(--zarban); box-shadow: 0 0 0 3px var(--zarban-glow); }
+.zb-input::placeholder { color: var(--text-faint); }
+
+/* amount presets */
+.zb-presets {
+    display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+}
+.zb-preset {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: 7px; padding: 4px 10px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .75rem; font-weight: 700;
+    cursor: pointer; transition: all .13s;
+}
+.zb-preset:hover { border-color: var(--zarban); color: var(--zarban); background: var(--zarban-soft); }
+
+.zb-notify-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    font-size: .83rem; color: var(--text-muted);
+}
+.zb-notify-row input[type=checkbox] { accent-color: var(--zarban); width: 16px; height: 16px; cursor: pointer; }
+
+/* Submit button */
+.zb-submit {
+    width: 100%; padding: 13px;
+    border: none; border-radius: 12px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .97rem; font-weight: 800;
+    color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, var(--zarban-dark), var(--zarban));
+    box-shadow: 0 4px 18px var(--zarban-glow);
+    transition: transform .15s, box-shadow .15s, background .15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.zb-submit:hover    { transform: translateY(-1px); box-shadow: 0 6px 26px var(--zarban-glow); }
+.zb-submit:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.zb-submit.is-add-btn { background: linear-gradient(135deg, #15803d, #22c55e); box-shadow: 0 4px 18px rgba(34,197,94,.3); }
+.zb-submit.is-add-btn:hover { box-shadow: 0 6px 26px rgba(34,197,94,.4); }
+.zb-submit.is-ded-btn { background: linear-gradient(135deg, #b91c1c, #ef4444); box-shadow: 0 4px 18px rgba(239,68,68,.3); }
+.zb-submit.is-ded-btn:hover { box-shadow: 0 6px 26px rgba(239,68,68,.4); }
+
+/* result toast in modal */
+.zb-result {
+    display: none;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: .83rem; font-weight: 600; margin-top: 12px;
+    align-items: center; gap: 8px;
+}
+.zb-result.ok  { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.25); display: flex; }
+.zb-result.err { background: rgba(239,68,68,.1);   color: #f87171; border: 1px solid rgba(239,68,68,.25); display: flex; }
+
+@keyframes fadeInDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin       { to { transform: rotate(360deg); } }
+
+@media (max-width: 860px) {
+    .zb-stats { grid-template-columns: 1fr 1fr; }
+    .zb-table td.hide-sm, .zb-table th.hide-sm { display: none; }
+    .zb-tx-table td.hide-sm, .zb-tx-table th.hide-sm { display: none; }
+}
+@media (max-width: 520px) {
+    .zb-stats { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 32px 28px 80px;">
+
+    <!-- Page Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; gap:14px; flex-wrap:wrap;">
+        <div>
+            <h1 style="font-size:1.6rem; font-weight:900; margin:0; display:flex; align-items:center; gap:10px;">
+                <svg class="zb-ecg" style="width:44px;height:20px;" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                مدیریت ضربان
+            </h1>
+            <p style="color:var(--text-muted); font-size:.83rem; margin:6px 0 0;">
+                ارز اختصاصی GameBeat — اعطا، کسر و مدیریت موجودی کاربران
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="zb-stats">
+        <div class="zb-stat-card">
+            <span class="zb-stat-icon"><svg class="zb-ecg" style="width:48px;height:22px;" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="zb-stat-val">{{ total_zarban }}</div>
+            <div class="zb-stat-label">کل ضربان در گردش</div>
+        </div>
+        <div class="zb-stat-card">
+            <span class="zb-stat-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M0 3a2 2 0 0 1 2-2h13.5a.5.5 0 0 1 0 1H15v2a1 1 0 0 1 1 1v8.5a1.5 1.5 0 0 1-1.5 1.5h-12A2.5 2.5 0 0 1 0 12.5zm1 1.732V12.5A1.5 1.5 0 0 0 2.5 14h12a.5.5 0 0 0 .5-.5V7H2a2 2 0 0 1-1-.268M1 3a1 1 0 0 0 1 1h12V2H2a1 1 0 0 0-1 1"/></svg></span>
+            <div class="zb-stat-val">{{ total_wallets }}</div>
+            <div class="zb-stat-label">کیف پول فعال</div>
+        </div>
+        <div class="zb-stat-card">
+            <span class="zb-stat-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/></svg></span>
+            <div class="zb-stat-val">{{ total_tx }}</div>
+            <div class="zb-stat-label">کل تراکنش‌ها</div>
+        </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="zb-card">
+
+        <!-- Search -->
+        <form method="get" id="searchForm">
+            <div class="zb-search-bar">
+                <div class="zb-search-wrap">
+                    <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+                    <input type="text" name="q" id="zbSearchInput"
+                           value="{{ search }}" class="zb-search"
+                           placeholder="جستجو..." autocomplete="off">
+                </div>
+                <select name="sort" class="zb-select"
+                        onchange="document.getElementById('searchForm').submit()">
+                    <option value="balance"  {% if sort == 'balance'  %}selected{% endif %}>بیشترین ضربان</option>
+                    <option value="username" {% if sort == 'username' %}selected{% endif %}>نام کاربری (A–Z)</option>
+                    <option value="date"     {% if sort == 'date'     %}selected{% endif %}>جدیدترین عضو</option>
+                </select>
+                <input type="hidden" name="page" value="1">
+            </div>
+            <div class="zb-search-meta">
+                <div class="zb-search-hint">
+                    <svg class="bi bi-info-circle" aria-hidden="true" style="font-size:.75rem;"><use href="#bi-info-circle"></use></svg>
+                    جستجو بر اساس نام کاربری، ایمیل یا شماره موبایل
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="zb-count-badge">{{ page_obj.paginator.count }} کاربر</span>
+                    {% if search %}
+                    <a href="?sort={{ sort }}" style="font-size:.75rem;color:var(--text-faint);text-decoration:none;">
+                        <svg class="bi bi-x-circle" aria-hidden="true"><use href="#bi-x-circle"></use></svg> پاک کردن
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="zb-table-wrap">
+            <table class="zb-table">
+                <thead>
+                    <tr>
+                        <th style="width:44px;">#</th>
+                        <th>کاربر</th>
+                        <th class="hide-sm">ایمیل</th>
+                        <th class="hide-sm">شماره موبایل</th>
+                        <th>موجودی</th>
+                        <th class="col-actions">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in page_obj %}
+                <tr id="row-{{ user.id }}">
+                    <td><span class="zb-row-idx">{{ forloop.counter0|add:page_obj.start_index }}</span></td>
+                    <td>
+                        <div class="zb-user-cell">
+                            <div class="zb-avatar">
+                                {% if user.gamer_profile.avatar %}
+                                    <img src="{{ user.gamer_profile.avatar.url }}" alt="">
+                                {% else %}{{ user.username|slice:":1"|upper }}{% endif %}
+                            </div>
+                            <div>
+                                <div class="zb-username">{{ user.username }}</div>
+                                <div class="zb-joined">{{ user.date_joined|date:"Y/m/d" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="hide-sm">
+                        {% if user.email %}<span class="zb-cell-text">{{ user.email }}</span>
+                        {% else %}<span class="zb-cell-empty">—</span>{% endif %}
+                    </td>
+                    <td class="hide-sm">
+                        {% if user.gamer_profile.phone %}
+                            <span class="zb-cell-text" dir="ltr">{{ user.gamer_profile.phone }}</span>
+                        {% else %}<span class="zb-cell-empty">—</span>{% endif %}
+                    </td>
+                    <td>
+                        <div class="zb-balance-chip {% if user.zarban_balance == 0 %}zero{% endif %}"
+                             id="balance-{{ user.id }}">
+                            <svg class="zb-ecg" style="width:22px;height:10px;" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="bal-num">{{ user.zarban_balance }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="zb-actions">
+                            <button class="zb-btn zb-btn-add" title="اعطای ضربان"
+                                    onclick="openModal({{ user.id }}, '{{ user.username }}', {{ user.zarban_balance }}, '{% if user.gamer_profile.avatar %}{{ user.gamer_profile.avatar.url }}{% endif %}', 'add')">
+                                <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg>
+                            </button>
+                            <button class="zb-btn zb-btn-ded" title="کسر ضربان"
+                                    onclick="openModal({{ user.id }}, '{{ user.username }}', {{ user.zarban_balance }}, '{% if user.gamer_profile.avatar %}{{ user.gamer_profile.avatar.url }}{% endif %}', 'deduct')">
+                                <svg class="bi bi-dash-lg" aria-hidden="true"><use href="#bi-dash-lg"></use></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="zb-empty">
+                            <span class="zb-empty-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg></span>
+                            {% if search %}نتیجه‌ای برای «{{ search }}» پیدا نشد
+                            {% else %}کاربری وجود ندارد{% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="zb-pagination">
+            <span class="zb-page-info">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+            <div class="zb-page-btns">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ search }}&sort={{ sort }}" class="zb-page-btn"><svg class="bi bi-chevron-right" aria-hidden="true"><use href="#bi-chevron-right"></use></svg></a>
+                {% else %}<span class="zb-page-btn disabled"><svg class="bi bi-chevron-right" aria-hidden="true"><use href="#bi-chevron-right"></use></svg></span>{% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <span class="zb-page-btn active">{{ num }}</span>
+                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <a href="?page={{ num }}&q={{ search }}&sort={{ sort }}" class="zb-page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ search }}&sort={{ sort }}" class="zb-page-btn"><svg class="bi bi-chevron-left" aria-hidden="true"><use href="#bi-chevron-left"></use></svg></a>
+                {% else %}<span class="zb-page-btn disabled"><svg class="bi bi-chevron-left" aria-hidden="true"><use href="#bi-chevron-left"></use></svg></span>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div><!-- /zb-card -->
+
+    <!-- Recent Transactions (full-width) -->
+    <div class="zb-tx-card">
+        <div class="zb-tx-head">
+            <svg class="bi bi-clock-history" aria-hidden="true" style="color:var(--zarban);"><use href="#bi-clock-history"></use></svg>
+            آخرین تراکنش‌ها
+        </div>
+        {% if recent_tx %}
+        <div style="overflow-x:auto;">
+            <table class="zb-tx-table">
+                <thead>
+                    <tr>
+                        <th style="width:44px;">نوع</th>
+                        <th>کاربر</th>
+                        <th class="hide-sm">توضیح</th>
+                        <th class="hide-sm">توسط</th>
+                        <th>مقدار</th>
+                        <th>زمان</th>
+                    </tr>
+                </thead>
+                <tbody id="zbTxTbody">
+                {% for tx in recent_tx %}
+                <tr>
+                    <td><span class="zb-tx-sign {% if tx.tx_type == 'credit' %}plus{% else %}minus{% endif %}">{% if tx.tx_type == 'credit' %}+{% else %}−{% endif %}</span></td>
+                    <td><span style="font-weight:700;color:var(--text-main);">{{ tx.wallet.user.username }}</span></td>
+                    <td class="hide-sm"><span style="color:var(--text-faint);font-size:.78rem;">{% if tx.reason %}{{ tx.reason }}{% else %}بدون توضیح{% endif %}</span></td>
+                    <td class="hide-sm"><span style="color:var(--text-faint);font-size:.78rem;">{% if tx.admin %}{{ tx.admin.username }}{% else %}—{% endif %}</span></td>
+                    <td><span class="zb-tx-amt {% if tx.tx_type == 'credit' %}plus{% else %}minus{% endif %}" style="display:inline-flex;align-items:center;gap:4px;">{% if tx.tx_type == 'credit' %}+{% else %}−{% endif %}{{ tx.amount }} <svg class="zb-ecg" style="width:18px;height:8px;" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></td>
+                    <td><span class="zb-tx-time">{{ tx.created_at|timesince }} پیش</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:32px; color:var(--text-faint); font-size:.85rem;">هنوز تراکنشی ثبت نشده</div>
+        {% endif %}
+    </div>
+
+</div><!-- /page wrapper -->
+
+
+<!-- ══════════════════════════════════════════
+     MODAL
+══════════════════════════════════════════ -->
+<div class="zb-modal-backdrop" id="zbBackdrop" onclick="handleBackdropClick(event)">
+    <div class="zb-modal" id="zbModal">
+
+        <!-- Header: user info -->
+        <div class="zb-modal-header">
+            <div class="zb-modal-avatar" id="mAvatar">?</div>
+            <div style="flex:1; min-width:0;">
+                <div class="zb-modal-user-name" id="mUsername">—</div>
+                <div class="zb-modal-balance">
+                    <span style="color:var(--text-faint); font-size:.78rem;">موجودی:</span>
+                    <span class="zb-modal-bal-num" id="mBalDisplay">0</span>
+                </div>
+            </div>
+            <button class="zb-modal-close" onclick="closeModal()" title="بستن">
+                <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="zb-modal-body">
+
+            <!-- Add / Deduct toggle -->
+            <div class="zb-toggle">
+                <button type="button" class="zb-toggle-btn" id="mBtnAdd" onclick="setAction('add')">
+                    <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> اعطای ضربان
+                </button>
+                <button type="button" class="zb-toggle-btn" id="mBtnDed" onclick="setAction('deduct')">
+                    <svg class="bi bi-dash-circle-fill" aria-hidden="true"><use href="#bi-dash-circle-fill"></use></svg> کسر ضربان
+                </button>
+            </div>
+
+            <!-- Amount -->
+            <div class="zb-field">
+                <label class="zb-label">مقدار ضربان</label>
+                <input type="number" id="mAmount" class="zb-input"
+                       placeholder="مقدار را وارد کنید..." min="1" value="100">
+                <div class="zb-presets">
+                    <button type="button" class="zb-preset" onclick="setPreset(10)">۱۰</button>
+                    <button type="button" class="zb-preset" onclick="setPreset(50)">۵۰</button>
+                    <button type="button" class="zb-preset" onclick="setPreset(100)">۱۰۰</button>
+                    <button type="button" class="zb-preset" onclick="setPreset(500)">۵۰۰</button>
+                    <button type="button" class="zb-preset" onclick="setPreset(1000)">۱۰۰۰</button>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="zb-field">
+                <label class="zb-label">دلیل <span style="font-weight:400;text-transform:none;letter-spacing:0;">(اختیاری)</span></label>
+                <input type="text" id="mReason" class="zb-input"
+                       placeholder="مثلاً: جایزه مسابقه، هدیه خوش‌آمدگویی...">
+            </div>
+
+            <!-- Notify -->
+            <div class="zb-notify-row">
+                <input type="checkbox" id="mNotify" checked>
+                <label for="mNotify">ارسال اعلان به کاربر</label>
+            </div>
+
+            <!-- Submit -->
+            <button class="zb-submit" id="mSubmitBtn" onclick="submitZarban()">
+                <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>
+                <span id="mSubmitLabel">اعمال</span>
+            </button>
+
+            <!-- Result -->
+            <div class="zb-result" id="mResult"></div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+let _uid = null, _uname = '', _bal = 0, _action = 'add';
+
+const ZB_ICON = `<svg style="width:18px;height:8px;overflow:visible;vertical-align:middle;color:#f87171;filter:drop-shadow(0 0 4px rgba(239,68,68,.8));" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* ── Live search debounced ── */
+(function () {
+    const inp = document.getElementById('zbSearchInput');
+    let t;
+    inp.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => document.getElementById('searchForm').submit(), 480);
+    });
+})();
+
+/* ── Open modal ── */
+function openModal(uid, username, balance, avatarUrl, action) {
+    _uid = uid; _uname = username; _bal = balance;
+
+    /* avatar */
+    const av = document.getElementById('mAvatar');
+    if (avatarUrl) {
+        av.innerHTML = `<img src="${avatarUrl}" alt="">`;
+    } else {
+        av.textContent = username.charAt(0).toUpperCase();
+    }
+
+    document.getElementById('mUsername').textContent   = username;
+    document.getElementById('mBalDisplay').textContent = balance;
+    document.getElementById('mAmount').value           = 100;
+    document.getElementById('mReason').value           = '';
+    document.getElementById('mResult').className       = 'zb-result';
+    document.getElementById('mSubmitBtn').disabled     = false;
+    document.getElementById('mSubmitLabel').textContent = 'اعمال';
+
+    /* highlight row */
+    document.querySelectorAll('.zb-table tbody tr').forEach(r => r.classList.remove('selected'));
+    const row = document.getElementById('row-' + uid);
+    if (row) row.classList.add('selected');
+
+    setAction(action);
+
+    document.getElementById('zbBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('mAmount').focus(), 280);
+}
+
+/* ── Close modal ── */
+function closeModal() {
+    document.getElementById('zbBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    document.querySelectorAll('.zb-table tbody tr').forEach(r => r.classList.remove('selected'));
+}
+
+function handleBackdropClick(e) {
+    if (e.target === document.getElementById('zbBackdrop')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── Toggle add / deduct ── */
+function setAction(a) {
+    _action = a;
+    const ba = document.getElementById('mBtnAdd');
+    const bd = document.getElementById('mBtnDed');
+    const sb = document.getElementById('mSubmitBtn');
+
+    ba.className = 'zb-toggle-btn' + (a === 'add'    ? ' is-add' : '');
+    bd.className = 'zb-toggle-btn' + (a === 'deduct' ? ' is-ded' : '');
+    sb.className = 'zb-submit'     + (a === 'add'    ? ' is-add-btn' : ' is-ded-btn');
+    document.getElementById('mSubmitLabel').textContent = (a === 'add') ? 'اعطای ضربان' : 'کسر ضربان';
+}
+
+/* ── Amount presets ── */
+function setPreset(v) { document.getElementById('mAmount').value = v; }
+
+/* ── Submit ── */
+function submitZarban() {
+    if (!_uid) return;
+    const amount = parseInt(document.getElementById('mAmount').value);
+    const reason = document.getElementById('mReason').value.trim();
+    const notify = document.getElementById('mNotify').checked ? '1' : '0';
+    const btn    = document.getElementById('mSubmitBtn');
+    const lbl    = document.getElementById('mSubmitLabel');
+
+    if (!amount || amount < 1) { showResult('مقدار باید عدد مثبت باشد', false); return; }
+
+    btn.disabled = true;
+    lbl.innerHTML = '<svg class="bi bi-arrow-repeat" aria-hidden="true" style="animation:spin .6s linear infinite;display:inline-block;margin-left:4px;"><use href="#bi-arrow-repeat"></use></svg> در حال ارسال...';
+
+    const fd = new FormData();
+    fd.append('action',  _action);
+    fd.append('amount',  amount);
+    fd.append('reason',  reason);
+    fd.append('notify',  notify);
+    fd.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch(`/admin-panel/zarban/${_uid}/manage/`, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        lbl.textContent = (_action === 'add') ? 'اعطای ضربان' : 'کسر ضربان';
+
+        if (data.ok) {
+            const nb = data.new_balance;
+
+            /* update chip in table */
+            const chip = document.getElementById('balance-' + _uid);
+            if (chip) {
+                chip.querySelector('.bal-num').textContent = nb;
+                chip.className = 'zb-balance-chip' + (nb === 0 ? ' zero' : '');
+                chip.animate(
+                    [{ transform:'scale(1.45)', outline:'2px solid #a855f7' },
+                     { transform:'scale(1)',    outline:'none' }],
+                    { duration: 400, easing: 'cubic-bezier(.34,1.56,.64,1)' }
+                );
+            }
+
+            /* update modal balance display */
+            _bal = nb;
+            document.getElementById('mBalDisplay').textContent = nb;
+
+            /* prepend row to tx table */
+            prependTxRow(data.action, data.amount, _uname, reason);
+
+            const sym = data.action === 'add' ? '+' : '−';
+            showResult(`${sym}${data.amount} ${ZB_ICON} انجام شد — موجودی جدید: ${nb}`, true);
+
+            /* auto close after success */
+            setTimeout(closeModal, 1800);
+        } else {
+            showResult(data.error || 'خطای ناشناخته', false);
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        lbl.textContent = (_action === 'add') ? 'اعطای ضربان' : 'کسر ضربان';
+        showResult('خطا در اتصال به سرور', false);
+    });
+}
+
+function showResult(msg, ok) {
+    const el = document.getElementById('mResult');
+    el.className = 'zb-result ' + (ok ? 'ok' : 'err');
+    el.innerHTML = `<svg class="bi" aria-hidden="true" style="width:1em;height:1em;"><use href="#bi-${ok ? 'check-circle-fill' : 'x-circle-fill'}"></use></svg> ${msg}`;
+    if (!ok) setTimeout(() => { el.className = 'zb-result'; }, 4000);
+}
+
+function prependTxRow(action, amount, username, reason) {
+    const tbody = document.getElementById('zbTxTbody');
+    if (!tbody) return;
+    const sign = action === 'add' ? 'plus' : 'minus';
+    const sym  = action === 'add' ? '+' : '−';
+    const tr   = document.createElement('tr');
+    tr.style.animation = 'fadeInDown .25s ease';
+    tr.innerHTML = `
+        <td><span class="zb-tx-sign ${sign}">${sym}</span></td>
+        <td><span style="font-weight:700;color:var(--text-main);">${username}</span></td>
+        <td class="hide-sm"><span style="color:var(--text-faint);font-size:.78rem;">${reason || 'بدون توضیح'}</span></td>
+        <td class="hide-sm"><span style="color:var(--text-faint);font-size:.78rem;">شما</span></td>
+        <td><span class="zb-tx-amt ${sign}" style="display:inline-flex;align-items:center;gap:4px;">${sym}${amount} ${ZB_ICON}</span></td>
+        <td><span class="zb-tx-time">همین الان</span></td>
+    `;
+    tbody.prepend(tr);
+}
+</script>
+{% endblock %}

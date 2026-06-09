@@ -1,0 +1,327 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>۴۰۴ — GAME OVER | GameBeat</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#05050f;
+  --purple:#7c3aed;
+  --purple2:#a855f7;
+  --pink:#ec4899;
+  --cyan:#06b6d4;
+  --green:#10b981;
+  --red:#ef4444;
+}
+
+html,body{width:100%;height:100%;overflow:hidden}
+
+body{
+  background:var(--bg);
+  font-family:'Vazirmatn',monospace;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+/* ── CRT screen effect ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+/* ── Stars ── */
+#stars{position:fixed;inset:0;overflow:hidden;z-index:0}
+.star{position:absolute;border-radius:50%;animation:twinkle ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+
+/* ── Neon grid floor ── */
+.grid-floor{
+  position:fixed;bottom:0;left:0;right:0;height:45vh;
+  background:linear-gradient(transparent,rgba(124,58,237,.04) 40%,rgba(124,58,237,.08));
+  perspective:600px;
+  overflow:hidden;
+  z-index:1;
+}
+.grid-floor::before,.grid-floor::after{
+  content:'';
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(124,58,237,.35) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,58,237,.35) 1px,transparent 1px);
+}
+.grid-floor::before{
+  background-size:60px 60px;
+  transform:rotateX(75deg) translateY(-30%);
+  transform-origin:bottom center;
+  animation:gridMove 4s linear infinite;
+}
+.grid-floor::after{
+  background-size:60px 60px;
+  transform:rotateX(75deg) translateY(-30%);
+  transform-origin:bottom center;
+  animation:gridMove 4s linear infinite;
+  animation-delay:-2s;
+  opacity:.5;
+}
+@keyframes gridMove{from{background-position:0 0}to{background-position:0 60px}}
+
+/* ── Main content ── */
+.scene{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;
+  padding-bottom:40px;
+}
+
+/* ── GAME OVER text ── */
+.gameover{
+  font-size:clamp(1rem,4vw,1.4rem);
+  font-weight:900;
+  letter-spacing:1em;
+  color:var(--red);
+  text-shadow:0 0 20px var(--red),0 0 40px var(--red);
+  animation:blink 1.2s step-end infinite;
+  margin-bottom:6px;
+  text-align:center;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── 404 ── */
+.four-oh-four{
+  font-size:clamp(120px,25vw,220px);
+  font-weight:900;
+  line-height:.9;
+  letter-spacing:-8px;
+  position:relative;
+  user-select:none;
+}
+.four-oh-four .digit{
+  display:inline-block;
+  background:linear-gradient(180deg,#fff 0%,var(--purple2) 40%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(168,85,247,.8)) drop-shadow(0 0 60px rgba(124,58,237,.4));
+  animation:charFloat 3s ease-in-out infinite;
+}
+.four-oh-four .digit:nth-child(1){animation-delay:0s}
+.four-oh-four .digit:nth-child(2){animation-delay:.3s;color:var(--cyan);background:linear-gradient(180deg,#fff 0%,var(--cyan) 50%,#0891b2 100%)}
+.four-oh-four .digit:nth-child(3){animation-delay:.6s}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* glitch layers */
+.four-oh-four::before,.four-oh-four::after{
+  content:'404';
+  position:absolute;top:0;left:0;
+  font-size:inherit;font-weight:900;letter-spacing:-8px;
+  -webkit-text-fill-color:transparent;
+}
+.four-oh-four::before{
+  background:linear-gradient(180deg,var(--cyan),transparent);
+  -webkit-background-clip:text;background-clip:text;
+  animation:glitchA 4s infinite;
+  clip-path:polygon(0 20%,100% 20%,100% 45%,0 45%);
+}
+.four-oh-four::after{
+  background:linear-gradient(180deg,var(--pink),transparent);
+  -webkit-background-clip:text;background-clip:text;
+  animation:glitchB 4s infinite;
+  clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);
+}
+@keyframes glitchA{0%,90%,100%{transform:translate(0);opacity:0}91%{transform:translate(-6px,2px);opacity:.7}94%{transform:translate(6px,-2px);opacity:.7}97%{transform:translate(0);opacity:0}}
+@keyframes glitchB{0%,88%,100%{transform:translate(0);opacity:0}89%{transform:translate(5px,3px);opacity:.6}93%{transform:translate(-4px,-1px);opacity:.6}96%{transform:translate(0);opacity:0}}
+
+/* ── Subtitle ── */
+.sub{
+  font-size:clamp(.78rem,2vw,.95rem);
+  color:rgba(255,255,255,.5);
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin-top:4px;
+  margin-bottom:28px;
+  text-align:center;
+}
+
+/* ── Lives / HP ── */
+.stats-row{
+  display:flex;align-items:center;gap:24px;
+  margin-bottom:32px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:12px 24px;
+}
+.stat-block{display:flex;flex-direction:column;align-items:center;gap:4px}
+.stat-label{font-size:.62rem;letter-spacing:.2em;color:rgba(255,255,255,.3);text-transform:uppercase}
+.stat-val{font-size:1.1rem;font-weight:700}
+.stat-val.lives{color:var(--red);text-shadow:0 0 10px var(--red)}
+.stat-val.score{color:var(--cyan);text-shadow:0 0 10px var(--cyan);font-size:.9rem}
+.stat-val.level{color:var(--purple2);text-shadow:0 0 10px var(--purple2)}
+
+.hp-bar-wrap{display:flex;flex-direction:column;gap:5px}
+.hp-label-row{display:flex;justify-content:space-between;font-size:.62rem;color:rgba(255,255,255,.3);letter-spacing:.15em;text-transform:uppercase}
+.hp-bar{width:160px;height:10px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+.hp-fill{height:100%;width:100%;background:linear-gradient(90deg,var(--red),#f97316);border-radius:3px;animation:hpDrain 2s cubic-bezier(.4,0,.2,1) .8s forwards;transform-origin:right}
+@keyframes hpDrain{to{width:0%}}
+
+.sep{width:1px;height:40px;background:rgba(255,255,255,.07)}
+
+/* ── Pixel character (CSS art) ── */
+.pixel-char{
+  margin-bottom:4px;
+  animation:charShake .15s ease-in-out 2.5s 3;
+}
+@keyframes charShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+.px-grid{display:grid;grid-template-columns:repeat(11,10px);gap:1px}
+.px{width:10px;height:10px;border-radius:1px}
+
+/* ── Buttons ── */
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 28px;border-radius:4px;
+  font-size:.88rem;font-weight:700;font-family:'Vazirmatn',monospace;
+  text-decoration:none;cursor:pointer;border:none;
+  position:relative;overflow:hidden;
+  transition:transform .1s;
+  letter-spacing:.05em;
+}
+.btn:active{transform:scale(.97)}
+
+.btn-primary{
+  background:var(--purple);
+  color:#fff;
+  box-shadow:0 0 0 2px #fff,0 0 0 4px var(--purple),0 8px 32px rgba(124,58,237,.5);
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+}
+.btn-primary:hover{background:#6d28d9;box-shadow:0 0 0 2px #fff,0 0 0 4px #6d28d9,0 12px 40px rgba(124,58,237,.7)}
+
+.btn-ghost{
+  background:transparent;
+  color:var(--cyan);
+  box-shadow:0 0 0 2px var(--cyan),inset 0 0 20px rgba(6,182,212,.05);
+}
+.btn-ghost:hover{background:rgba(6,182,212,.1);box-shadow:0 0 0 2px var(--cyan),inset 0 0 20px rgba(6,182,212,.15),0 0 30px rgba(6,182,212,.3)}
+
+/* ── Insert coin ── */
+.insert-coin{
+  margin-top:28px;
+  font-size:.72rem;letter-spacing:.3em;
+  color:rgba(255,255,255,.2);
+  text-transform:uppercase;
+  animation:blink 1.6s step-end infinite;
+}
+
+/* ── Score counter ── */
+.score-count{
+  font-variant-numeric:tabular-nums;
+  display:inline-block;
+  min-width:6ch;
+}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div id="stars"></div>
+
+<!-- Grid floor -->
+<div class="grid-floor"></div>
+
+<div class="scene">
+
+  <!-- GAME OVER -->
+  <div class="gameover">— &nbsp; G A M E &nbsp; O V E R &nbsp; —</div>
+
+  <!-- 404 -->
+  <div class="four-oh-four" aria-label="404">
+    <span class="digit">4</span><span class="digit">0</span><span class="digit">4</span>
+  </div>
+
+  <div class="sub">صفحه‌ای که دنبالش بودی وجود نداره</div>
+
+  <!-- Stats bar -->
+  <div class="stats-row">
+    <div class="stat-block">
+      <div class="stat-label">lives</div>
+      <div class="stat-val lives">♥ ♥ ♥</div>
+    </div>
+    <div class="sep"></div>
+    <div class="hp-bar-wrap">
+      <div class="hp-label-row"><span>HP</span><span>0 / 100</span></div>
+      <div class="hp-bar"><div class="hp-fill"></div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="stat-block">
+      <div class="stat-label">score</div>
+      <div class="stat-val score"><span class="score-count">000000</span></div>
+    </div>
+    <div class="sep"></div>
+    <div class="stat-block">
+      <div class="stat-label">stage</div>
+      <div class="stat-val level">404</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btns">
+    <a href="/" class="btn btn-primary">
+      ▶ &nbsp; برگشت به خونه
+    </a>
+    <a href="/feed/" class="btn btn-ghost">
+      ◈ &nbsp; فید اجتماعی
+    </a>
+  </div>
+
+  <div class="insert-coin">▼ &nbsp; insert coin to continue &nbsp; ▼</div>
+</div>
+
+<script>
+// Stars
+const sf = document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  const sz=Math.random()*2.5+.5;
+  const col=Math.random()>.7?'rgba(168,85,247,':'rgba(255,255,255,';
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${col}${Math.random()*.8+.2});animation-duration:${Math.random()*4+2}s;animation-delay:${Math.random()*5}s`;
+  sf.appendChild(s);
+}
+
+// Score counter animation
+let sc=0;
+const scoreEl=document.querySelector('.score-count');
+const target=404404;
+const dur=2200;
+const start=Date.now();
+function tickScore(){
+  const p=Math.min((Date.now()-start)/dur,1);
+  sc=Math.floor(p*target);
+  scoreEl.textContent=String(sc).padStart(6,'0');
+  if(p<1)requestAnimationFrame(tickScore);
+}
+tickScore();
+
+// Lives drain after 2s
+setTimeout(()=>{
+  const lives=document.querySelector('.stat-val.lives');
+  setTimeout(()=>{lives.textContent='♥ ♥ ☆';},400);
+  setTimeout(()=>{lives.textContent='♥ ☆ ☆';},900);
+  setTimeout(()=>{lives.textContent='☆ ☆ ☆';lives.style.opacity='.3';},1400);
+},2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+{% extends 'community/base.html' %}
+{% block title %}ساخت گروه | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.cg-wrap {
+  max-width: 540px; margin: 40px auto; padding: 0 16px;
+  direction: rtl;
+}
+.cg-card {
+  background: #0d0d1a;
+  border: 1px solid rgba(139,92,246,.15);
+  border-radius: 24px; padding: 32px;
+}
+.cg-title {
+  font-size: 1.2rem; font-weight: 900; color: #fff;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 12px;
+}
+.cg-sub { font-size: .83rem; color: #3d3d55; margin-bottom: 28px; }
+.cg-label { font-size: .8rem; font-weight: 700; color: #888; margin-bottom: 6px; display: block; }
+.cg-input {
+  width: 100%; background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+  color: #e2e2e2; font-size: .88rem; padding: 12px 16px;
+  font-family: 'Vazirmatn', sans-serif; outline: none;
+  transition: all .2s; box-sizing: border-box;
+}
+.cg-input:focus {
+  border-color: rgba(139,92,246,.5);
+  background: rgba(139,92,246,.06);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+}
+.cg-field { margin-bottom: 20px; }
+.cg-icon-preview {
+  width: 72px; height: 72px; border-radius: 18px;
+  background: linear-gradient(135deg,#1e3a5f,#2563eb);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; cursor: pointer; margin-bottom: 12px;
+  border: 2px dashed rgba(139,92,246,.3);
+  transition: all .2s; overflow: hidden;
+}
+.cg-icon-preview:hover { border-color: rgba(139,92,246,.7); }
+.cg-icon-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+/* member search */
+.cg-member-search {
+  display: flex; gap: 10px; margin-bottom: 12px;
+}
+.cg-member-search input { flex: 1; }
+.cg-search-btn {
+  padding: 12px 18px; border-radius: 14px;
+  background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.3);
+  color: #a78bfa; font-size: .84rem; cursor: pointer;
+  font-family: 'Vazirmatn', sans-serif; font-weight: 700;
+  transition: all .2s; white-space: nowrap;
+}
+.cg-search-btn:hover { background: rgba(139,92,246,.3); }
+
+.cg-member-results { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.cg-member-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 14px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05);
+  cursor: pointer; transition: all .15s;
+}
+.cg-member-row:hover { background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.3); }
+.cg-member-row.selected { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.5); }
+.cg-member-av {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; font-weight: 900; color: #fff;
+  background: linear-gradient(135deg,#4c1d95,#7c3aed);
+}
+.cg-member-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+.cg-member-name { font-size: .85rem; color: #ccc; font-weight: 700; flex: 1; }
+.cg-member-check {
+  width: 22px; height: 22px; border-radius: 8px;
+  border: 2px solid rgba(139,92,246,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; color: #a78bfa; transition: all .15s;
+}
+.cg-member-row.selected .cg-member-check {
+  background: #7c3aed; border-color: #7c3aed; color: #fff;
+}
+
+.cg-selected-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 0; }
+.cg-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px;
+  background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.3);
+  font-size: .78rem; color: #c084fc; font-weight: 700;
+}
+.cg-chip button {
+  background: none; border: none; color: #a78bfa; cursor: pointer;
+  font-size: .9rem; padding: 0; line-height: 1;
+}
+.cg-chip button:hover { color: #f87171; }
+
+.cg-submit {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg,#7c3aed,#a855f7);
+  border: none; border-radius: 16px;
+  color: #fff; font-size: .95rem; font-weight: 900;
+  cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+  box-shadow: 0 6px 20px rgba(139,92,246,.4);
+  transition: all .2s; margin-top: 8px;
+}
+.cg-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(139,92,246,.5); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cg-wrap">
+  <div class="cg-card">
+    <div class="cg-title">
+      <svg style="width:1.3em;height:1.3em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>
+      ساخت گروه جدید
+    </div>
+    <p class="cg-sub">یه گروه بساز و دوستانت رو دعوت کن</p>
+
+    <form method="post" enctype="multipart/form-data" id="createGroupForm">
+      {% csrf_token %}
+
+      <!-- Icon -->
+      <div class="cg-field">
+        <label class="cg-label">آیکون گروه (اختیاری)</label>
+        <div class="cg-icon-preview" id="iconPreview" onclick="document.getElementById('iconInput').click()">
+          <svg style="width:1.5em;height:1.5em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>
+        </div>
+        <input type="file" name="icon" id="iconInput" accept="image/*" style="display:none">
+        <div style="font-size:.75rem;color:#3d3d55">برای تغییر کلیک کن</div>
+      </div>
+
+      <!-- Name -->
+      <div class="cg-field">
+        <label class="cg-label" for="groupName">نام گروه *</label>
+        <input type="text" name="name" id="groupName" class="cg-input" placeholder="مثلاً: تیم بتل رویال" maxlength="100" required>
+      </div>
+
+      <!-- Description -->
+      <div class="cg-field">
+        <label class="cg-label" for="groupDesc">توضیحات (اختیاری)</label>
+        <textarea name="description" id="groupDesc" class="cg-input" rows="2" placeholder="درباره گروه بنویس..."></textarea>
+      </div>
+
+      <!-- Members -->
+      <div class="cg-field">
+        <label class="cg-label">اضافه کردن اعضا</label>
+        <div class="cg-member-search">
+          <input type="text" id="memberSearch" class="cg-input" placeholder="نام‌کاربری را بنویس...">
+          <button type="button" class="cg-search-btn" onclick="searchMembers()">جستجو</button>
+        </div>
+        <div class="cg-member-results" id="memberResults">
+          {% for friend in friends %}
+          <div class="cg-member-row" data-uid="{{ friend.id }}" data-username="{{ friend.username }}" onclick="toggleMember(this)">
+            <div class="cg-member-av">
+              {% if friend.gamer_profile.avatar %}
+                <img src="{{ friend.gamer_profile.avatar.url }}">
+              {% else %}
+                {{ friend.username|first|upper }}
+              {% endif %}
+            </div>
+            <div class="cg-member-name">{{ friend.get_full_name|default:friend.username }}</div>
+            <div class="cg-member-check"><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg></div>
+          </div>
+          {% endfor %}
+        </div>
+        <!-- Selected chips -->
+        <div class="cg-selected-list" id="selectedList"></div>
+        <!-- Hidden inputs -->
+        <div id="hiddenMembers"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button type="submit" class="cg-submit">
+          <svg class="bi bi-people-fill me-2" aria-hidden="true"><use href="#bi-people-fill"></use></svg>ساخت گروه
+        </button>
+        <a href="{% url 'community:inbox' %}" style="padding:12px 22px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:.88rem;font-weight:700;text-decoration:none;transition:all .2s;background:rgba(255,255,255,0.03);" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.color='rgba(255,255,255,0.4)';this.style.borderColor='rgba(255,255,255,0.1)'">
+          انصراف
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Icon preview
+document.getElementById('iconInput').addEventListener('change', function() {
+  if (!this.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const p = document.getElementById('iconPreview');
+    p.innerHTML = `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(this.files[0]);
+});
+
+const selectedMembers = {};
+
+function toggleMember(row) {
+  const uid      = row.dataset.uid;
+  const username = row.dataset.username;
+  const name     = row.querySelector('.cg-member-name').textContent;
+
+  if (selectedMembers[uid]) {
+    delete selectedMembers[uid];
+    row.classList.remove('selected');
+  } else {
+    selectedMembers[uid] = { username, name };
+    row.classList.add('selected');
+  }
+  renderChips();
+}
+
+function renderChips() {
+  const list    = document.getElementById('selectedList');
+  const hidden  = document.getElementById('hiddenMembers');
+  list.innerHTML  = '';
+  hidden.innerHTML = '';
+  Object.entries(selectedMembers).forEach(([uid, info]) => {
+    list.innerHTML += `
+      <div class="cg-chip">
+        ${info.name}
+        <button type="button" onclick="removeChip('${uid}')">×</button>
+      </div>`;
+    hidden.innerHTML += `<input type="hidden" name="members" value="${uid}">`;
+  });
+}
+
+function removeChip(uid) {
+  delete selectedMembers[uid];
+  document.querySelectorAll(`.cg-member-row[data-uid="${uid}"]`).forEach(r => r.classList.remove('selected'));
+  renderChips();
+}
+
+function searchMembers() {
+  const q = document.getElementById('memberSearch').value.trim();
+  if (!q) return;
+  fetch(`/search/?q=${encodeURIComponent(q)}&format=json`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    const results = document.getElementById('memberResults');
+    // فقط نتایج جستجو رو نشون بده (دوستان پیش‌فرض پاک بشه)
+    const existingIds = new Set([...results.querySelectorAll('.cg-member-row')].map(r => r.dataset.uid));
+    (data.users || []).forEach(u => {
+      if (!existingIds.has(String(u.id))) {
+        const div = document.createElement('div');
+        div.className = 'cg-member-row';
+        div.dataset.uid = u.id;
+        div.dataset.username = u.username;
+        div.onclick = () => toggleMember(div);
+        div.innerHTML = `
+          <div class="cg-member-av">${u.username[0].toUpperCase()}</div>
+          <div class="cg-member-name">${u.display_name || u.username}</div>
+          <div class="cg-member-check"><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg></div>`;
+        results.appendChild(div);
+      }
+    });
+  });
+}
+
+document.getElementById('memberSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); searchMembers(); }
+});
+</script>
+{% endblock %}

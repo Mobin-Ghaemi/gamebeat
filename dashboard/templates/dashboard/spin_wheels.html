@@ -1,0 +1,97 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}گردونه‌های شانس | داشبورد{% endblock %}
+{% block page_title %}گردونه‌های شانس{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg> گردونه‌های شانس</div>
+        <div class="page-subtitle">مدیریت گردونه‌ها، آیتم‌ها و درصد شانس</div>
+    </div>
+    <a href="{% url 'dashboard:spin_wheel_add' %}" class="btn-purple">
+        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> گردونه جدید
+    </a>
+</div>
+
+{% if wheels %}
+<div class="dash-card" style="padding:0; overflow:hidden;">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>نام گردونه</th>
+                <th>آیتم‌ها</th>
+                <th>رایگان روزانه</th>
+                <th>هزینه (ضربان)</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for wheel in wheels %}
+            <tr>
+                <td>
+                    <strong>{{ wheel.name }}</strong>
+                    {% if wheel.description %}<div style="font-size:0.75rem;color:var(--text-dim);">{{ wheel.description|truncatechars:50 }}</div>{% endif %}
+                </td>
+                <td>
+                    <span style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:2px 10px;border-radius:20px;font-size:0.8rem;">
+                        {{ wheel.item_count }} آیتم
+                    </span>
+                </td>
+                <td>{{ wheel.daily_free_spins }} بار</td>
+                <td>
+                    {% if wheel.cost_zarban %}
+                        {{ wheel.cost_zarban }} <svg style="width:1em;height:1em;fill:#a78bfa;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.281 8.717 2.01z"/></svg>
+                    {% else %}
+                        <span style="color:var(--text-dim);">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="toggle-btn {% if wheel.is_active %}active{% endif %}"
+                            onclick="toggleWheel({{ wheel.pk }}, this)"
+                            data-id="{{ wheel.pk }}">
+                        {% if wheel.is_active %}<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>{% else %}<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>{% endif %}
+                    </button>
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{% url 'dashboard:spin_wheel_edit' wheel.pk %}" class="btn-ghost" style="padding:4px 12px;font-size:0.8rem;">
+                            <svg class="bi bi-pencil-fill" aria-hidden="true"><use href="#bi-pencil-fill"></use></svg> ویرایش
+                        </a>
+                        <form method="post" action="{% url 'dashboard:spin_wheel_delete' wheel.pk %}"
+                              onsubmit="return confirm('گردونه «{{ wheel.name }}» حذف شود؟')">
+                            {% csrf_token %}
+                            <button type="submit" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:4px 12px;border-radius:6px;font-size:0.8rem;cursor:pointer;">
+                                <svg class="bi bi-trash-fill" aria-hidden="true"><use href="#bi-trash-fill"></use></svg>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:60px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.194.048.377.135.537.255L13.3 15.1a.5.5 0 0 1-.3.9H3a.5.5 0 0 1-.3-.9l1.838-1.379c.16-.12.343-.207.537-.255L6.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 2.5.5"/></svg></div>
+    <div style="color:var(--text-dim);margin-bottom:20px;">هنوز گردونه‌ای ساخته نشده</div>
+    <a href="{% url 'dashboard:spin_wheel_add' %}" class="btn-purple">ساخت اولین گردونه</a>
+</div>
+{% endif %}
+
+<script>
+function toggleWheel(id, btn) {
+    fetch(`/admin-panel/spin/${id}/toggle/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(r => r.json()).then(d => {
+        if (d.ok) {
+            btn.innerHTML = d.is_active
+                ? '<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>'
+                : '<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>';
+        }
+    });
+}
+</script>
+{% endblock %}

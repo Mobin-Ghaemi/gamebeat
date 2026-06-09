@@ -1,0 +1,275 @@
+{% extends "dashboard/base.html" %}
+{% block title %}اشتراک پریمیوم — GameBeat{% endblock %}
+{% block page_title %}<span style="color:#fbbf24">✦</span> اشتراک پریمیوم{% endblock %}
+
+{% block extra_css %}
+<style>
+.plan-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;transition:.2s;}
+.plan-card:hover{border-color:rgba(251,191,36,.4);box-shadow:0 6px 24px rgba(251,191,36,.08);}
+.plan-card .plan-badge{position:absolute;top:14px;left:14px;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:20px;}
+.plan-duration{font-size:.78rem;color:var(--text-muted);margin-bottom:4px;}
+.plan-name{font-size:1.1rem;font-weight:800;color:var(--text-main);margin-bottom:6px;}
+.plan-price{font-size:1.6rem;font-weight:900;color:#fbbf24;margin-bottom:12px;}
+.plan-price span{font-size:.8rem;color:var(--text-muted);font-weight:400;}
+.plan-feature{font-size:.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.plan-feature::before{content:'✓';color:#4ade80;font-weight:700;flex-shrink:0;}
+.premium-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;}
+.sub-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(53,53,74,.5);}
+.sub-row:last-child{border-bottom:none;}
+.sub-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--purple),var(--purple-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:#fff;flex-shrink:0;}
+.sub-info{flex:1;min-width:0;}
+.sub-name{font-weight:600;font-size:.9rem;color:var(--text-main);}
+.sub-meta{font-size:.75rem;color:var(--text-muted);margin-top:2px;}
+.exp-badge{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);font-size:.7rem;padding:2px 8px;border-radius:12px;}
+.modal-dark{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:28px;}
+.progress-days{height:6px;background:rgba(251,191,36,.15);border-radius:3px;margin-top:8px;overflow:hidden;}
+.progress-days-bar{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:3px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">🌟 اشتراک پریمیوم</div>
+    <div class="page-subtitle">مدیریت پلن‌ها و اشتراک‌های کاربران</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn-purple" onclick="document.getElementById('modalAddPlan').style.display='flex'">
+      + پلن جدید
+    </button>
+    <button class="btn-ghost" onclick="document.getElementById('modalAssign').style.display='flex'">
+      👤 تخصیص اشتراک
+    </button>
+  </div>
+</div>
+
+<!-- آمار بالا -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card blue">
+      <div class="stat-card-icon"><svg class="bi bi-patch-check-fill" aria-hidden="true"><use href="#bi-patch-check-fill"></use></svg></div>
+      <div class="stat-card-value">{{ active_count }}</div>
+      <div class="stat-card-label">اشتراک فعال</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card orange">
+      <div class="stat-card-icon">📋</div>
+      <div class="stat-card-value">{{ plans.count }}</div>
+      <div class="stat-card-label">تعداد پلن‌ها</div>
+    </div>
+  </div>
+</div>
+
+<!-- پلن‌ها -->
+<div class="dash-card mb-4">
+  <div class="dash-card-title">
+    <svg class="bi bi-layers-fill" aria-hidden="true"><use href="#bi-layers-fill"></use></svg>
+    پلن‌های پریمیوم
+    {% if not plans %}<span style="font-size:.8rem;color:var(--text-muted);font-weight:400;margin-right:8px;">— هنوز پلنی اضافه نشده</span>{% endif %}
+  </div>
+  <div class="row g-3">
+    {% for plan in plans %}
+    <div class="col-md-4">
+      <div class="plan-card">
+        {% if plan.is_active %}<div class="plan-badge">✓ فعال</div>{% else %}<div class="plan-badge" style="background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.3);">غیرفعال</div>{% endif %}
+        <div class="plan-duration">{{ plan.get_duration_display }}</div>
+        <div class="plan-name">{{ plan.name }}</div>
+        <div class="plan-price">{{ plan.price|floatformat:0 }} <span>تومان</span></div>
+        {% if plan.description %}<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px;">{{ plan.description }}</div>{% endif %}
+        {% for feat in plan.get_features_list %}
+        <div class="plan-feature">{{ feat }}</div>
+        {% endfor %}
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn-edit-ghost" style="font-size:.75rem;flex:1" onclick="editPlan({{ plan.pk }},'{{ plan.name|escapejs }}','{{ plan.duration }}',{{ plan.price }},'{{ plan.description|escapejs }}',`{{ plan.features|escapejs }}`,{{ plan.is_active|yesno:'true,false' }})">ویرایش</button>
+          <form method="post" action="{% url 'dashboard:premium_plan_delete' plan.pk %}" onsubmit="return confirm('پلن حذف شود؟')">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger-ghost" style="font-size:.75rem;">حذف</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center" style="padding:32px;color:var(--text-muted);">هنوز پلنی تعریف نشده. روی «+ پلن جدید» کلیک کن.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- اشتراک‌های فعال -->
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="dash-card">
+      <div class="dash-card-title">
+        <svg class="bi bi-patch-check-fill" aria-hidden="true" style="color:#fbbf24"><use href="#bi-patch-check-fill"></use></svg>
+        اشتراک‌های فعال ({{ active_count }})
+      </div>
+      {% for sub in active_subs %}
+      {% with days_left=sub.end_date|timeuntil %}
+      <div class="sub-row">
+        <div class="sub-avatar">{{ sub.user.username|slice:":1"|upper }}</div>
+        <div class="sub-info">
+          <div class="sub-name">
+            {{ sub.user.get_full_name|default:sub.user.username }}
+            <span class="premium-badge" style="font-size:.65rem;padding:1px 7px;margin-right:4px;">✦ پریمیوم</span>
+          </div>
+          <div class="sub-meta">
+            @{{ sub.user.username }} ·
+            {% if sub.plan %}{{ sub.plan.name }}{% endif %} ·
+            تا {{ sub.end_date|date:"Y/m/d" }}
+          </div>
+          {% with total=sub.plan.duration_days|default:30 %}
+          <div class="progress-days mt-1">
+            <div class="progress-days-bar" style="width:{% widthratio sub.start_date|timeuntil:sub.end_date 1 100 %}%"></div>
+          </div>
+          {% endwith %}
+          {% if sub.note %}<div style="font-size:.7rem;color:var(--text-faint);margin-top:3px;">📝 {{ sub.note }}</div>{% endif %}
+        </div>
+        <form method="post" action="{% url 'dashboard:premium_revoke' sub.pk %}" onsubmit="return confirm('اشتراک لغو شود؟')">
+          {% csrf_token %}
+          <button type="submit" class="btn-danger-ghost" style="font-size:.72rem;white-space:nowrap;">لغو</button>
+        </form>
+      </div>
+      {% endwith %}
+      {% empty %}
+      <div style="text-align:center;padding:32px;color:var(--text-muted);">هیچ اشتراک فعالی وجود ندارد</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- اشتراک‌های منقضی -->
+  <div class="col-lg-5">
+    <div class="dash-card">
+      <div class="dash-card-title">
+        <svg class="bi bi-clock-history" aria-hidden="true"><use href="#bi-clock-history"></use></svg>
+        منقضی‌شده‌ها
+      </div>
+      {% for sub in expired_subs %}
+      <div class="sub-row">
+        <div class="sub-avatar" style="background:var(--bg-card2);color:var(--text-muted);">{{ sub.user.username|slice:":1"|upper }}</div>
+        <div class="sub-info">
+          <div class="sub-name" style="color:var(--text-muted);">@{{ sub.user.username }}</div>
+          <div class="sub-meta">
+            {% if sub.plan %}{{ sub.plan.name }}{% endif %} ·
+            <span class="exp-badge">منقضی {{ sub.end_date|date:"Y/m/d" }}</span>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:.85rem;">بدون سابقه</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Modal: پلن جدید/ویرایش ══ -->
+<div id="modalAddPlan" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center;">
+  <div class="modal-dark" style="width:100%;max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h5 style="margin:0;font-weight:800;" id="planModalTitle">پلن جدید</h5>
+      <button onclick="closePlanModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <form method="post" action="{% url 'dashboard:premium_plan_save' %}">
+      {% csrf_token %}
+      <input type="hidden" name="plan_id" id="planId">
+      <div class="mb-3">
+        <label class="dash-label">نام پلن *</label>
+        <input type="text" name="name" id="planName" class="dash-input" placeholder="مثلاً: گیمر پرو" required>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label class="dash-label">مدت اشتراک *</label>
+          <select name="duration" id="planDuration" class="dash-input">
+            <option value="1_month">۱ ماهه</option>
+            <option value="6_months">۶ ماهه</option>
+            <option value="1_year">۱ ساله</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="dash-label">قیمت (تومان) *</label>
+          <input type="number" name="price" id="planPrice" class="dash-input" placeholder="۰" min="0" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="dash-label">توضیحات</label>
+        <input type="text" name="description" id="planDesc" class="dash-input" placeholder="توضیح کوتاه پلن...">
+      </div>
+      <div class="mb-3">
+        <label class="dash-label">امکانات <span style="font-size:.72rem;color:var(--text-faint)">(هر خط یک امکان)</span></label>
+        <textarea name="features" id="planFeatures" class="dash-input" rows="5" placeholder="تیک آبی پریمیوم&#10;اطلاع از بازدید پروفایل&#10;بدون تبلیغات"></textarea>
+      </div>
+      <div class="mb-4 d-flex align-items-center gap-2">
+        <input type="checkbox" name="is_active" id="planActive" checked style="width:16px;height:16px;accent-color:var(--purple);">
+        <label for="planActive" class="dash-label" style="margin:0;cursor:pointer;">پلن فعال باشد</label>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn-ghost" onclick="closePlanModal()">انصراف</button>
+        <button type="submit" class="btn-purple">ذخیره پلن</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Modal: تخصیص اشتراک ══ -->
+<div id="modalAssign" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center;">
+  <div class="modal-dark" style="width:100%;max-width:440px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h5 style="margin:0;font-weight:800;">تخصیص اشتراک به کاربر</h5>
+      <button onclick="document.getElementById('modalAssign').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <form method="post" action="{% url 'dashboard:premium_assign' %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="dash-label">نام کاربری *</label>
+        <input type="text" name="username" class="dash-input" placeholder="username" dir="ltr" required>
+      </div>
+      <div class="mb-3">
+        <label class="dash-label">پلن *</label>
+        <select name="plan_id" class="dash-input" required>
+          <option value="">انتخاب پلن...</option>
+          {% for plan in plans %}
+          {% if plan.is_active %}
+          <option value="{{ plan.pk }}">{{ plan.name }} — {{ plan.get_duration_display }} — {{ plan.price|floatformat:0 }} تومان</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="dash-label">یادداشت (اختیاری)</label>
+        <input type="text" name="note" class="dash-input" placeholder="مثلاً: هدیه، خرید دستی...">
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn-ghost" onclick="document.getElementById('modalAssign').style.display='none'">انصراف</button>
+        <button type="submit" class="btn-purple">✦ فعال‌سازی</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editPlan(id, name, duration, price, desc, features, isActive) {
+  document.getElementById('planId').value = id;
+  document.getElementById('planName').value = name;
+  document.getElementById('planDuration').value = duration;
+  document.getElementById('planPrice').value = price;
+  document.getElementById('planDesc').value = desc;
+  document.getElementById('planFeatures').value = features;
+  document.getElementById('planActive').checked = isActive;
+  document.getElementById('planModalTitle').textContent = 'ویرایش پلن';
+  document.getElementById('modalAddPlan').style.display = 'flex';
+}
+function closePlanModal() {
+  document.getElementById('modalAddPlan').style.display = 'none';
+  document.getElementById('planId').value = '';
+  document.getElementById('planModalTitle').textContent = 'پلن جدید';
+}
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('modalAddPlan').style.display = 'none';
+    document.getElementById('modalAssign').style.display = 'none';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,436 @@
+{% extends "community/base.html" %}
+{% load static %}
+{% block title %}تنظیمات — GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.st-page {
+    min-height: calc(100vh - 64px);
+    background: #08081c;
+    direction: rtl;
+    padding-bottom: 80px;
+}
+
+/* ══ Tab Bar ══ */
+.st-tabbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 28px;
+}
+.st-tabbar::-webkit-scrollbar { display: none; }
+
+.st-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    font-size: .84rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.38);
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.03);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .18s;
+    text-decoration: none;
+}
+.st-tab:hover {
+    color: rgba(255,255,255,.7);
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.12);
+}
+.st-tab.active {
+    color: #c4b5fd;
+    background: rgba(139,92,246,.15);
+    border-color: rgba(139,92,246,.35);
+}
+
+/* ══ Content ══ */
+.st-body {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 36px 20px;
+}
+
+/* ══ Section (one shown at a time) ══ */
+.st-sec {
+    display: none;
+    animation: stFadeIn .22s ease;
+}
+.st-sec.active { display: block; }
+
+@keyframes stFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══ Section Header ══ */
+.st-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.st-sec-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.si-purple { background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.28); }
+.si-blue   { background: rgba(96,165,250,.13);  border: 1px solid rgba(96,165,250,.22); }
+.si-green  { background: rgba(52,211,153,.1);   border: 1px solid rgba(52,211,153,.2);  }
+.si-cyan   { background: rgba(6,182,212,.11);   border: 1px solid rgba(6,182,212,.2);   }
+
+.st-sec-title { font-size: 1.05rem; font-weight: 800; color: #e0e0f0; }
+.st-sec-desc  { font-size: .77rem; color: rgba(255,255,255,.3); margin-top: 3px; }
+
+/* ══ Row ══ */
+.st-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.055);
+    margin-bottom: 10px;
+    transition: background .15s, border-color .18s;
+}
+.st-row:hover {
+    background: rgba(139,92,246,.05);
+    border-color: rgba(139,92,246,.18);
+}
+.st-row.st-dim { opacity: .3; pointer-events: none; }
+
+.st-row-body { flex: 1; min-width: 0; }
+.st-row-label { font-size: .9rem; font-weight: 700; color: #d0d0ea; margin-bottom: 3px; }
+.st-row-hint  { font-size: .75rem; color: rgba(255,255,255,.27); line-height: 1.5; }
+
+/* saved chip */
+.st-chip {
+    font-size: .66rem; font-weight: 800;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(52,211,153,.1); color: #34d399;
+    border: 1px solid rgba(52,211,153,.22);
+    white-space: nowrap; flex-shrink: 0;
+    opacity: 0; transition: opacity .2s;
+    pointer-events: none;
+}
+.st-chip.on { opacity: 1; }
+
+/* ══ Toggle ══ */
+.st-tog {
+    position: relative; width: 50px; height: 27px; flex-shrink: 0;
+}
+.st-tog input { opacity: 0; width: 0; height: 0; position: absolute; }
+.st-tog-track {
+    position: absolute; inset: 0; border-radius: 100px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    cursor: pointer;
+    transition: background .25s, box-shadow .25s, border-color .25s;
+}
+.st-tog-track::after {
+    content: '';
+    position: absolute; top: 3px; right: 3px;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), background .25s;
+}
+.st-tog input:checked + .st-tog-track {
+    background: linear-gradient(135deg, #5b21b6, #7c3aed, #a78bfa);
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(139,92,246,.5);
+}
+.st-tog input:checked + .st-tog-track::after {
+    transform: translateX(-23px);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+/* ══ Note ══ */
+.st-note {
+    margin-top: 4px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.02);
+    border: 1px dashed rgba(255,255,255,.08);
+    font-size: .78rem;
+    color: rgba(255,255,255,.3);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.st-note a { color: #a78bfa; font-weight: 700; text-decoration: none; }
+.st-note a:hover { color: #c4b5fd; text-decoration: underline; }
+.st-note-ok { color: #34d399; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+
+/* ══ Toast ══ */
+#stToast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: #13132b;
+    border: 1px solid rgba(139,92,246,.4);
+    color: #e8e8f8; font-size: .83rem; font-weight: 700;
+    padding: 11px 22px; border-radius: 50px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    z-index: 9999; opacity: 0; pointer-events: none;
+    transition: opacity .28s, transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+#stToast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+.st-toast-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: #34d399; box-shadow: 0 0 10px #34d399;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="st-page">
+
+    <form id="stForm" method="POST" action="{% url 'community:settings' %}">
+        {% csrf_token %}
+        <div class="st-body">
+
+            <!-- ══ Tab Bar ══ -->
+            <div class="st-tabbar">
+                <button type="button" class="st-tab active" onclick="stSwitch('privacy',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg> حریم خصوصی</button>
+                <button type="button" class="st-tab"        onclick="stSwitch('msg',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/></svg> پیام‌ها</button>
+                <button type="button" class="st-tab"        onclick="stSwitch('profile',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/></svg> پروفایل عمومی</button>
+                <button type="button" class="st-tab"        onclick="stSwitch('map',this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg> گیمر یابی</button>
+            </div>
+
+            <!-- ── حریم خصوصی ── -->
+            <div class="st-sec active" id="st-privacy">
+                <div class="st-sec-head">
+                    <div class="st-sec-icon si-purple"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg></div>
+                    <div>
+                        <div class="st-sec-title">حریم خصوصی</div>
+                        <div class="st-sec-desc">کنترل کن چه کسی اطلاعاتت رو می‌بینه</div>
+                    </div>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">پروفایل خصوصی</div>
+                        <div class="st-row-hint">فقط فالوورهات می‌تونن پروفایل و پست‌هات رو ببینن</div>
+                    </div>
+                    <span class="st-chip" id="c-is_private">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="is_private" {% if profile.is_private %}checked{% endif %} onchange="stSave(this,'c-is_private')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">نمایش وضعیت آنلاین</div>
+                        <div class="st-row-hint">بقیه می‌تونن ببینن الان آنلاینی یا نه</div>
+                    </div>
+                    <span class="st-chip" id="c-show_online">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_online" {% if profile.show_online %}checked{% endif %} onchange="stSave(this,'c-show_online')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">آخرین بازدید</div>
+                        <div class="st-row-hint">زمان آخرین حضورت توی پروفایلت قابل مشاهده‌ست</div>
+                    </div>
+                    <span class="st-chip" id="c-show_last_seen">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_last_seen" {% if profile.show_last_seen %}checked{% endif %} onchange="stSave(this,'c-show_last_seen')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">نمایش ایمیل</div>
+                        <div class="st-row-hint">آدرس ایمیلت برای بقیه توی پروفایل نمایش داده میشه</div>
+                    </div>
+                    <span class="st-chip" id="c-show_email">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_email" {% if profile.show_email %}checked{% endif %} onchange="stSave(this,'c-show_email')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── پیام‌ها ── -->
+            <div class="st-sec" id="st-msg">
+                <div class="st-sec-head">
+                    <div class="st-sec-icon si-blue"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/></svg></div>
+                    <div>
+                        <div class="st-sec-title">پیام‌ها</div>
+                        <div class="st-sec-desc">تعیین کن چه کسی می‌تونه بهت DM بده</div>
+                    </div>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">دریافت پیام مستقیم</div>
+                        <div class="st-row-hint">امکان ارسال DM از طرف کاربرهای دیگه</div>
+                    </div>
+                    <span class="st-chip" id="c-allow_dm">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="allow_dm" id="chk-allow_dm" {% if profile.allow_dm %}checked{% endif %} onchange="stSave(this,'c-allow_dm');stSyncDm()">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row {% if not profile.allow_dm %}st-dim{% endif %}" id="row-dm_followers_only">
+                    <div class="st-row-body">
+                        <div class="st-row-label">فقط فالوورها پیام بدن</div>
+                        <div class="st-row-hint">فقط کسایی که دنبالت می‌کنن می‌تونن DM بفرستن</div>
+                    </div>
+                    <span class="st-chip" id="c-dm_followers_only">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="dm_followers_only" {% if profile.dm_followers_only %}checked{% endif %} onchange="stSave(this,'c-dm_followers_only')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── پروفایل عمومی ── -->
+            <div class="st-sec" id="st-profile">
+                <div class="st-sec-head">
+                    <div class="st-sec-icon si-green"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/></svg></div>
+                    <div>
+                        <div class="st-sec-title">پروفایل عمومی</div>
+                        <div class="st-sec-desc">اطلاعاتی که توی صفحه پروفایلت نمایش داده میشن</div>
+                    </div>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">لیست بازی‌ها</div>
+                        <div class="st-row-hint">بک‌لاگ و بازی‌های ثبت‌شده‌ات توی پروفایلت قابل مشاهده‌ست</div>
+                    </div>
+                    <span class="st-chip" id="c-show_backlog">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_backlog" {% if profile.show_backlog %}checked{% endif %} onchange="stSave(this,'c-show_backlog')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">آمار پروفایل</div>
+                        <div class="st-row-hint">تعداد پست‌ها، فالوور و دنبال‌شونده‌ها</div>
+                    </div>
+                    <span class="st-chip" id="c-show_stats">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_stats" {% if profile.show_stats %}checked{% endif %} onchange="stSave(this,'c-show_stats')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── گیمر یابی ── -->
+            <div class="st-sec" id="st-map">
+                <div class="st-sec-head">
+                    <div class="st-sec-icon si-cyan"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg></div>
+                    <div>
+                        <div class="st-sec-title">گیمر یابی</div>
+                        <div class="st-sec-desc">کنترل نمایش موقعیتت برای یافتن گیمرهای نزدیک</div>
+                    </div>
+                </div>
+
+                <div class="st-row">
+                    <div class="st-row-body">
+                        <div class="st-row-label">نمایش در گیمر یابی</div>
+                        <div class="st-row-hint">اگه خاموش باشه کسی تو رو در نتایج نمیبینه</div>
+                    </div>
+                    <span class="st-chip" id="c-show_location">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_location" id="chk-show_location" {% if profile.show_location %}checked{% endif %} onchange="stSave(this,'c-show_location');stSyncMap()">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-row {% if not profile.show_location %}st-dim{% endif %}" id="row-show_on_map">
+                    <div class="st-row-body">
+                        <div class="st-row-label">نمایش دقیق روی نقشه</div>
+                        <div class="st-row-hint">پین موقعیتت روی نقشه گیمر یابی نشون داده میشه</div>
+                    </div>
+                    <span class="st-chip" id="c-show_on_map">ذخیره شد ✓</span>
+                    <label class="st-tog">
+                        <input type="checkbox" name="show_on_map" {% if profile.show_on_map %}checked{% endif %} onchange="stSave(this,'c-show_on_map')">
+                        <span class="st-tog-track"></span>
+                    </label>
+                </div>
+
+                <div class="st-note">
+                    <svg class="bi bi-geo-alt-fill" aria-hidden="true" style="color:#06b6d4"><use href="#bi-geo-alt-fill"></use></svg>
+                    برای ثبت موقعیت دقیق روی نقشه به
+                    <a href="{% url 'community:edit_profile' %}">ویرایش پروفایل</a>
+                    برو.
+                    {% if profile.location_label %}
+                    <span class="st-note-ok"><svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> {{ profile.location_label }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>{# st-body #}
+    </form>
+</div>{# st-page #}
+
+<div id="stToast"><span class="st-toast-dot"></span> تنظیمات ذخیره شد</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const _stUrl = '{% url "community:settings" %}';
+let   _stTmr = null;
+
+function stSwitch(name, btn) {
+    document.querySelectorAll('.st-sec').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.st-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('st-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+function stSave(el, chipId) {
+    const chip = document.getElementById(chipId);
+    if (chip) chip.classList.remove('on');
+    clearTimeout(_stTmr);
+    _stTmr = setTimeout(() => {
+        fetch(_stUrl, {
+            method: 'POST',
+            body: new FormData(document.getElementById('stForm')),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.ok) return;
+            if (chip) { chip.classList.add('on'); setTimeout(() => chip.classList.remove('on'), 2200); }
+            const t = document.getElementById('stToast');
+            t.classList.add('on');
+            clearTimeout(t._t);
+            t._t = setTimeout(() => t.classList.remove('on'), 2600);
+        })
+        .catch(() => {});
+    }, 300);
+}
+
+function stSyncDm() {
+    const on = document.getElementById('chk-allow_dm')?.checked;
+    document.getElementById('row-dm_followers_only')?.classList.toggle('st-dim', !on);
+}
+function stSyncMap() {
+    const on = document.getElementById('chk-show_location')?.checked;
+    document.getElementById('row-show_on_map')?.classList.toggle('st-dim', !on);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gamebeat",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["manage.py", "runserver", "8007"],
+      "port": 8007
+    }
+  ]
+}
