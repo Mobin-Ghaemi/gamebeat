@@ -673,12 +673,17 @@
             <!-- LFG Posts -->
             {% if lfg_posts %}
                 {% for post in lfg_posts %}
-                <div class="lfg-post-card" id="lfg-card-{{ post.pk }}">
+                <div class="lfg-post-card {% if post.author.gamer_profile.is_premium %}lfg-boosted{% endif %}"
+                     id="lfg-card-{{ post.pk }}"
+                     {% if post.author.gamer_profile.is_premium %}style="border-color:rgba(251,191,36,.35);background:linear-gradient(135deg,rgba(251,191,36,.04),var(--bg-card));"{% endif %}>
                     <div class="lfg-post-header">
                         <div>
                             <div class="lfg-game-name">
                                 <svg class="bi bi-controller" aria-hidden="true" style="color: var(--blue-accent);"><use href="#bi-controller"></use></svg>
                                 {{ post.game_name }}
+                                {% if post.author.gamer_profile.is_premium %}
+                                <span style="font-size:.65rem;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:1px 7px;margin-right:4px;vertical-align:middle;">🚀 پریمیوم</span>
+                                {% endif %}
                             </div>
                             <div class="lfg-badges">
                                 <span class="lfg-badge lfg-badge-platform">{{ post.get_platform_display }}</span>
@@ -687,11 +692,8 @@
                             </div>
                         </div>
                         <a href="{% url 'community:profile' username=post.author.username %}" class="lfg-author">
-                            {% if post.author.gamer_profile.avatar %}
-                                <img src="{{ post.author.gamer_profile.avatar.url }}" class="avatar avatar-sm">
-                            {% else %}
-                                <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem;">{{ post.author.username|first|upper }}</div>
-                            {% endif %}
+                            {% load community_tags %}
+                            {% avatar_with_frame post.author.gamer_profile 'sm' %}
                             <div class="lfg-author-info">
                                 <span class="lfg-author-name">{{ post.author.username }}</span>
                                 <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>

@@ -72,3 +72,26 @@ def hashtagify(text):
         return f'<a href="{url}" class="hashtag-link">#{tag}</a>'
 
     return mark_safe(re.sub(r'#([a-zA-Z؀-ۿ\w]{2,50})', replace, escaped))
+
+
+@register.simple_tag
+def avatar_with_frame(profile, size='md', css_class=''):
+    """نمایش آواتار با فریم طلایی برای کاربران پریمیوم
+    size: sm | md | lg
+    """
+    size_map = {'sm': '32px', 'md': '46px', 'lg': '90px', 'xl': '120px'}
+    px = size_map.get(size, '46px')
+    is_premium = getattr(profile, 'is_premium', False)
+    initial = profile.user.username[0].upper() if profile and profile.user else '?'
+    avatar_url = profile.avatar.url if profile and profile.avatar else None
+
+    if avatar_url:
+        img = f'<img src="{avatar_url}" style="width:{px};height:{px};border-radius:50%;object-fit:cover;display:block;{("border:2px solid var(--bg-dark);" if is_premium else "")} {css_class}" alt="">'
+    else:
+        bg = 'linear-gradient(135deg,#4c1d95,#6d28d9)'
+        img = f'<div style="width:{px};height:{px};border-radius:50%;background:{bg};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:calc({px} * 0.4);{("border:2px solid var(--bg-dark);" if is_premium else "")} {css_class}">{initial}</div>'
+
+    if is_premium:
+        frame_size = {'sm': 'frame-sm', 'md': '', 'lg': 'frame-lg', 'xl': 'frame-lg'}.get(size, '')
+        return mark_safe(f'<div class="premium-frame {frame_size}" style="display:inline-flex;">{img}</div>')
+    return mark_safe(img)

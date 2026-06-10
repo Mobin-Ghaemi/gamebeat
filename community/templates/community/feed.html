@@ -577,11 +577,7 @@
 
                 <div class="post-head">
                     <a href="{% url 'community:profile' username=post.author.username %}" class="post-author">
-                        {% if post.author.gamer_profile.avatar %}
-                            <img src="{{ post.author.gamer_profile.avatar.url }}" class="avatar avatar-md">
-                        {% else %}
-                            <div class="avatar-placeholder avatar-md" style="font-size:1rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ post.author.username|first|upper }}</div>
-                        {% endif %}
+                        {% avatar_with_frame post.author.gamer_profile 'md' %}
                         <div>
                             <div class="pa-name">{{ post.author.get_full_name|default:post.author.username }}</div>
                             <div class="pa-meta">
@@ -594,6 +590,9 @@
                         </div>
                     </a>
                     <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
+                        {% if post.boost_active %}
+                            <span class="post-type-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35);">🚀 بوست شده</span>
+                        {% endif %}
                         {% if post.post_type == 'achievement' %}
                             <span class="post-type-badge ptb-achievement"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاورد</span>
                         {% elif post.post_type == 'highlight' %}
@@ -688,6 +687,15 @@
                     <button class="pf-btn" onclick="sharePost({{ post.id }})">
                         <svg class="bi bi-share" aria-hidden="true"><use href="#bi-share"></use></svg>
                     </button>
+                    {% if user == post.author and my_profile.is_premium %}
+                    <button class="pf-btn boost-btn {% if post.boost_active %}boosted{% endif %}"
+                            id="boost-btn-{{ post.id }}"
+                            onclick="boostPost({{ post.id }}, this)"
+                            title="{% if post.boost_active %}بوست فعال است{% else %}بوست پست{% endif %}"
+                            style="{% if post.boost_active %}color:#fbbf24;{% endif %}">
+                        🚀 <span style="font-size:.78rem;font-weight:700;">{% if post.boost_active %}بوست فعال{% else %}بوست{% endif %}</span>
+                    </button>
+                    {% endif %}
                 </div>
 
                 <div class="comment-box" id="c-{{ post.id }}">
@@ -1137,6 +1145,45 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLmModal
 function sharePost(postId) {
     const url = window.location.origin + '/post/' + postId + '/';
     navigator.clipboard.writeText(url).then(()=> showToast('لینک کپی شد ✓'));
+}
+
+/* ──── Boost ──── */
+function boostPost(postId, btn) {
+    fetch(`/post/${postId}/boost/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) {
+            if (data.error === 'premium_required') {
+                showToast('❌ فقط کاربران پریمیوم می‌توانند پست بوست کنند', '#ef4444');
+            } else if (data.error === 'max_boost_reached') {
+                showToast('⚠️ فقط یک پست را می‌توانید همزمان بوست کنید — ابتدا بوست قبلی را لغو کنید', '#f59e0b');
+            }
+            return;
+        }
+        const isBoosted = data.boosted;
+        btn.classList.toggle('boosted', isBoosted);
+        btn.style.color = isBoosted ? '#fbbf24' : '';
+        btn.querySelector('span').textContent = isBoosted ? 'بوست فعال' : 'بوست';
+        // بج بالای پست
+        const card = btn.closest('.post-card, .post-item, [data-post-id]') || btn.closest('div[class*="post"]');
+        if (card) {
+            let badge = card.querySelector('.boost-badge');
+            if (isBoosted && !badge) {
+                badge = document.createElement('span');
+                badge.className = 'post-type-badge boost-badge';
+                badge.style.cssText = 'background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35);';
+                badge.textContent = '🚀 بوست شده';
+                const badgeWrap = card.querySelector('.post-type-badge')?.parentElement;
+                if (badgeWrap) badgeWrap.prepend(badge);
+            } else if (!isBoosted && badge) {
+                badge.remove();
+            }
+        }
+        showToast(isBoosted ? '🚀 پست بوست شد — ۲۴ ساعته' : 'بوست لغو شد', isBoosted ? '#f59e0b' : '#6b7280');
+    });
 }
 
 /* ──── Toast ──── */

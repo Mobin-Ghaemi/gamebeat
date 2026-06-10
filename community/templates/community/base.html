@@ -892,6 +892,35 @@
         .dropdown-item { color: var(--text-muted); padding: 8px 14px; }
         .dropdown-item:hover { background: rgba(139,92,246,0.1); color: var(--text-white); }
         .dropdown-divider { border-color: var(--border); }
+
+        /* ── فریم طلایی پریمیوم ── */
+        @keyframes premiumSpin {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes premiumPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,.0), 0 0 8px 2px rgba(251,191,36,.35); }
+            50%       { box-shadow: 0 0 0 3px rgba(251,191,36,.15), 0 0 16px 4px rgba(251,191,36,.5); }
+        }
+        .premium-frame {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24, #fde68a, #f59e0b, #d97706, #fbbf24);
+            background-size: 300% 300%;
+            animation: premiumSpin 3s ease infinite, premiumPulse 2.5s ease-in-out infinite;
+        }
+        .premium-frame img,
+        .premium-frame > div {
+            border-radius: 50%;
+            border: 2px solid var(--bg-dark) !important;
+        }
+        .premium-frame.frame-sm { padding: 2px; }
+        .premium-frame.frame-lg { padding: 4px; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -952,11 +981,15 @@
                 <!-- Account Dropdown (custom) -->
                 <div class="pf-wrap" id="pfWrap">
                     <button class="pf-trigger" id="pfTrigger" onclick="togglePfMenu(event)">
-                        {% if user.gamer_profile.avatar %}
-                            <img src="{{ user.gamer_profile.avatar.url }}" class="nav-avatar" alt="avatar">
-                        {% else %}
-                            <div class="nav-avatar-placeholder">{{ user.username|first|upper }}</div>
+                        {% if user.gamer_profile.is_premium %}
+                        <div class="premium-frame frame-sm">
                         {% endif %}
+                        {% if user.gamer_profile.avatar %}
+                            <img src="{{ user.gamer_profile.avatar.url }}" class="nav-avatar" alt="avatar" style="{% if user.gamer_profile.is_premium %}border:none;{% endif %}">
+                        {% else %}
+                            <div class="nav-avatar-placeholder" style="{% if user.gamer_profile.is_premium %}border:none;{% endif %}">{{ user.username|first|upper }}</div>
+                        {% endif %}
+                        {% if user.gamer_profile.is_premium %}</div>{% endif %}
                         <div class="nav-acct-col">
                             <span class="nav-account-label">{{ user.username }}</span>
                             <span class="nav-zarban-token" id="navZarbanToken">

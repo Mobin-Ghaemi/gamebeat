@@ -14,6 +14,7 @@ from .models import Channel, ChannelMember, ChannelPost, ChannelReaction, Pinned
 from .models import PLATFORM_CHOICES, CITY_CHOICES, ScoreSettings, UserSession
 from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
+from .models import ProfileView, PremiumPlan
 from django.utils import timezone
 import re
 import json
@@ -41,21 +42,63 @@ def extract_and_save_hashtags(post):
         post.hashtags.add(hashtag)
 
 
-def _send_profile_view_notif(viewer, profile_user):
-    """ارسال نوتیف بازدید پروفایل برای کاربران پریمیوم — حداکثر یک بار در ۶ ساعت از همان بازدیدکننده"""
+def _record_profile_view(viewer, profile_user):
+    """ثبت بازدید + نوتیف آنی
+    - پریمیوم: نوتیف فوری با اسم واقعی
+    - غیرپریمیوم: نوتیف روزانه تجمیعی (فقط تعداد، بدون اسم)
+    """
     from django.core.cache import cache
-    from django.utils import timezone
+    from datetime import date
     cache_key = f'pv_{profile_user.id}_{viewer.id}'
     if cache.get(cache_key):
-        return  # قبلاً نوتیف داده شده، رد کن
-    viewer_name = viewer.get_full_name() or viewer.username
-    Notification.objects.create(
-        recipient=profile_user,
-        sender=viewer,
-        notif_type='profile_view',
-        custom_text=f'👁️ {viewer_name} پروفایل تو رو دید',
-    )
-    cache.set(cache_key, True, 60 * 60 * 6)  # ۶ ساعت throttle
+        return  # throttle ۶ ساعته
+    ProfileView.objects.create(viewer=viewer, viewed_user=profile_user)
+    cache.set(cache_key, True, 60 * 60 * 6)
+
+    profile = get_or_create_gamer_profile(profile_user)
+
+    if profile.is_premium:
+        # ── پریمیوم: نوتیف آنی با اسم ──
+        viewer_name = viewer.get_full_name() or f'@{viewer.username}'
+        Notification.objects.create(
+            recipient=profile_user,
+            sender=viewer,
+            notif_type='profile_view',
+            custom_text=f'👁️ {viewer_name} پروفایل تو رو دید',
+        )
+    else:
+        # ── غیرپریمیوم: نوتیف تجمیعی امروز ──
+        # تعداد کل بازدیدهای امروز
+        today = date.today()
+        count = ProfileView.objects.filter(
+            viewed_user=profile_user,
+            viewed_at__date=today,
+        ).count()
+        text = f'{count} نفر پروفایل شما را مشاهده کردند'
+
+        # اگر نوتیف امروز داریم → آپدیت کن، وگرنه بساز
+        existing = Notification.objects.filter(
+            recipient=profile_user,
+            notif_type='view_digest',
+            created_at__date=today,
+        ).first()
+        if existing:
+            existing.custom_text = text
+            existing.sender = viewer   # آخرین بازدیدکننده (برای آواتار تار)
+            existing.is_read = False
+            existing.save(update_fields=['custom_text', 'sender', 'is_read'])
+        else:
+            Notification.objects.create(
+                recipient=profile_user,
+                sender=viewer,
+                notif_type='view_digest',
+                custom_text=text,
+            )
+
+
+# نگه‌دار alias قدیمی برای سازگاری
+def _send_profile_view_notif(viewer, profile_user):
+    _record_profile_view(viewer, profile_user)
 
 
 def _annotate_reactions(posts, user):
@@ -164,6 +207,12 @@ def feed(request):
          .prefetch_related('likes', 'comments', 'reactions')
          .order_by('-created_at')[:30])
 
+    # ── بوست‌شده‌های فعال رو بالای فید بیار ──
+    now = timezone.now()
+    boosted = [p for p in posts if p.is_boosted and p.boost_expires_at and p.boost_expires_at > now]
+    normal  = [p for p in posts if not (p.is_boosted and p.boost_expires_at and p.boost_expires_at > now)]
+    posts   = boosted + normal
+
     _annotate_reactions(posts, request.user)
     liked_post_ids = set(PostLike.objects.filter(user=request.user).values_list('post_id', flat=True))
 
@@ -218,9 +267,9 @@ def gamer_profile(request, username):
         request.user.gamer_profile.last_seen = timezone.now()
         request.user.gamer_profile.save(update_fields=['last_seen'])
 
-    # نوتیف بازدید پروفایل — فقط برای کاربران پریمیوم
-    if request.user.is_authenticated and not is_own_profile and profile.is_premium:
-        _send_profile_view_notif(viewer=request.user, profile_user=profile_user)
+    # ثبت بازدید پروفایل — برای همه (پریمیوم نوتیف آنی، غیرپریمیوم digest شبانه)
+    if request.user.is_authenticated and not is_own_profile:
+        _record_profile_view(viewer=request.user, profile_user=profile_user)
 
     # پروفایل خصوصی — فقط صاحب پروفایل یا فالوورها می‌بینن
     if profile.is_private and not is_own_profile:
@@ -265,6 +314,62 @@ def gamer_profile(request, username):
     fav_genre = profile.favorite_genre
     completed_games = [b for b in all_backlog if b.status == 'completed']
 
+    # ── آنالیتیکس پریمیوم (فقط روی پروفایل خودت) ──
+    analytics = None
+    if is_own_profile and profile.is_premium:
+        from datetime import timedelta
+        from django.db.models.functions import TruncDate
+        from django.db.models import Count
+        import json as _json
+
+        today = timezone.now().date()
+        since_14 = today - timedelta(days=13)
+        since_30 = today - timedelta(days=29)
+
+        # ── بازدید ۱۴ روز — یک کوئری با GROUP BY ──
+        view_qs = (
+            ProfileView.objects
+            .filter(viewed_user=profile_user, viewed_at__date__gte=since_14)
+            .annotate(day=TruncDate('viewed_at'))
+            .values('day')
+            .annotate(cnt=Count('id'))
+        )
+        view_map = {row['day']: row['cnt'] for row in view_qs}
+
+        # ── فالوور جدید روزانه ۱۴ روز — یک کوئری با GROUP BY ──
+        follow_qs = (
+            Follow.objects
+            .filter(following=profile_user, created_at__date__gte=since_14)
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(cnt=Count('id'))
+        )
+        follow_map = {row['day']: row['cnt'] for row in follow_qs}
+
+        # ساخت آرایه ۱۴ روز با مقادیر صفر برای روزهای بدون داده
+        labels, view_data, follow_data = [], [], []
+        for i in range(13, -1, -1):
+            d = today - timedelta(days=i)
+            labels.append(d.strftime('%m/%d'))
+            view_data.append(view_map.get(d, 0))
+            follow_data.append(follow_map.get(d, 0))
+
+        analytics = {
+            'view_labels':        _json.dumps(labels),
+            'view_data':          _json.dumps(view_data),
+            'follow_labels':      _json.dumps(labels),
+            'follow_data':        _json.dumps(follow_data),
+            'total_views_30d':    ProfileView.objects.filter(
+                                      viewed_user=profile_user,
+                                      viewed_at__date__gte=since_30,
+                                  ).count(),
+            'total_reactions_14d': PostReaction.objects.filter(
+                                       post__author=profile_user,
+                                       created_at__date__gte=since_14,
+                                   ).count(),
+            'followers_now':      Follow.objects.filter(following=profile_user).count(),
+        }
+
     context = {
         'profile_user': profile_user,
         'profile': profile,
@@ -287,6 +392,7 @@ def gamer_profile(request, username):
         'completed_count': completed_count,
         'fav_genre': fav_genre,
         'completed_games': completed_games,
+        'analytics': analytics,
     }
     return render(request, 'community/profile.html', context)
 
@@ -869,6 +975,10 @@ def lfg_board(request):
         lfg_posts = lfg_posts.filter(game_name__icontains=game_filter)
 
     lfg_posts = list(lfg_posts.order_by('-created_at')[:50])
+    # پریمیوم‌ها بالای بورد
+    premium_lfg = [p for p in lfg_posts if p.author.gamer_profile.is_premium]
+    normal_lfg  = [p for p in lfg_posts if not p.author.gamer_profile.is_premium]
+    lfg_posts   = premium_lfg + normal_lfg
 
     from dashboard.models import Game as DashboardGame
     _fallback = ['Valorant', 'FIFA 25', 'Call of Duty', 'GTA Online', 'PUBG', 'Dota 2', 'CS2', 'Fortnite']
@@ -1280,6 +1390,40 @@ def delete_post(request, post_id):
 
 @login_required
 @require_POST
+def boost_post(request, post_id):
+    """بوست پست — فقط برای کاربران پریمیوم، ۲۴ ساعته"""
+    from datetime import timedelta
+    post = get_object_or_404(Post, pk=post_id, author=request.user)
+    my_profile = get_or_create_gamer_profile(request.user)
+
+    if not my_profile.is_premium:
+        return JsonResponse({'ok': False, 'error': 'premium_required'}, status=403)
+
+    if post.boost_active:
+        # لغو بوست
+        post.is_boosted = False
+        post.boost_expires_at = None
+        post.save(update_fields=['is_boosted', 'boost_expires_at'])
+        return JsonResponse({'ok': True, 'boosted': False})
+
+    # بررسی محدودیت: حداکثر ۱ بوست فعال همزمان
+    active_boosts = Post.objects.filter(
+        author=request.user,
+        is_boosted=True,
+        boost_expires_at__gt=timezone.now(),
+    ).exclude(pk=post_id).count()
+    if active_boosts >= 1:
+        return JsonResponse({'ok': False, 'error': 'max_boost_reached'}, status=400)
+
+    # فعال‌سازی بوست ۲۴ ساعته
+    post.is_boosted = True
+    post.boost_expires_at = timezone.now() + timedelta(hours=24)
+    post.save(update_fields=['is_boosted', 'boost_expires_at'])
+    return JsonResponse({'ok': True, 'boosted': True, 'expires': post.boost_expires_at.isoformat()})
+
+
+@login_required
+@require_POST
 def connect_gaming_account(request):
     from .gaming_apis import lookup_account
     from django.utils import timezone
@@ -1552,6 +1696,17 @@ def conversation(request, username):
     other_user = get_object_or_404(User, username=username)
     if other_user == request.user:
         return redirect('community:inbox')
+
+    # ── DM بدون فالو فقط برای پریمیوم ──
+    my_profile = get_or_create_gamer_profile(request.user)
+    if not my_profile.is_premium:
+        is_mutual = (
+            Follow.objects.filter(follower=request.user, following=other_user).exists() or
+            Follow.objects.filter(follower=other_user, following=request.user).exists()
+        )
+        if not is_mutual and other_user.username != 'admin':
+            messages.error(request, '✉️ برای ارسال پیام به افرادی که دنبالشان نیستید، اشتراک پریمیوم تهیه کنید.')
+            return redirect('community:premium_info')
 
     # get or create conversation
     conv = Conversation.objects.filter(
@@ -3540,3 +3695,59 @@ def spin_go(request, wheel_id):
         'can_spin_free': False,
         'next_spin_ts': new_next_ts,  # ← timestamp مطلق — هیچ‌وقت ریست نمی‌شه
     })
+
+
+# ═══════════════════════════════════════════════════════════════
+#  WHO VIEWED ME
+# ═══════════════════════════════════════════════════════════════
+
+@login_required
+def who_viewed_me(request):
+    from django.utils import timezone
+    from datetime import timedelta
+    my_profile = get_or_create_gamer_profile(request.user)
+    is_premium = my_profile.is_premium
+
+    # غیرپریمیوم → ارور + ریدایرکت به صفحه پریمیوم
+    if not is_premium:
+        messages.error(request, 'ابتدا اشتراک پریمیوم تهیه کنید تا بازدیدکنندگان پروفایلتان را ببینید.')
+        return redirect('community:premium_info')
+
+    # ۳۰ روز اخیر
+    since = timezone.now() - timedelta(days=30)
+    views_qs = (
+        ProfileView.objects
+        .filter(viewed_user=request.user, viewed_at__gte=since)
+        .select_related('viewer', 'viewer__gamer_profile')
+        .order_by('-viewed_at')
+    )
+
+    unique_count = views_qs.values('viewer').distinct().count()
+    today_count  = views_qs.filter(viewed_at__date=timezone.now().date()).count()
+
+    seen = set()
+    viewers = []
+    for v in views_qs:
+        if v.viewer_id not in seen:
+            seen.add(v.viewer_id)
+            viewers.append(v)
+        if len(viewers) >= 50:
+            break
+
+    plans = PremiumPlan.objects.filter(is_active=True)
+
+    return render(request, 'community/who_viewed_me.html', {
+        'is_premium':    is_premium,
+        'viewers':       viewers,
+        'unique_count':  unique_count,
+        'today_count':   today_count,
+        'plans':         plans,
+        'blur_count':    min(unique_count, 12),  # تعداد آواتار تار برای غیرپریمیوم
+    })
+
+
+@login_required
+def premium_info(request):
+    """صفحه پریمیوم پابلیک — نمایش پلن‌ها به کاربر عادی"""
+    plans = PremiumPlan.objects.filter(is_active=True)
+    return render(request, 'community/premium_info.html', {'plans': plans})

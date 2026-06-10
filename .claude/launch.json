@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["manage.py", "runserver", "8007"],
       "port": 8007
+    },
+    {
+      "name": "basirat-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/mobinghaemi/Projects/Basirat/frontend"],
+      "port": 5173
     }
   ]
 }

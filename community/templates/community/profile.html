@@ -1188,6 +1188,41 @@
                 {% endif %}
             </div>
 
+            <!-- ── آنالیتیکس پریمیوم ── -->
+            {% if analytics %}
+            <div style="background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(139,92,246,.04));border:1px solid rgba(251,191,36,.2);border-radius:16px;padding:16px;margin:12px 0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                    <span style="font-size:.85rem;font-weight:800;color:#fbbf24;">📊 آنالیتیکس پروفایل</span>
+                    <span style="font-size:.68rem;background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:1px 8px;">✦ پریمیوم</span>
+                </div>
+                <!-- کارت‌های آمار -->
+                <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:900;color:#60a5fa;">{{ analytics.total_views_30d }}</div>
+                        <div style="font-size:.7rem;color:var(--text-muted);">بازدید ۳۰ روز</div>
+                    </div>
+                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:900;color:#4ade80;">{{ analytics.followers_now }}</div>
+                        <div style="font-size:.7rem;color:var(--text-muted);">فالوور فعلی</div>
+                    </div>
+                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:900;color:#f472b6;">{{ analytics.total_reactions_14d }}</div>
+                        <div style="font-size:.7rem;color:var(--text-muted);">ری‌اکشن ۱۴ روز</div>
+                    </div>
+                </div>
+                <!-- نمودار بازدید -->
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:700;">بازدید پروفایل — ۱۴ روز اخیر</div>
+                    <canvas id="viewsChart" height="70"></canvas>
+                </div>
+                <!-- نمودار فالوور -->
+                <div>
+                    <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:700;">فالوور جدید روزانه — ۱۴ روز اخیر</div>
+                    <canvas id="followChart" height="70"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Favorite genre & pinned game -->
             {% if fav_genre or profile.pinned_game_name %}
             <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px;">
@@ -2491,4 +2526,45 @@ function bmShowErr(msg) {
     el.textContent = msg; el.style.display = 'block';
 }
 </script>
+
+{% if analytics %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+    const viewLabels  = {{ analytics.view_labels|safe }};
+    const viewData    = {{ analytics.view_data|safe }};
+    const followLabels= {{ analytics.follow_labels|safe }};
+    const followData  = {{ analytics.follow_data|safe }};
+
+    const commonOpts = {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { rtl: true, bodyFont: { family: 'Vazirmatn' } } },
+        scales: {
+            x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' } },
+            y: { ticks: { color: '#6b7280', font: { size: 10 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,.06)' }, beginAtZero: true }
+        }
+    };
+
+    new Chart(document.getElementById('viewsChart'), {
+        type: 'bar',
+        data: {
+            labels: viewLabels,
+            datasets: [{ data: viewData, backgroundColor: 'rgba(96,165,250,.5)', borderColor: '#60a5fa',
+                          borderWidth: 1, borderRadius: 4 }]
+        },
+        options: commonOpts
+    });
+
+    new Chart(document.getElementById('followChart'), {
+        type: 'line',
+        data: {
+            labels: followLabels,
+            datasets: [{ data: followData, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,.1)',
+                          borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#4ade80', fill: true, tension: .4 }]
+        },
+        options: commonOpts
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

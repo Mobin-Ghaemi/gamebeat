@@ -25,6 +25,7 @@ urlpatterns = [
     path('profile/<str:username>/', views.gamer_profile, name='profile'),
     path('follow/<str:username>/', views.toggle_follow, name='toggle_follow'),
     path('post/<int:post_id>/delete/', views.delete_post, name='delete_post'),
+    path('post/<int:post_id>/boost/', views.boost_post, name='boost_post'),
     path('gaming/connect/', views.connect_gaming_account, name='connect_gaming'),
     path('gaming/disconnect/', views.disconnect_gaming_account, name='disconnect_gaming'),
     path('post/new/', views.create_post_page, name='create_post_page'),
@@ -110,4 +111,8 @@ urlpatterns = [
     path('spin/', views.spin_list, name='spin_list'),
     path('spin/<int:wheel_id>/', views.spin_detail, name='spin_detail'),
     path('spin/<int:wheel_id>/go/', views.spin_go, name='spin_go'),
+    # بازدیدکنندگان پروفایل
+    path('who-viewed-me/', views.who_viewed_me, name='who_viewed_me'),
+    # پریمیوم (پابلیک)
+    path('premium/', views.premium_info, name='premium_info'),
 ]

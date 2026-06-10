@@ -1,0 +1,188 @@
+{% extends "community/base.html" %}
+{% load static %}
+{% block title %}بازدیدکنندگان پروفایل — GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── layout ── */
+.wvm-wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 80px; }
+
+/* ── stats bar ── */
+.wvm-stats { display: flex; gap: 12px; margin-bottom: 28px; }
+.wvm-stat  { flex: 1; background: var(--bg-card); border: 1px solid var(--border);
+             border-radius: 14px; padding: 16px; text-align: center; }
+.wvm-stat-val { font-size: 1.9rem; font-weight: 900; color: #fbbf24; }
+.wvm-stat-lbl { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ── viewer card ── */
+.viewer-card { display: flex; align-items: center; gap: 14px;
+               background: var(--bg-card); border: 1px solid var(--border);
+               border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+               transition: .18s; }
+.viewer-card:hover { border-color: rgba(139,92,246,.4); }
+.viewer-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.viewer-info   { flex: 1; min-width: 0; }
+.viewer-name   { font-weight: 700; font-size: .95rem; color: var(--text-main); }
+.viewer-meta   { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+.viewer-time   { font-size: .7rem; color: var(--text-faint); white-space: nowrap; }
+
+/* ── blur / paywall ── */
+.blur-grid     { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+@media(max-width:480px){ .blur-grid { grid-template-columns: repeat(3,1fr); } }
+.blur-avatar-wrap { position: relative; border-radius: 14px; overflow: hidden;
+                    background: var(--bg-card2); aspect-ratio: 1; }
+.blur-avatar-wrap img { width: 100%; height: 100%; object-fit: cover;
+                         filter: blur(12px) brightness(.7); transform: scale(1.1);
+                         pointer-events: none; user-select: none; }
+.blur-avatar-wrap .blur-lock { position: absolute; inset: 0; display: flex;
+                                 align-items: center; justify-content: center;
+                                 font-size: 1.3rem; }
+
+/* ── paywall box ── */
+.paywall-box { background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(251,191,36,.06));
+               border: 1px solid rgba(251,191,36,.25); border-radius: 20px;
+               padding: 28px 24px; text-align: center; }
+.paywall-title { font-size: 1.2rem; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
+.paywall-sub   { font-size: .85rem; color: var(--text-muted); margin-bottom: 24px; }
+.plan-pill     { display: inline-flex; flex-direction: column; align-items: center;
+                 background: var(--bg-card); border: 1px solid var(--border);
+                 border-radius: 14px; padding: 14px 20px; min-width: 120px;
+                 cursor: pointer; transition: .18s; }
+.plan-pill:hover, .plan-pill.selected { border-color: rgba(251,191,36,.5);
+                                         background: rgba(251,191,36,.06); }
+.plan-pill-name  { font-weight: 800; font-size: .9rem; color: var(--text-main); }
+.plan-pill-dur   { font-size: .72rem; color: var(--text-muted); margin: 3px 0; }
+.plan-pill-price { font-size: 1rem; font-weight: 900; color: #fbbf24; }
+.btn-premium-buy { background: linear-gradient(135deg, #f59e0b, #fbbf24);
+                   color: #1c1c26; border: none; border-radius: 50px;
+                   padding: 12px 32px; font-size: .95rem; font-weight: 900;
+                   cursor: pointer; margin-top: 20px; transition: .18s; }
+.btn-premium-buy:hover { opacity: .9; transform: translateY(-1px); }
+
+/* ── premium badge ── */
+.premium-label { display: inline-flex; align-items: center; gap: 6px;
+                 background: rgba(251,191,36,.12); color: #fbbf24;
+                 border: 1px solid rgba(251,191,36,.3); border-radius: 20px;
+                 padding: 4px 14px; font-size: .8rem; font-weight: 700; margin-bottom: 20px; }
+
+/* ── section title ── */
+.wvm-section-title { font-size: 1rem; font-weight: 800; color: var(--text-main);
+                      margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wvm-wrap">
+
+  <!-- هدر -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+    <a href="javascript:history.back()" style="color:var(--text-muted);font-size:1.2rem;">←</a>
+    <div>
+      <h1 style="font-size:1.3rem;font-weight:900;margin:0;">👁️ بازدیدکنندگان پروفایل</h1>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px;">۳۰ روز گذشته</div>
+    </div>
+    {% if is_premium %}
+    <div class="premium-label" style="margin:0 auto 0 0;">✦ پریمیوم</div>
+    {% endif %}
+  </div>
+
+  <!-- آمار -->
+  <div class="wvm-stats">
+    <div class="wvm-stat">
+      <div class="wvm-stat-val">{{ unique_count }}</div>
+      <div class="wvm-stat-lbl">بازدیدکننده کل</div>
+    </div>
+    <div class="wvm-stat">
+      <div class="wvm-stat-val">{{ today_count }}</div>
+      <div class="wvm-stat-lbl">بازدید امروز</div>
+    </div>
+  </div>
+
+  {% if unique_count == 0 %}
+  <!-- هیچ بازدیدی نبوده -->
+  <div style="text-align:center;padding:48px 0;color:var(--text-muted);">
+    <div style="font-size:2.5rem;margin-bottom:12px;">👻</div>
+    <div style="font-size:1rem;font-weight:700;">هنوز کسی پروفایلت رو ندیده</div>
+    <div style="font-size:.8rem;margin-top:6px;">محتوا پست کن تا دیده بشی!</div>
+  </div>
+
+  {% elif is_premium %}
+  <!-- ── کاربر پریمیوم: لیست واقعی ── -->
+  <div class="wvm-section-title">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="color:#fbbf24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    کسانی که پروفایلت رو دیدن
+  </div>
+  {% for v in viewers %}
+  <a href="{% url 'community:profile' v.viewer.username %}" style="text-decoration:none;">
+    <div class="viewer-card">
+      {% if v.viewer.gamer_profile.avatar %}
+        <img src="{{ v.viewer.gamer_profile.avatar.url }}" alt="" class="viewer-avatar">
+      {% else %}
+        <div class="viewer-avatar" style="background:linear-gradient(135deg,var(--purple),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;">
+          {{ v.viewer.username|slice:":1"|upper }}
+        </div>
+      {% endif %}
+      <div class="viewer-info">
+        <div class="viewer-name">
+          {{ v.viewer.get_full_name|default:v.viewer.username }}
+          {% if v.viewer.gamer_profile.is_premium %}
+          <span style="font-size:.65rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:1px 6px;margin-right:4px;">✦</span>
+          {% endif %}
+        </div>
+        <div class="viewer-meta">@{{ v.viewer.username }}</div>
+      </div>
+      <div class="viewer-time">{{ v.viewed_at|timesince }} پیش</div>
+    </div>
+  </a>
+  {% endfor %}
+
+  {% else %}
+  <!-- ── کاربر غیرپریمیوم: تار + paywall ── -->
+  {% if blur_count > 0 %}
+  <div class="wvm-section-title">
+    <span>👤</span> {{ unique_count }} نفر پروفایلت رو دیدن
+  </div>
+
+  <!-- آواتارهای تار -->
+  <div class="blur-grid">
+    {% for i in "123456789012"|make_list %}
+    {% if forloop.counter <= blur_count %}
+    <div class="blur-avatar-wrap">
+      <img src="{% static 'images/avatar-placeholder.svg' %}" alt="">
+      <div class="blur-lock">🔒</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- باکس خرید -->
+  <div class="paywall-box">
+    <div style="font-size:2rem;margin-bottom:10px;">🌟</div>
+    <div class="paywall-title">ببین کی پروفایلت رو دیده!</div>
+    <div class="paywall-sub">
+      با اشتراک پریمیوم، لیست کامل بازدیدکننده‌ها رو به‌صورت آنی ببین
+      و هر بار که کسی پروفایلت رو ببینه نوتیف بگیر.
+    </div>
+
+    {% if plans %}
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
+      {% for plan in plans %}
+      <div class="plan-pill {% if forloop.first %}selected{% endif %}">
+        <div class="plan-pill-name">{{ plan.name }}</div>
+        <div class="plan-pill-dur">{{ plan.get_duration_display }}</div>
+        <div class="plan-pill-price">{{ plan.price|floatformat:0 }} تومان</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <a href="mailto:support@gamebeat.ir?subject=خرید اشتراک پریمیوم">
+      <button class="btn-premium-buy">✦ خرید اشتراک پریمیوم</button>
+    </a>
+    <div style="font-size:.72rem;color:var(--text-faint);margin-top:10px;">پشتیبانی: support@gamebeat.ir</div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

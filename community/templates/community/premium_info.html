@@ -1,0 +1,128 @@
+{% extends "community/base.html" %}
+{% load static %}
+{% block title %}اشتراک پریمیوم — GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.pi-wrap { max-width: 600px; margin: 0 auto; padding: 32px 16px 80px; }
+.pi-hero  { text-align: center; margin-bottom: 40px; }
+.pi-hero-icon { font-size: 3rem; margin-bottom: 12px; }
+.pi-hero-title { font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
+.pi-hero-sub   { font-size: .9rem; color: var(--text-muted); max-width: 380px; margin: 0 auto; }
+
+.plan-card { background: var(--bg-card); border: 1px solid var(--border);
+             border-radius: 20px; padding: 24px; margin-bottom: 16px;
+             transition: .2s; position: relative; }
+.plan-card:hover { border-color: rgba(251,191,36,.4); transform: translateY(-2px);
+                   box-shadow: 0 8px 32px rgba(251,191,36,.08); }
+.plan-card.featured { border-color: rgba(251,191,36,.35);
+                       background: linear-gradient(135deg, rgba(251,191,36,.06), var(--bg-card)); }
+.plan-badge { position: absolute; top: -10px; right: 20px;
+              background: linear-gradient(135deg,#f59e0b,#fbbf24);
+              color: #1c1c26; font-size: .7rem; font-weight: 900;
+              padding: 3px 12px; border-radius: 20px; }
+.plan-name  { font-size: 1.1rem; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
+.plan-dur   { font-size: .78rem; color: var(--text-muted); margin-bottom: 12px; }
+.plan-price { font-size: 2rem; font-weight: 900; color: #fbbf24; }
+.plan-price span { font-size: .8rem; color: var(--text-muted); font-weight: 400; }
+.plan-feat  { display: flex; align-items: center; gap: 8px;
+              font-size: .82rem; color: var(--text-muted); margin-bottom: 6px; }
+.plan-feat::before { content: '✓'; color: #4ade80; font-weight: 900; flex-shrink: 0; }
+
+.btn-buy { display: block; width: 100%; background: linear-gradient(135deg,#f59e0b,#fbbf24);
+           color: #1c1c26; border: none; border-radius: 50px;
+           padding: 13px; font-size: 1rem; font-weight: 900;
+           margin-top: 20px; cursor: pointer; transition: .18s; text-align: center;
+           text-decoration: none; }
+.btn-buy:hover { opacity: .9; transform: translateY(-1px); color: #1c1c26; }
+
+.feature-row { display: flex; align-items: flex-start; gap: 14px;
+               background: var(--bg-card); border: 1px solid var(--border);
+               border-radius: 14px; padding: 16px; margin-bottom: 10px; }
+.feature-icon { font-size: 1.5rem; flex-shrink: 0; }
+.feature-text-title { font-weight: 700; font-size: .9rem; color: var(--text-main); }
+.feature-text-sub   { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pi-wrap">
+
+  {# پیام ارور اگر از who_viewed_me ریدایرکت شده #}
+  {% if messages %}
+  {% for msg in messages %}
+  <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;
+              padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:10px;
+              color:#f87171;font-size:.88rem;font-weight:600;">
+    <span style="font-size:1.2rem;">🔒</span>
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- هدر -->
+  <div class="pi-hero">
+    <div class="pi-hero-icon">🌟</div>
+    <div class="pi-hero-title">اشتراک پریمیوم GameBeat</div>
+    <div class="pi-hero-sub">تجربه بهتر، امکانات بیشتر — از گیمرهای واقعی برای گیمرهای واقعی</div>
+  </div>
+
+  <!-- امکانات -->
+  <div style="margin-bottom:32px;">
+    <div class="feature-row">
+      <div class="feature-icon">👁️</div>
+      <div>
+        <div class="feature-text-title">ببین کی پروفایلت رو دیده</div>
+        <div class="feature-text-sub">لیست کامل بازدیدکنندگان ۳۰ روز گذشته + نوتیف آنی</div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-icon">✦</div>
+      <div>
+        <div class="feature-text-title">تیک آبی پریمیوم</div>
+        <div class="feature-text-sub">بج ویژه روی پروفایل که توجه همه رو جلب می‌کنه</div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-icon">🚀</div>
+      <div>
+        <div class="feature-text-title">امکانات اختصاصی</div>
+        <div class="feature-text-sub">دسترسی به تمام ویژگی‌های انحصاری که به تدریج اضافه می‌شن</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- پلن‌ها -->
+  {% if plans %}
+  <div style="font-size:1rem;font-weight:800;color:var(--text-main);margin-bottom:16px;">پلن‌های موجود</div>
+  {% for plan in plans %}
+  <div class="plan-card {% if forloop.first %}featured{% endif %}">
+    {% if forloop.first %}<div class="plan-badge">⭐ پیشنهادی</div>{% endif %}
+    <div class="plan-name">{{ plan.name }}</div>
+    <div class="plan-dur">{{ plan.get_duration_display }}</div>
+    <div class="plan-price">{{ plan.price|floatformat:0 }} <span>تومان</span></div>
+    {% if plan.description %}<div style="font-size:.82rem;color:var(--text-muted);margin:10px 0;">{{ plan.description }}</div>{% endif %}
+    <div style="margin-top:14px;">
+      {% for feat in plan.get_features_list %}
+      <div class="plan-feat">{{ feat }}</div>
+      {% endfor %}
+    </div>
+    <a href="mailto:support@gamebeat.ir?subject=خرید اشتراک {{ plan.name }}&body=سلام، می‌خوام پلن {{ plan.name }} به مبلغ {{ plan.price }} تومان رو خریداری کنم. یوزرنیم: {{ request.user.username }}"
+       class="btn-buy">
+      خرید {{ plan.name }}
+    </a>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div style="text-align:center;padding:32px;color:var(--text-muted);">
+    در حال حاضر پلن فعالی وجود ندارد. به زودی...
+  </div>
+  {% endif %}
+
+  <div style="text-align:center;margin-top:24px;font-size:.78rem;color:var(--text-faint);">
+    برای خرید و فعال‌سازی با پشتیبانی تماس بگیرید:<br>
+    <a href="mailto:support@gamebeat.ir" style="color:var(--purple-light);">support@gamebeat.ir</a>
+  </div>
+
+</div>
+{% endblock %}

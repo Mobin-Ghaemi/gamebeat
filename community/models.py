@@ -251,8 +251,10 @@ class Post(models.Model):
     link_title = models.CharField(max_length=300, blank=True)
     link_description = models.TextField(blank=True)
     link_image_url = models.URLField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    updated_at      = models.DateTimeField(auto_now=True)
+    is_boosted      = models.BooleanField(default=False, verbose_name='بوست شده')
+    boost_expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضای بوست')
 
     class Meta:
         verbose_name = 'پست'
@@ -266,6 +268,10 @@ class Post(models.Model):
 
     def __str__(self):
         return f'{self.author.username}: {self.content[:50]}'
+
+    @property
+    def boost_active(self):
+        return self.is_boosted and self.boost_expires_at and self.boost_expires_at > timezone.now()
 
     @property
     def likes_count(self):
@@ -533,10 +539,11 @@ class Notification(models.Model):
         ('zarban',         'ضربان'),
         ('spin',           'گردونه شانس'),
         ('profile_view',   'بازدید پروفایل'),
+        ('view_digest',    'خلاصه بازدیدها'),
     ]
 
     recipient   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    sender      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
+    sender      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications', null=True, blank=True)
     notif_type  = models.CharField(max_length=15, choices=NOTIF_TYPES)
     post        = models.ForeignKey('Post', on_delete=models.CASCADE, null=True, blank=True)
     custom_text = models.CharField(max_length=500, blank=True, default='')
@@ -1412,3 +1419,31 @@ class PremiumSubscription(models.Model):
     @property
     def is_expired(self):
         return timezone.now() > self.end_date
+
+
+# ═══════════════════════════════════════════════════════════════
+#  PROFILE VIEW TRACKING
+# ═══════════════════════════════════════════════════════════════
+
+class ProfileView(models.Model):
+    """ثبت هر بازدید از پروفایل — برای همه کاربران (پریمیوم و غیرپریمیوم)"""
+    viewer      = models.ForeignKey(User, on_delete=models.CASCADE,
+                                    related_name='profile_views_given',
+                                    verbose_name='بازدیدکننده')
+    viewed_user = models.ForeignKey(User, on_delete=models.CASCADE,
+                                    related_name='profile_views_received',
+                                    verbose_name='صاحب پروفایل')
+    viewed_at   = models.DateTimeField(default=timezone.now, verbose_name='زمان بازدید')
+    notified    = models.BooleanField(default=False, verbose_name='نوتیف ارسال شد')
+
+    class Meta:
+        verbose_name        = 'بازدید پروفایل'
+        verbose_name_plural = 'بازدیدهای پروفایل'
+        ordering            = ['-viewed_at']
+        indexes             = [
+            models.Index(fields=['viewed_user', 'viewed_at']),
+            models.Index(fields=['viewer', 'viewed_user']),
+        ]
+
+    def __str__(self):
+        return f'{self.viewer.username} → {self.viewed_user.username} @ {self.viewed_at:%Y-%m-%d %H:%M}'
