@@ -176,15 +176,16 @@ def feed(request):
     my_profile = get_or_create_gamer_profile(request.user)
     following_ids = list(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
 
-    posts = list(Post.objects.filter(
-        Q(author__in=following_ids) | Q(author=request.user),
-        is_public=True
-    ).select_related('author', 'author__gamer_profile').prefetch_related('likes', 'comments', 'reactions').order_by('-created_at')[:50])
-
-    # ── Discover mode: no follows yet → show popular posts ──────────────────
-    is_discover = len(posts) == 0 and len(following_ids) == 0
-    if is_discover:
-        # Top users by follower count (excluding self)
+    if following_ids:
+        # ── فید اصلی: فقط پست‌های کسانی که فالو کرده ──
+        is_discover = False
+        posts = list(Post.objects.filter(
+            author__in=following_ids,
+            is_public=True
+        ).select_related('author', 'author__gamer_profile').prefetch_related('likes', 'comments', 'reactions').order_by('-created_at')[:50])
+    else:
+        # ── کسی رو فالو نکرده → پست‌های پرفالوورترین‌ها ──
+        is_discover = True
         popular_users = User.objects.exclude(
             id=request.user.id
         ).filter(

@@ -8,6 +8,12 @@
       "port": 8007
     },
     {
+      "name": "gamebeat-preview",
+      "runtimeExecutable": "/Users/mobinghaemi/Desktop/gamebeat/.venv/bin/python",
+      "runtimeArgs": ["manage.py", "runserver", "8019"],
+      "port": 8019
+    },
+    {
       "name": "basirat-frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "/Users/mobinghaemi/Projects/Basirat/frontend"],

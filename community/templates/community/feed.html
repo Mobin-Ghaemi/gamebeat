@@ -29,12 +29,12 @@
 }
 .mini-banner {
     height: 72px;
-    background: linear-gradient(135deg, #1a0a30 0%, #1e1040 50%, #0e0e25 100%);
+    background: linear-gradient(135deg, #06141c 0%, #07202c 50%, #06121a 100%);
     position: relative;
 }
 .mini-banner::before {
     content:''; position:absolute; inset:0;
-    background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.35) 0%, transparent 70%);
+    background: radial-gradient(ellipse at 30% 50%, rgba(34,211,238,0.35) 0%, transparent 70%);
 }
 .mini-banner img { width:100%; height:100%; object-fit:cover; }
 .mini-body { padding: 0 14px 16px; }
@@ -42,15 +42,15 @@
     width:56px; height:56px; border-radius:50%;
     border:3px solid var(--bg-card); margin-top:-28px; position:relative; z-index:1;
     object-fit:cover; display:block;
-    box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+    box-shadow: 0 4px 14px rgba(34,211,238,0.35);
 }
 .mini-av-ph {
     width:56px; height:56px; border-radius:50%;
-    border:3px solid var(--bg-card); background: linear-gradient(135deg,#4c1d95,#6d28d9);
+    border:3px solid var(--bg-card); background: linear-gradient(135deg,#0c4a5e,#0e7490);
     margin-top:-28px; position:relative; z-index:1;
     display:flex; align-items:center; justify-content:center;
     font-size:1.25rem; font-weight:900; color:#fff;
-    box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+    box-shadow: 0 4px 14px rgba(34,211,238,0.35);
 }
 .mini-stats {
     display:grid; grid-template-columns:1fr 1fr 1fr;
@@ -66,7 +66,7 @@
     color:var(--text-muted); text-decoration:none; font-size:0.88rem;
     transition:all 0.18s; font-weight:500;
 }
-.side-link:hover { background:rgba(139,92,246,0.1); color:var(--text-white); }
+.side-link:hover { background:rgba(34,211,238,0.1); color:var(--text-white); }
 .side-link i { font-size:1rem; width:18px; text-align:center; }
 
 /* ══════════════ QUICK COMPOSE ══════════════ */
@@ -78,7 +78,7 @@
     margin-bottom: 16px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-.quick-compose:hover { border-color: rgba(139,92,246,0.3); }
+.quick-compose:hover { border-color: rgba(34,211,238,0.3); }
 .qc-top { display:flex; align-items:center; gap:12px; }
 .qc-fake-input {
     flex: 1;
@@ -95,8 +95,8 @@
     font-family: 'Vazirmatn', sans-serif;
 }
 .qc-fake-input:hover {
-    background: rgba(139,92,246,0.07);
-    border-color: rgba(139,92,246,0.4);
+    background: rgba(34,211,238,0.07);
+    border-color: rgba(34,211,238,0.4);
     color: var(--text-muted);
 }
 .qc-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
@@ -108,17 +108,17 @@
     background:none; border:none; cursor:pointer; font-family:'Vazirmatn',sans-serif;
     transition:all 0.15s;
 }
-.qc-action-btn:hover { background:rgba(139,92,246,0.1); color:#a78bfa; }
+.qc-action-btn:hover { background:rgba(34,211,238,0.1); color:#67e8f9; }
 .qc-action-btn i { font-size:1rem; }
 .qc-post-btn {
     margin-right:auto;
-    background: linear-gradient(135deg,#7c3aed,#a855f7);
+    background: linear-gradient(135deg,#0891b2,#22d3ee);
     color:white !important;
     border-radius:10px; padding:7px 18px;
     font-size:0.85rem; font-weight:700;
-    box-shadow: 0 4px 14px rgba(139,92,246,0.3);
+    box-shadow: 0 4px 14px rgba(34,211,238,0.3);
 }
-.qc-post-btn:hover { box-shadow:0 6px 20px rgba(139,92,246,0.5); transform:translateY(-1px); background:rgba(0,0,0,0) !important; background: linear-gradient(135deg,#6d28d9,#9333ea) !important; }
+.qc-post-btn:hover { box-shadow:0 6px 20px rgba(34,211,238,0.5); transform:translateY(-1px); background:rgba(0,0,0,0) !important; background: linear-gradient(135deg,#0e7490,#0891b2) !important; }
 
 /* ══════════════ POST CARD ══════════════ */
 .post-card {
@@ -131,7 +131,7 @@
     position: relative;
 }
 .post-card:hover {
-    border-color: rgba(139,92,246,0.25);
+    border-color: rgba(34,211,238,0.25);
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     transform: translateY(-1px);
 }
@@ -148,12 +148,12 @@
     animation: shimmer 3s linear infinite;
 }
 .post-card.t-highlight {
-    border-top: 2px solid #a855f7;
+    border-top: 2px solid #22d3ee;
 }
 .post-card.t-highlight::before {
     content:'';
     position:absolute; top:0; left:0; right:0; height:3px;
-    background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc, #7c3aed);
+    background: linear-gradient(90deg, #0891b2, #22d3ee, #67e8f9, #0891b2);
     background-size: 200% 100%;
     animation: shimmer 3s linear infinite;
 }
@@ -168,7 +168,7 @@
     padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;
 }
 .ptb-achievement { background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
-.ptb-highlight   { background:rgba(168,85,247,0.12);  color:#c084fc;  border:1px solid rgba(168,85,247,0.25); }
+.ptb-highlight   { background:rgba(34,211,238,0.12);  color:#67e8f9;  border:1px solid rgba(34,211,238,0.25); }
 .ptb-lfg         { background:rgba(0,212,255,0.10);   color:#00d4ff;  border:1px solid rgba(0,212,255,0.28); }
 
 /* LFG feed card */
@@ -217,7 +217,7 @@
     cursor:pointer; font-family:'Vazirmatn',sans-serif; transition:all 0.15s;
     position: relative;
 }
-.pf-btn:hover { background:rgba(139,92,246,0.09); color:#a78bfa; }
+.pf-btn:hover { background:rgba(34,211,238,0.09); color:#67e8f9; }
 .pf-btn.liked { color:#f87171; }
 .pf-btn.liked i { color:#f87171; }
 .pf-btn .btn-icon { display:inline-flex; }
@@ -272,7 +272,7 @@
     border:1px solid var(--border);
     border-radius:12px; padding:9px 13px; flex:1;
 }
-.c-author { font-size:0.8rem; font-weight:700; color:#a78bfa; margin-bottom:3px; }
+.c-author { font-size:0.8rem; font-weight:700; color:#67e8f9; margin-bottom:3px; }
 .c-text { font-size:0.86rem; color:var(--text-white); line-height:1.6; }
 .c-input-row { display:flex; gap:8px; margin-top:10px; }
 
@@ -329,7 +329,7 @@
 }
 .lm-tab-btn:hover { color:#888; }
 .lm-tab-btn.active { color:#f87171; border-color:#f87171; }
-.lm-tab-btn.active.rxn { color:#a78bfa; border-color:#8b5cf6; }
+.lm-tab-btn.active.rxn { color:#67e8f9; border-color:#22d3ee; }
 .lm-tab-cnt {
     font-size:.68rem; background:rgba(255,255,255,.06);
     border-radius:20px; padding:1px 7px;
@@ -399,7 +399,7 @@
 .lc-comment:last-child { border-bottom:none; }
 .lc-comment-head { display:flex; align-items:center; gap:9px; margin-bottom:5px; }
 .lc-comment-meta { flex:1; }
-.lc-comment-author { font-size:.82rem; font-weight:700; color:#a78bfa; }
+.lc-comment-author { font-size:.82rem; font-weight:700; color:#67e8f9; }
 .lc-comment-time { font-size:.68rem; color:#3a3a3a; margin-top:1px; }
 .lc-comment-text { font-size:.85rem; color:#d0d0d0; line-height:1.65; }
 .lc-empty { text-align:center; padding:44px 20px; color:#3a3a3a; }
@@ -426,15 +426,15 @@
 .sug-card:last-child { border:none; }
 .sug-info { flex:1; min-width:0; }
 .sug-name { font-size:0.86rem; font-weight:700; color:var(--text-white); text-decoration:none; }
-.sug-name:hover { color:#a78bfa; }
+.sug-name:hover { color:#67e8f9; }
 .sug-meta { font-size:0.73rem; color:var(--text-dim); margin-top:2px; }
 .follow-btn {
-    background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3);
-    color:#a78bfa; border-radius:8px; padding:5px 13px; font-size:0.78rem;
+    background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3);
+    color:#67e8f9; border-radius:8px; padding:5px 13px; font-size:0.78rem;
     cursor:pointer; font-family:'Vazirmatn',sans-serif; font-weight:700;
     transition:all 0.15s; white-space:nowrap;
 }
-.follow-btn:hover { background:rgba(139,92,246,0.22); color:white; }
+.follow-btn:hover { background:rgba(34,211,238,0.22); color:white; }
 .follow-btn.following { background:var(--bg-card2); color:var(--text-dim); border-color:var(--border); }
 
 /* ══════════════ LFG ══════════════ */
@@ -452,11 +452,11 @@
 
 /* ══════════════ HASHTAG ══════════════ */
 .hashtag-link {
-    color:#a78bfa; text-decoration:none; font-weight:600;
-    background:rgba(139,92,246,0.08); padding:1px 6px; border-radius:6px;
+    color:#67e8f9; text-decoration:none; font-weight:600;
+    background:rgba(34,211,238,0.08); padding:1px 6px; border-radius:6px;
     transition: background 0.15s;
 }
-.hashtag-link:hover { background:rgba(139,92,246,0.18); }
+.hashtag-link:hover { background:rgba(34,211,238,0.18); }
 
 /* ══════════════ SIDEBAR CARD ══════════════ */
 .sb-panel {
@@ -474,10 +474,186 @@
 /* ══════════════ RESPONSIVE ══════════════ */
 @media(max-width:1060px) { .feed-wrap{ grid-template-columns:220px 1fr; } .sidebar-r{ display:none; } }
 @media(max-width:720px)  { .feed-wrap{ grid-template-columns:1fr; padding:12px 12px 80px; } .sidebar-l{ display:none; } }
+
+/* ════════════════════════════════════════════════════════════════
+   ✦✦ NEON-CYBER THEME — صفحه اصلی (اسکوپ‌شده به همین صفحه) ✦✦
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --bg-void:#060911; --bg-dark:#0a0f1a; --bg-card:#0e1420; --bg-card2:#131c2b;
+  --border:#1d2a3e; --border-glow:#22d3ee;
+  --red-primary:#22d3ee; --red-glow:#67e8f9; --red-dark:#0e7490; --orange-accent:#a3e635;
+  --text-white:#e9f1fb; --text-muted:#8296ad; --text-dim:#52647a;
+  --success:#34d399; --gold:#fbbf24; --blue-accent:#38bdf8;
+  --glass:linear-gradient(180deg,rgba(20,30,46,.60),rgba(11,18,29,.72));
+  --glass-brd:rgba(120,200,255,.11);
+}
+
+/* —— پس‌زمینه‌ی محیطیِ متحرک —— */
+body{ background:#050811; }
+body::before{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 90% at 50% -15%, rgba(34,211,238,.13), transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, rgba(163,230,53,.06), transparent 55%),
+    radial-gradient(85% 70% at 0% 100%, rgba(56,189,248,.07), transparent 60%),
+    #050811;
+}
+body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  background:
+    radial-gradient(38% 42% at 22% 28%, rgba(34,211,238,.16), transparent 70%),
+    radial-gradient(42% 46% at 80% 68%, rgba(56,189,248,.13), transparent 70%),
+    radial-gradient(34% 38% at 62% 12%, rgba(163,230,53,.08), transparent 70%);
+  background-repeat:no-repeat; background-size:160% 160%; background-position:0% 0%;
+  filter:blur(36px); opacity:.95;
+  animation:auroraDrift 26s ease-in-out infinite alternate;
+}
+@keyframes auroraDrift{
+  0%  { background-position:0% 0%, 100% 100%, 50% 0%; }
+  100%{ background-position:18% 12%, 82% 88%, 38% 16%; }
+}
+.feed-grid{
+  position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+  background-image:
+    linear-gradient(rgba(120,200,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,255,.05) 1px, transparent 1px);
+  background-size:50px 50px;
+  -webkit-mask-image:radial-gradient(125% 78% at 50% -5%, #000 26%, transparent 72%);
+          mask-image:radial-gradient(125% 78% at 50% -5%, #000 26%, transparent 72%);
+}
+.feed-wrap{ position:relative; z-index:1; }
+
+/* —— هماهنگ‌سازی نوار بالا (فقط همین صفحه) —— */
+.community-nav{ background:rgba(6,9,17,.82)!important; border-bottom:1px solid rgba(34,211,238,.12)!important; box-shadow:0 1px 0 rgba(34,211,238,.06), 0 8px 30px rgba(0,0,0,.35); }
+.nav-link-item:hover, .nav-link-item.active{ background:rgba(34,211,238,.12)!important; }
+.nav-link-item.active{ color:var(--red-primary)!important; border-color:rgba(34,211,238,.32)!important; }
+.nav-brand span{ background:rgba(34,211,238,.14)!important; -webkit-text-fill-color:var(--red-primary)!important; }
+.nav-icon-btn:hover{ border-color:rgba(34,211,238,.5)!important; color:#67e8f9!important; background:rgba(34,211,238,.1)!important; }
+.pf-trigger:hover, .pf-trigger.open, .nav-profile-btn:hover, .nav-account-btn:hover{ border-color:rgba(34,211,238,.5)!important; background:rgba(34,211,238,.07)!important; }
+.pf-menu{ border-color:rgba(34,211,238,.18)!important; }
+.pf-item:hover{ background:rgba(34,211,238,.1)!important; }
+.pf-item.admin{ color:#67e8f9!important; }
+.pf-item.admin .pf-item-icon{ background:rgba(34,211,238,.12)!important; border-color:rgba(34,211,238,.25)!important; }
+.pf-head-av-ph{ background:linear-gradient(135deg,#0c4a5e,#0891b2)!important; }
+.nav-links a[href="/admin-panel/"]{ color:#67e8f9!important; border-color:rgba(34,211,238,.3)!important; }
+.dropdown-item:hover{ background:rgba(34,211,238,.1); color:var(--text-white); }
+.nav-new-post-btn{ background:linear-gradient(135deg,#22d3ee,#0e7490)!important; box-shadow:0 4px 14px rgba(34,211,238,.35)!important; }
+
+/* —— کامپوننت‌های پایه‌ی دیده‌شده روی فید (override از base) —— */
+.platform-badge{ background:rgba(34,211,238,.1)!important; border-color:rgba(34,211,238,.3)!important; color:#67e8f9!important; }
+.rxn-chip:hover{ border-color:rgba(34,211,238,.4)!important; background:rgba(34,211,238,.08)!important; }
+.rxn-chip.mine{ border-color:rgba(34,211,238,.5)!important; background:rgba(34,211,238,.1)!important; color:#67e8f9!important; }
+.rxn-chip.mine .rxn-count{ color:#67e8f9!important; }
+#globalRxnPicker .rp-btn.active{ background:rgba(34,211,238,.18)!important; outline-color:rgba(34,211,238,.35)!important; }
+/* آواتارِ پیش‌فرضِ تگِ avatar_with_frame (گرادینتِ inline) — فقط روی فید فیروزه‌ای می‌شه */
+[style*="#4c1d95"]{ background:linear-gradient(135deg,#0c4a5e,#0891b2)!important; }
+.c-author{ color:#67e8f9!important; }
+.lc-comment-author{ color:#67e8f9!important; }
+.lm-tab-btn.active.rxn{ color:#67e8f9!important; border-color:#22d3ee!important; }
+.alert-danger, .alert-error{ background:rgba(239,68,68,.1)!important; color:#fca5a5!important; border:1px solid rgba(239,68,68,.25)!important; }
+
+/* —— کارت‌های شیشه‌ای + گلوی نئونی —— */
+.post-card, .quick-compose, .sb-panel, .mini-card{
+  background:var(--glass)!important;
+  border:1px solid var(--glass-brd)!important;
+  -webkit-backdrop-filter:blur(13px) saturate(125%); backdrop-filter:blur(13px) saturate(125%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045), 0 8px 30px rgba(0,0,0,.4);
+}
+.post-card{ transition:border-color .25s, box-shadow .25s, transform .2s; }
+.post-card:hover{
+  border-color:rgba(34,211,238,.42)!important;
+  box-shadow:0 0 0 1px rgba(34,211,238,.22), 0 14px 44px rgba(0,0,0,.5), 0 0 46px rgba(34,211,238,.10)!important;
+  transform:translateY(-2px);
+}
+.quick-compose:hover{ border-color:rgba(34,211,238,.32)!important; }
+.sb-panel:hover{ border-color:rgba(34,211,238,.22)!important; }
+
+/* —— کامپوز و دکمه‌ها —— */
+.qc-post-btn{ background:linear-gradient(135deg,#22d3ee,#0e7490)!important; color:#021118!important; box-shadow:0 4px 18px rgba(34,211,238,.4)!important; }
+.qc-post-btn:hover{ box-shadow:0 7px 26px rgba(34,211,238,.6)!important; transform:translateY(-1px); }
+.qc-fake-input:hover{ border-color:rgba(34,211,238,.45)!important; background:rgba(34,211,238,.06)!important; }
+.btn-red{ background:linear-gradient(135deg,#0ea5c9,#0e7490)!important; color:#fff!important; box-shadow:0 4px 16px rgba(34,211,238,.32)!important; font-weight:800; }
+.btn-red:hover{ box-shadow:0 8px 26px rgba(34,211,238,.5)!important; }
+.follow-btn:hover{ box-shadow:0 0 0 1px rgba(34,211,238,.3); }
+.side-link:hover{ box-shadow:inset 2px 0 0 #22d3ee; }
+
+/* —— بنر مینی‌پروفایل (سایبری) —— */
+.mini-banner{ background:linear-gradient(135deg,#06141c,#0a2a38 55%,#06121a)!important; }
+.mini-banner::before{
+  background:
+    radial-gradient(ellipse at 28% 45%, rgba(34,211,238,.45), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(120,200,255,.07) 0 1px, transparent 1px 16px)!important;
+}
+.mini-av, .mini-av-ph{ box-shadow:0 0 0 3px var(--bg-card), 0 4px 18px rgba(34,211,238,.4)!important; }
+
+/* —— تیتر پنل‌ها —— */
+.sb-panel-title svg{ filter:drop-shadow(0 0 6px rgba(34,211,238,.5)); }
+
+/* —— حالت خالی —— */
+.empty-feed{ border:1px dashed rgba(34,211,238,.25)!important; background:linear-gradient(180deg, rgba(34,211,238,.03), transparent); box-shadow:inset 0 0 60px rgba(34,211,238,.05); }
+.empty-feed .ef-icon{ color:rgba(34,211,238,.38)!important; filter:drop-shadow(0 0 12px rgba(34,211,238,.3)); }
+
+/* —— بنر حالت کشف —— */
+.discover-banner{ position:relative; overflow:hidden; }
+.discover-banner::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(110deg, transparent 30%, rgba(34,211,238,.13) 50%, transparent 70%);
+  transform:translateX(-120%); animation:sheen 4.5s ease-in-out infinite;
+}
+@keyframes sheen{ 0%,55%{ transform:translateX(-120%);} 100%{ transform:translateX(120%);} }
+
+/* —— هیرو مهمان —— */
+.cyber-hero{
+  position:relative; overflow:hidden; border-radius:22px; margin-bottom:16px; padding:26px 24px;
+  background:linear-gradient(135deg, rgba(8,16,26,.80), rgba(6,12,20,.86));
+  border:1px solid rgba(34,211,238,.22);
+  box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+}
+.cyber-hero::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(60% 130% at 100% 0%, rgba(34,211,238,.20), transparent 60%),
+    radial-gradient(60% 130% at 0% 100%, rgba(163,230,53,.10), transparent 60%);
+}
+.cyber-hero h1{
+  position:relative; font-size:1.7rem; font-weight:900; line-height:1.35; margin:0 0 8px;
+  background:linear-gradient(90deg,#67e8f9,#22d3ee 42%,#a3e635);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.cyber-hero p{ position:relative; color:#9fb3c9; font-size:.92rem; line-height:1.85; margin:0 0 16px; max-width:470px; }
+.cyber-hero .hero-cta{ position:relative; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.hero-chip{ display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700; color:#67e8f9; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.2); padding:5px 12px; border-radius:30px; }
+.hero-chip b{ color:#e9f1fb; }
+
+/* —— تیزرِ ترند —— */
+.trend-teaser{ display:flex; flex-wrap:wrap; gap:7px; }
+.trend-chip{
+  font-size:.78rem; font-weight:700; color:#8aa6c2;
+  background:rgba(34,211,238,.05); border:1px solid rgba(120,200,255,.1);
+  border-radius:30px; padding:5px 12px; position:relative; overflow:hidden;
+}
+.trend-chip::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent, rgba(34,211,238,.16), transparent); transform:translateX(-100%); animation:sheen 3.2s ease-in-out infinite; }
+.trend-soon{ font-size:.72rem; color:var(--text-dim); margin-top:11px; display:flex; align-items:center; gap:6px; }
+
+/* —— ریسپانسیو: جلوگیری از سرریزِ نوبار در موبایل (اسکوپِ صفحه اصلی) —— */
+@media (max-width:560px){
+  .nav-brand span{ display:none!important; }
+  .nav-brand{ font-size:1.25rem!important; }
+}
+@media (max-width:720px){
+  .cyber-hero{ padding:20px 18px!important; }
+  .cyber-hero h1{ font-size:1.35rem!important; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  body::after, .discover-banner::after, .trend-chip::after{ animation:none!important; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="feed-grid" aria-hidden="true"></div>
 <div class="feed-wrap">
 
     <!-- LEFT SIDEBAR -->
@@ -511,8 +687,8 @@
 
         <!-- Nav Links (authenticated) -->
         <div class="mini-card" style="padding:10px;">
-            <a href="{% url 'community:create_post_page' %}" class="side-link" style="color:#a78bfa; font-weight:700; background:rgba(139,92,246,0.07); margin-bottom:4px;">
-                <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-plus-circle-fill"></use></svg> پست جدید
+            <a href="{% url 'community:create_post_page' %}" class="side-link" style="color:#67e8f9; font-weight:700; background:rgba(34,211,238,0.07); margin-bottom:4px;">
+                <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:#22d3ee;"><use href="#bi-plus-circle-fill"></use></svg> پست جدید
             </a>
             <a href="{% url 'community:search' %}" class="side-link"><svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی گیمر</a>
             <a href="{% url 'community:lfg' %}" class="side-link"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> پیدا کردن هم‌بازی</a>
@@ -522,9 +698,9 @@
         {% else %}
         <!-- ── Guest: Join CTA Card ── -->
         <div class="mini-card">
-            <div class="mini-banner" style="background: linear-gradient(135deg, #1a0a30 0%, #2d1b6b 50%, #0e0e25 100%);">
+            <div class="mini-banner" style="background: linear-gradient(135deg, #06141c 0%, #0a3a4a 50%, #06121a 100%);">
                 <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-                    <svg class="bi bi-controller" aria-hidden="true" style="font-size:2.2rem; color:rgba(139,92,246,0.6);"><use href="#bi-controller"></use></svg>
+                    <svg class="bi bi-controller" aria-hidden="true" style="font-size:2.2rem; color:rgba(34,211,238,0.6);"><use href="#bi-controller"></use></svg>
                 </div>
             </div>
             <div class="mini-body" style="padding:16px 14px 18px;">
@@ -560,9 +736,24 @@
     <!-- CENTER: Posts Feed -->
     <main>
 
+        {% if not user.is_authenticated %}
+        <!-- ── Guest Hero ── -->
+        <section class="cyber-hero">
+            <h1>کامیونیتیِ گیمرهای ایران</h1>
+            <p>پروفایل گیمری بساز، با گیمرها هم‌بازی شو، دستاوردهات رو به نمایش بذار و توی لیدربورد بالا برو — همه‌ش یه‌جا.</p>
+            <div class="hero-cta">
+                <a href="{% url 'account:register' %}" class="btn-red" style="text-decoration:none;">
+                    <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> همین حالا شروع کن
+                </a>
+                <span class="hero-chip"><svg class="bi bi-people-fill" aria-hidden="true" style="width:.9em;height:.9em;"><use href="#bi-people-fill"></use></svg> <b>{{ stats.users }}</b> گیمر</span>
+                <span class="hero-chip"><svg class="bi bi-fire" aria-hidden="true" style="width:.9em;height:.9em;"><use href="#bi-fire"></use></svg> <b>{{ stats.posts }}</b> پست</span>
+            </div>
+        </section>
+        {% endif %}
+
         {% if is_discover %}
         <!-- Discover Banner -->
-        <div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(168,85,247,0.06)); border:1px solid rgba(139,92,246,0.25); border-radius:16px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
+        <div class="discover-banner" style="background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(34,211,238,0.06)); border:1px solid rgba(34,211,238,0.25); border-radius:16px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:14px;">
             <svg style="width:1.8rem;height:1.8rem;fill:currentColor;vertical-align:-.125em;flex-shrink:0" viewBox="0 0 16 16"><path d="M.5 10.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1zM2 9.5a.5.5 0 0 0 .5.5h4.792l-1.44 2.88A.5.5 0 0 0 6.29 13H7.5v.5a.5.5 0 0 0 1 0V13h1.21a.5.5 0 0 0 .438-.72L8.708 10H13.5a.5.5 0 0 0 0-1h-11a.5.5 0 0 0-.5.5M14.53 5.92 11.11.44a.5.5 0 0 0-.88 0L7.28 5.63 5.96 3.02a.5.5 0 0 0-.88 0L2.93 7.6A.5.5 0 0 0 3.35 8.3l8.5-1.5a.5.5 0 0 0 .27-.84z"/></svg>
             <div>
                 <div style="font-weight:800; font-size:0.95rem; color:var(--text-white); margin-bottom:3px;">حالت کشف — محبوب‌ترین گیمرها</div>
@@ -712,7 +903,7 @@
                         {% if comment.author.gamer_profile.avatar %}
                             <img src="{{ comment.author.gamer_profile.avatar.url }}" class="avatar avatar-sm">
                         {% else %}
-                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ comment.author.username|first|upper }}</div>
+                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; background:linear-gradient(135deg,#0c4a5e,#0e7490); border:none; color:#fff;">{{ comment.author.username|first|upper }}</div>
                         {% endif %}
                         <div class="c-bubble">
                             <div class="c-author">@{{ comment.author.username }}</div>
@@ -727,7 +918,7 @@
                         {% if my_profile.avatar %}
                             <img src="{{ my_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
                         {% else %}
-                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; flex-shrink:0; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ user.username|first|upper }}</div>
+                            <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; flex-shrink:0; background:linear-gradient(135deg,#0c4a5e,#0e7490); border:none; color:#fff;">{{ user.username|first|upper }}</div>
                         {% endif %}
                         <input type="text" name="content" class="g-input"
                                style="padding:8px 14px; border-radius:50px;"
@@ -739,7 +930,7 @@
                     </form>
                     {% else %}
                     <a href="{% url 'account:login' %}?next=/" class="c-input-row" style="text-decoration:none; padding:10px 14px; justify-content:center; color:var(--text-dim); font-size:0.85rem;">
-                        <svg class="bi bi-lock-fill" aria-hidden="true" style="color:#8b5cf6; margin-left:6px;"><use href="#bi-lock-fill"></use></svg> برای کامنت گذاشتن ورود کن
+                        <svg class="bi bi-lock-fill" aria-hidden="true" style="color:#22d3ee; margin-left:6px;"><use href="#bi-lock-fill"></use></svg> برای کامنت گذاشتن ورود کن
                     </a>
                     {% endif %}
                 </div>
@@ -776,15 +967,15 @@
         {% if suggested_gamers %}
         <div class="sb-panel">
             <div class="sb-panel-title">
-                <svg class="bi bi-people-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-people-fill"></use></svg> گیمرها رو بشناس
-                <a href="{% url 'community:search' %}" style="font-size:0.75rem; color:#8b5cf6; margin-right:auto; text-decoration:none;">همه →</a>
+                <svg class="bi bi-people-fill" aria-hidden="true" style="color:#22d3ee;"><use href="#bi-people-fill"></use></svg> گیمرها رو بشناس
+                <a href="{% url 'community:search' %}" style="font-size:0.75rem; color:#22d3ee; margin-right:auto; text-decoration:none;">همه →</a>
             </div>
             {% for gamer in suggested_gamers %}
             <div class="sug-card">
                 {% if gamer.gamer_profile.avatar %}
                     <img src="{{ gamer.gamer_profile.avatar.url }}" class="avatar avatar-sm">
                 {% else %}
-                    <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ gamer.username|first|upper }}</div>
+                    <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem; background:linear-gradient(135deg,#0c4a5e,#0e7490); border:none; color:#fff;">{{ gamer.username|first|upper }}</div>
                 {% endif %}
                 <div class="sug-info">
                     <a href="{% url 'community:profile' username=gamer.username %}" class="sug-name">{{ gamer.username }}</a>
@@ -801,8 +992,16 @@
 
         <!-- Trending hashtags placeholder -->
         <div class="sb-panel">
-            <div class="sb-panel-title"><svg class="bi bi-fire" aria-hidden="true" style="color:#f97316;"><use href="#bi-fire"></use></svg> ترند هشتگ‌ها</div>
-            <div style="color:var(--text-dim); font-size:0.82rem; text-align:center; padding:12px 0;">به زودی ...</div>
+            <div class="sb-panel-title"><svg class="bi bi-fire" aria-hidden="true" style="color:#22d3ee;"><use href="#bi-fire"></use></svg> ترند هشتگ‌ها</div>
+            <div class="trend-teaser" aria-hidden="true">
+                <span class="trend-chip">#گیم</span>
+                <span class="trend-chip">#کالاف</span>
+                <span class="trend-chip">#PC</span>
+                <span class="trend-chip">#پلی‌استیشن</span>
+                <span class="trend-chip">#esports</span>
+                <span class="trend-chip">#گیمر</span>
+            </div>
+            <div class="trend-soon"><svg class="bi bi-clock-history" aria-hidden="true" style="color:#22d3ee;"><use href="#bi-clock-history"></use></svg> به‌زودی فعال می‌شه…</div>
         </div>
 
     </aside>
@@ -822,8 +1021,8 @@
 }
 #msgBarBtn {
     width:100%;
-    background:#1e1e2e;
-    border:1px solid rgba(139,92,246,.35);
+    background:#101826;
+    border:1px solid rgba(34,211,238,.35);
     border-bottom:none;
     border-radius:12px 12px 0 0;
     padding:10px 14px;
@@ -836,7 +1035,7 @@
 #msgBarBtn:hover { background:#252538; }
 #msgBarBtnLabel { flex:1; text-align:right; }
 #msgBarArrow {
-    font-size:.75rem; color:#7c6aaa;
+    font-size:.75rem; color:#4d7e92;
     transition:transform .2s;
     display:inline-block;
 }
@@ -850,7 +1049,7 @@
 /* ── لیست مخاطبین (dropdown رو به بالا) ── */
 #msgPanel {
     position:absolute; bottom:100%; right:0; left:0;
-    background:#141420; border:1px solid rgba(139,92,246,.28);
+    background:#0a1018; border:1px solid rgba(34,211,238,.28);
     border-radius:14px 14px 0 0;
     box-shadow:0 -12px 40px rgba(0,0,0,.7);
     display:none; flex-direction:column; overflow:hidden;
@@ -865,21 +1064,21 @@
     outline:none; font-family:'Vazirmatn',sans-serif; box-sizing:border-box;
     transition:border-color .15s;
 }
-#msgSearch:focus { border-color:rgba(139,92,246,.5); }
-#msgSearch::placeholder { color:#383850; }
+#msgSearch:focus { border-color:rgba(34,211,238,.5); }
+#msgSearch::placeholder { color:#2a3c52; }
 #msgContactList { flex:1; overflow-y:auto; min-height:0; }
 #msgContactList::-webkit-scrollbar { width:3px; }
-#msgContactList::-webkit-scrollbar-thumb { background:#232340; border-radius:3px; }
+#msgContactList::-webkit-scrollbar-thumb { background:#16243a; border-radius:3px; }
 .msg-contact-row {
     display:flex; align-items:center; gap:10px;
     padding:9px 12px; cursor:pointer; transition:background .12s;
     border-bottom:1px solid rgba(255,255,255,.03);
 }
-.msg-contact-row:hover { background:rgba(139,92,246,.1); }
+.msg-contact-row:hover { background:rgba(34,211,238,.1); }
 .msg-contact-av { width:34px; height:34px; border-radius:50%; flex-shrink:0; object-fit:cover; }
 .msg-contact-av-ph {
     width:34px; height:34px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    background:linear-gradient(135deg,#0c4a5e,#0891b2);
     display:flex; align-items:center; justify-content:center;
     font-weight:900; color:#fff; font-size:.82rem;
 }
@@ -895,7 +1094,7 @@
 #msgChat {
     position:fixed; bottom:0; right:280px; z-index:8100;
     width:300px; height:400px;
-    background:#141420; border:1px solid rgba(139,92,246,.25);
+    background:#0a1018; border:1px solid rgba(34,211,238,.25);
     border-radius:14px 14px 0 0;
     box-shadow:0 -12px 40px rgba(0,0,0,.7);
     display:none; flex-direction:column; overflow:hidden;
@@ -904,17 +1103,17 @@
 #msgChatHead {
     padding:10px 13px; border-bottom:1px solid rgba(255,255,255,.06);
     display:flex; align-items:center; gap:9px; flex-shrink:0;
-    background:#1a1a2e;
+    background:#0e1622;
 }
 #msgChatAv {
     width:30px; height:30px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    background:linear-gradient(135deg,#0c4a5e,#0891b2);
     display:flex; align-items:center; justify-content:center;
     font-weight:900; color:#fff; font-size:.78rem; overflow:hidden;
 }
 #msgChatName { font-size:.84rem; font-weight:800; color:#f0f0f0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-#msgChatFull { font-size:.68rem; color:#7c3aed; text-decoration:none; white-space:nowrap; padding:2px 7px; border-radius:6px; background:rgba(124,58,237,.1); }
-#msgChatFull:hover { background:rgba(124,58,237,.22); }
+#msgChatFull { font-size:.68rem; color:#0891b2; text-decoration:none; white-space:nowrap; padding:2px 7px; border-radius:6px; background:rgba(8,145,178,.1); }
+#msgChatFull:hover { background:rgba(8,145,178,.22); }
 #msgChatClose { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); color:#666; width:24px; height:24px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
 #msgChatClose:hover { background:#ef4444; color:#fff; border-color:#ef4444; }
 #msgChatMsgs {
@@ -922,20 +1121,20 @@
     display:flex; flex-direction:column; gap:5px; min-height:0;
 }
 #msgChatMsgs::-webkit-scrollbar { width:3px; }
-#msgChatMsgs::-webkit-scrollbar-thumb { background:#232340; border-radius:3px; }
+#msgChatMsgs::-webkit-scrollbar-thumb { background:#16243a; border-radius:3px; }
 #msgChatInput {
     padding:8px 10px; border-top:1px solid rgba(255,255,255,.06);
-    display:flex; gap:7px; flex-shrink:0; background:#141420;
+    display:flex; gap:7px; flex-shrink:0; background:#0a1018;
 }
 #msgChatInputField {
     flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
     border-radius:9px; padding:7px 11px; color:#d0d0d0; font-size:.8rem;
     outline:none; font-family:'Vazirmatn',sans-serif; transition:border-color .15s;
 }
-#msgChatInputField:focus { border-color:rgba(139,92,246,.5); }
-#msgChatInputField::placeholder { color:#383850; }
+#msgChatInputField:focus { border-color:rgba(34,211,238,.5); }
+#msgChatInputField::placeholder { color:#2a3c52; }
 #msgChatSendBtn {
-    background:linear-gradient(135deg,#6d28d9,#a855f7); border:none;
+    background:linear-gradient(135deg,#0e7490,#22d3ee); border:none;
     color:#fff; border-radius:9px; padding:0 12px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     transition:transform .15s; flex-shrink:0;
@@ -944,14 +1143,14 @@
 #msgChatSendBtn svg { width:15px; height:15px; fill:currentColor; }
 .mb-mine {
     align-self:flex-start;
-    background:linear-gradient(135deg,#6d28d9,#9333ea);
+    background:linear-gradient(135deg,#0e7490,#0891b2);
     color:#fff; border-radius:12px 12px 3px 12px;
     padding:7px 11px; font-size:.8rem; max-width:82%;
     line-height:1.55; word-break:break-word;
 }
 .mb-other {
     align-self:flex-end;
-    background:#1e1e32; border:1px solid rgba(255,255,255,.07);
+    background:#111a28; border:1px solid rgba(255,255,255,.07);
     color:#c8c8d0; border-radius:12px 12px 12px 3px;
     padding:7px 11px; font-size:.8rem; max-width:82%;
     line-height:1.55; word-break:break-word;
@@ -968,7 +1167,7 @@
             <input id="msgSearch" type="text" placeholder="جستجوی مخاطب..." oninput="msgFilterContacts(this.value)">
         </div>
         <div id="msgContactList">
-            <div style="text-align:center;padding:28px;color:#2e2e50;font-size:.8rem;">در حال بارگذاری...</div>
+            <div style="text-align:center;padding:28px;color:#1c2e44;font-size:.8rem;">در حال بارگذاری...</div>
         </div>
     </div>
     <!-- دکمه select-bar -->
@@ -988,7 +1187,7 @@
         <button id="msgChatClose" onclick="msgCloseChat()">✕</button>
     </div>
     <div id="msgChatMsgs">
-        <div style="text-align:center;padding:24px;color:#2e2e50;font-size:.8rem;">مخاطبی انتخاب کن</div>
+        <div style="text-align:center;padding:24px;color:#1c2e44;font-size:.8rem;">مخاطبی انتخاب کن</div>
     </div>
     <div id="msgChatInput">
         <input id="msgChatInputField" type="text" placeholder="پیام بنویس..."
@@ -1167,7 +1366,7 @@ function _buildCommentEl(c) {
     div.style.cssText = 'animation:thumbIn .22s ease;';
     const av = c.avatar
         ? `<img src="${c.avatar}" class="avatar avatar-sm">`
-        : `<div class="avatar-placeholder avatar-sm" style="font-size:.7rem;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;">${c.username.charAt(0).toUpperCase()}</div>`;
+        : `<div class="avatar-placeholder avatar-sm" style="font-size:.7rem;background:linear-gradient(135deg,#0c4a5e,#0e7490);border:none;color:#fff;">${c.username.charAt(0).toUpperCase()}</div>`;
     div.innerHTML = `${av}
         <div class="c-bubble">
             <div class="c-author">@${c.username}
@@ -1293,7 +1492,7 @@ function _lmLoad() {
                 <a class="lm-user" href="/profile/${u.username}/" onclick="closeLmModal()">
                     ${u.avatar
                         ? `<img src="${u.avatar}" class="avatar avatar-sm" style="border:2px solid rgba(248,113,113,.22);flex-shrink:0;">`
-                        : `<div class="avatar-placeholder avatar-sm" style="font-size:.75rem;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;flex-shrink:0;">${u.username.charAt(0).toUpperCase()}</div>`
+                        : `<div class="avatar-placeholder avatar-sm" style="font-size:.75rem;background:linear-gradient(135deg,#0c4a5e,#0e7490);border:none;color:#fff;flex-shrink:0;">${u.username.charAt(0).toUpperCase()}</div>`
                     }
                     <div class="lm-uinfo">
                         <div class="lm-uname">${u.full_name}
@@ -1345,7 +1544,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLmModal
   const el = document.createElement('div');
   el.innerHTML = `
 <div id="shareOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:99999;align-items:flex-end;justify-content:center;">
-  <div id="shareSheet" style="width:100%;max-width:480px;background:#0d0d1a;border-radius:24px 24px 0 0;padding:0 0 32px;border:1px solid rgba(139,92,246,.2);border-bottom:none;box-shadow:0 -16px 48px rgba(0,0,0,.6);transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.2,.64,1);direction:rtl;">
+  <div id="shareSheet" style="width:100%;max-width:480px;background:#0d0d1a;border-radius:24px 24px 0 0;padding:0 0 32px;border:1px solid rgba(34,211,238,.2);border-bottom:none;box-shadow:0 -16px 48px rgba(0,0,0,.6);transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.2,.64,1);direction:rtl;">
     <div style="display:flex;justify-content:center;padding:12px 0 4px;"><div style="width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);"></div></div>
     <div style="padding:4px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px;">
       <div style="flex:1;"><div style="font-size:.95rem;font-weight:900;color:#fff;">ارسال به</div></div>
@@ -1359,7 +1558,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLmModal
     </div>
     <div id="shareContactList" style="max-height:260px;overflow-y:auto;padding:4px 8px 8px;"><div style="text-align:center;padding:24px;color:#444;font-size:.82rem;">در حال بارگذاری...</div></div>
     <div style="padding:4px 16px 0;">
-      <button id="shareCopyBtn" style="width:100%;padding:13px;border-radius:14px;background:rgba(139,92,246,.1);border:1px dashed rgba(139,92,246,.3);color:#a78bfa;font-size:.84rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Vazirmatn',sans-serif;">
+      <button id="shareCopyBtn" style="width:100%;padding:13px;border-radius:14px;background:rgba(34,211,238,.1);border:1px dashed rgba(34,211,238,.3);color:#67e8f9;font-size:.84rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Vazirmatn',sans-serif;">
         <svg style="width:1em;height:1em;fill:currentColor" viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/></svg>
         کپی لینک پست
       </button>
@@ -1420,11 +1619,11 @@ function renderShareContacts(contacts, filter='') {
             display:flex;align-items:center;gap:12px;
             padding:10px 12px;border-radius:14px;cursor:pointer;
             transition:background .15s;
-        " onmouseover="this.style.background='rgba(139,92,246,.1)'"
+        " onmouseover="this.style.background='rgba(34,211,238,.1)'"
            onmouseout="this.style.background='transparent'">
             ${c.avatar
                 ? `<img src="${c.avatar}" style="width:42px;height:42px;border-radius:12px;object-fit:cover;flex-shrink:0;">`
-                : `<div style="width:42px;height:42px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#4c1d95,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;">${c.initial}</div>`
+                : `<div style="width:42px;height:42px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#0c4a5e,#0891b2);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;">${c.initial}</div>`
             }
             <div style="flex:1;min-width:0;">
                 <div style="font-size:.86rem;font-weight:700;color:#d4d4d4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtmlShare(c.display)}</div>
@@ -1470,8 +1669,8 @@ function shareCopyLink() {
         btn.style.borderColor = 'rgba(74,222,128,.4)';
         setTimeout(() => {
             btn.innerHTML = '<svg style="width:1em;height:1em;fill:currentColor" viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/></svg> کپی لینک پست';
-            btn.style.color = '#a78bfa';
-            btn.style.borderColor = 'rgba(139,92,246,.3)';
+            btn.style.color = '#67e8f9';
+            btn.style.borderColor = 'rgba(34,211,238,.3)';
         }, 2000);
     });
 }
@@ -1529,7 +1728,7 @@ function boostPost(postId, btn) {
 }
 
 /* ──── Toast ──── */
-function showToast(msg, color='#7c3aed') {
+function showToast(msg, color='#0891b2') {
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -1670,12 +1869,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); 
             avatarEl.innerHTML = `<img src="${avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`;
         } else {
             avatarEl.textContent = initial;
-            avatarEl.style.background = 'linear-gradient(135deg,#4c1d95,#7c3aed)';
+            avatarEl.style.background = 'linear-gradient(135deg,#0c4a5e,#0891b2)';
         }
         document.getElementById('msgChatName').textContent = display;
         document.getElementById('msgChatFull').href = '/dm/' + username + '/';
         document.getElementById('msgChatMsgs').innerHTML =
-            '<div style="text-align:center;padding:20px;color:#444;font-size:.8rem;"><a href="/dm/'+username+'/" style="color:#8b5cf6;">مشاهده مکالمه کامل ↗</a></div>';
+            '<div style="text-align:center;padding:20px;color:#444;font-size:.8rem;"><a href="/dm/'+username+'/" style="color:#22d3ee;">مشاهده مکالمه کامل ↗</a></div>';
 
         const win = document.getElementById('msgChat');
         win.style.display = 'flex';
