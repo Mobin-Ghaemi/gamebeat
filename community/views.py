@@ -57,34 +57,27 @@ def _record_profile_view(viewer, profile_user):
 
     profile = get_or_create_gamer_profile(profile_user)
 
+    # همه کاربران (پریمیوم و غیرپریمیوم) همین نوتیف را می‌گیرند
+    # پریمیوم: اسم بازدیدکننده نشان داده می‌شود
+    # غیرپریمیوم: فقط متن عمومی (اسم مخفی)
     if profile.is_premium:
-        # ── پریمیوم: نوتیف آنی با اسم ──
-        viewer_name = viewer.get_full_name() or f'@{viewer.username}'
         Notification.objects.create(
             recipient=profile_user,
             sender=viewer,
             notif_type='profile_view',
-            custom_text=f'👁️ {viewer_name} پروفایل تو رو دید',
+            custom_text='👁️ یک نفر پروفایل تو رو دید',
         )
     else:
-        # ── غیرپریمیوم: نوتیف تجمیعی امروز ──
-        # تعداد کل بازدیدهای امروز
+        # نوتیف تجمیعی روزانه — فقط یک نوتیف در روز، آپدیت می‌شود
         today = date.today()
-        count = ProfileView.objects.filter(
-            viewed_user=profile_user,
-            viewed_at__date=today,
-        ).count()
-        text = f'{count} نفر پروفایل شما را مشاهده کردند'
-
-        # اگر نوتیف امروز داریم → آپدیت کن، وگرنه بساز
         existing = Notification.objects.filter(
             recipient=profile_user,
             notif_type='view_digest',
             created_at__date=today,
         ).first()
         if existing:
-            existing.custom_text = text
-            existing.sender = viewer   # آخرین بازدیدکننده (برای آواتار تار)
+            existing.sender = viewer
+            existing.custom_text = '👁️ یک نفر پروفایل تو رو دید'
             existing.is_read = False
             existing.save(update_fields=['custom_text', 'sender', 'is_read'])
         else:
@@ -92,7 +85,7 @@ def _record_profile_view(viewer, profile_user):
                 recipient=profile_user,
                 sender=viewer,
                 notif_type='view_digest',
-                custom_text=text,
+                custom_text='👁️ یک نفر پروفایل تو رو دید',
             )
 
 
@@ -1713,16 +1706,16 @@ def conversation(request, username):
         participants=request.user
     ).filter(participants=other_user).first()
 
+    # هیچ‌کس نمی‌تونه به admin پیام بده
+    if other_user.username == 'admin':
+        messages.error(request, 'ارسال پیام به مدیریت گیم‌بیت امکان‌پذیر نیست.')
+        return redirect('community:inbox')
+
     if not conv:
         conv = Conversation.objects.create()
         conv.participants.add(request.user, other_user)
 
-    # مکالمه با مدیریت گیم‌بیت یک‌طرفه‌ست — کاربران نمی‌تونن پیام بدن
-    is_admin_other = other_user.username == 'admin'
-
     if request.method == 'POST':
-        if is_admin_other and not (request.user.is_staff or request.user.is_superuser):
-            return redirect('community:conversation', username=username)
         content = request.POST.get('content', '').strip()
         if content:
             Message.objects.create(
@@ -1806,8 +1799,8 @@ def send_message_ajax(request, username):
         return JsonResponse({'error': 'method'}, status=405)
     other_user = get_object_or_404(User, username=username)
     # کاربر عادی نمی‌تونه به یوزر admin (مدیریت گیم‌بیت) پیام بده
-    if other_user.username == 'admin' and not (request.user.is_staff or request.user.is_superuser):
-        return JsonResponse({'error': 'readonly'}, status=403)
+    if other_user.username == 'admin':
+        return JsonResponse({'error': 'ارسال پیام به مدیریت گیم‌بیت امکان‌پذیر نیست.'}, status=403)
     # بررسی بلاک
     if Block.objects.filter(blocker=other_user, blocked=request.user).exists():
         return JsonResponse({'error': 'blocked'}, status=403)
@@ -3751,3 +3744,41 @@ def premium_info(request):
     """صفحه پریمیوم پابلیک — نمایش پلن‌ها به کاربر عادی"""
     plans = PremiumPlan.objects.filter(is_active=True)
     return render(request, 'community/premium_info.html', {'plans': plans})
+
+
+@login_required
+def dm_list_api(request):
+    """لیست DM‌ها برای شیر کردن پست — JSON"""
+    blocked_ids = set(Block.objects.filter(blocker=request.user).values_list('blocked_id', flat=True))
+    convs = request.user.conversations.prefetch_related(
+        'participants', 'participants__gamer_profile'
+    ).order_by('-updated_at')
+    result = []
+    for c in convs:
+        other = c.other_participant(request.user)
+        if not other or other.id in blocked_ids or other.username == 'admin':
+            continue
+        avatar_url = ''
+        profile = getattr(other, 'gamer_profile', None)
+        if profile and profile.avatar:
+            avatar_url = profile.avatar.url
+        result.append({
+            'username': other.username,
+            'display': other.get_full_name() or other.username,
+            'avatar': avatar_url,
+            'initial': other.username[0].upper() if other.username else '?',
+        })
+    # کاربرانی که هنوز DM نداریم ولی می‌فالویم
+    following_ids = set(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
+    existing_usernames = {r['username'] for r in result}
+    extra = User.objects.filter(id__in=following_ids).exclude(username__in=existing_usernames).exclude(username='admin').select_related('gamer_profile')[:20]
+    for u in extra:
+        profile = getattr(u, 'gamer_profile', None)
+        avatar_url = profile.avatar.url if profile and profile.avatar else ''
+        result.append({
+            'username': u.username,
+            'display': u.get_full_name() or u.username,
+            'avatar': avatar_url,
+            'initial': u.username[0].upper(),
+        })
+    return JsonResponse({'ok': True, 'contacts': result})

@@ -1,4 +1,5 @@
 {% extends 'community/base.html' %}
+{% load jalali_filters %}
 {% load community_tags %}
 {% block title %}{{ profile_user.username }} | GameBeat Community{% endblock %}
 
@@ -1715,7 +1716,7 @@
                                 {% if ach.description %}
                                     <div class="ach-desc">{{ ach.description }}</div>
                                 {% endif %}
-                                <div class="ach-date">{{ ach.earned_at|date:"Y/m/d" }}</div>
+                                <div class="ach-date">{{ ach.earned_at|jalali:"Y/m/d" }}</div>
                             </div>
                             {% endfor %}
                         </div>

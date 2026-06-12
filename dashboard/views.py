@@ -1042,17 +1042,31 @@ def premium_plan_delete(request, plan_id):
     return redirect('dashboard:premium')
 
 
+def _find_user_by_query(q):
+    """پیدا کردن کاربر با یوزرنیم، ایمیل یا شماره موبایل"""
+    user = User.objects.filter(username=q).first()
+    if user:
+        return user
+    user = User.objects.filter(email__iexact=q).first()
+    if user:
+        return user
+    gp = GamerProfile.objects.filter(phone=q).select_related('user').first()
+    if gp:
+        return gp.user
+    return None
+
+
 @login_required
 @user_passes_test(is_admin)
 def premium_assign(request):
     if request.method != 'POST':
         return redirect('dashboard:premium')
-    username = request.POST.get('username', '').strip()
-    plan_id  = request.POST.get('plan_id')
-    note     = request.POST.get('note', '').strip()
-    user = User.objects.filter(username=username).first()
+    query   = request.POST.get('user_query', '').strip()
+    plan_id = request.POST.get('plan_id')
+    note    = request.POST.get('note', '').strip()
+    user = _find_user_by_query(query)
     if not user:
-        messages.error(request, f'کاربر «{username}» پیدا نشد.')
+        messages.error(request, f'کاربری با «{query}» پیدا نشد.')
         return redirect('dashboard:premium')
     plan  = get_object_or_404(PremiumPlan, pk=plan_id)
     start = timezone.now()
@@ -1068,7 +1082,7 @@ def premium_assign(request):
             notif_type='admin',
             custom_text=f'🌟 اشتراک پریمیوم «{plan.name}» برای شما فعال شد! تا {end.strftime("%Y/%m/%d")} معتبر است.'
         )
-    messages.success(request, f'اشتراک پریمیوم برای «{username}» فعال شد.')
+    messages.success(request, f'اشتراک پریمیوم برای «{user.username}» فعال شد.')
     return redirect('dashboard:premium')
 
 
@@ -1079,4 +1093,77 @@ def premium_revoke(request, sub_id):
     sub.is_active = False
     sub.save(update_fields=['is_active'])
     messages.success(request, f'اشتراک «{sub.user.username}» لغو شد.')
+    return redirect('dashboard:premium')
+
+
+@login_required
+@user_passes_test(is_admin)
+def premium_adjust_days(request):
+    """هدیه دادن یا کم کردن روز پریمیوم از کاربر"""
+    if request.method != 'POST':
+        return redirect('dashboard:premium')
+
+    query = request.POST.get('user_query', '').strip()
+    try:
+        days = int(request.POST.get('days', 0))
+    except ValueError:
+        messages.error(request, 'تعداد روز نامعتبر است.')
+        return redirect('dashboard:premium')
+    note = request.POST.get('note', '').strip()
+
+    if days == 0:
+        messages.error(request, 'تعداد روز نمی‌تواند صفر باشد.')
+        return redirect('dashboard:premium')
+
+    user = _find_user_by_query(query)
+    if not user:
+        messages.error(request, f'کاربری با «{query}» پیدا نشد.')
+        return redirect('dashboard:premium')
+
+    now = timezone.now()
+    sub = PremiumSubscription.objects.filter(user=user, is_active=True, end_date__gt=now).order_by('-end_date').first()
+
+    if sub:
+        new_end = sub.end_date + timedelta(days=days)
+        if new_end <= now:
+            # اشتراک منفی شد — لغو کن
+            sub.is_active = False
+            sub.end_date = now
+            sub.save(update_fields=['is_active', 'end_date'])
+            action_text = f'اشتراک «{user.username}» به دلیل کسر روز لغو شد.'
+        else:
+            sub.end_date = new_end
+            if note:
+                sub.note = (sub.note + ' | ' + note).strip(' | ')
+            sub.save(update_fields=['end_date', 'note'])
+            action_text = f'{"+" if days > 0 else ""}{days} روز برای «{user.username}» اعمال شد. پایان جدید: {new_end.strftime("%Y/%m/%d")}'
+    else:
+        if days <= 0:
+            messages.error(request, f'کاربر «{user.username}» اشتراک فعالی ندارد؛ نمی‌توان روز کم کرد.')
+            return redirect('dashboard:premium')
+        # اشتراک جدید هدیه‌ای بدون پلن
+        end = now + timedelta(days=days)
+        sub = PremiumSubscription.objects.create(
+            user=user, plan=None, start_date=now, end_date=end,
+            is_active=True, assigned_by=request.user,
+            note=note or f'هدیه {days} روزه از ادمین'
+        )
+        action_text = f'{days} روز پریمیوم هدیه به «{user.username}» داده شد. تا {end.strftime("%Y/%m/%d")}'
+
+    # اطلاع‌رسانی به کاربر
+    admin_user = User.objects.filter(username='admin').first() or request.user
+    if days > 0:
+        Notification.objects.create(
+            recipient=user, sender=admin_user,
+            notif_type='admin',
+            custom_text=f'🎁 {days} روز اشتراک پریمیوم به شما داده شد.'
+        )
+    else:
+        Notification.objects.create(
+            recipient=user, sender=admin_user,
+            notif_type='admin',
+            custom_text=f'⚠️ {abs(days)} روز اشتراک پریمیوم از شما کسر شد.'
+        )
+
+    messages.success(request, action_text)
     return redirect('dashboard:premium')

@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load custom_filters %}
 
 {% block title %}فروش های اخیر{% endblock %}
@@ -267,7 +268,7 @@
                 {% for item in sales_items %}
                 <tr>
                     <td class="cell-order">#{{ item.order_id }}</td>
-                    <td>{{ item.order.created_at|date:"Y/m/d H:i" }}</td>
+                    <td>{{ item.order.created_at|jalali:"Y/m/d H:i" }}</td>
                     <td>{{ item.product.name }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>{{ item.unit_price|round_thousands }} تومان</td>

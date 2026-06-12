@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}هشتگ‌ها - داشبورد GameBeat{% endblock %}
@@ -93,7 +94,7 @@
 
             <!-- Date -->
             <div style="font-size:0.78rem;color:var(--text-faint)">
-                <svg class="bi bi-calendar3 me-1" aria-hidden="true"><use href="#bi-calendar3"></use></svg>{{ ht.created_at|date:"Y/m/d" }}
+                <svg class="bi bi-calendar3 me-1" aria-hidden="true"><use href="#bi-calendar3"></use></svg>{{ ht.created_at|jalali:"Y/m/d" }}
             </div>
 
             <!-- Usage bar -->

@@ -1,3 +1,4 @@
+{% load jalali_filters %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -735,7 +736,7 @@
                 {% if subscription %}
                 <div class="subscription-badge">
                     <i class="fas fa-check-circle"></i>
-                    اشتراک فعال تا {{ subscription.end_date|date:"Y/m/d" }}
+                    اشتراک فعال تا {{ subscription.end_date|jalali:"Y/m/d" }}
                 </div>
                 {% endif %}
             </div>

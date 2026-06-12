@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}داشبورد کاربر | گیم‌بیت{% endblock %}
@@ -295,8 +296,8 @@
             <div class="subscription-info">
                 <h4>{{ subscription.plan.name }}</h4>
                 <div class="subscription-details">
-                    شروع: {{ subscription.start_date|date:"Y/m/d" }} | 
-                    پایان: {{ subscription.end_date|date:"Y/m/d" }} | 
+                    شروع: {{ subscription.start_date|jalali:"Y/m/d" }} | 
+                    پایان: {{ subscription.end_date|jalali:"Y/m/d" }} | 
                     {{ subscription.plan.price|floatformat:0 }} تومان/ماه
                 </div>
             </div>

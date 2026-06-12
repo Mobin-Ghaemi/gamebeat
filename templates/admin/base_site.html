@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+// Convert Gregorian dates to Jalali in Django admin
+(function () {
+  var g2j = (function () {
+    function toJalali(gy, gm, gd) {
+      var g_d_no, j_d_no, j_np, i;
+      var jy, jm, jd;
+      gy -= 1600; gm -= 1; gd -= 1;
+      g_d_no = 365 * gy + Math.floor((gy + 3) / 4) - Math.floor((gy + 99) / 100) + Math.floor((gy + 399) / 400);
+      for (i = 0; i < gm; ++i) g_d_no += [31,28+((gy+1600)%4===0&&((gy+1600)%100!==0||(gy+1600)%400===0)?1:0),31,30,31,30,31,31,30,31,30,31][i];
+      g_d_no += gd;
+      j_d_no = g_d_no - 79;
+      j_np = Math.floor(j_d_no / 12053); j_d_no %= 12053;
+      jy = 979 + 33 * j_np + 4 * Math.floor(j_d_no / 1461);
+      j_d_no %= 1461;
+      if (j_d_no >= 366) { jy += Math.floor((j_d_no - 1) / 365); j_d_no = (j_d_no - 1) % 365; }
+      for (i = 0; i < 11 && j_d_no >= [31,31,31,31,31,31,30,30,30,30,30][i]; ++i) j_d_no -= [31,31,31,31,31,31,30,30,30,30,30][i];
+      jm = i + 1; jd = j_d_no + 1;
+      return { y: jy, m: jm, d: jd };
+    }
+    var pd = function(n){ return ('۰۱۲۳۴۵۶۷۸۹'[Math.floor(n/10)]||'') + '۰۱۲۳۴۵۶۷۸۹'[n%10]; };
+    var pn = function(s){ return String(s).replace(/[0-9]/g, function(c){ return '۰۱۲۳۴۵۶۷۸۹'[c]; }); };
+
+    // matches: 2024-01-15, 2024-01-15 14:30, 2024-01-15T14:30
+    var RE = /\b(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?\b/g;
+
+    return function convertNode(node) {
+      if (node.nodeType === 3) {
+        var t = node.textContent;
+        var changed = false;
+        var result = t.replace(RE, function(_, gy, gm, gd, hh, mm, ss) {
+          changed = true;
+          var j = toJalali(+gy, +gm, +gd);
+          var s = pn(j.y) + '/' + pd(j.m) + '/' + pd(j.d);
+          if (hh !== undefined) s += ' ' + pd(+hh) + ':' + pd(+mm);
+          return s;
+        });
+        if (changed) node.textContent = result;
+      } else if (node.nodeType === 1 && !['SCRIPT','STYLE','INPUT','TEXTAREA','A'].includes(node.tagName)) {
+        for (var i = 0; i < node.childNodes.length; i++) convertNode(node.childNodes[i]);
+      }
+    };
+  })();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    g2j(document.getElementById('content') || document.body);
+  });
+})();
+</script>
+{% endblock %}

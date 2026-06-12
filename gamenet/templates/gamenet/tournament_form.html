@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
@@ -396,18 +397,18 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">تاریخ شروع *</label>
                         <input type="text" id="start_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/15" readonly>
-                        <input type="hidden" id="start_date_gregorian" name="start_date" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        <input type="hidden" id="start_date_gregorian" name="start_date" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|jalali:'Y-m-d H:i:s' }}{% endif %}">
                         <div id="startDateValidationError" class="help-text" style="color:#fda4af; display:none;"></div>
                         <div class="time-inline">
                             <label class="form-label time-inline-title">ساعت شروع (اختیاری)</label>
                             <div class="time-inline-row">
                                 <div class="time-field">
                                     <span class="time-chip">ساعت</span>
-                                    <input type="text" id="startHourInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۹ یا 09" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'H' }}{% endif %}">
+                                    <input type="text" id="startHourInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۹ یا 09" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|jalali:'H' }}{% endif %}">
                                 </div>
                                 <div class="time-field">
                                     <span class="time-chip">دقیقه</span>
-                                    <input type="text" id="startMinuteInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۵ یا 05" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|date:'i' }}{% endif %}">
+                                    <input type="text" id="startMinuteInput" class="form-input" inputmode="numeric" maxlength="2" placeholder="مثال: ۵ یا 05" value="{% if tournament and tournament.start_date %}{{ tournament.start_date|jalali:'i' }}{% endif %}">
                                 </div>
                             </div>
                         </div>
@@ -417,7 +418,7 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">تاریخ پایان (اختیاری)</label>
                         <input type="text" id="end_date_jalali" class="form-input jalali-input" placeholder="مثال: 1404/01/20" readonly>
-                        <input type="hidden" id="end_date_gregorian" name="end_date" value="{% if tournament and tournament.end_date %}{{ tournament.end_date|date:'Y-m-d H:i:s' }}{% endif %}">
+                        <input type="hidden" id="end_date_gregorian" name="end_date" value="{% if tournament and tournament.end_date %}{{ tournament.end_date|jalali:'Y-m-d H:i:s' }}{% endif %}">
                         <div id="endDateValidationError" class="help-text" style="color:#fda4af; display:none;"></div>
                         {{ form.end_date.errors }}
                     </div>

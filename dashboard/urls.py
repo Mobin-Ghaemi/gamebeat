@@ -46,4 +46,5 @@ urlpatterns = [
     path('premium/plan/<int:plan_id>/delete/', views.premium_plan_delete, name='premium_plan_delete'),
     path('premium/assign/', views.premium_assign, name='premium_assign'),
     path('premium/<int:sub_id>/revoke/', views.premium_revoke, name='premium_revoke'),
+    path('premium/adjust-days/', views.premium_adjust_days, name='premium_adjust_days'),
 ]

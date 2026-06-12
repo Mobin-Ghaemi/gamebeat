@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 
 {% block title %}بازی‌ها{% endblock %}
 
@@ -490,7 +491,7 @@
                 {% else %}
                 <span class="game-date">بدون ژانر</span>
                 {% endif %}
-                <span class="game-date">{{ game.created_at|date:"Y/m/d" }}</span>
+                <span class="game-date">{{ game.created_at|jalali:"Y/m/d" }}</span>
             </div>
 
             <p class="game-description">

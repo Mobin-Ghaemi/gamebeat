@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}حذف {{ gamenet.name }} | گیم‌بیت{% endblock %}
@@ -115,7 +116,7 @@
         <div class="gamenet-info">
             <h4>{{ gamenet.name }}</h4>
             <p>آدرس: {{ gamenet.slug }}</p>
-            <p>تاریخ ساخت: {{ gamenet.created_at|date:"Y/m/d" }}</p>
+            <p>تاریخ ساخت: {{ gamenet.created_at|jalali:"Y/m/d" }}</p>
         </div>
         
         <div class="confirm-warning">

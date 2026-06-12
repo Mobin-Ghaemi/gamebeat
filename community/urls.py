@@ -74,6 +74,7 @@ urlpatterns = [
     path('dm/<str:username>/', views.conversation, name='conversation'),
     path('dm/<str:username>/send/', views.send_message_ajax, name='send_message'),
     path('api/inbox/count/', views.inbox_unread_count, name='inbox_count'),
+    path('api/dm-list/', views.dm_list_api, name='dm_list_api'),
     path('dm/<str:username>/mark-read/', views.mark_conversation_read, name='mark_conversation_read'),
     path('dm/<str:username>/poll/', views.conversation_poll, name='conversation_poll'),
     # Block / Pin / Mute

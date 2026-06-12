@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load humanize %}
 {% load custom_filters %}
 
@@ -596,7 +597,7 @@
     <!-- Header -->
     <div class="page-header">
         <h1>📊 گزارشات و آمار</h1>
-        <p>{{ gamenet.name }} • {{ today|date:"Y/m/d" }}</p>
+        <p>{{ gamenet.name }} • {{ today|jalali:"Y/m/d" }}</p>
     </div>
     
     <!-- آمار افقی -->
@@ -827,7 +828,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
                         <span style="color: #10b981; font-weight: 600; font-size: 14px;">{{ order.total_amount|round_thousands }} تومان</span>
-                        <span style="color: rgba(255,255,255,0.4); font-size: 12px;">{{ order.created_at|date:"H:i - m/d" }}</span>
+                        <span style="color: rgba(255,255,255,0.4); font-size: 12px;">{{ order.created_at|jalali:"H:i - m/d" }}</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -853,8 +854,8 @@
                 {% for session in recent_sessions %}
                 <tr>
                     <td class="session-device">{{ session.device.name }}</td>
-                    <td class="session-time">{{ session.start_time|date:"Y/m/d H:i" }}</td>
-                    <td class="session-time">{{ session.end_time|date:"Y/m/d H:i" }}</td>
+                    <td class="session-time">{{ session.start_time|jalali:"Y/m/d H:i" }}</td>
+                    <td class="session-time">{{ session.end_time|jalali:"Y/m/d H:i" }}</td>
                     <td class="session-duration">{{ session.duration }} دقیقه</td>
                     <td class="session-cost">{{ session.total_cost|round_thousands }} تومان</td>
                 </tr>

@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}داشبورد {{ gamenet.name }} | گیم‌بیت{% endblock %}
@@ -374,7 +375,7 @@
                     </div>
                     <div class="panel-meta-item">
                         <i class="fas fa-calendar"></i>
-                        <span>{{ gamenet.created_at|date:"Y/m/d" }}</span>
+                        <span>{{ gamenet.created_at|jalali:"Y/m/d" }}</span>
                     </div>
                     {% if gamenet.address %}
                     <div class="panel-meta-item">

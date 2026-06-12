@@ -1,4 +1,5 @@
 {% extends 'community/base.html' %}
+{% load jalali_filters %}
 {% block title %}{{ game.name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -571,7 +572,7 @@
                                 {% else %}
                                 <span class="gd-rv-no-score">بدون امتیاز</span>
                                 {% endif %}
-                                <span class="gd-rv-date">{{ rv.created_at|date:"Y/m/d" }}</span>
+                                <span class="gd-rv-date">{{ rv.created_at|jalali:"Y/m/d" }}</span>
                                 {% if user == rv.user %}
                                 <button class="gd-rv-delete" onclick="deleteReview({{ rv.id }})"><svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف</button>
                                 {% endif %}

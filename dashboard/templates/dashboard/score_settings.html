@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
 {% block title %}تنظیمات امتیاز | داشبورد{% endblock %}
 {% block page_title %}تنظیمات امتیاز{% endblock %}
 
@@ -292,7 +293,7 @@
             </button>
             <div class="save-updated">
                 <div style="margin-bottom:2px;"><svg class="bi bi-clock-history" aria-hidden="true" style="margin-left:4px;"><use href="#bi-clock-history"></use></svg>آخرین ذخیره</div>
-                <div style="color:var(--text-muted);">{{ cfg.updated_at|date:"Y/m/d — H:i" }}</div>
+                <div style="color:var(--text-muted);">{{ cfg.updated_at|jalali:"Y/m/d — H:i" }}</div>
             </div>
         </div>
 

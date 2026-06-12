@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}کاربران - داشبورد GameBeat{% endblock %}
@@ -102,9 +103,9 @@
                         </div>
                     </td>
                     <td style="color:var(--text-muted);font-size:0.82rem">{{ u.email|default:"—" }}</td>
-                    <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap">{{ u.date_joined|date:"Y/m/d" }}</td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap">{{ u.date_joined|jalali:"Y/m/d" }}</td>
                     <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap">
-                        {% if u.last_login %}{{ u.last_login|date:"Y/m/d" }}{% else %}<span style="color:var(--text-faint)">هرگز</span>{% endif %}
+                        {% if u.last_login %}{{ u.last_login|jalali:"Y/m/d" }}{% else %}<span style="color:var(--text-faint)">هرگز</span>{% endif %}
                     </td>
                     <td style="color:var(--text-muted);font-size:0.82rem">
                         {% if u.post_count is not None %}{{ u.post_count }}{% else %}—{% endif %}

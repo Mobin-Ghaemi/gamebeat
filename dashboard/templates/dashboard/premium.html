@@ -1,4 +1,5 @@
 {% extends "dashboard/base.html" %}
+{% load jalali_filters %}
 {% block title %}اشتراک پریمیوم — GameBeat{% endblock %}
 {% block page_title %}<span style="color:#fbbf24">✦</span> اشتراک پریمیوم{% endblock %}
 
@@ -24,6 +25,41 @@
 .modal-dark{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:28px;}
 .progress-days{height:6px;background:rgba(251,191,36,.15);border-radius:3px;margin-top:8px;overflow:hidden;}
 .progress-days-bar{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:3px;}
+/* ── User Autocomplete ── */
+.uac-wrap { position:relative; }
+.uac-input { width:100%; }
+.uac-dropdown {
+    position:absolute; top:calc(100% + 4px); right:0; left:0; z-index:3000;
+    background:#1a1a2e; border:1px solid rgba(139,92,246,.3);
+    border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.6);
+    max-height:220px; overflow-y:auto; display:none;
+}
+.uac-dropdown.open { display:block; }
+.uac-item {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 13px; cursor:pointer; transition:background .12s;
+    border-bottom:1px solid rgba(255,255,255,.04);
+}
+.uac-item:last-child { border-bottom:none; }
+.uac-item:hover, .uac-item.focused { background:rgba(139,92,246,.12); }
+.uac-av {
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.78rem; font-weight:900; color:#fff;
+}
+.uac-info { flex:1; min-width:0; }
+.uac-name { font-size:.83rem; font-weight:700; color:#e0e0e0; }
+.uac-sub  { font-size:.7rem; color:#555; margin-top:1px; }
+.uac-loading { padding:14px; text-align:center; color:#555; font-size:.8rem; }
+.uac-empty   { padding:14px; text-align:center; color:#444; font-size:.8rem; }
+.adj-shortcut {
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    color:var(--text-muted); border-radius:8px; padding:4px 12px;
+    font-size:.75rem; cursor:pointer; font-family:'Vazirmatn',sans-serif;
+    transition:.15s;
+}
+.adj-shortcut:hover { background:rgba(139,92,246,.15); border-color:rgba(139,92,246,.4); color:#a78bfa; }
 </style>
 {% endblock %}
 
@@ -39,6 +75,9 @@
     </button>
     <button class="btn-ghost" onclick="document.getElementById('modalAssign').style.display='flex'">
       👤 تخصیص اشتراک
+    </button>
+    <button class="btn-ghost" style="color:#4ade80;border-color:rgba(74,222,128,.3);" onclick="document.getElementById('modalAdjust').style.display='flex'">
+      🎁 هدیه / کسر روز
     </button>
   </div>
 </div>
@@ -115,7 +154,7 @@
           <div class="sub-meta">
             @{{ sub.user.username }} ·
             {% if sub.plan %}{{ sub.plan.name }}{% endif %} ·
-            تا {{ sub.end_date|date:"Y/m/d" }}
+            تا {{ sub.end_date|jalali:"Y/m/d" }}
           </div>
           {% with total=sub.plan.duration_days|default:30 %}
           <div class="progress-days mt-1">
@@ -150,7 +189,7 @@
           <div class="sub-name" style="color:var(--text-muted);">@{{ sub.user.username }}</div>
           <div class="sub-meta">
             {% if sub.plan %}{{ sub.plan.name }}{% endif %} ·
-            <span class="exp-badge">منقضی {{ sub.end_date|date:"Y/m/d" }}</span>
+            <span class="exp-badge">منقضی {{ sub.end_date|jalali:"Y/m/d" }}</span>
           </div>
         </div>
       </div>
@@ -210,6 +249,77 @@
   </div>
 </div>
 
+<!-- ══ Modal: هدیه / کسر روز ══ -->
+<div id="modalAdjust" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center;">
+  <div class="modal-dark" style="width:100%;max-width:440px;">
+    <!-- هدر -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h5 style="margin:0;font-weight:800;" id="adjustModalTitle">🎁 مدیریت روزهای پریمیوم</h5>
+      <button onclick="document.getElementById('modalAdjust').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- تب‌بندی -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
+      <button type="button" id="tabGift" onclick="adjustTab('gift')"
+        style="flex:1;padding:9px;background:none;border:none;border-bottom:2px solid #4ade80;color:#4ade80;font-family:'Vazirmatn',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;">
+        🎁 هدیه روز
+      </button>
+      <button type="button" id="tabDeduct" onclick="adjustTab('deduct')"
+        style="flex:1;padding:9px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'Vazirmatn',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;">
+        ➖ کسر روز
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'dashboard:premium_adjust_days' %}">
+      {% csrf_token %}
+      <input type="hidden" name="days" id="adjustDaysHidden">
+
+      <!-- جستجوی کاربر -->
+      <div class="mb-3">
+        <label class="dash-label">جستجوی کاربر *</label>
+        <div class="uac-wrap">
+          <input type="text" id="adjustSearch" class="dash-input uac-input"
+            placeholder="یوزرنیم، ایمیل یا شماره موبایل..." dir="ltr"
+            autocomplete="off" oninput="uacSearch(this,'adjustDropdown','adjustUserQuery')">
+          <input type="hidden" name="user_query" id="adjustUserQuery" required>
+          <div class="uac-dropdown" id="adjustDropdown"></div>
+        </div>
+        <div id="adjustSelected" style="display:none;margin-top:6px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:7px 12px;font-size:.82rem;color:#a78bfa;align-items:center;gap:8px;">
+          <span id="adjustSelectedText"></span>
+          <button type="button" onclick="uacClear('adjustSearch','adjustUserQuery','adjustSelected')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.9rem;margin-right:auto;">✕</button>
+        </div>
+      </div>
+
+      <!-- تعداد روز -->
+      <div class="mb-3">
+        <label class="dash-label" id="adjustDaysLabel">تعداد روز هدیه *</label>
+        <input type="number" id="adjustDaysInput" class="dash-input" min="1" placeholder="مثلاً: 30" oninput="syncAdjustDays(this.value)" required>
+        <!-- میانبرها -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;" id="adjustShortcuts">
+          <button type="button" onclick="setAdjustDays(7)"  class="adj-shortcut">۷ روز</button>
+          <button type="button" onclick="setAdjustDays(14)" class="adj-shortcut">۱۴ روز</button>
+          <button type="button" onclick="setAdjustDays(30)" class="adj-shortcut">۱ ماه</button>
+          <button type="button" onclick="setAdjustDays(60)" class="adj-shortcut">۲ ماه</button>
+          <button type="button" onclick="setAdjustDays(90)" class="adj-shortcut">۳ ماه</button>
+          <button type="button" onclick="setAdjustDays(180)" class="adj-shortcut">۶ ماه</button>
+          <button type="button" onclick="setAdjustDays(365)" class="adj-shortcut">۱ سال</button>
+        </div>
+      </div>
+
+      <!-- یادداشت -->
+      <div class="mb-4">
+        <label class="dash-label">یادداشت (اختیاری)</label>
+        <input type="text" name="note" class="dash-input" id="adjustNote" placeholder="دلیل هدیه یا کسر...">
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn-ghost" onclick="document.getElementById('modalAdjust').style.display='none'">انصراف</button>
+        <button type="submit" class="btn-purple" id="adjustSubmitBtn">🎁 هدیه بده</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ══ Modal: تخصیص اشتراک ══ -->
 <div id="modalAssign" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center;">
   <div class="modal-dark" style="width:100%;max-width:440px;">
@@ -220,8 +330,16 @@
     <form method="post" action="{% url 'dashboard:premium_assign' %}">
       {% csrf_token %}
       <div class="mb-3">
-        <label class="dash-label">نام کاربری *</label>
-        <input type="text" name="username" class="dash-input" placeholder="username" dir="ltr" required>
+        <label class="dash-label">جستجوی کاربر *</label>
+        <div class="uac-wrap">
+          <input type="text" id="assignSearch" class="dash-input uac-input" placeholder="یوزرنیم، ایمیل یا شماره موبایل..." dir="ltr" autocomplete="off" oninput="uacSearch(this,'assignDropdown','assignUserQuery')">
+          <input type="hidden" name="user_query" id="assignUserQuery" required>
+          <div class="uac-dropdown" id="assignDropdown"></div>
+        </div>
+        <div id="assignSelected" style="display:none;margin-top:6px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:7px 12px;font-size:.82rem;color:#a78bfa;display:flex;align-items:center;gap:8px;">
+          <span id="assignSelectedText"></span>
+          <button type="button" onclick="uacClear('assignSearch','assignUserQuery','assignSelected')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.9rem;margin-right:auto;">✕</button>
+        </div>
       </div>
       <div class="mb-3">
         <label class="dash-label">پلن *</label>
@@ -249,6 +367,140 @@
 
 {% block extra_js %}
 <script>
+/* ── User Autocomplete (dropdown appended to body) ── */
+(function(){
+    const API = '{% url "dashboard:user_search_api" %}';
+    let _timer = null;
+    let _activeInput = null;
+
+    // یه dropdown global توی body می‌سازیم
+    const _dd = document.createElement('div');
+    _dd.id = 'uacGlobalDD';
+    _dd.style.cssText = 'position:fixed;z-index:99999;background:#1a1a2e;border:1px solid rgba(139,92,246,.35);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.7);max-height:240px;overflow-y:auto;display:none;min-width:280px;';
+    document.body.appendChild(_dd);
+
+    function positionDD(inp) {
+        const r = inp.getBoundingClientRect();
+        _dd.style.top  = (r.bottom + 4) + 'px';
+        _dd.style.left = r.left + 'px';
+        _dd.style.width = r.width + 'px';
+    }
+
+    function closeDD() {
+        _dd.style.display = 'none';
+        _dd.innerHTML = '';
+        _activeInput = null;
+    }
+
+    window.uacSearch = function(inp, dropdownId, hiddenId) {
+        const q = inp.value.trim();
+        document.getElementById(hiddenId).value = '';
+        if (q.length < 1) { closeDD(); return; }
+        _activeInput = {inp, dropdownId, hiddenId};
+        clearTimeout(_timer);
+        _dd.innerHTML = '<div style="padding:12px;text-align:center;color:#666;font-size:.8rem;">در حال جستجو...</div>';
+        _dd.style.display = 'block';
+        positionDD(inp);
+        _timer = setTimeout(() => {
+            fetch(API + '?q=' + encodeURIComponent(q), {credentials:'same-origin'})
+                .then(r => r.json())
+                .then(data => {
+                    positionDD(inp);
+                    if (!data.results || !data.results.length) {
+                        _dd.innerHTML = '<div style="padding:12px;text-align:center;color:#444;font-size:.8rem;">کاربری پیدا نشد</div>';
+                        return;
+                    }
+                    _dd.innerHTML = data.results.map(u => {
+                        const sub = [u.email, u.phone].filter(Boolean).join(' · ');
+                        const badge = u.is_staff ? '<span style="font-size:.62rem;color:#a78bfa;background:rgba(139,92,246,.15);border-radius:4px;padding:1px 5px;margin-right:4px;">ادمین</span>' : '';
+                        return `<div onclick="uacPick('${esc(u.username)}','${esc(u.email||'')}','${esc(u.phone||'')}','${inp.id}','${hiddenId}')"
+                            style="display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);"
+                            onmouseover="this.style.background='rgba(139,92,246,.12)'" onmouseout="this.style.background=''"
+                        >
+                            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#4c1d95,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:900;color:#fff;flex-shrink:0;">${u.initial}</div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:.83rem;font-weight:700;color:#e0e0e0;">@${u.username}${badge}</div>
+                                ${sub ? `<div style="font-size:.7rem;color:#555;margin-top:1px;">${sub}</div>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('');
+                }).catch(() => {
+                    _dd.innerHTML = '<div style="padding:12px;text-align:center;color:#f87171;font-size:.8rem;">خطا در جستجو</div>';
+                });
+        }, 300);
+    };
+
+    function esc(s){ return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+    window.uacPick = function(username, email, phone, inputId, hiddenId) {
+        document.getElementById(inputId).value = '@' + username;
+        document.getElementById(hiddenId).value = username;
+        closeDD();
+        const prefix = hiddenId.replace('UserQuery','');
+        const box = document.getElementById(prefix + 'Selected');
+        const txt = document.getElementById(prefix + 'SelectedText');
+        if (box && txt) {
+            txt.textContent = '@' + username + (email ? ' · ' + email : '') + (phone ? ' · ' + phone : '');
+            box.style.display = 'flex';
+        }
+    };
+
+    window.uacClear = function(inputId, hiddenId, selectedId) {
+        document.getElementById(inputId).value = '';
+        document.getElementById(hiddenId).value = '';
+        const box = document.getElementById(selectedId);
+        if (box) box.style.display = 'none';
+        closeDD();
+    };
+
+    // بستن با کلیک بیرون
+    document.addEventListener('click', e => {
+        if (!_dd.contains(e.target) && (!_activeInput || e.target !== _activeInput.inp)) closeDD();
+    });
+    // جابجایی با اسکرول
+    window.addEventListener('scroll', () => { if (_activeInput) positionDD(_activeInput.inp); }, true);
+})();
+
+/* ── Adjust Tabs ── */
+let _adjustMode = 'gift';
+
+function adjustTab(tab) {
+    _adjustMode = tab;
+    const isGift = tab === 'gift';
+    const label  = document.getElementById('adjustDaysLabel');
+    const btn    = document.getElementById('adjustSubmitBtn');
+    const tabG   = document.getElementById('tabGift');
+    const tabD   = document.getElementById('tabDeduct');
+    const inp    = document.getElementById('adjustDaysInput');
+
+    tabG.style.borderBottomColor = isGift ? '#4ade80' : 'transparent';
+    tabG.style.color = isGift ? '#4ade80' : 'var(--text-muted)';
+    tabD.style.borderBottomColor = !isGift ? '#f87171' : 'transparent';
+    tabD.style.color = !isGift ? '#f87171' : 'var(--text-muted)';
+
+    label.textContent = isGift ? 'تعداد روز هدیه *' : 'تعداد روز کسر *';
+    btn.innerHTML = isGift ? '🎁 هدیه بده' : '➖ کسر کن';
+    btn.style.background = isGift
+        ? 'linear-gradient(135deg,#16a34a,#22c55e)'
+        : 'linear-gradient(135deg,#dc2626,#ef4444)';
+
+    inp.value = '';
+    document.getElementById('adjustDaysHidden').value = '';
+}
+
+function setAdjustDays(n) {
+    document.getElementById('adjustDaysInput').value = n;
+    syncAdjustDays(n);
+}
+
+function syncAdjustDays(val) {
+    const n = parseInt(val) || 0;
+    document.getElementById('adjustDaysHidden').value = _adjustMode === 'gift' ? n : -n;
+}
+
+// init
+adjustTab('gift');
+
 function editPlan(id, name, duration, price, desc, features, isActive) {
   document.getElementById('planId').value = id;
   document.getElementById('planName').value = name;
@@ -269,6 +521,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('modalAddPlan').style.display = 'none';
     document.getElementById('modalAssign').style.display = 'none';
+    document.getElementById('modalAdjust').style.display = 'none';
   }
 });
 </script>

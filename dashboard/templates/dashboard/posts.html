@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}پست‌ها - داشبورد GameBeat{% endblock %}
@@ -136,7 +137,7 @@
                     <td style="color:#60a5fa;font-size:0.85rem">
                         <svg class="bi bi-chat-fill" aria-hidden="true" style="font-size:0.7rem;margin-left:3px"><use href="#bi-chat-fill"></use></svg>{{ post.comments_count_ann }}
                     </td>
-                    <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ post.created_at|date:"Y/m/d" }}</td>
+                    <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ post.created_at|jalali:"Y/m/d" }}</td>
                     <td>
                         <div style="display:flex;gap:5px;align-items:center">
                             {% if tab == 'pending' %}

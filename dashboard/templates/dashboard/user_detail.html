@@ -1,4 +1,5 @@
 {% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
 {% load static %}
 
 {% block title %}{{ u.username }} - داشبورد GameBeat{% endblock %}
@@ -72,11 +73,11 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
                 <div>
                     <div style="font-size:0.75rem;color:var(--text-faint);margin-bottom:4px">تاریخ عضویت</div>
-                    <div style="font-size:0.9rem;font-weight:600">{{ u.date_joined|date:"Y/m/d H:i" }}</div>
+                    <div style="font-size:0.9rem;font-weight:600">{{ u.date_joined|jalali:"Y/m/d H:i" }}</div>
                 </div>
                 <div>
                     <div style="font-size:0.75rem;color:var(--text-faint);margin-bottom:4px">آخرین ورود</div>
-                    <div style="font-size:0.9rem;font-weight:600">{% if u.last_login %}{{ u.last_login|date:"Y/m/d H:i" }}{% else %}<span style="color:var(--text-faint)">هرگز</span>{% endif %}</div>
+                    <div style="font-size:0.9rem;font-weight:600">{% if u.last_login %}{{ u.last_login|jalali:"Y/m/d H:i" }}{% else %}<span style="color:var(--text-faint)">هرگز</span>{% endif %}</div>
                 </div>
                 {% if profile %}
                 <div>
@@ -153,7 +154,7 @@
                     </span>
                 </td>
                 <td style="color:#f87171;font-size:0.85rem"><svg class="bi bi-heart-fill" aria-hidden="true" style="font-size:0.7rem"><use href="#bi-heart-fill"></use></svg> {{ post.likes_count }}</td>
-                <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ post.created_at|date:"Y/m/d" }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap">{{ post.created_at|jalali:"Y/m/d" }}</td>
                 <td>
                     <a href="{% url 'dashboard:post_detail' post.pk %}" class="btn-ghost" style="padding:4px 10px;text-decoration:none;font-size:0.78rem">
                         <svg class="bi bi-eye" aria-hidden="true"><use href="#bi-eye"></use></svg>

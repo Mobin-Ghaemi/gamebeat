@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load humanize %}
 {% load custom_filters %}
 
@@ -510,7 +511,7 @@
             </div>
             <div class="recent-sale-left">
                 <div class="recent-sale-amount">{{ order.total_amount|round_thousands }} تومان</div>
-                <div class="recent-sale-time">{{ order.created_at|date:"H:i" }} - {{ order.created_at|date:"Y/m/d" }}</div>
+                <div class="recent-sale-time">{{ order.created_at|jalali:"H:i" }} - {{ order.created_at|jalali:"Y/m/d" }}</div>
             </div>
         </div>
         {% endfor %}

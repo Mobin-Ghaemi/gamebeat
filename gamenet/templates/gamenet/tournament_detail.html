@@ -1,4 +1,5 @@
 {% extends 'gamenet/base_panel.html' %}
+{% load jalali_filters %}
 {% load humanize %}
 
 {% block title %}{{ tournament.name }}{% endblock %}
@@ -645,11 +646,11 @@
             </div>
             <div class="meta-item">
                 <div class="meta-label">تاریخ شروع</div>
-                <div class="meta-value">{{ tournament.start_date|date:'Y/m/d H:i' }}</div>
+                <div class="meta-value">{{ tournament.start_date|jalali:'Y/m/d H:i' }}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">تاریخ پایان</div>
-                <div class="meta-value">{{ tournament.end_date|date:'Y/m/d H:i'|default:'---' }}</div>
+                <div class="meta-value">{{ tournament.end_date|jalali:'Y/m/d H:i'|default:'---' }}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">ثبت‌نام</div>
