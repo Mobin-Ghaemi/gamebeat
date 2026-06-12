@@ -20,6 +20,16 @@ import re
 import json
 import urllib.request
 import urllib.parse
+import jdatetime
+
+
+def _to_jalali(dt, fmt='%Y/%m/%d'):
+    """تبدیل datetime میلادی به شمسی با اعداد فارسی"""
+    _pd = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt)
+    jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+    return jdt.strftime(fmt).translate(_pd)
 
 
 def get_or_create_gamer_profile(user):
@@ -343,7 +353,7 @@ def gamer_profile(request, username):
         labels, view_data, follow_data = [], [], []
         for i in range(13, -1, -1):
             d = today - timedelta(days=i)
-            labels.append(d.strftime('%m/%d'))
+            labels.append(jdatetime.date.fromgregorian(date=d).strftime('%m/%d').translate(str.maketrans('0123456789','۰۱۲۳۴۵۶۷۸۹')))
             view_data.append(view_map.get(d, 0))
             follow_data.append(follow_map.get(d, 0))
 
@@ -767,7 +777,7 @@ def post_comments_list(request, post_id):
             'full_name': u.get_full_name() or u.username,
             'avatar': avatar_url,
             'content': c.content,
-            'created_at': c.created_at.strftime('%Y-%m-%d %H:%M'),
+            'created_at': _to_jalali(c.created_at, '%Y/%m/%d %H:%M'),
         })
     return JsonResponse({'comments': data, 'total': post.comments_count})
 
@@ -2403,7 +2413,7 @@ def add_game_review(request, game_id):
             'user': request.user.get_full_name() or request.user.username,
             'username': request.user.username,
             'avatar': avatar_url,
-            'created_at': review.created_at.strftime('%Y/%m/%d'),
+            'created_at': _to_jalali(review.created_at, '%Y/%m/%d'),
         },
         'review_avg': review_avg,
         'review_count': reviews.count(),

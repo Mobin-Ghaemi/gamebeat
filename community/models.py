@@ -1103,6 +1103,52 @@ class UserSession(models.Model):
 
         return result
 
+    @classmethod
+    def check_and_award_zarban(cls, user):
+        """
+        کل ثانیه‌های آنلاین کاربر (همه سشن‌ها) را حساب می‌کند.
+        به ازای هر ساعت کامل جدید، ضربان واریز می‌کند.
+        cross-session: ۵۰ دقیقه لاگ‌اوت + ۱۰ دقیقه = ۱ ساعت = ۱ جایزه
+        """
+        try:
+            total_map = cls.total_seconds_in_period([user.id])
+            total_secs = total_map.get(user.id, 0)
+            total_hours = int(total_secs // 3600)
+
+            # خواندن کیف پول
+            from community.models import ZarbanWallet, ZarbanTransaction, Notification, ScoreSettings
+            wallet = ZarbanWallet.get_or_create_for(user)
+
+            new_hours = total_hours - wallet.online_zarban_hours
+            if new_hours <= 0:
+                return
+
+            cfg = ScoreSettings.get()
+            reward_per_hour = cfg.online_hour_score  # از تنظیمات ادمین
+
+            total_reward = new_hours * reward_per_hour
+            wallet.balance += total_reward
+            wallet.online_zarban_hours = total_hours
+            wallet.save(update_fields=['balance', 'online_zarban_hours', 'updated_at'])
+
+            ZarbanTransaction.objects.create(
+                wallet=wallet,
+                amount=total_reward,
+                tx_type=ZarbanTransaction.TX_CREDIT,
+                reason=f'جایزه {new_hours} ساعت حضور آنلاین',
+            )
+
+            # نوتیف به کاربر
+            admin_user = User.objects.filter(username='admin').first()
+            Notification.objects.create(
+                recipient=user,
+                sender=admin_user,
+                notif_type='zarban',
+                custom_text=f'💜 {total_reward} ضربان بابت {new_hours} ساعت حضور آنلاین به شما تعلق گرفت!',
+            )
+        except Exception:
+            pass  # هیچ‌وقت نباید سایت را خراب کند
+
 
 # ════════════════════════════════════════════════════════
 #  تنظیمات امتیاز  —  Singleton (همیشه یک رکورد با pk=1)
@@ -1168,6 +1214,8 @@ class ZarbanWallet(models.Model):
     """کیف پول ضربان هر کاربر — یک رکورد به ازای هر User"""
     user    = models.OneToOneField(User, on_delete=models.CASCADE, related_name='zarban_wallet')
     balance = models.PositiveIntegerField(default=0, verbose_name='موجودی ضربان')
+    # تعداد ساعت‌هایی که تا الان بابت آنلاین بودن ضربان گرفته
+    online_zarban_hours = models.PositiveIntegerField(default=0, verbose_name='ساعت‌های جایزه‌داده‌شده')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

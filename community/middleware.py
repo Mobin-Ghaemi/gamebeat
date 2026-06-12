@@ -36,7 +36,14 @@ class OnlineTrackingMiddleware:
         # به‌روزرسانی یا ایجاد سشن (lazy import تا از circular import جلوگیری شود)
         try:
             from community.models import UserSession
-            UserSession.get_or_create_active(request.user)
+            session = UserSession.get_or_create_active(request.user)
+
+            # هر ۵ دقیقه یک‌بار چک کن آیا ساعت جدیدی کامل شده
+            from django.core.cache import cache
+            award_key = f'zarban_check_{request.user.id}'
+            if not cache.get(award_key):
+                cache.set(award_key, True, 5 * 60)  # هر ۵ دقیقه
+                UserSession.check_and_award_zarban(request.user)
         except Exception:
             pass  # هیچ‌وقت نباید سایت را خراب کند
 

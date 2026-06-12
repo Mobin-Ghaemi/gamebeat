@@ -207,7 +207,10 @@ class Session(models.Model):
         ordering = ['-start_time']
 
     def __str__(self):
-        return f"جلسه دستگاه #{self.device.number} - {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+        import jdatetime
+        _pd = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+        jt = jdatetime.datetime.fromgregorian(datetime=self.start_time)
+        return f"جلسه دستگاه #{self.device.number} - {jt.strftime('%Y-%m-%d %H:%M').translate(_pd)}"
 
     def calculate_duration_minutes(self):
         """محاسبه مدت زمان به دقیقه"""

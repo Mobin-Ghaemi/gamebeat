@@ -12,12 +12,20 @@ from datetime import timedelta, date
 import urllib.request
 import urllib.parse
 import os
+import jdatetime
 from .models import Game, GENRE_CHOICES, PLATFORM_CHOICES
 from community.models import Post, Comment, Hashtag, GamerProfile, PostLike, PostReaction, GameBacklog
 from community.models import Notification, Conversation, Message, ScoreSettings
 from community.models import ZarbanWallet, ZarbanTransaction
 from community.models import SpinWheel, SpinWheelItem, SpinRecord
 from community.models import PremiumPlan, PremiumSubscription
+
+
+def _to_jalali(dt, fmt='%Y/%m/%d'):
+    _pd = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+    if timezone.is_aware(dt):
+        dt = timezone.localtime(dt)
+    return jdatetime.datetime.fromgregorian(datetime=dt).strftime(fmt).translate(_pd)
 
 
 def _int(val, default=0):
@@ -97,7 +105,9 @@ def dashboard_index(request):
     chart_posts = []
     for i in range(29, -1, -1):
         day = (now - timedelta(days=i)).date()
-        chart_labels.append(f'{day.month}/{day.day}')
+        _jday = jdatetime.date.fromgregorian(date=day)
+        _pd = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+        chart_labels.append(f'{_jday.month}/{_jday.day}'.translate(_pd))
         chart_users.append(user_by_day.get(day, 0))
         chart_posts.append(post_by_day.get(day, 0))
 
@@ -1080,7 +1090,7 @@ def premium_assign(request):
         Notification.objects.create(
             recipient=user, sender=superuser,
             notif_type='admin',
-            custom_text=f'🌟 اشتراک پریمیوم «{plan.name}» برای شما فعال شد! تا {end.strftime("%Y/%m/%d")} معتبر است.'
+            custom_text=f'🌟 اشتراک پریمیوم «{plan.name}» برای شما فعال شد! تا {_to_jalali(end)} معتبر است.'
         )
     messages.success(request, f'اشتراک پریمیوم برای «{user.username}» فعال شد.')
     return redirect('dashboard:premium')
@@ -1136,7 +1146,7 @@ def premium_adjust_days(request):
             if note:
                 sub.note = (sub.note + ' | ' + note).strip(' | ')
             sub.save(update_fields=['end_date', 'note'])
-            action_text = f'{"+" if days > 0 else ""}{days} روز برای «{user.username}» اعمال شد. پایان جدید: {new_end.strftime("%Y/%m/%d")}'
+            action_text = f'{"+" if days > 0 else ""}{days} روز برای «{user.username}» اعمال شد. پایان جدید: {_to_jalali(new_end)}'
     else:
         if days <= 0:
             messages.error(request, f'کاربر «{user.username}» اشتراک فعالی ندارد؛ نمی‌توان روز کم کرد.')
@@ -1148,7 +1158,7 @@ def premium_adjust_days(request):
             is_active=True, assigned_by=request.user,
             note=note or f'هدیه {days} روزه از ادمین'
         )
-        action_text = f'{days} روز پریمیوم هدیه به «{user.username}» داده شد. تا {end.strftime("%Y/%m/%d")}'
+        action_text = f'{days} روز پریمیوم هدیه به «{user.username}» داده شد. تا {_to_jalali(end)}'
 
     # اطلاع‌رسانی به کاربر
     admin_user = User.objects.filter(username='admin').first() or request.user
