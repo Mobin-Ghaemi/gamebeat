@@ -204,7 +204,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> روی پست شما کامنت گذاشت</span>
                     {% if n.custom_text %}
-                    <span class="notif-preview">💬 {{ n.custom_text|truncatechars:55 }}</span>
+                    <span class="notif-preview"><svg class="bi bi-chat-dots" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> {{ n.custom_text|truncatechars:55 }}</span>
                     {% elif n.post %}
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
                     {% endif %}
@@ -465,7 +465,7 @@
                 {% if n.notif_type == 'profile_view' and n.sender and n.sender.gamer_profile.avatar %}
                     <img src="{{ n.sender.gamer_profile.avatar.url }}" class="notif-av-img" alt="">
                 {% else %}
-                    <div class="notif-av-ph" style="background:linear-gradient(135deg,#3b3758,#2d2b3d);font-size:1.2rem;">👁️</div>
+                    <div class="notif-av-ph" style="background:linear-gradient(135deg,#3b3758,#2d2b3d);"><svg class="bi bi-eye" style="width:1.1rem;height:1.1rem;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-eye"></use></svg></div>
                 {% endif %}
             </div>
             <div class="notif-body" style="flex:1;">

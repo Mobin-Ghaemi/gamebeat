@@ -1,188 +1,228 @@
 {% extends "community/base.html" %}
 {% load jalali_filters %}
 {% load static %}
+{% load community_tags %}
 {% block title %}بازدیدکنندگان پروفایل — GameBeat{% endblock %}
 
 {% block extra_css %}
 <style>
-/* ── layout ── */
-.wvm-wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 80px; }
+:root { --gold:#fbbf24; --purple:#8b5cf6; --purple-dim:rgba(139,92,246,.15); }
 
-/* ── stats bar ── */
-.wvm-stats { display: flex; gap: 12px; margin-bottom: 28px; }
-.wvm-stat  { flex: 1; background: var(--bg-card); border: 1px solid var(--border);
-             border-radius: 14px; padding: 16px; text-align: center; }
-.wvm-stat-val { font-size: 1.9rem; font-weight: 900; color: #fbbf24; }
-.wvm-stat-lbl { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+/* ── page wrapper ── */
+.wvm-page { max-width: 700px; margin: 0 auto; padding: 20px 14px 100px; }
+
+/* ── top bar ── */
+.wvm-topbar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+}
+.wvm-back {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-card); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 1.1rem; text-decoration: none;
+  transition: .15s; flex-shrink: 0;
+}
+.wvm-back:hover { border-color: var(--purple); color: var(--purple); }
+.wvm-heading { flex: 1; }
+.wvm-heading h1 { font-size: 1.25rem; font-weight: 900; margin: 0; }
+.wvm-heading p  { font-size: .78rem; color: var(--text-muted); margin: 2px 0 0; }
+
+/* ── stats row ── */
+.wvm-stats {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+  margin-bottom: 28px;
+}
+.wvm-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px 10px; text-align: center;
+  position: relative; overflow: hidden; transition: .18s;
+}
+.wvm-stat::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--glow, transparent); opacity: 0; transition: .3s;
+}
+.wvm-stat:hover::before { opacity: 1; }
+.wvm-stat.s1 { --glow: linear-gradient(135deg,rgba(251,191,36,.07),transparent); }
+.wvm-stat.s2 { --glow: linear-gradient(135deg,rgba(139,92,246,.07),transparent); }
+.wvm-stat.s3 { --glow: linear-gradient(135deg,rgba(34,197,94,.07),transparent); }
+.wvm-stat-icon { font-size: 1.4rem; margin-bottom: 6px; }
+.wvm-stat-val  {
+  font-size: 2rem; font-weight: 900; line-height: 1;
+  background: var(--grad, var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.wvm-stat.s1 .wvm-stat-val { --grad: linear-gradient(135deg,#fbbf24,#f59e0b); }
+.wvm-stat.s2 .wvm-stat-val { --grad: linear-gradient(135deg,#a78bfa,#8b5cf6); }
+.wvm-stat.s3 .wvm-stat-val { --grad: linear-gradient(135deg,#4ade80,#22c55e); }
+.wvm-stat-lbl  { font-size: .72rem; color: var(--text-muted); margin-top: 4px; }
+
+/* ── section header ── */
+.wvm-sec-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.wvm-sec-hdr h2 {
+  font-size: .95rem; font-weight: 800; color: var(--text-main);
+  display: flex; align-items: center; gap: 7px; margin: 0;
+}
+.wvm-sec-hdr span { font-size: .8rem; color: var(--text-muted); }
 
 /* ── viewer card ── */
-.viewer-card { display: flex; align-items: center; gap: 14px;
-               background: var(--bg-card); border: 1px solid var(--border);
-               border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
-               transition: .18s; }
-.viewer-card:hover { border-color: rgba(139,92,246,.4); }
-.viewer-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.viewer-info   { flex: 1; min-width: 0; }
-.viewer-name   { font-weight: 700; font-size: .95rem; color: var(--text-main); }
-.viewer-meta   { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
-.viewer-time   { font-size: .7rem; color: var(--text-faint); white-space: nowrap; }
+.viewer-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 16px; margin-bottom: 8px;
+  text-decoration: none; transition: .18s; position: relative;
+  overflow: hidden;
+}
+.viewer-card::after {
+  content: ''; position: absolute; inset: 0; opacity: 0;
+  background: linear-gradient(90deg, var(--purple-dim), transparent);
+  transition: .2s; pointer-events: none;
+}
+.viewer-card:hover { border-color: rgba(139,92,246,.4); transform: translateX(-2px); }
+.viewer-card:hover::after { opacity: 1; }
 
-/* ── blur / paywall ── */
-.blur-grid     { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-@media(max-width:480px){ .blur-grid { grid-template-columns: repeat(3,1fr); } }
-.blur-avatar-wrap { position: relative; border-radius: 14px; overflow: hidden;
-                    background: var(--bg-card2); aspect-ratio: 1; }
-.blur-avatar-wrap img { width: 100%; height: 100%; object-fit: cover;
-                         filter: blur(12px) brightness(.7); transform: scale(1.1);
-                         pointer-events: none; user-select: none; }
-.blur-avatar-wrap .blur-lock { position: absolute; inset: 0; display: flex;
-                                 align-items: center; justify-content: center;
-                                 font-size: 1.3rem; }
+.v-avatar {
+  width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
+  flex-shrink: 0; border: 2px solid var(--border);
+}
+.v-avatar-ph {
+  width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg,#8b5cf6,#6366f1);
+  border: 2px solid rgba(139,92,246,.4);
+}
 
-/* ── paywall box ── */
-.paywall-box { background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(251,191,36,.06));
-               border: 1px solid rgba(251,191,36,.25); border-radius: 20px;
-               padding: 28px 24px; text-align: center; }
-.paywall-title { font-size: 1.2rem; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
-.paywall-sub   { font-size: .85rem; color: var(--text-muted); margin-bottom: 24px; }
-.plan-pill     { display: inline-flex; flex-direction: column; align-items: center;
-                 background: var(--bg-card); border: 1px solid var(--border);
-                 border-radius: 14px; padding: 14px 20px; min-width: 120px;
-                 cursor: pointer; transition: .18s; }
-.plan-pill:hover, .plan-pill.selected { border-color: rgba(251,191,36,.5);
-                                         background: rgba(251,191,36,.06); }
-.plan-pill-name  { font-weight: 800; font-size: .9rem; color: var(--text-main); }
-.plan-pill-dur   { font-size: .72rem; color: var(--text-muted); margin: 3px 0; }
-.plan-pill-price { font-size: 1rem; font-weight: 900; color: #fbbf24; }
-.btn-premium-buy { background: linear-gradient(135deg, #f59e0b, #fbbf24);
-                   color: #1c1c26; border: none; border-radius: 50px;
-                   padding: 12px 32px; font-size: .95rem; font-weight: 900;
-                   cursor: pointer; margin-top: 20px; transition: .18s; }
-.btn-premium-buy:hover { opacity: .9; transform: translateY(-1px); }
+.v-info  { flex: 1; min-width: 0; }
+.v-name  {
+  font-weight: 700; font-size: .95rem; color: var(--text-main);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.v-user  { font-size: .78rem; color: var(--text-muted); margin-top: 1px; }
+.v-badge {
+  font-size: .65rem; padding: 1px 7px; border-radius: 20px;
+  font-weight: 700; white-space: nowrap;
+}
+.v-badge.premium { background:rgba(59,130,246,.12); color:#60a5fa; border:1px solid rgba(59,130,246,.25); }
+.v-badge.follower { background:rgba(34,197,94,.1); color:#4ade80; border:1px solid rgba(34,197,94,.25); }
 
-/* ── premium badge ── */
-.premium-label { display: inline-flex; align-items: center; gap: 6px;
-                 background: rgba(251,191,36,.12); color: #fbbf24;
-                 border: 1px solid rgba(251,191,36,.3); border-radius: 20px;
-                 padding: 4px 14px; font-size: .8rem; font-weight: 700; margin-bottom: 20px; }
+.v-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.v-time  { font-size: .72rem; color: var(--text-faint); white-space: nowrap; }
+.v-arrow { color: var(--text-faint); font-size: .85rem; }
 
-/* ── section title ── */
-.wvm-section-title { font-size: 1rem; font-weight: 800; color: var(--text-main);
-                      margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+/* ── empty state ── */
+.wvm-empty {
+  text-align: center; padding: 64px 0 40px;
+}
+.wvm-empty-icon {
+  font-size: 4rem; margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.wvm-empty h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px; }
+.wvm-empty p  { font-size: .85rem; color: var(--text-muted); margin: 0; }
+
+/* ── skeleton loader ── */
+.skeleton {
+  background: linear-gradient(90deg,var(--bg-card) 25%,var(--bg-card2,#1e1e2e) 50%,var(--bg-card) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite;
+  border-radius: 10px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="wvm-wrap">
+<div class="wvm-page">
 
-  <!-- هدر -->
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-    <a href="javascript:history.back()" style="color:var(--text-muted);font-size:1.2rem;">←</a>
-    <div>
-      <h1 style="font-size:1.3rem;font-weight:900;margin:0;">👁️ بازدیدکنندگان پروفایل</h1>
-      <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px;">۳۰ روز گذشته</div>
+  <!-- top bar -->
+  <div class="wvm-topbar">
+    <a href="javascript:history.back()" class="wvm-back">←</a>
+    <div class="wvm-heading">
+      <h1><svg class="bi bi-eye" style="width:1.1em;height:1.1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-eye"></use></svg> بازدیدکنندگان پروفایل</h1>
+      <p>۳۰ روز گذشته</p>
     </div>
-    {% if is_premium %}
-    <div class="premium-label" style="margin:0 auto 0 0;">✦ پریمیوم</div>
-    {% endif %}
+    <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);
+                border-radius:20px;padding:5px 14px;font-size:.78rem;font-weight:700;color:var(--gold);">
+      <svg class="bi bi-gem" style="width:.85em;height:.85em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> پریمیوم
+    </div>
   </div>
 
-  <!-- آمار -->
+  <!-- stats -->
   <div class="wvm-stats">
-    <div class="wvm-stat">
+    <div class="wvm-stat s1">
+      <div class="wvm-stat-icon"><svg class="bi bi-people-fill" style="width:1.4rem;height:1.4rem;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-people-fill"></use></svg></div>
       <div class="wvm-stat-val">{{ unique_count }}</div>
-      <div class="wvm-stat-lbl">بازدیدکننده کل</div>
+      <div class="wvm-stat-lbl">بازدیدکننده</div>
     </div>
-    <div class="wvm-stat">
+    <div class="wvm-stat s2">
+      <div class="wvm-stat-icon"><svg class="bi bi-calendar3" style="width:1.4rem;height:1.4rem;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-calendar3"></use></svg></div>
+      <div class="wvm-stat-val">{{ week_count }}</div>
+      <div class="wvm-stat-lbl">این هفته</div>
+    </div>
+    <div class="wvm-stat s3">
+      <div class="wvm-stat-icon"><svg class="bi bi-fire" style="width:1.4rem;height:1.4rem;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-fire"></use></svg></div>
       <div class="wvm-stat-val">{{ today_count }}</div>
-      <div class="wvm-stat-lbl">بازدید امروز</div>
+      <div class="wvm-stat-lbl">امروز</div>
     </div>
   </div>
 
   {% if unique_count == 0 %}
-  <!-- هیچ بازدیدی نبوده -->
-  <div style="text-align:center;padding:48px 0;color:var(--text-muted);">
-    <div style="font-size:2.5rem;margin-bottom:12px;">👻</div>
-    <div style="font-size:1rem;font-weight:700;">هنوز کسی پروفایلت رو ندیده</div>
-    <div style="font-size:.8rem;margin-top:6px;">محتوا پست کن تا دیده بشی!</div>
+  <!-- empty -->
+  <div class="wvm-empty">
+    <div class="wvm-empty-icon"><svg class="bi bi-person-circle" style="width:4rem;height:4rem;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-person-circle"></use></svg></div>
+    <h3>هنوز کسی پروفایلت رو ندیده</h3>
+    <p>محتوا پست کن تا دیده بشی!</p>
   </div>
-
-  {% elif is_premium %}
-  <!-- ── کاربر پریمیوم: لیست واقعی ── -->
-  <div class="wvm-section-title">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="color:#fbbf24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-    کسانی که پروفایلت رو دیدن
-  </div>
-  {% for v in viewers %}
-  <a href="{% url 'community:profile' v.viewer.username %}" style="text-decoration:none;">
-    <div class="viewer-card">
-      {% if v.viewer.gamer_profile.avatar %}
-        <img src="{{ v.viewer.gamer_profile.avatar.url }}" alt="" class="viewer-avatar">
-      {% else %}
-        <div class="viewer-avatar" style="background:linear-gradient(135deg,var(--purple),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;">
-          {{ v.viewer.username|slice:":1"|upper }}
-        </div>
-      {% endif %}
-      <div class="viewer-info">
-        <div class="viewer-name">
-          {{ v.viewer.get_full_name|default:v.viewer.username }}
-          {% if v.viewer.gamer_profile.is_premium %}
-          <span style="font-size:.65rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:1px 6px;margin-right:4px;">✦</span>
-          {% endif %}
-        </div>
-        <div class="viewer-meta">@{{ v.viewer.username }}</div>
-      </div>
-      <div class="viewer-time">{{ v.viewed_at|timesince }} پیش</div>
-    </div>
-  </a>
-  {% endfor %}
 
   {% else %}
-  <!-- ── کاربر غیرپریمیوم: تار + paywall ── -->
-  {% if blur_count > 0 %}
-  <div class="wvm-section-title">
-    <span>👤</span> {{ unique_count }} نفر پروفایلت رو دیدن
+  <!-- section header -->
+  <div class="wvm-sec-hdr">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="color:var(--gold)">
+        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+      </svg>
+      کسانی که اومدن سرت
+    </h2>
+    <span>{{ viewers|length }} نفر</span>
   </div>
 
-  <!-- آواتارهای تار -->
-  <div class="blur-grid">
-    {% for i in "123456789012"|make_list %}
-    {% if forloop.counter <= blur_count %}
-    <div class="blur-avatar-wrap">
-      <img src="{% static 'images/avatar-placeholder.svg' %}" alt="">
-      <div class="blur-lock">🔒</div>
-    </div>
+  <!-- viewer list -->
+  {% for v in viewers %}
+  <a href="{% url 'community:profile' v.viewer.username %}" class="viewer-card">
+
+    {% if v.viewer.gamer_profile.avatar %}
+      <img src="{{ v.viewer.gamer_profile.avatar.url }}" alt="" class="v-avatar">
+    {% else %}
+      <div class="v-avatar-ph">{{ v.viewer.username|slice:":1"|upper }}</div>
     {% endif %}
-    {% endfor %}
-  </div>
-  {% endif %}
 
-  <!-- باکس خرید -->
-  <div class="paywall-box">
-    <div style="font-size:2rem;margin-bottom:10px;">🌟</div>
-    <div class="paywall-title">ببین کی پروفایلت رو دیده!</div>
-    <div class="paywall-sub">
-      با اشتراک پریمیوم، لیست کامل بازدیدکننده‌ها رو به‌صورت آنی ببین
-      و هر بار که کسی پروفایلت رو ببینه نوتیف بگیر.
-    </div>
-
-    {% if plans %}
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
-      {% for plan in plans %}
-      <div class="plan-pill {% if forloop.first %}selected{% endif %}">
-        <div class="plan-pill-name">{{ plan.name }}</div>
-        <div class="plan-pill-dur">{{ plan.get_duration_display }}</div>
-        <div class="plan-pill-price">{{ plan.price|floatformat:0 }} تومان</div>
+    <div class="v-info">
+      <div class="v-name">
+        {{ v.viewer.get_full_name|default:v.viewer.username }}
+        {% verified_badge v.viewer.gamer_profile 'sm' %}
+        {% if v.viewer.gamer_profile.is_premium %}
+          <span class="v-badge premium"><svg class="bi bi-gem" style="width:.7em;height:.7em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> پریمیوم</span>
+        {% endif %}
+        {% if v.is_follower %}
+          <span class="v-badge follower">دنبالت می‌کنه</span>
+        {% endif %}
       </div>
-      {% endfor %}
+      <div class="v-user">@{{ v.viewer.username }}</div>
     </div>
-    {% endif %}
 
-    <a href="mailto:support@gamebeat.ir?subject=خرید اشتراک پریمیوم">
-      <button class="btn-premium-buy">✦ خرید اشتراک پریمیوم</button>
-    </a>
-    <div style="font-size:.72rem;color:var(--text-faint);margin-top:10px;">پشتیبانی: support@gamebeat.ir</div>
-  </div>
+    <div class="v-right">
+      <div class="v-time">{{ v.viewed_at|timesince }} پیش</div>
+      <div class="v-arrow">›</div>
+    </div>
+
+  </a>
+  {% endfor %}
   {% endif %}
 
 </div>

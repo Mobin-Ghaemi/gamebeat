@@ -54,14 +54,22 @@ RANK_CHOICES = [
 
 
 class GamerProfile(models.Model):
+    NAME_DISPLAY_CHOICES = [
+        ('full', 'نام و نام خانوادگی'),
+        ('nickname', 'نام مستعار'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='gamer_profile', verbose_name='کاربر')
     bio = models.TextField(max_length=500, blank=True, verbose_name='درباره من')
+    nickname = models.CharField(max_length=50, blank=True, verbose_name='نام مستعار')
+    name_display = models.CharField(max_length=10, choices=NAME_DISPLAY_CHOICES, default='full', verbose_name='نمایش نام در پروفایل')
     avatar = models.ImageField(upload_to='community/avatars/', blank=True, null=True, verbose_name='آواتار')
     banner = models.ImageField(upload_to='community/banners/', blank=True, null=True, verbose_name='بنر پروفایل')
     city = models.CharField(max_length=20, choices=CITY_CHOICES, blank=True, verbose_name='شهر')
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES, default='pc', verbose_name='پلتفرم اصلی')
     platforms = models.JSONField(default=list, blank=True, verbose_name='پلتفرم‌ها')
     gaming_style = models.CharField(max_length=20, choices=GAMING_STYLE_CHOICES, blank=True, verbose_name='سبک بازی')
+    gaming_styles = models.JSONField(default=list, blank=True, verbose_name='سبک‌های بازی')
     rank = models.CharField(max_length=15, choices=RANK_CHOICES, blank=True, verbose_name='رنک')
     favorite_games = models.TextField(blank=True, verbose_name='بازی‌های مورد علاقه')
     phone = models.CharField(max_length=20, blank=True, verbose_name='شماره تماس')
@@ -70,6 +78,7 @@ class GamerProfile(models.Model):
     psn_id = models.CharField(max_length=100, blank=True, verbose_name='PSN ID')
     xbox_gamertag = models.CharField(max_length=100, blank=True, verbose_name='Xbox Gamertag')
     total_hours_played = models.PositiveIntegerField(default=0, verbose_name='ساعت بازی')
+    is_verified = models.BooleanField(default=False, verbose_name='تأیید‌شده', help_text='بج آبی تیک — برای ادمین کلاب‌ها/استریمرهای شناخته‌شده')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,6 +108,14 @@ class GamerProfile(models.Model):
         return f'@{self.user.username}'
 
     @property
+    def display_name(self):
+        """نامی که در پروفایل نمایش داده می‌شود — طبق انتخاب کاربر."""
+        if self.name_display == 'nickname' and self.nickname.strip():
+            return self.nickname.strip()
+        full = self.user.get_full_name().strip()
+        return full or self.nickname.strip() or self.user.username
+
+    @property
     def followers_count(self):
         return Follow.objects.filter(following=self.user).count()
 
@@ -122,6 +139,19 @@ class GamerProfile(models.Model):
         elif self.platform:
             return [self.platform]
         return []
+
+    def get_gaming_styles_list(self):
+        """Returns list of gaming-style codes — uses new gaming_styles field, falls back to old gaming_style"""
+        if self.gaming_styles:
+            return self.gaming_styles
+        elif self.gaming_style:
+            return [self.gaming_style]
+        return []
+
+    def get_gaming_styles_display(self):
+        """Returns list of human labels for the selected gaming styles"""
+        labels = dict(GAMING_STYLE_CHOICES)
+        return [labels.get(s, s) for s in self.get_gaming_styles_list()]
 
     def get_platform_display_list(self):
         """Returns list of (code, display_name, icon) tuples for all platforms"""
@@ -1054,22 +1084,41 @@ class UserSession(models.Model):
             self.duration_secs = max(0, int((self.last_activity - self.started_at).total_seconds()))
             self.save(update_fields=['ended_at', 'duration_secs'])
 
+    # حداکثر فاصله بین دو نوشتن واقعی last_activity روی DB (ثانیه)
+    TOUCH_THROTTLE = 90
+
     @classmethod
     def get_or_create_active(cls, user):
         """
         سشن فعال موجود را برمی‌گرداند یا سشن جدید می‌سازد.
         سشن‌های قدیمی/باز‌مانده را می‌بندد.
-        """
-        now    = timezone.now()
-        cutoff = now - timezone.timedelta(seconds=cls.SESSION_TIMEOUT)
 
+        برای جلوگیری از SELECT/UPDATE روی هر درخواست (مخصوصاً heartbeat
+        که هر ۶۰ ثانیه می‌زند)، pk سشن فعال در cache نگه داشته می‌شود و
+        نوشتن واقعی last_activity حداکثر هر TOUCH_THROTTLE ثانیه انجام می‌شود.
+        """
+        from django.core.cache import cache
+        now = timezone.now()
+
+        cache_key = f'active_session_pk_{user.id}'
+        touch_key = f'active_session_touch_{user.id}'
+        cached_pk = cache.get(cache_key)
+
+        if cached_pk:
+            if not cache.get(touch_key):
+                cache.set(touch_key, True, cls.TOUCH_THROTTLE)
+                cls.objects.filter(pk=cached_pk, ended_at__isnull=True).update(last_activity=now)
+            return None
+
+        cutoff = now - timezone.timedelta(seconds=cls.SESSION_TIMEOUT)
         active = cls.objects.filter(
             user=user, ended_at__isnull=True, last_activity__gte=cutoff
         ).order_by('-last_activity').first()
 
         if active:
-            # به‌روزرسانی بدون ذخیره کامل (سریع‌تر)
             cls.objects.filter(pk=active.pk).update(last_activity=now)
+            cache.set(cache_key, active.pk, cls.SESSION_TIMEOUT)
+            cache.set(touch_key, True, cls.TOUCH_THROTTLE)
             return active
 
         # بستن سشن‌های باز قدیمی
@@ -1077,7 +1126,10 @@ class UserSession(models.Model):
             stale.close()
 
         # سشن جدید
-        return cls.objects.create(user=user)
+        new_session = cls.objects.create(user=user)
+        cache.set(cache_key, new_session.pk, cls.SESSION_TIMEOUT)
+        cache.set(touch_key, True, cls.TOUCH_THROTTLE)
+        return new_session
 
     @classmethod
     def total_seconds_in_period(cls, user_ids, since=None):

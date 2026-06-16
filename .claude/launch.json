@@ -5,7 +5,8 @@
       "name": "gamebeat",
       "runtimeExecutable": "python",
       "runtimeArgs": ["manage.py", "runserver", "8007"],
-      "port": 8007
+      "port": 8007,
+      "autoPort": false
     },
     {
       "name": "basirat-frontend",

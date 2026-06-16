@@ -15,7 +15,7 @@ PLATFORM_CHOICES = [
 
 
 class Game(models.Model):
-    name = models.CharField(max_length=200, verbose_name='نام بازی')
+    name = models.CharField(max_length=200, unique=True, verbose_name='نام بازی')
     cover = models.ImageField(upload_to='games/covers/', blank=True, null=True, verbose_name='کاور')
     genres = models.JSONField(default=list, verbose_name='ژانرها')
     platforms = models.JSONField(default=list, verbose_name='پلتفرم‌ها')
@@ -24,6 +24,7 @@ class Game(models.Model):
     release_year = models.IntegerField(null=True, blank=True, verbose_name='سال انتشار')
     description = models.TextField(blank=True, verbose_name='توضیحات')
     is_featured  = models.BooleanField(default=False, verbose_name='ویژه')
+    is_popular   = models.BooleanField(default=False, verbose_name='پرطرفدار')
     is_active    = models.BooleanField(default=True,  verbose_name='فعال')
     is_online       = models.BooleanField(default=False, verbose_name='آنلاین/چندنفره')
     is_crack_online = models.BooleanField(default=False, verbose_name='کرک آنلاین')

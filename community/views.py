@@ -11,7 +11,7 @@ from .models import GameBacklog, PostReaction
 from .models import ActivityLog, Challenge, Club, ClubMember, ClubPost
 from .models import GroupChat, GroupMember, GroupMessage, PinnedGroupChat, MutedGroupChat
 from .models import Channel, ChannelMember, ChannelPost, ChannelReaction, PinnedChannel, MutedChannel
-from .models import PLATFORM_CHOICES, CITY_CHOICES, ScoreSettings, UserSession
+from .models import PLATFORM_CHOICES, CITY_CHOICES, GAMING_STYLE_CHOICES, ScoreSettings, UserSession
 from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
 from .models import ProfileView, PremiumPlan
@@ -35,6 +35,33 @@ def _to_jalali(dt, fmt='%Y/%m/%d'):
 def get_or_create_gamer_profile(user):
     profile, _ = GamerProfile.objects.get_or_create(user=user)
     return profile
+
+
+def _award_zarban(user, amount, reason):
+    """افزایش موجودی ضربان و ثبت تراکنش — همیشه idempotent نیست، بررسی تکراری بودن با caller."""
+    wallet = ZarbanWallet.get_or_create_for(user)
+    wallet.balance += amount
+    wallet.save(update_fields=['balance', 'updated_at'])
+    ZarbanTransaction.objects.create(
+        wallet=wallet, amount=amount,
+        tx_type=ZarbanTransaction.TX_CREDIT, reason=reason,
+    )
+
+
+def _unlock_achievement(user, ach_type, title, desc='', icon='bi-trophy'):
+    """باز کردن دستاورد — اگه قبلاً وجود داشت، نادیده می‌گیره."""
+    if Achievement.objects.filter(user=user, achievement_type=ach_type).exists():
+        return False
+    Achievement.objects.create(
+        user=user, achievement_type=ach_type,
+        title=title, description=desc, icon=icon,
+    )
+    Notification.objects.create(
+        recipient=user, sender=user,
+        notif_type='zarban',
+        custom_text=f'🏆 دستاورد جدید باز کردی: {title}',
+    )
+    return True
 
 
 def extract_and_save_hashtags(post):
@@ -141,12 +168,17 @@ def _build_combined_feed(posts, lfg_list):
 
 
 def feed(request):
-    # Unauthenticated users see the same community feed with public posts
+    # Unauthenticated users see posts from top popular gamers
     if not request.user.is_authenticated:
-        posts = list(Post.objects.filter(is_public=True)
-                    .select_related('author', 'author__gamer_profile')
-                    .prefetch_related('reactions', 'comments')
-                    .order_by('-created_at')[:30])
+        popular_users = User.objects.filter(
+            gamer_profile__isnull=False
+        ).annotate(fc=Count('followers_set')).order_by('-fc')[:10]
+        popular_ids = [u.id for u in popular_users]
+        posts = list(Post.objects.filter(
+            author__in=popular_ids, is_public=True
+        ).select_related('author', 'author__gamer_profile')
+         .prefetch_related('reactions', 'comments')
+         .order_by('-created_at')[:30])
         for p in posts:
             p.my_reaction = ''
             p.reactions_summary = {}
@@ -192,7 +224,7 @@ def feed(request):
     ).select_related('author', 'author__gamer_profile').prefetch_related('likes', 'comments', 'reactions').order_by('-created_at')[:50])
 
     # ── Discover mode: no follows yet → show popular posts ──────────────────
-    is_discover = len(posts) == 0 and len(following_ids) == 0
+    is_discover = len(following_ids) == 0
     if is_discover:
         # Top users by follower count (excluding self)
         popular_users = User.objects.exclude(
@@ -248,6 +280,7 @@ def feed(request):
         'my_profile': my_profile,
         'suggested_gamers': suggested_gamers,
         'is_discover': is_discover,
+        'following_ids': set(following_ids),
     }
     return render(request, 'community/feed.html', context)
 
@@ -317,61 +350,34 @@ def gamer_profile(request, username):
     fav_genre = profile.favorite_genre
     completed_games = [b for b in all_backlog if b.status == 'completed']
 
-    # ── آنالیتیکس پریمیوم (فقط روی پروفایل خودت) ──
-    analytics = None
-    if is_own_profile and profile.is_premium:
-        from datetime import timedelta
-        from django.db.models.functions import TruncDate
-        from django.db.models import Count
-        import json as _json
-
-        today = timezone.now().date()
-        since_14 = today - timedelta(days=13)
-        since_30 = today - timedelta(days=29)
-
-        # ── بازدید ۱۴ روز — یک کوئری با GROUP BY ──
-        view_qs = (
-            ProfileView.objects
-            .filter(viewed_user=profile_user, viewed_at__date__gte=since_14)
-            .annotate(day=TruncDate('viewed_at'))
-            .values('day')
-            .annotate(cnt=Count('id'))
+    # اشتراک فعال پریمیوم (برای نمایش روزهای باقی‌مانده)
+    from .models import PremiumSubscription as _PS
+    from datetime import timedelta
+    premium_sub = None
+    profile_views_30d = 0
+    reactions_14d = 0
+    zarban_balance = 0
+    if is_own_profile:
+        premium_sub = (
+            _PS.objects
+            .filter(user=profile_user, is_active=True, end_date__gt=timezone.now())
+            .order_by('-end_date')
+            .first()
         )
-        view_map = {row['day']: row['cnt'] for row in view_qs}
+        if premium_sub:
+            remaining = premium_sub.end_date - timezone.now()
+            premium_sub.days_left = max(0, remaining.days)
+            premium_sub.hours_left = max(0, int(remaining.total_seconds() // 3600))
 
-        # ── فالوور جدید روزانه ۱۴ روز — یک کوئری با GROUP BY ──
-        follow_qs = (
-            Follow.objects
-            .filter(following=profile_user, created_at__date__gte=since_14)
-            .annotate(day=TruncDate('created_at'))
-            .values('day')
-            .annotate(cnt=Count('id'))
-        )
-        follow_map = {row['day']: row['cnt'] for row in follow_qs}
-
-        # ساخت آرایه ۱۴ روز با مقادیر صفر برای روزهای بدون داده
-        labels, view_data, follow_data = [], [], []
-        for i in range(13, -1, -1):
-            d = today - timedelta(days=i)
-            labels.append(jdatetime.date.fromgregorian(date=d).strftime('%m/%d').translate(str.maketrans('0123456789','۰۱۲۳۴۵۶۷۸۹')))
-            view_data.append(view_map.get(d, 0))
-            follow_data.append(follow_map.get(d, 0))
-
-        analytics = {
-            'view_labels':        _json.dumps(labels),
-            'view_data':          _json.dumps(view_data),
-            'follow_labels':      _json.dumps(labels),
-            'follow_data':        _json.dumps(follow_data),
-            'total_views_30d':    ProfileView.objects.filter(
-                                      viewed_user=profile_user,
-                                      viewed_at__date__gte=since_30,
-                                  ).count(),
-            'total_reactions_14d': PostReaction.objects.filter(
-                                       post__author=profile_user,
-                                       created_at__date__gte=since_14,
-                                   ).count(),
-            'followers_now':      Follow.objects.filter(following=profile_user).count(),
-        }
+        since_30 = timezone.now() - timedelta(days=30)
+        since_14 = timezone.now() - timedelta(days=14)
+        profile_views_30d = ProfileView.objects.filter(
+            viewed_user=profile_user, viewed_at__gte=since_30
+        ).count()
+        reactions_14d = PostReaction.objects.filter(
+            post__author=profile_user, created_at__gte=since_14
+        ).count()
+        zarban_balance = ZarbanWallet.get_or_create_for(profile_user).balance
 
     context = {
         'profile_user': profile_user,
@@ -395,7 +401,10 @@ def gamer_profile(request, username):
         'completed_count': completed_count,
         'fav_genre': fav_genre,
         'completed_games': completed_games,
-        'analytics': analytics,
+        'premium_sub': premium_sub,
+        'profile_views_30d': profile_views_30d,
+        'reactions_14d': reactions_14d,
+        'zarban_balance': zarban_balance,
     }
     return render(request, 'community/profile.html', context)
 
@@ -466,6 +475,9 @@ def edit_profile(request):
         request.user.save()
 
         profile.bio = request.POST.get('bio', '')
+        profile.nickname = request.POST.get('nickname', '').strip()
+        name_display = request.POST.get('name_display', 'full')
+        profile.name_display = name_display if name_display in ('full', 'nickname') else 'full'
         profile.city = request.POST.get('city', '')
 
         # location_label from province + city selects in edit profile
@@ -511,8 +523,9 @@ def edit_profile(request):
         selected_platforms = request.POST.getlist('platforms')
         profile.platforms = selected_platforms
         profile.platform = selected_platforms[0] if selected_platforms else 'pc'
-        profile.gaming_style = request.POST.get('gaming_style', '')
-        profile.rank = request.POST.get('rank', '')
+        selected_styles = request.POST.getlist('gaming_styles')
+        profile.gaming_styles = selected_styles
+        profile.gaming_style = selected_styles[0] if selected_styles else ''
         profile.favorite_games = request.POST.get('favorite_games', '')
         profile.phone = request.POST.get('phone', '').strip()
         raw_nid = request.POST.get('national_id', '').strip()
@@ -538,19 +551,23 @@ def edit_profile(request):
     loc_province_val = loc_parts[0].strip() if len(loc_parts) >= 1 else ''
     loc_city_val     = loc_parts[1].strip() if len(loc_parts) >= 2 else ''
 
+    # بازی‌های قابل انتخاب از کاتالوگ ادمین (dashboard.Game)
+    from dashboard.models import Game as DashboardGame
+    popular_games = list(
+        DashboardGame.objects.filter(is_active=True, is_popular=True)
+        .order_by('-is_featured', 'name')
+        .values_list('name', flat=True)
+    )
+
     context = {
         'profile': profile,
         'platform_choices': PLATFORM_CHOICES,
         'city_choices': CITY_CHOICES,
+        'name_display_choices': GamerProfile.NAME_DISPLAY_CHOICES,
+        'gaming_style_choices': GAMING_STYLE_CHOICES,
         'loc_province_val': loc_province_val,
         'loc_city_val': loc_city_val,
-        'popular_games': [
-            'Valorant', 'FIFA 25', 'Call of Duty', 'GTA V', 'PUBG',
-            'Dota 2', 'CS2', 'Fortnite', 'Minecraft', 'League of Legends',
-            'Apex Legends', 'Elden Ring', 'Dark Souls', 'Cyberpunk 2077',
-            'Red Dead Redemption 2', 'God of War', 'Spider-Man',
-            'Witcher 3', 'Zelda: Tears of the Kingdom', 'Overwatch 2',
-        ],
+        'popular_games': popular_games,
     }
     return render(request, 'community/edit_profile.html', context)
 
@@ -578,6 +595,12 @@ def create_post(request):
 
         profile = get_or_create_gamer_profile(request.user)
         profile.save()
+
+        _award_zarban(request.user, 5, 'انتشار پست جدید')
+        _unlock_achievement(
+            request.user, 'first_post',
+            'اولین پست', 'اولین پستت رو منتشر کردی!', 'bi-pencil-square',
+        )
 
         messages.success(request, 'پست منتشر شد!')
     return redirect('community:feed')
@@ -800,6 +823,15 @@ def add_comment(request, post_id):
                 notif_type='comment', post=post,
                 custom_text=content[:120],
             )
+
+        _award_zarban(request.user, 2, 'ارسال کامنت')
+        comment_count = Comment.objects.filter(author=request.user).count()
+        if comment_count >= 10:
+            _unlock_achievement(
+                request.user, 'social',
+                'گیمر اجتماعی', '۱۰ کامنت ارسال کردی!', 'bi-chat-dots',
+            )
+
         if is_ajax:
             profile = get_or_create_gamer_profile(request.user)
             return JsonResponse({
@@ -864,6 +896,11 @@ def toggle_follow(request, username):
             sender=request.user,
             notif_type='follow',
             post=None
+        )
+        _award_zarban(request.user, 3, f'دنبال کردن {target_user.username}')
+        _unlock_achievement(
+            request.user, 'first_follow',
+            'اولین فالو', 'اولین گیمر رو دنبال کردی!', 'bi-person-plus',
         )
     return JsonResponse({'following': following, 'followers_count': target_profile.followers_count})
 
@@ -969,6 +1006,9 @@ def lfg_board(request):
     my_profile = get_or_create_gamer_profile(request.user) if request.user.is_authenticated else None
     platform_filter = request.GET.get('platform', '')
     game_filter = request.GET.get('game', '')
+    mine_filter = request.GET.get('mine') == '1'
+
+    my_favorite_games = my_profile.get_favorite_games_list() if my_profile else []
 
     lfg_posts = LFGPost.objects.filter(is_active=True).select_related('author', 'author__gamer_profile')
 
@@ -976,6 +1016,8 @@ def lfg_board(request):
         lfg_posts = lfg_posts.filter(platform=platform_filter)
     if game_filter:
         lfg_posts = lfg_posts.filter(game_name__icontains=game_filter)
+    elif mine_filter and my_favorite_games:
+        lfg_posts = lfg_posts.filter(game_name__in=my_favorite_games)
 
     lfg_posts = list(lfg_posts.order_by('-created_at')[:50])
     # پریمیوم‌ها بالای بورد
@@ -1024,6 +1066,8 @@ def lfg_board(request):
         'lfg_posts': lfg_posts,
         'platform_filter': platform_filter,
         'game_filter': game_filter,
+        'mine_filter': mine_filter,
+        'my_favorite_games': my_favorite_games,
         'my_profile': my_profile,
         'platform_choices': PLATFORM_CHOICES,
         'popular_games': _fallback,
@@ -1147,6 +1191,7 @@ def join_lfg(request, post_id):
             notif_type='lfg_join',
             custom_text=f'{request.user.username} به پست «{post.game_name}» پیوست',
         )
+        _award_zarban(request.user, 10, f'پیوستن به LFG: {post.game_name}')
         party = _maybe_create_party_group(post)
         return JsonResponse({'ok': True, 'type': 'joined',
                              'current': post.current_players, 'max': post.max_players,
@@ -1320,10 +1365,19 @@ def leaderboard(request):
             online_hours                   * cfg.online_hour_score
         )
 
-    # واکشی همه کاربران فعال از DB
+    # کاربرانی که در این بازه سشن آنلاین داشتن (حتی بدون پست/کامنت)
+    _session_qs = UserSession.objects.filter(ended_at__isnull=False)
+    _active_session_qs = UserSession.objects.filter(ended_at__isnull=True)
+    if since:
+        _session_qs = _session_qs.filter(started_at__gte=since)
+        _active_session_qs = _active_session_qs.filter(started_at__gte=since)
+    online_user_ids = set(_session_qs.values_list('user_id', flat=True)) | \
+                      set(_active_session_qs.values_list('user_id', flat=True))
+
+    # واکشی همه کاربران فعال از DB (پست، کامنت یا آنلاین بودن در بازه)
     all_profiles = list(
         _db_counts(GamerProfile.objects.select_related('user'), since)
-        .filter(Q(db_post_count__gt=0) | Q(db_comment_count__gt=0))
+        .filter(Q(db_post_count__gt=0) | Q(db_comment_count__gt=0) | Q(user_id__in=online_user_ids))
     )
 
     all_user_ids = [g.user_id for g in all_profiles]
@@ -1978,6 +2032,17 @@ def inbox_unread_count(request):
 
 
 @login_required
+def heartbeat(request):
+    """
+    Ping سبک از مرورگر برای نگه‌داشتن last_activity سشن آنلاین تازه،
+    حتی وقتی کاربر بین صفحات حرکت نمی‌کند (مثلاً روی یک صفحه ثابت مونده).
+    خودِ OnlineTrackingMiddleware کار ثبت سشن/جایزه ضربان را انجام می‌دهد؛
+    این مسیر فقط باید خارج از SKIP_PATHS باشد تا middleware آن را پردازش کند.
+    """
+    return JsonResponse({'ok': True})
+
+
+@login_required
 def mark_conversation_read(request, username):
     """AJAX: mark messages and notifications as read for a conversation."""
     if request.method != 'POST':
@@ -2018,8 +2083,13 @@ def conversation_poll(request, username):
     ).filter(participants=other_user).first()
 
     new_msgs = []
-    if conv and after_id:
-        qs = conv.messages.filter(id__gt=after_id).select_related('sender', 'sender__gamer_profile').order_by('id')
+    if conv:
+        if after_id:
+            qs = conv.messages.filter(id__gt=after_id).select_related('sender', 'sender__gamer_profile').order_by('id')
+        else:
+            # بار اول: آخرین ۳۰ پیام رو بده
+            qs = conv.messages.select_related('sender', 'sender__gamer_profile').order_by('-id')[:30]
+            qs = list(reversed(list(qs)))
         for msg in qs:
             is_mine = msg.sender == request.user
             sender_profile = getattr(msg.sender, 'gamer_profile', None)
@@ -2041,7 +2111,7 @@ def conversation_poll(request, username):
             })
         # پیام‌های جدید رو read کن
         if new_msgs:
-            qs.exclude(sender=request.user).update(is_read=True)
+            conv.messages.filter(id__gt=0).exclude(sender=request.user).filter(is_read=False).update(is_read=True)
 
     return JsonResponse({
         'is_blocked_by_other': is_blocked,
@@ -2477,16 +2547,39 @@ def challenges_page(request):
     from django.utils import timezone
     now = timezone.now()
     active_challenges = Challenge.objects.filter(is_active=True, end_date__gte=now)
-    past_challenges = Challenge.objects.filter(is_active=True, end_date__lt=now)[:5]
+    past_challenges_qs = Challenge.objects.filter(is_active=True, end_date__lt=now)[:5]
 
     challenges_data = []
     for ch in active_challenges:
         lb = ch.get_leaderboard()
         challenges_data.append({'challenge': ch, 'leaderboard': lb})
 
+    # جایزه ضربان برای برندگان چالش‌های تموم‌شده (idempotent)
+    if request.user.is_authenticated:
+        prizes = [100, 60, 30]
+        for ch in past_challenges_qs:
+            lb = list(ch.get_leaderboard())
+            for rank, entry in enumerate(lb[:3]):
+                if entry['user'] == request.user.id:
+                    reason = f'چالش:{ch.id}:رتبه{rank + 1}'
+                    wallet = ZarbanWallet.get_or_create_for(request.user)
+                    if not wallet.transactions.filter(reason=reason).exists():
+                        _award_zarban(request.user, prizes[rank], reason)
+                        Notification.objects.create(
+                            recipient=request.user, sender=request.user,
+                            notif_type='zarban',
+                            custom_text=f'🏆 رتبه {rank + 1} چالش «{ch.title}» — {prizes[rank]} ضربان جایزه گرفتی!',
+                        )
+                        if rank == 0:
+                            _unlock_achievement(
+                                request.user, 'veteran',
+                                'قهرمان چالش', ch.title[:80], 'bi-trophy-fill',
+                            )
+                    break
+
     return render(request, 'community/challenges.html', {
         'challenges_data': challenges_data,
-        'past_challenges': past_challenges,
+        'past_challenges': past_challenges_qs,
     })
 
 
@@ -3632,8 +3725,14 @@ def spin_go(request, wheel_id):
         reward_text = f'{won_item.reward_amount} ضربان 💜 به کیف‌پولت اضافه شد!'
 
     elif won_item.reward_type == SpinWheelItem.REWARD_XP and won_item.reward_amount > 0:
-        # XP system removed — ignore this reward type
-        reward_text = f'{won_item.reward_amount} XP ⚡ دریافت کردی!'
+        wallet = ZarbanWallet.get_or_create_for(request.user)
+        wallet.balance += won_item.reward_amount
+        wallet.save()
+        ZarbanTransaction.objects.create(
+            wallet=wallet, amount=won_item.reward_amount,
+            tx_type='credit', reason=f'جایزه گردونه (XP→ضربان): {won_item.name}'
+        )
+        reward_text = f'{won_item.reward_amount} ضربان 💜 به کیف‌پولت اضافه شد!'
 
     elif won_item.reward_type == SpinWheelItem.REWARD_SPIN:
         # چرخش مجدد — SpinRecord ثبت نمی‌کنیم تا cooldown شروع نشه
@@ -3711,13 +3810,14 @@ def who_viewed_me(request):
     my_profile = get_or_create_gamer_profile(request.user)
     is_premium = my_profile.is_premium
 
-    # غیرپریمیوم → ارور + ریدایرکت به صفحه پریمیوم
+    # غیرپریمیوم → ریدایرکت به صفحه پریمیوم
     if not is_premium:
         messages.error(request, 'ابتدا اشتراک پریمیوم تهیه کنید تا بازدیدکنندگان پروفایلتان را ببینید.')
         return redirect('community:premium_info')
 
-    # ۳۰ روز اخیر
-    since = timezone.now() - timedelta(days=30)
+    now   = timezone.now()
+    since = now - timedelta(days=30)
+
     views_qs = (
         ProfileView.objects
         .filter(viewed_user=request.user, viewed_at__gte=since)
@@ -3726,26 +3826,112 @@ def who_viewed_me(request):
     )
 
     unique_count = views_qs.values('viewer').distinct().count()
-    today_count  = views_qs.filter(viewed_at__date=timezone.now().date()).count()
+    today_count  = views_qs.filter(viewed_at__date=now.date()).count()
+    week_count   = views_qs.filter(viewed_at__gte=now - timedelta(days=7)).count()
+
+    # فالوورهای کاربر جاری برای نشان دادن «دنبالت می‌کنه»
+    from .models import Follow
+    follower_ids = set(
+        Follow.objects.filter(following=request.user).values_list('follower_id', flat=True)
+    )
 
     seen = set()
     viewers = []
     for v in views_qs:
         if v.viewer_id not in seen:
             seen.add(v.viewer_id)
+            v.is_follower = v.viewer_id in follower_ids
             viewers.append(v)
-        if len(viewers) >= 50:
+        if len(viewers) >= 60:
             break
 
     plans = PremiumPlan.objects.filter(is_active=True)
 
     return render(request, 'community/who_viewed_me.html', {
-        'is_premium':    is_premium,
-        'viewers':       viewers,
-        'unique_count':  unique_count,
-        'today_count':   today_count,
-        'plans':         plans,
-        'blur_count':    min(unique_count, 12),  # تعداد آواتار تار برای غیرپریمیوم
+        'is_premium':   is_premium,
+        'viewers':      viewers,
+        'unique_count': unique_count,
+        'today_count':  today_count,
+        'week_count':   week_count,
+        'plans':        plans,
+        'blur_count':   min(unique_count, 12),
+    })
+
+
+@login_required
+def profile_stats(request):
+    """صفحه آمارها — فقط برای کاربران پریمیوم"""
+    profile_user = request.user
+    profile = profile_user.gamer_profile
+    if not profile.is_premium:
+        from django.contrib import messages as _msg
+        _msg.warning(request, 'برای دیدن آمارها باید اشتراک پریمیوم داشته باشی.')
+        return redirect('community:premium_info')
+
+    from datetime import timedelta
+    from django.db.models.functions import TruncDate
+    from django.db.models import Count
+    import json as _json
+
+    today = timezone.now().date()
+    since_14 = today - timedelta(days=13)
+    since_30 = today - timedelta(days=29)
+
+    view_qs = (
+        ProfileView.objects
+        .filter(viewed_user=profile_user, viewed_at__date__gte=since_14)
+        .annotate(day=TruncDate('viewed_at'))
+        .values('day')
+        .annotate(cnt=Count('id'))
+    )
+    view_map = {row['day']: row['cnt'] for row in view_qs}
+
+    follow_qs = (
+        Follow.objects
+        .filter(following=profile_user, created_at__date__gte=since_14)
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(cnt=Count('id'))
+    )
+    follow_map = {row['day']: row['cnt'] for row in follow_qs}
+
+    labels, view_data, follow_data = [], [], []
+    for i in range(13, -1, -1):
+        d = today - timedelta(days=i)
+        labels.append(jdatetime.date.fromgregorian(date=d).strftime('%m/%d').translate(str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')))
+        view_data.append(view_map.get(d, 0))
+        follow_data.append(follow_map.get(d, 0))
+
+    analytics = {
+        'view_labels':         _json.dumps(labels),
+        'view_data':           _json.dumps(view_data),
+        'follow_labels':       _json.dumps(labels),
+        'follow_data':         _json.dumps(follow_data),
+        'total_views_30d':     ProfileView.objects.filter(
+                                   viewed_user=profile_user,
+                                   viewed_at__date__gte=since_30,
+                               ).count(),
+        'total_reactions_14d': PostReaction.objects.filter(
+                                   post__author=profile_user,
+                                   created_at__date__gte=since_14,
+                               ).count(),
+        'followers_now':       Follow.objects.filter(following=profile_user).count(),
+        'following_now':       Follow.objects.filter(follower=profile_user).count(),
+        'total_views_ever':    ProfileView.objects.filter(viewed_user=profile_user).count(),
+    }
+
+    from .models import PremiumSubscription as _PS
+    premium_sub = (
+        _PS.objects
+        .filter(user=profile_user, is_active=True, end_date__gt=timezone.now())
+        .order_by('-end_date')
+        .first()
+    )
+
+    return render(request, 'community/analytics.html', {
+        'analytics': analytics,
+        'profile': profile,
+        'premium_sub': premium_sub,
     })
 
 
@@ -3772,11 +3958,13 @@ def dm_list_api(request):
         profile = getattr(other, 'gamer_profile', None)
         if profile and profile.avatar:
             avatar_url = profile.avatar.url
+        unread_count = c.messages.filter(is_read=False).exclude(sender=request.user).count()
         result.append({
             'username': other.username,
             'display': other.get_full_name() or other.username,
             'avatar': avatar_url,
             'initial': other.username[0].upper() if other.username else '?',
+            'unread': unread_count,
         })
     # کاربرانی که هنوز DM نداریم ولی می‌فالویم
     following_ids = set(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
@@ -3792,3 +3980,19 @@ def dm_list_api(request):
             'initial': u.username[0].upper(),
         })
     return JsonResponse({'ok': True, 'contacts': result})
+
+
+def game_search_api(request):
+    from dashboard.models import Game as DashboardGame
+    q = request.GET.get('q', '').strip()
+    qs = DashboardGame.objects.filter(is_active=True)
+    if q:
+        qs = qs.filter(name__icontains=q)
+    qs = qs.order_by('-is_popular', '-is_featured', 'name')[:20]
+    results = []
+    for g in qs:
+        results.append({
+            'name': g.name,
+            'cover': g.cover.url if g.cover else '',
+        })
+    return JsonResponse({'ok': True, 'games': results})

@@ -517,6 +517,30 @@
                         </div>
                     </div>
                 </label>
+                <!-- پرطرفدار -->
+                <label style="
+                    display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+                    padding:12px 16px;border-radius:10px;background:var(--bg-card2);border:1px solid rgba(239,68,68,.2);">
+                    <div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--text-main)">🔥 پرطرفدار</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px">در بخش «بازی‌های پرطرفدار» ویرایش پروفایل نشون داده می‌شه</div>
+                    </div>
+                    <div style="position:relative">
+                        <input type="checkbox" name="is_popular" id="popularToggle"
+                               {% if game and game.is_popular %}checked{% endif %}
+                               style="display:none" onchange="updatePopularToggle(this)">
+                        <div id="popularTrack" onclick="document.getElementById('popularToggle').click()" style="
+                            width:46px;height:26px;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;
+                            background:{% if game and game.is_popular %}#ef4444{% else %}var(--border){% endif %};
+                            box-shadow:{% if game and game.is_popular %}0 0 10px rgba(239,68,68,.4){% else %}none{% endif %};">
+                            <div id="popularThumb" style="
+                                width:20px;height:20px;border-radius:50%;background:white;
+                                position:absolute;top:3px;transition:transform .2s;
+                                transform:{% if game and game.is_popular %}translateX(-22px){% else %}translateX(-3px){% endif %};
+                            "></div>
+                        </div>
+                    </div>
+                </label>
                 <!-- آنلاین / چندنفره -->
                 <label style="
                     display:flex;align-items:center;justify-content:space-between;cursor:pointer;
@@ -931,8 +955,11 @@ function sApplyToForm() {
     var onlineToggle = document.getElementById('onlineToggle');
     if (onlineToggle && onlineToggle.checked) f.appendChild(_hi('is_online', 'on'));
 
-    var crackToggle  = document.getElementById('crackToggle');
-    if (crackToggle  && crackToggle.checked)  f.appendChild(_hi('is_crack_online', 'on'));
+    var crackToggle   = document.getElementById('crackToggle');
+    if (crackToggle   && crackToggle.checked)  f.appendChild(_hi('is_crack_online', 'on'));
+
+    var popularToggle = document.getElementById('popularToggle');
+    if (popularToggle && popularToggle.checked) f.appendChild(_hi('is_popular', 'on'));
 
     document.body.appendChild(f);
     f.submit();   // classic synchronous submit — guaranteed to work
@@ -1014,6 +1041,20 @@ function updateCrackToggle(checkbox) {
     if (checkbox.checked) {
         track.style.background = '#f59e0b';
         track.style.boxShadow  = '0 0 10px rgba(245,158,11,.4)';
+        thumb.style.transform  = 'translateX(-22px)';
+    } else {
+        track.style.background = 'var(--border)';
+        track.style.boxShadow  = 'none';
+        thumb.style.transform  = 'translateX(-3px)';
+    }
+}
+
+function updatePopularToggle(checkbox) {
+    var track = document.getElementById('popularTrack');
+    var thumb = document.getElementById('popularThumb');
+    if (checkbox.checked) {
+        track.style.background = '#ef4444';
+        track.style.boxShadow  = '0 0 10px rgba(239,68,68,.4)';
         thumb.style.transform  = 'translateX(-22px)';
     } else {
         track.style.background = 'var(--border)';

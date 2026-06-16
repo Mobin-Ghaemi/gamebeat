@@ -74,7 +74,9 @@ urlpatterns = [
     path('dm/<str:username>/', views.conversation, name='conversation'),
     path('dm/<str:username>/send/', views.send_message_ajax, name='send_message'),
     path('api/inbox/count/', views.inbox_unread_count, name='inbox_count'),
+    path('heartbeat/', views.heartbeat, name='heartbeat'),
     path('api/dm-list/', views.dm_list_api, name='dm_list_api'),
+    path('api/game-search/', views.game_search_api, name='game_search_api'),
     path('dm/<str:username>/mark-read/', views.mark_conversation_read, name='mark_conversation_read'),
     path('dm/<str:username>/poll/', views.conversation_poll, name='conversation_poll'),
     # Block / Pin / Mute
@@ -114,6 +116,8 @@ urlpatterns = [
     path('spin/<int:wheel_id>/go/', views.spin_go, name='spin_go'),
     # بازدیدکنندگان پروفایل
     path('who-viewed-me/', views.who_viewed_me, name='who_viewed_me'),
+    # آمارها (پریمیوم)
+    path('stats/', views.profile_stats, name='profile_stats'),
     # پریمیوم (پابلیک)
     path('premium/', views.premium_info, name='premium_info'),
 ]

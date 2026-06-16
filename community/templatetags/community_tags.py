@@ -39,7 +39,7 @@ def secs_to_time(value):
     try:
         secs = int(value or 0)
         if secs <= 0:
-            return ''
+            return '۰ دقیقه'
         hours   = secs // 3600
         minutes = (secs % 3600) // 60
         if hours and minutes:
@@ -95,3 +95,23 @@ def avatar_with_frame(profile, size='md', css_class=''):
         frame_size = {'sm': 'frame-sm', 'md': '', 'lg': 'frame-lg', 'xl': 'frame-lg'}.get(size, '')
         return mark_safe(f'<div class="premium-frame {frame_size}" style="display:inline-flex;">{img}</div>')
     return mark_safe(img)
+
+
+@register.simple_tag
+def verified_badge(profile, size='md'):
+    """بج فیروزه‌ای «تأیید‌شده» کنار نام کاربرانی که is_verified هستن (ادمین کلاب/استریمر شناخته‌شده)
+    size: sm | md | lg
+    """
+    if not profile or not getattr(profile, 'is_verified', False):
+        return ''
+    px_map   = {'sm': '16px', 'md': '20px', 'lg': '24px'}
+    icon_map = {'sm': '9',    'md': '12',   'lg': '14'}
+    px      = px_map.get(size, '20px')
+    icon_px = icon_map.get(size, '12')
+    return mark_safe(
+        f'<span title="تأیید‌شده" style="display:inline-flex;align-items:center;justify-content:center;'
+        f'width:{px};height:{px};background:linear-gradient(135deg,#22d3ee,#0891b2);border-radius:50%;'
+        f'flex-shrink:0;box-shadow:0 2px 8px rgba(34,211,238,.45);">'
+        f'<svg viewBox="0 0 24 24" fill="white" width="{icon_px}" height="{icon_px}">'
+        f'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>'
+    )

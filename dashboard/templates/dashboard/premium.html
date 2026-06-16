@@ -1,7 +1,7 @@
 {% extends "dashboard/base.html" %}
 {% load jalali_filters %}
 {% block title %}اشتراک پریمیوم — GameBeat{% endblock %}
-{% block page_title %}<span style="color:#fbbf24">✦</span> اشتراک پریمیوم{% endblock %}
+{% block page_title %}<svg class="bi bi-gem" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"  style="color:#fbbf24"><use href="#bi-gem"></use></svg> اشتراک پریمیوم{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -66,7 +66,7 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <div class="page-title">🌟 اشتراک پریمیوم</div>
+    <div class="page-title"><svg class="bi bi-gem" style="width:1.1em;height:1.1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> اشتراک پریمیوم</div>
     <div class="page-subtitle">مدیریت پلن‌ها و اشتراک‌های کاربران</div>
   </div>
   <div class="d-flex gap-2">
@@ -74,10 +74,10 @@
       + پلن جدید
     </button>
     <button class="btn-ghost" onclick="document.getElementById('modalAssign').style.display='flex'">
-      👤 تخصیص اشتراک
+      <svg class="bi bi-person-plus" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-person-plus"></use></svg> تخصیص اشتراک
     </button>
     <button class="btn-ghost" style="color:#4ade80;border-color:rgba(74,222,128,.3);" onclick="document.getElementById('modalAdjust').style.display='flex'">
-      🎁 هدیه / کسر روز
+      <svg class="bi bi-gift" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gift"></use></svg> هدیه / کسر روز
     </button>
   </div>
 </div>
@@ -149,7 +149,7 @@
         <div class="sub-info">
           <div class="sub-name">
             {{ sub.user.get_full_name|default:sub.user.username }}
-            <span class="premium-badge" style="font-size:.65rem;padding:1px 7px;margin-right:4px;">✦ پریمیوم</span>
+            <span class="premium-badge" style="font-size:.65rem;padding:1px 7px;margin-right:4px;"><svg class="bi bi-gem" style="width:.65em;height:.65em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> پریمیوم</span>
           </div>
           <div class="sub-meta">
             @{{ sub.user.username }} ·
@@ -254,7 +254,7 @@
   <div class="modal-dark" style="width:100%;max-width:440px;">
     <!-- هدر -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-      <h5 style="margin:0;font-weight:800;" id="adjustModalTitle">🎁 مدیریت روزهای پریمیوم</h5>
+      <h5 style="margin:0;font-weight:800;" id="adjustModalTitle"><svg class="bi bi-gift" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gift"></use></svg> مدیریت روزهای پریمیوم</h5>
       <button onclick="document.getElementById('modalAdjust').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
     </div>
 
@@ -262,7 +262,7 @@
     <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
       <button type="button" id="tabGift" onclick="adjustTab('gift')"
         style="flex:1;padding:9px;background:none;border:none;border-bottom:2px solid #4ade80;color:#4ade80;font-family:'Vazirmatn',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;">
-        🎁 هدیه روز
+        <svg class="bi bi-gift" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gift"></use></svg> هدیه روز
       </button>
       <button type="button" id="tabDeduct" onclick="adjustTab('deduct')"
         style="flex:1;padding:9px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'Vazirmatn',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;">
@@ -314,7 +314,7 @@
 
       <div class="d-flex gap-2 justify-content-end">
         <button type="button" class="btn-ghost" onclick="document.getElementById('modalAdjust').style.display='none'">انصراف</button>
-        <button type="submit" class="btn-purple" id="adjustSubmitBtn">🎁 هدیه بده</button>
+        <button type="submit" class="btn-purple" id="adjustSubmitBtn"><svg class="bi bi-gift" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gift"></use></svg> هدیه بده</button>
       </div>
     </form>
   </div>
@@ -358,7 +358,7 @@
       </div>
       <div class="d-flex gap-2 justify-content-end">
         <button type="button" class="btn-ghost" onclick="document.getElementById('modalAssign').style.display='none'">انصراف</button>
-        <button type="submit" class="btn-purple">✦ فعال‌سازی</button>
+        <button type="submit" class="btn-purple"><svg class="bi bi-gem" style="width:1em;height:1em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> فعال‌سازی</button>
       </div>
     </form>
   </div>
@@ -479,7 +479,7 @@ function adjustTab(tab) {
     tabD.style.color = !isGift ? '#f87171' : 'var(--text-muted)';
 
     label.textContent = isGift ? 'تعداد روز هدیه *' : 'تعداد روز کسر *';
-    btn.innerHTML = isGift ? '🎁 هدیه بده' : '➖ کسر کن';
+    btn.innerHTML = isGift ? '+ هدیه بده' : '− کسر کن';
     btn.style.background = isGift
         ? 'linear-gradient(135deg,#16a34a,#22c55e)'
         : 'linear-gradient(135deg,#dc2626,#ef4444)';

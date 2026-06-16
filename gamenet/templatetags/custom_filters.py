@@ -30,6 +30,14 @@ def format_price(value):
         return value
 
 @register.filter
+def get_item(d, key):
+    """دسترسی به مقدار دیکشنری با کلید داینامیک — d[key] داخل تمپلیت"""
+    try:
+        return d.get(key)
+    except (AttributeError, TypeError):
+        return None
+
+@register.filter
 def round_thousands(value):
     """رند کردن ۳ رقم آخر به ۰۰۰ — مثلاً ۱۸,۶۳۵,۶۱۵ → ۱۸,۶۳۵,۰۰۰"""
     try:

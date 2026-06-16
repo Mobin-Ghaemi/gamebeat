@@ -93,7 +93,12 @@
                             </div>
                             {% endwith %}
                             <div>
-                                <div style="font-weight:600;font-size:0.875rem">{{ u.username }}</div>
+                                <div style="font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:5px">
+                                    {{ u.username }}
+                                    {% if u.gamer_profile.is_verified %}
+                                    <svg viewBox="0 0 24 24" width="13" height="13" style="flex-shrink:0;" title="تأیید‌شده"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    {% endif %}
+                                </div>
                                 {% if u.is_superuser %}
                                     <div style="font-size:0.72rem;color:var(--purple-light)">سوپر ادمین</div>
                                 {% elif u.is_staff %}
@@ -140,6 +145,13 @@
                                         <svg class="bi bi-check-circle" aria-hidden="true"><use href="#bi-check-circle"></use></svg>
                                     </button>
                                 {% endif %}
+                            </form>
+                            <form method="post" action="{% url 'dashboard:user_verify' u.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-ghost" title="{% if u.gamer_profile.is_verified %}حذف تأیید{% else %}تأیید کاربر{% endif %}"
+                                        style="padding:5px 10px;font-size:0.8rem;display:inline-flex;align-items:center;gap:4px;{% if u.gamer_profile.is_verified %}color:#22d3ee;border-color:rgba(34,211,238,.35);{% endif %}">
+                                    <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg>
+                                </button>
                             </form>
                             {% endif %}
                         </div>

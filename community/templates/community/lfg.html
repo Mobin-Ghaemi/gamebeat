@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}پیدا کردن هم‌بازی | GameBeat{% endblock %}
 {% block nav_lfg %}active{% endblock %}
 
@@ -222,6 +223,78 @@
     color: var(--blue-accent);
     background: rgba(0,212,255,0.06);
 }
+
+/* Game search (live autocomplete روی Game objects ادمین) */
+.lfg-game-search { position: relative; flex: 1; min-width: 220px; }
+.lfg-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 9px 14px;
+    transition: border-color .2s;
+}
+.lfg-search-box:focus-within { border-color: var(--blue-accent); }
+.lfg-search-input {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-white);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.85rem;
+}
+.lfg-search-input::placeholder { color: var(--text-dim); }
+.lfg-search-clear {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+.lfg-search-clear:hover { color: var(--red-primary); }
+
+.lfg-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0; left: 0;
+    background: #0d0d22;
+    border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 14px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    display: none;
+}
+.lfg-search-dropdown.open { display: block; }
+.lfg-drop-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.1s;
+}
+.lfg-drop-item:last-child { border-bottom: none; }
+.lfg-drop-item:hover { background: rgba(0,212,255,0.1); }
+.lfg-drop-cover {
+    width: 36px; height: 36px; border-radius: 8px;
+    object-fit: cover; flex-shrink: 0;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.18);
+}
+.lfg-drop-cover-ph {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(139,92,246,0.08));
+    border: 1px solid rgba(0,212,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+}
+.lfg-drop-name { font-size: 0.85rem; font-weight: 700; color: var(--text-white); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lfg-drop-empty { padding: 18px; text-align: center; color: var(--text-dim); font-size: 0.82rem; }
 
 /* Sidebar */
 .lfg-sidebar { position: sticky; top: 88px; height: fit-content; }
@@ -572,16 +645,38 @@
     </div>
 
     <!-- Filters -->
-    <form method="get" id="lfgFilterForm">
-        <div class="lfg-filters">
-            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-funnel-fill" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-funnel-fill"></use></svg> پلتفرم:</span>
-            <a href="{% url 'community:lfg' %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
-            {% for val, label in platform_choices %}
-                <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter }}{% endif %}"
-                   class="filter-pill {% if platform_filter == val %}active{% endif %}">{{ label }}</a>
-            {% endfor %}
+    <div class="lfg-filters">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-funnel-fill" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-funnel-fill"></use></svg> پلتفرم:</span>
+        <a href="?{% if game_filter %}game={{ game_filter|urlencode }}{% endif %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
+        {% for val, label in platform_choices %}
+            <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter|urlencode }}{% endif %}"
+               class="filter-pill {% if platform_filter == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Game filter: پیلِ بازی‌های من + سرچ زنده روی Game‌های واقعی ادمین -->
+    <div class="lfg-filters">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-controller" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-controller"></use></svg> بازی:</span>
+        <a href="?{% if platform_filter %}platform={{ platform_filter }}{% endif %}" class="filter-pill {% if not game_filter and not mine_filter %}active{% endif %}">همه</a>
+        {% if my_favorite_games %}
+        <a href="?mine=1{% if platform_filter %}&platform={{ platform_filter }}{% endif %}" class="filter-pill {% if mine_filter %}active{% endif %}">
+            <svg class="bi bi-star-fill" aria-hidden="true" style="font-size:.75em;"><use href="#bi-star-fill"></use></svg> بازی‌های من
+        </a>
+        {% endif %}
+
+        <div class="lfg-game-search" id="lfgGameSearch">
+            <div class="lfg-search-box">
+                <svg class="bi bi-search" aria-hidden="true" style="color:var(--text-muted);flex-shrink:0;"><use href="#bi-search"></use></svg>
+                <input type="text" id="lfgGameSearchInput" class="lfg-search-input" value="{{ game_filter }}" placeholder="جستجوی نام بازی...">
+                {% if game_filter %}
+                <a href="?{% if platform_filter %}platform={{ platform_filter }}{% endif %}" class="lfg-search-clear" title="حذف فیلتر">
+                    <svg class="bi bi-x-lg" aria-hidden="true"><use href="#bi-x-lg"></use></svg>
+                </a>
+                {% endif %}
+            </div>
+            <div class="lfg-search-dropdown" id="lfgGameSearchDropdown"></div>
         </div>
-    </form>
+    </div>
 
     <div class="lfg-layout">
         <!-- Main -->
@@ -696,7 +791,7 @@
                             {% load community_tags %}
                             {% avatar_with_frame post.author.gamer_profile 'sm' %}
                             <div class="lfg-author-info">
-                                <span class="lfg-author-name">{{ post.author.username }}</span>
+                                <span class="lfg-author-name" style="display:inline-flex;align-items:center;gap:4px;">{{ post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</span>
                                 <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>
                             </div>
                         </a>
@@ -900,6 +995,82 @@
       }
     });
   }
+})();
+
+/* ──────────────────────────────────────────
+   جستجوی زنده‌ی بازی روی بورد LFG (بر اساس Game‌های واقعی ادمین)
+   ────────────────────────────────────────── */
+(function(){
+  var input = document.getElementById('lfgGameSearchInput');
+  var dd    = document.getElementById('lfgGameSearchDropdown');
+  if (!input || !dd) return;
+
+  var timer = null;
+
+  function navTo(gameName){
+    var params = new URLSearchParams(window.location.search);
+    params.delete('mine');
+    if (gameName) { params.set('game', gameName); } else { params.delete('game'); }
+    window.location.search = params.toString();
+  }
+
+  function closeDropdown(){ dd.classList.remove('open'); }
+
+  function renderResults(games){
+    if (!games.length){
+      dd.innerHTML = '<div class="lfg-drop-empty">بازی‌ای پیدا نشد 😕</div>';
+      dd.classList.add('open');
+      return;
+    }
+    dd.innerHTML = games.map(function(g){
+      var cover = g.cover
+        ? '<img src="' + g.cover + '" class="lfg-drop-cover" alt="">'
+        : '<div class="lfg-drop-cover-ph">🎮</div>';
+      return '<div class="lfg-drop-item" data-name="' + g.name.replace(/"/g, '&quot;') + '">' +
+             cover + '<span class="lfg-drop-name"></span></div>';
+    }).join('');
+    // جلوگیری از XSS: متن نام بازی رو از طریق textContent ست می‌کنیم
+    var rows = dd.querySelectorAll('.lfg-drop-item');
+    rows.forEach(function(row, i){ row.querySelector('.lfg-drop-name').textContent = games[i].name; });
+    dd.classList.add('open');
+  }
+
+  function fetchGames(q){
+    fetch('{% url "community:game_search_api" %}?q=' + encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
+      .then(function(data){ renderResults((data.ok && data.games) || []); })
+      .catch(function(){ dd.innerHTML = '<div class="lfg-drop-empty">خطا در جستجو</div>'; dd.classList.add('open'); });
+  }
+
+  input.addEventListener('input', function(){
+    var q = this.value.trim();
+    clearTimeout(timer);
+    if (!q){ closeDropdown(); return; }
+    dd.innerHTML = '<div class="lfg-drop-empty">🔍 در حال جستجو...</div>';
+    dd.classList.add('open');
+    timer = setTimeout(function(){ fetchGames(q); }, 220);
+  });
+
+  input.addEventListener('focus', function(){
+    var q = this.value.trim();
+    if (q) fetchGames(q);
+  });
+
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ e.preventDefault(); navTo(this.value.trim()); }
+    else if (e.key === 'Escape'){ closeDropdown(); this.blur(); }
+  });
+
+  dd.addEventListener('mousedown', function(e){
+    e.preventDefault();
+    var item = e.target.closest('.lfg-drop-item');
+    if (!item) return;
+    navTo(item.dataset.name);
+  });
+
+  document.addEventListener('click', function(e){
+    if (!input.contains(e.target) && !dd.contains(e.target)) closeDropdown();
+  });
 })();
 
 /* ──────────────────────────────────────────

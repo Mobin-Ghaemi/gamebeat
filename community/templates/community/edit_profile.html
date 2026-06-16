@@ -74,122 +74,199 @@
 
 .avatar-upload-hint strong { color: var(--red-primary); }
 
-/* Game tags input */
-.games-input-wrap { position: relative; }
+/* ══ Favorite Games — redesigned ══ */
 
-.games-suggestions {
+/* Search box */
+.fav-search-wrap {
+    position: relative;
+    margin-bottom: 16px;
+}
+.fav-search-icon {
     position: absolute;
-    top: 100%;
-    right: 0;
-    left: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px;
-    z-index: 10;
-    display: none;
+    right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--text-dim); font-size: 0.95rem;
+    pointer-events: none;
 }
-
-.game-suggest-item {
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    transition: all 0.15s;
-}
-
-.game-suggest-item:hover {
-    background: rgba(139,92,246,0.1);
-    color: var(--text-white);
-}
-
-.popular-games {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.popular-game-tag {
-    background: rgba(139,92,246,0.08);
-    border: 1px solid rgba(139,92,246,0.2);
-    color: var(--text-muted);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.popular-game-tag:hover {
-    background: rgba(139,92,246,0.15);
-    color: var(--red-primary);
-    border-color: var(--red-primary);
-}
-
-/* Favorite games chip selector */
-.fav-chips-wrap {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    min-height: 42px;
-    padding: 10px 12px;
-    background: var(--bg-card2);
-    border: 1px solid var(--border);
+.fav-search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(139,92,246,0.25);
     border-radius: 12px;
-    margin-bottom: 12px;
+    padding: 11px 42px 11px 14px;
+    color: var(--text-white);
+    font-size: 0.88rem;
+    font-family: 'Vazirmatn', sans-serif;
+    direction: rtl;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    box-sizing: border-box;
+}
+.fav-search-input:focus {
+    border-color: rgba(139,92,246,0.65);
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+}
+.fav-search-input::placeholder { color: var(--text-dim); }
+
+/* Dropdown */
+.fav-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0; left: 0;
+    background: #0d0d22;
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 14px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    display: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139,92,246,0.3) transparent;
+}
+.fav-search-dropdown.open { display: block; animation: dropIn 0.16s ease; }
+@keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+.fav-drop-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.1s;
+}
+.fav-drop-item:last-child { border-bottom: none; }
+.fav-drop-item:hover { background: rgba(139,92,246,0.12); }
+.fav-drop-item.is-added { opacity: 0.55; cursor: default; }
+
+.fav-drop-cover {
+    width: 40px; height: 40px; border-radius: 8px;
+    object-fit: cover; flex-shrink: 0;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.18);
+}
+.fav-drop-cover-ph {
+    width: 40px; height: 40px; border-radius: 8px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(168,85,247,0.08));
+    border: 1px solid rgba(139,92,246,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.fav-drop-info { flex: 1; min-width: 0; }
+.fav-drop-name {
+    font-size: 0.87rem; font-weight: 700; color: var(--text-white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fav-drop-badge {
+    font-size: 0.7rem; color: #a78bfa; margin-top: 2px;
+}
+.fav-drop-add {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: #a78bfa; font-size: 1rem; font-weight: 700;
+    transition: background 0.15s;
+}
+.fav-drop-item:hover .fav-drop-add { background: rgba(139,92,246,0.28); color: #fff; }
+.fav-drop-item.is-added .fav-drop-add {
+    background: rgba(16,185,129,0.1);
+    border-color: rgba(16,185,129,0.3);
+    color: #34d399;
+}
+
+.fav-drop-empty {
+    padding: 20px; text-align: center;
+    color: var(--text-dim); font-size: 0.82rem;
+}
+
+/* Selected chips area */
+.fav-selected-area {
+    background: rgba(139,92,246,0.04);
+    border: 1.5px dashed rgba(139,92,246,0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    min-height: 52px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-bottom: 16px;
     transition: border-color 0.2s;
 }
-.fav-chips-wrap:focus-within { border-color: #8b5cf6; }
+.fav-selected-area:has(.fav-chip) {
+    border-style: solid;
+    border-color: rgba(139,92,246,0.28);
+    background: rgba(139,92,246,0.06);
+}
 
 .fav-chip {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(139,92,246,0.15);
-    border: 1px solid rgba(139,92,246,0.4);
+    background: linear-gradient(135deg, rgba(109,40,217,0.25), rgba(139,92,246,0.15));
+    border: 1px solid rgba(139,92,246,0.45);
     color: #c084fc;
-    padding: 4px 10px 4px 8px;
-    border-radius: 20px;
-    font-size: 0.82rem; font-weight: 600;
-    animation: chipIn 0.18s ease;
+    padding: 5px 10px 5px 6px;
+    border-radius: 22px;
+    font-size: 0.82rem; font-weight: 700;
+    animation: chipIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
 }
-@keyframes chipIn { from { transform: scale(0.8); opacity:0; } to { transform: scale(1); opacity:1; } }
+@keyframes chipIn { from { transform: scale(0.7); opacity:0; } to { transform: scale(1); opacity:1; } }
 
 .fav-chip-x {
-    background: none; border: none; cursor: pointer;
-    color: rgba(192,132,252,0.6); font-size: 0.85rem; line-height:1;
-    padding: 0 2px; border-radius: 4px;
-    transition: color 0.15s;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+    color: rgba(192,132,252,0.7); font-size: 0.75rem; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    font-family: monospace;
 }
-.fav-chip-x:hover { color: #f87171; }
+.fav-chip-x:hover { background: rgba(248,113,113,0.2); color: #f87171; }
 
-.fav-add-row {
-    display: flex; gap: 8px; align-items: center;
-    margin-bottom: 12px;
+.fav-empty-hint {
+    font-size: 0.78rem; color: var(--text-dim);
+    font-style: italic;
+    width: 100%; text-align: center;
 }
-.fav-add-row .g-input { flex: 1; }
 
-.fav-add-btn {
-    background: rgba(139,92,246,0.15);
-    border: 1px solid rgba(139,92,246,0.3);
+/* Popular tags */
+.popular-section-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.75rem; font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+.popular-section-label::before,
+.popular-section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.07);
+}
+
+.popular-games {
+    display: flex; flex-wrap: wrap; gap: 7px;
+}
+
+.popular-game-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+}
+.popular-game-tag:hover {
+    background: rgba(139,92,246,0.14);
+    border-color: rgba(139,92,246,0.4);
     color: #c084fc;
-    padding: 9px 18px; border-radius: 10px;
-    font-size: 0.85rem; font-weight: 700;
-    cursor: pointer; white-space: nowrap;
-    font-family: 'Vazirmatn', sans-serif;
-    transition: all 0.15s;
+    transform: translateY(-1px);
 }
-.fav-add-btn:hover { background: rgba(139,92,246,0.25); color: #fff; }
-
 .popular-game-tag.selected {
     background: rgba(139,92,246,0.2);
     border-color: rgba(139,92,246,0.55);
     color: #c084fc;
+    box-shadow: 0 0 0 1px rgba(139,92,246,0.2);
 }
 .popular-game-tag.selected::before { content: '✓ '; }
-
-.fav-empty-hint {
-    font-size: 0.78rem; color: var(--text-dim);
-    font-style: italic; align-self: center;
-}
 
 /* Platform checkbox multi-select */
 .platform-grid {
@@ -627,6 +704,18 @@
                     <input type="text" name="last_name" class="g-input" value="{{ request.user.last_name }}" placeholder="نام خانوادگی">
                 </div>
                 <div class="form-group">
+                    <label class="g-label"><svg class="bi bi-controller me-1" aria-hidden="true"><use href="#bi-controller"></use></svg>نام مستعار</label>
+                    <input type="text" name="nickname" class="g-input" value="{{ profile.nickname }}" placeholder="مثلاً: ShadowGamer" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label class="g-label">توی پروفایل کدوم نمایش داده شه؟</label>
+                    <select name="name_display" class="g-input">
+                        {% for val, label in name_display_choices %}
+                            <option value="{{ val }}" {% if profile.name_display == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="g-label"><svg class="bi bi-envelope me-1" aria-hidden="true"><use href="#bi-envelope"></use></svg>ایمیل</label>
                     <input type="email" name="email" class="g-input" value="{{ request.user.email }}" placeholder="example@email.com" dir="ltr">
                 </div>
@@ -647,31 +736,19 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="g-label">سبک بازی</label>
-                    <select name="gaming_style" class="g-input">
-                        <option value="">انتخاب سبک</option>
-                        <option value="competitive" {% if profile.gaming_style == 'competitive' %}selected{% endif %}>رقابتی / Competitive</option>
-                        <option value="casual" {% if profile.gaming_style == 'casual' %}selected{% endif %}>تفریحی / Casual</option>
-                        <option value="streamer" {% if profile.gaming_style == 'streamer' %}selected{% endif %}>استریمر</option>
-                        <option value="pro" {% if profile.gaming_style == 'pro' %}selected{% endif %}>حرفه‌ای / Pro</option>
-                        <option value="collector" {% if profile.gaming_style == 'collector' %}selected{% endif %}>کالکتور</option>
-                        <option value="rpg_lover" {% if profile.gaming_style == 'rpg_lover' %}selected{% endif %}>دوستدار RPG</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="g-label">رنک</label>
-                    <select name="rank" class="g-input">
-                        <option value="">بدون رنک</option>
-                        <option value="bronze" {% if profile.rank == 'bronze' %}selected{% endif %}>برنز</option>
-                        <option value="silver" {% if profile.rank == 'silver' %}selected{% endif %}>نقره</option>
-                        <option value="gold" {% if profile.rank == 'gold' %}selected{% endif %}>طلا</option>
-                        <option value="platinum" {% if profile.rank == 'platinum' %}selected{% endif %}>پلاتینیوم</option>
-                        <option value="diamond" {% if profile.rank == 'diamond' %}selected{% endif %}>الماس</option>
-                        <option value="master" {% if profile.rank == 'master' %}selected{% endif %}>مستر</option>
-                        <option value="grandmaster" {% if profile.rank == 'grandmaster' %}selected{% endif %}>گرندمستر</option>
-                        <option value="challenger" {% if profile.rank == 'challenger' %}selected{% endif %}>چلنجر</option>
-                    </select>
+                <div class="form-group full">
+                    <label class="g-label">سبک بازی <span style="color:var(--text-dim);font-size:.72rem;">— می‌تونی چند سبک رو با هم انتخاب کنی</span></label>
+                    <div class="platform-grid">
+                        {% for val, label in gaming_style_choices %}
+                        <div>
+                            <input type="checkbox" name="gaming_styles" id="gs_{{ val }}" value="{{ val }}" class="platform-option"
+                                {% if val in profile.get_gaming_styles_list %}checked{% endif %}>
+                            <label for="gs_{{ val }}" class="platform-label">
+                                <span>{{ label }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="form-group full">
                     <label class="g-label">بیو / درباره من</label>
@@ -700,33 +777,36 @@
 
         <!-- Favorite Games -->
         <div class="section-card">
-            <div class="section-title"><svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg> بازی‌های مورد علاقه</div>
+            <div class="section-title">
+                <svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg>
+                بازی‌های مورد علاقه
+            </div>
 
-            <!-- Hidden input — actual form value -->
             <input type="hidden" name="favorite_games" id="favHidden" value="{{ profile.favorite_games }}">
 
-            <!-- Chips display -->
-            <label class="g-label" style="margin-bottom:8px;">بازی‌های انتخاب شده</label>
-            <div class="fav-chips-wrap" id="favChips">
-                <span class="fav-empty-hint" id="favEmptyHint">هنوز بازی‌ای اضافه نشده...</span>
+            <!-- Search -->
+            <div class="fav-search-wrap">
+                <svg class="bi bi-search fav-search-icon" aria-hidden="true"><use href="#bi-search"></use></svg>
+                <input type="text" id="favSearchInput" class="fav-search-input"
+                    placeholder="جستجوی بازی از کاتالوگ ما..."
+                    autocomplete="off">
+                <div class="fav-search-dropdown" id="favSearchDropdown"></div>
             </div>
 
-            <!-- Add new game -->
-            <div class="fav-add-row">
-                <input type="text" id="favAddInput" class="g-input" placeholder="نام بازی رو بنویس و اضافه کن..."
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();favAdd();}">
-                <button type="button" class="fav-add-btn" onclick="favAdd()">
-                    <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> اضافه
-                </button>
+            <!-- Selected chips -->
+            <div class="fav-selected-area" id="favChips">
+                <span class="fav-empty-hint" id="favEmptyHint">هنوز بازی‌ای انتخاب نشده — از جستجو بالا اضافه کن</span>
             </div>
 
-            <!-- Popular games — toggle style -->
-            <div style="font-size:0.78rem; color:var(--text-dim); margin-bottom:8px;">بازی‌های پرطرفدار — کلیک کن تا انتخاب/حذف کنی:</div>
+            <!-- Popular quick-picks -->
+            {% if popular_games %}
+            <div class="popular-section-label">پرطرفدارها</div>
             <div class="popular-games" id="popularGameTags">
                 {% for g in popular_games %}
                 <span class="popular-game-tag" data-game="{{ g }}" onclick="favToggle('{{ g }}', this)">{{ g }}</span>
                 {% endfor %}
             </div>
+            {% endif %}
         </div>
 
         <!-- Location for Gamer Finder -->
@@ -921,68 +1001,144 @@ function previewAvatar(input) {
     }
 }
 
-/* ── Favorite Games Chip Selector ── */
+/* ── Favorite Games ── */
+/* favGames = [{name, cover}, ...] */
 let favGames = [];
 
 function favInit() {
     const raw = document.getElementById('favHidden').value;
-    favGames = raw ? raw.split(',').map(g => g.trim()).filter(Boolean) : [];
+    favGames = raw ? raw.split(',').map(g => g.trim()).filter(Boolean).map(n => ({name: n, cover: ''})) : [];
     favRender();
 }
 
-function favRender() {
-    const wrap    = document.getElementById('favChips');
-    const hint    = document.getElementById('favEmptyHint');
-    const hidden  = document.getElementById('favHidden');
+function favNames() { return favGames.map(g => g.name); }
 
-    /* chips */
-    const chips = favGames.map(g => `
-        <span class="fav-chip">
-            <svg class="bi bi-joystick" aria-hidden="true" style="font-size:0.72rem;"><use href="#bi-joystick"></use></svg>
-            ${escH(g)}
-            <button type="button" class="fav-chip-x" onclick="favRemove('${escAttr(g)}')" title="حذف">×</button>
-        </span>
-    `).join('');
-    wrap.innerHTML = chips || '';
-    if (!favGames.length) {
-        if (!hint.parentNode) wrap.appendChild(hint);
-        hint.style.display = 'inline';
+function favRender() {
+    const wrap   = document.getElementById('favChips');
+    const hidden = document.getElementById('favHidden');
+
+    if (favGames.length) {
+        wrap.innerHTML = favGames.map(g => `
+            <span class="fav-chip">
+                ${g.cover
+                    ? `<img src="${g.cover}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;" alt="">`
+                    : `<span style="font-size:0.75rem;">🎮</span>`}
+                ${escH(g.name)}
+                <button type="button" class="fav-chip-x" data-remove="${escH(g.name)}" title="حذف">×</button>
+            </span>
+        `).join('');
+        wrap.querySelectorAll('.fav-chip-x').forEach(btn => {
+            btn.addEventListener('click', () => favRemove(btn.dataset.remove));
+        });
     } else {
-        hint.style.display = 'none';
+        wrap.innerHTML = '<span class="fav-empty-hint" id="favEmptyHint">هنوز بازی‌ای انتخاب نشده — از جستجو بالا اضافه کن</span>';
     }
 
-    /* update hidden input */
-    hidden.value = favGames.join(', ');
+    hidden.value = favNames().join(', ');
 
-    /* update popular tag selected states */
     document.querySelectorAll('.popular-game-tag').forEach(tag => {
-        const g = tag.dataset.game;
-        tag.classList.toggle('selected', favGames.includes(g));
+        tag.classList.toggle('selected', favNames().includes(tag.dataset.game));
     });
 }
 
-function favAdd() {
-    const input = document.getElementById('favAddInput');
-    const name  = input.value.trim();
-    if (!name) return;
-    if (!favGames.includes(name)) {
-        favGames.push(name);
-        favRender();
-    }
-    input.value = '';
-    input.focus();
+/* ── Game Search ── */
+let _favSearchTimer = null;
+
+function initGameSearch() {
+    const input = document.getElementById('favSearchInput');
+    const dd    = document.getElementById('favSearchDropdown');
+    if (!input) return;
+
+    input.addEventListener('input', function() {
+        clearTimeout(_favSearchTimer);
+        const q = this.value.trim();
+        if (!q) { closeFavDrop(); return; }
+        /* loading state */
+        dd.innerHTML = '<div class="fav-drop-empty">🔍 در حال جستجو...</div>';
+        dd.classList.add('open');
+        _favSearchTimer = setTimeout(() => fetchGames(q), 220);
+    });
+
+    input.addEventListener('focus', function() {
+        const q = this.value.trim();
+        if (q) fetchGames(q);
+    });
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeFavDrop(); this.blur(); }
+    });
+
+    dd.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        const item = e.target.closest('.fav-drop-item');
+        if (!item || item.classList.contains('is-added')) return;
+        const name  = item.dataset.gameName;
+        const cover = item.dataset.gameCover || '';
+        if (name) favPickGame(name, cover);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !dd.contains(e.target)) closeFavDrop();
+    });
+}
+
+function fetchGames(q) {
+    const dd = document.getElementById('favSearchDropdown');
+    fetch(`{% url 'community:game_search_api' %}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok || !data.games.length) {
+                dd.innerHTML = '<div class="fav-drop-empty">بازی‌ای پیدا نشد 😕</div>';
+                dd.classList.add('open');
+                return;
+            }
+            dd.innerHTML = data.games.map(g => {
+                const added = favGames.includes(g.name);
+                const cover = g.cover
+                    ? `<img src="${g.cover}" class="fav-drop-cover" alt="">`
+                    : `<div class="fav-drop-cover-ph">🎮</div>`;
+                return `
+                <div class="fav-drop-item${added ? ' is-added' : ''}"
+                     data-game-name="${escH(g.name)}"
+                     data-game-cover="${escH(g.cover)}">
+                    ${cover}
+                    <div class="fav-drop-info">
+                        <div class="fav-drop-name">${escH(g.name)}</div>
+                        ${added ? '<div class="fav-drop-badge">✓ اضافه شده</div>' : ''}
+                    </div>
+                    <div class="fav-drop-add">${added ? '✓' : '+'}</div>
+                </div>`;
+            }).join('');
+            dd.classList.add('open');
+        })
+        .catch(() => {
+            dd.innerHTML = '<div class="fav-drop-empty">خطا در جستجو</div>';
+        });
+}
+
+function favPickGame(name, cover) {
+    if (favNames().includes(name)) return;
+    document.getElementById('favSearchInput').value = '';
+    closeFavDrop();
+    favGames.push({name, cover: cover || ''});
+    favRender();
+}
+
+function closeFavDrop() {
+    const dd = document.getElementById('favSearchDropdown');
+    if (dd) dd.classList.remove('open');
 }
 
 function favRemove(name) {
-    favGames = favGames.filter(g => g !== name);
+    favGames = favGames.filter(g => g.name !== name);
     favRender();
 }
 
 function favToggle(name, el) {
-    if (favGames.includes(name)) {
+    if (favNames().includes(name)) {
         favRemove(name);
     } else {
-        favGames.push(name);
+        favGames.push({name, cover: ''});
         favRender();
     }
 }
@@ -993,6 +1149,7 @@ function escAttr(s) { return String(s).replace(/'/g,"\\'"); }
 /* init on load */
 document.addEventListener('DOMContentLoaded', () => {
   favInit();
+  initGameSearch();
   initSearchableSelects();
 
   /* national_id — only digits (Persian or Latin) */

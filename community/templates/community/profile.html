@@ -106,6 +106,11 @@
     box-shadow: 0 0 0 4px rgba(139,92,246,0.2), 0 0 30px rgba(139,92,246,0.5);
     display: block;
 }
+.profile-avatar-img.premium-avatar,
+.profile-avatar-placeholder.premium-avatar {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.25), 0 0 30px rgba(251,191,36,0.45);
+}
 .profile-avatar-placeholder {
     width: 115px; height: 115px;
     border-radius: 50%;
@@ -1093,9 +1098,9 @@
             <div class="profile-top-row">
                 <div class="profile-avatar-wrap">
                     {% if profile.avatar %}
-                        <img src="{{ profile.avatar.url }}" class="profile-avatar-img" alt="{{ profile_user.username }}">
+                        <img src="{{ profile.avatar.url }}" class="profile-avatar-img{% if profile.is_premium %} premium-avatar{% endif %}" alt="{{ profile_user.username }}">
                     {% else %}
-                        <div class="profile-avatar-placeholder">{{ profile_user.username|first|upper }}</div>
+                        <div class="profile-avatar-placeholder{% if profile.is_premium %} premium-avatar{% endif %}">{{ profile_user.username|first|upper }}</div>
                     {% endif %}
                 </div>
                 <div class="profile-actions">
@@ -1122,7 +1127,8 @@
 
             <div class="profile-name-section">
                 <div class="profile-display-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    {% if profile_user.get_full_name %}{{ profile_user.get_full_name }}{% else %}{{ profile_user.username }}{% endif %}
+                    {{ profile.display_name }}
+                    {% verified_badge profile 'lg' %}
                     {% if profile.is_premium %}
                     <span title="کاربر پریمیوم" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:50%;flex-shrink:0;box-shadow:0 2px 8px rgba(59,130,246,.5);">
                       <svg viewBox="0 0 24 24" fill="white" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -1131,8 +1137,27 @@
                 </div>
                 <div class="profile-username">
                     @{{ profile_user.username }}
-                    {% if profile.is_premium %}<span style="font-size:.68rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:1px 8px;margin-right:4px;vertical-align:middle;">✦ پریمیوم</span>{% endif %}
+                    {% if profile.is_premium %}<span style="font-size:.68rem;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:1px 8px;margin-right:4px;vertical-align:middle;"><svg class="bi bi-gem" style="width:.7em;height:.7em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> پریمیوم</span>{% endif %}
                 </div>
+
+                {% if is_own_profile and premium_sub and premium_sub.hours_left > 0 %}
+                <div style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;
+                            background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(139,92,246,.06));
+                            border:1px solid rgba(251,191,36,.2);border-radius:12px;
+                            padding:7px 14px;font-size:.8rem;">
+                    <svg class="bi bi-gem" style="width:.9em;height:.9em;fill:#fbbf24;flex-shrink:0;" aria-hidden="true"><use href="#bi-gem"></use></svg>
+                    <span style="color:var(--text-muted);">اشتراک پریمیوم:</span>
+                    {% if premium_sub.days_left > 0 %}
+                        <span style="font-weight:800;color:#fbbf24;">{{ premium_sub.days_left }} روز</span>
+                        <span style="color:var(--text-muted);">باقی‌مانده</span>
+                    {% else %}
+                        <span style="font-weight:800;color:#f97316;">کمتر از ۱ روز</span>
+                    {% endif %}
+                    <span style="color:var(--text-dim);font-size:.72rem;">
+                        (تا {{ premium_sub.end_date|jalali:"Y/m/d" }})
+                    </span>
+                </div>
+                {% endif %}
 
                 {% if profile.bio %}
                     <p class="profile-bio">{{ profile.bio }}</p>
@@ -1154,11 +1179,11 @@
                             <svg class="bi bi-geo-alt-fill" aria-hidden="true"><use href="#bi-geo-alt-fill"></use></svg> {{ profile.get_city_display }}
                         </span>
                     {% endif %}
-                    {% if profile.gaming_style %}
+                    {% for style_label in profile.get_gaming_styles_display %}
                         <span class="badge-item badge-style">
-                            <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ profile.get_gaming_style_display }}
+                            <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ style_label }}
                         </span>
-                    {% endif %}
+                    {% endfor %}
                 </div>
 
             </div>
@@ -1189,39 +1214,18 @@
                 {% endif %}
             </div>
 
-            <!-- ── آنالیتیکس پریمیوم ── -->
-            {% if analytics %}
-            <div style="background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(139,92,246,.04));border:1px solid rgba(251,191,36,.2);border-radius:16px;padding:16px;margin:12px 0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                    <span style="font-size:.85rem;font-weight:800;color:#fbbf24;">📊 آنالیتیکس پروفایل</span>
-                    <span style="font-size:.68rem;background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:1px 8px;">✦ پریمیوم</span>
+            <!-- ── دکمه آمارها (فقط پریمیوم خودت) ── -->
+            {% if is_own_profile and profile.is_premium %}
+            <a href="{% url 'community:profile_stats' %}" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(139,92,246,.06));border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:13px 16px;margin:12px 0;text-decoration:none;transition:.18s;" onmouseover="this.style.borderColor='rgba(251,191,36,.5)'" onmouseout="this.style.borderColor='rgba(251,191,36,.25)'">
+                <div style="width:38px;height:38px;border-radius:10px;background:rgba(251,191,36,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="color:#fbbf24"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg>
                 </div>
-                <!-- کارت‌های آمار -->
-                <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#60a5fa;">{{ analytics.total_views_30d }}</div>
-                        <div style="font-size:.7rem;color:var(--text-muted);">بازدید ۳۰ روز</div>
-                    </div>
-                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#4ade80;">{{ analytics.followers_now }}</div>
-                        <div style="font-size:.7rem;color:var(--text-muted);">فالوور فعلی</div>
-                    </div>
-                    <div style="flex:1;min-width:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#f472b6;">{{ analytics.total_reactions_14d }}</div>
-                        <div style="font-size:.7rem;color:var(--text-muted);">ری‌اکشن ۱۴ روز</div>
-                    </div>
+                <div style="flex:1;">
+                    <div style="font-size:.88rem;font-weight:800;color:#fbbf24;">آمارها</div>
+                    <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px;">بازدید، فالوور و ری‌اکشن‌های پروفایلت</div>
                 </div>
-                <!-- نمودار بازدید -->
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:700;">بازدید پروفایل — ۱۴ روز اخیر</div>
-                    <canvas id="viewsChart" height="70"></canvas>
-                </div>
-                <!-- نمودار فالوور -->
-                <div>
-                    <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:700;">فالوور جدید روزانه — ۱۴ روز اخیر</div>
-                    <canvas id="followChart" height="70"></canvas>
-                </div>
-            </div>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="color:var(--text-faint)"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+            </a>
             {% endif %}
 
             <!-- Favorite genre & pinned game -->
@@ -1373,6 +1377,11 @@
             <button class="profile-tab" id="tab-following" onclick="switchTab('following')">
                 <svg class="bi bi-person-check-fill" aria-hidden="true"><use href="#bi-person-check-fill"></use></svg> دنبال‌شده‌ها
             </button>
+            {% if is_own_profile and profile.is_premium %}
+            <a href="{% url 'community:profile_stats' %}" class="profile-tab" style="color:#fbbf24;text-decoration:none;">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="vertical-align:-.125em"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg> آمارها
+            </a>
+            {% endif %}
         </div>
 
         <div class="profile-layout">
@@ -1440,10 +1449,10 @@
                                     <button class="post-action-btn" id="rxn-main-{{ post.id }}"
                                         data-my-reaction="{{ post.my_reaction }}"
                                         onclick="toggleReactionPicker({{ post.id }})">
-                                        {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.75rem;">خفن</span>
+                                        {% if post.my_reaction == 'fire' %}<svg class="bi bi-fire" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-fire"></use></svg> <span style="font-size:.75rem;">خفن</span>
                                         {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.75rem;">GG</span>
                                         {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.75rem;">عصبانی</span>
-                                        {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.75rem;">لجند</span>
+                                        {% elif post.my_reaction == 'legend' %}<svg class="bi bi-trophy-fill" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> <span style="font-size:.75rem;">لجند</span>
                                         {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.75rem;">GG EZ</span>
                                         {% elif post.my_reaction == 'cry' %}😢 <span style="font-size:.75rem;">گریه</span>
                                         {% elif post.my_reaction == 'sob' %}😭 <span style="font-size:.75rem;">اشک</span>
@@ -1662,7 +1671,7 @@
                                 {% if ga.extra_data %}
                                     <div style="margin-top:8px; font-size:0.72rem; color:var(--text-dim);">
                                         {% if ga.extra_data.gamerscore %}
-                                            <span>🏆 {{ ga.extra_data.gamerscore }} امتیاز</span>
+                                            <span><svg class="bi bi-trophy-fill" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> {{ ga.extra_data.gamerscore }} امتیاز</span>
                                         {% endif %}
                                         {% if ga.extra_data.country %}
                                             <span>{{ ga.extra_data.country }}</span>
@@ -1798,10 +1807,10 @@
                         <span>{{ profile.get_rank_display }}</span>
                     </div>
                     {% endif %}
-                    {% if profile.gaming_style %}
+                    {% if profile.get_gaming_styles_list %}
                     <div class="sidebar-info-row">
                         <svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg>
-                        <span>{{ profile.get_gaming_style_display }}</span>
+                        <span>{{ profile.get_gaming_styles_display|join:'، ' }}</span>
                     </div>
                     {% endif %}
                     {% if profile.city %}
@@ -1843,6 +1852,42 @@
                         {% endif %}
                     </div>
                     {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Mini stats for own profile -->
+                {% if is_own_profile %}
+                <div class="sidebar-card" style="padding:18px;">
+                    <div class="sidebar-card-title" style="margin-bottom:14px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="color:var(--purple);vertical-align:-.125em"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg> آمار سریع
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:12px 10px;text-align:center;">
+                            <div style="font-size:1.4rem;font-weight:900;color:#60a5fa;line-height:1;">{{ profile_views_30d }}</div>
+                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">بازدید ۳۰ روز</div>
+                        </div>
+                        <div style="background:rgba(244,114,182,.07);border:1px solid rgba(244,114,182,.15);border-radius:12px;padding:12px 10px;text-align:center;">
+                            <div style="font-size:1.4rem;font-weight:900;color:#f472b6;line-height:1;">{{ reactions_14d }}</div>
+                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">ری‌اکشن ۱۴ روز</div>
+                        </div>
+                        <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.15);border-radius:12px;padding:12px 10px;text-align:center;">
+                            <div style="font-size:1.4rem;font-weight:900;color:#4ade80;line-height:1;">{{ profile.followers_count }}</div>
+                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">دنبال‌کننده</div>
+                        </div>
+                        <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.15);border-radius:12px;padding:12px 10px;text-align:center;">
+                            <div style="font-size:1.4rem;font-weight:900;color:#a78bfa;line-height:1;">{{ zarban_balance }}</div>
+                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">ضربان 💜</div>
+                        </div>
+                    </div>
+                    {% if profile.is_premium %}
+                    <a href="{% url 'community:profile_stats' %}" style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:9px;color:#fbbf24;font-size:.8rem;font-weight:700;text-decoration:none;transition:.15s;" onmouseover="this.style.borderColor='rgba(251,191,36,.45)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="vertical-align:-.125em"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg> مشاهده آمار کامل
+                    </a>
+                    {% else %}
+                    <a href="{% url 'community:premium_info' %}" style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:9px;color:#a78bfa;font-size:.8rem;font-weight:700;text-decoration:none;transition:.15s;" onmouseover="this.style.borderColor='rgba(139,92,246,.45)'" onmouseout="this.style.borderColor='rgba(139,92,246,.2)'">
+                        🔒 آمار کامل — پریمیوم
+                    </a>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -2528,44 +2573,4 @@ function bmShowErr(msg) {
 }
 </script>
 
-{% if analytics %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-(function(){
-    const viewLabels  = {{ analytics.view_labels|safe }};
-    const viewData    = {{ analytics.view_data|safe }};
-    const followLabels= {{ analytics.follow_labels|safe }};
-    const followData  = {{ analytics.follow_data|safe }};
-
-    const commonOpts = {
-        responsive: true,
-        plugins: { legend: { display: false }, tooltip: { rtl: true, bodyFont: { family: 'Vazirmatn' } } },
-        scales: {
-            x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' } },
-            y: { ticks: { color: '#6b7280', font: { size: 10 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,.06)' }, beginAtZero: true }
-        }
-    };
-
-    new Chart(document.getElementById('viewsChart'), {
-        type: 'bar',
-        data: {
-            labels: viewLabels,
-            datasets: [{ data: viewData, backgroundColor: 'rgba(96,165,250,.5)', borderColor: '#60a5fa',
-                          borderWidth: 1, borderRadius: 4 }]
-        },
-        options: commonOpts
-    });
-
-    new Chart(document.getElementById('followChart'), {
-        type: 'line',
-        data: {
-            labels: followLabels,
-            datasets: [{ data: followData, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,.1)',
-                          borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#4ade80', fill: true, tension: .4 }]
-        },
-        options: commonOpts
-    });
-})();
-</script>
-{% endif %}
 {% endblock %}

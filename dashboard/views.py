@@ -13,9 +13,10 @@ import urllib.request
 import urllib.parse
 import os
 import jdatetime
+from django.conf import settings
 from .models import Game, GENRE_CHOICES, PLATFORM_CHOICES
 from community.models import Post, Comment, Hashtag, GamerProfile, PostLike, PostReaction, GameBacklog
-from community.models import Notification, Conversation, Message, ScoreSettings
+from community.models import Notification, Conversation, Message, ScoreSettings, UserSession
 from community.models import ZarbanWallet, ZarbanTransaction
 from community.models import SpinWheel, SpinWheelItem, SpinRecord
 from community.models import PremiumPlan, PremiumSubscription
@@ -150,7 +151,7 @@ def user_list(request):
     q = request.GET.get('q', '').strip()
     filter_type = request.GET.get('filter', 'all')
 
-    users = User.objects.annotate(post_count=Count('posts')).order_by('-date_joined')
+    users = User.objects.select_related('gamer_profile').annotate(post_count=Count('posts')).order_by('-date_joined')
 
     if q:
         users = users.filter(Q(username__icontains=q) | Q(email__icontains=q))
@@ -184,6 +185,22 @@ def user_toggle_ban(request, user_id):
             u.is_active = not u.is_active
             u.save()
             messages.success(request, f'کاربر {u.username} {"فعال" if u.is_active else "مسدود"} شد.')
+    return redirect('dashboard:users')
+
+
+@login_required
+@user_passes_test(is_admin)
+def user_toggle_verified(request, user_id):
+    if request.method == 'POST':
+        u = get_object_or_404(User, pk=user_id)
+        profile = GamerProfile.objects.filter(user=u).first()
+        if profile:
+            profile.is_verified = not profile.is_verified
+            profile.save(update_fields=['is_verified'])
+            messages.success(request, f'کاربر {u.username} {"تأیید شد ✓" if profile.is_verified else "از تأیید خارج شد"}.')
+    next_url = request.POST.get('next') or 'dashboard:users'
+    if next_url == 'dashboard:user_detail':
+        return redirect('dashboard:user_detail', user_id=user_id)
     return redirect('dashboard:users')
 
 
@@ -383,14 +400,30 @@ def game_list(request):
 @user_passes_test(is_admin)
 def game_add(request):
     if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        steam_url = request.POST.get('steam_url', '').strip()
+
+        if Game.objects.filter(name__iexact=name).exists():
+            messages.error(request, f'بازی با نام «{name}» قبلاً ثبت شده.')
+            return render(request, 'dashboard/game_form.html', {
+                'action': 'add', 'genre_choices': GENRE_CHOICES, 'platform_choices': PLATFORM_CHOICES,
+            })
+        if steam_url and Game.objects.filter(steam_url=steam_url).exists():
+            messages.error(request, 'این لینک استیم قبلاً برای یک بازی دیگر ثبت شده.')
+            return render(request, 'dashboard/game_form.html', {
+                'action': 'add', 'genre_choices': GENRE_CHOICES, 'platform_choices': PLATFORM_CHOICES,
+            })
+
         g = Game()
-        g.name = request.POST.get('name', '').strip()
+        g.name = name
+        g.steam_url = steam_url
         g.genre = request.POST.get('genre', '')
         g.developer = request.POST.get('developer', '')
         g.publisher = request.POST.get('publisher', '')
         g.release_year = request.POST.get('release_year') or None
         g.description = request.POST.get('description', '')
         g.is_featured = 'is_featured' in request.POST
+        g.is_popular  = 'is_popular'  in request.POST
         g.is_online       = 'is_online'       in request.POST
         g.is_crack_online = 'is_crack_online' in request.POST
         g.platforms = request.POST.getlist('platforms')
@@ -413,13 +446,31 @@ def game_add(request):
 def game_edit(request, game_id):
     game = get_object_or_404(Game, pk=game_id)
     if request.method == 'POST':
-        game.name = request.POST.get('name', '').strip()
+        new_name = request.POST.get('name', '').strip()
+        new_steam_url = request.POST.get('steam_url', '').strip()
+
+        if Game.objects.filter(name__iexact=new_name).exclude(pk=game.pk).exists():
+            messages.error(request, f'بازی دیگری با نام «{new_name}» وجود دارد.')
+            return render(request, 'dashboard/game_form.html', {
+                'action': 'edit', 'game': game,
+                'genre_choices': GENRE_CHOICES, 'platform_choices': PLATFORM_CHOICES,
+            })
+        if new_steam_url and Game.objects.filter(steam_url=new_steam_url).exclude(pk=game.pk).exists():
+            messages.error(request, 'این لینک استیم قبلاً برای یک بازی دیگر ثبت شده.')
+            return render(request, 'dashboard/game_form.html', {
+                'action': 'edit', 'game': game,
+                'genre_choices': GENRE_CHOICES, 'platform_choices': PLATFORM_CHOICES,
+            })
+
+        game.name = new_name
+        game.steam_url = new_steam_url
         game.genre = request.POST.get('genre', '')
         game.developer = request.POST.get('developer', '')
         game.publisher = request.POST.get('publisher', '')
         game.release_year = request.POST.get('release_year') or None
         game.description = request.POST.get('description', '')
         game.is_featured = 'is_featured' in request.POST
+        game.is_popular  = 'is_popular'  in request.POST
         game.is_online   = 'is_online'   in request.POST
         game.platforms = request.POST.getlist('platforms')
         if request.FILES.get('cover'):

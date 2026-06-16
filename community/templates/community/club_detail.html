@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}{{ club.name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -204,8 +205,9 @@
                         {% else %}{{ post.author.username|first|upper }}{% endif %}
                     </div>
                     <div>
-                        <div class="cd-post-username">
+                        <div class="cd-post-username" style="display:inline-flex;align-items:center;gap:4px;">
                             <a href="{% url 'community:profile' post.author.username %}" style="color:#fff;text-decoration:none;">{{ post.author.username }}</a>
+                            {% verified_badge post.author.gamer_profile 'sm' %}
                         </div>
                         <div class="cd-post-time">{{ post.created_at|timesince }} پیش</div>
                     </div>
@@ -232,8 +234,9 @@
                         <img src="{{ m.user.gamer_profile.avatar.url }}" alt="">
                         {% else %}{{ m.user.username|first|upper }}{% endif %}
                     </div>
-                    <div class="cd-member-name">
+                    <div class="cd-member-name" style="display:inline-flex;align-items:center;gap:4px;">
                         <a href="{% url 'community:profile' m.user.username %}" style="color:inherit;text-decoration:none;">{{ m.user.username }}</a>
+                        {% verified_badge m.user.gamer_profile 'sm' %}
                     </div>
                     {% if m.role != 'member' %}
                     <span class="cd-role-badge {{ m.role }}">{{ m.get_role_display }}</span>

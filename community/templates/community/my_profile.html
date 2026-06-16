@@ -1,4 +1,5 @@
 {% extends 'community/base.html' %}
+{% load community_tags %}
 {% block title %}حساب کاربری | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -306,7 +307,7 @@
                     </div>
                 </div>
 
-                <div class="ph-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="ph-name" style="display:flex;align-items:center;justify-content:center;gap:6px;">{{ profile.display_name }} {% verified_badge profile 'md' %}</div>
                 <div class="ph-tag">@{{ request.user.username }}</div>
                 {% if profile.bio %}<div class="ph-bio">{{ profile.bio }}</div>{% endif %}
 
@@ -394,6 +395,18 @@
                             <label class="g-label">نام خانوادگی</label>
                             <input type="text" name="last_name" class="g-input" value="{{ request.user.last_name }}" placeholder="نام خانوادگی">
                         </div>
+                    </div>
+                    <div class="field">
+                        <label class="g-label">نام مستعار <span style="color:var(--text-dim);font-size:.72rem;">— اسمی که دوست داری گیمرها باهاش بشناسنت</span></label>
+                        <input type="text" name="nickname" class="g-input" value="{{ profile.nickname }}" placeholder="مثلاً: ShadowGamer" maxlength="50">
+                    </div>
+                    <div class="field">
+                        <label class="g-label">توی پروفایل کدوم نمایش داده شه؟</label>
+                        <select name="name_display" class="g-input">
+                            {% for val, label in name_display_choices %}
+                                <option value="{{ val }}" {% if profile.name_display == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="field">
                         <label class="g-label">بیو <span style="color:var(--text-dim);font-size:.72rem;">— خودت رو با یه جمله معرفی کن</span></label>

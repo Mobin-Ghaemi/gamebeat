@@ -45,6 +45,12 @@
                 {% else %}
                     <span class="badge-banned"><svg class="bi bi-slash-circle me-1" aria-hidden="true"><use href="#bi-slash-circle"></use></svg>مسدود</span>
                 {% endif %}
+                {% if profile.is_verified %}
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;color:#22d3ee;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:20px;padding:3px 10px;">
+                        <svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        تأیید‌شده
+                    </span>
+                {% endif %}
             </div>
 
             <!-- Ban/Unban -->
@@ -59,6 +65,19 @@
                 {% else %}
                     <button type="submit" class="btn-success-ghost" style="width:100%;justify-content:center">
                         <svg class="bi bi-check-circle me-1" aria-hidden="true"><use href="#bi-check-circle"></use></svg>فعال‌سازی
+                    </button>
+                {% endif %}
+            </form>
+            <form method="post" action="{% url 'dashboard:user_verify' u.pk %}" style="margin-top:8px">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="dashboard:user_detail">
+                {% if profile.is_verified %}
+                    <button type="submit" class="btn-ghost" style="width:100%;justify-content:center;color:#22d3ee;border-color:rgba(34,211,238,.35);">
+                        <svg viewBox="0 0 24 24" width="14" height="14" style="margin-left:5px;"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>حذف تأیید
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn-ghost" style="width:100%;justify-content:center">
+                        <svg class="bi bi-patch-check me-1" aria-hidden="true"><use href="#bi-check-circle"></use></svg>تأیید کاربر
                     </button>
                 {% endif %}
             </form>

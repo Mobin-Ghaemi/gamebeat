@@ -3,7 +3,6 @@ from django.utils.html import format_html
 from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, Achievement
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 
-admin.site.register(GamerProfile)
 admin.site.register(Post)
 admin.site.register(PostLike)
 admin.site.register(Comment)
@@ -14,6 +13,14 @@ admin.site.register(ActivityLog)
 admin.site.register(Club)
 admin.site.register(ClubMember)
 admin.site.register(ClubPost)
+
+
+@admin.register(GamerProfile)
+class GamerProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'display_name', 'is_verified', 'rank', 'created_at')
+    list_editable = ('is_verified',)
+    list_filter = ('is_verified', 'rank', 'platform')
+    search_fields = ('user__username', 'nickname')
 
 
 @admin.register(Challenge)

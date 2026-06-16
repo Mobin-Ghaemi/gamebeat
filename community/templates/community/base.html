@@ -1252,10 +1252,15 @@
 
     // ── Notification + DM badge polling ──
     {% if user.is_authenticated %}
-    function updateBadge(url, badgeId, btnId, storageKey) {
+    function updateBadge(url, badgeId, btnId, storageKey, extraBadgeId) {
         fetch(url, {credentials:'same-origin'}).then(r => r.json()).then(d => {
             const badge = document.getElementById(badgeId);
             const btn   = document.getElementById(btnId);
+            const extra = extraBadgeId ? document.getElementById(extraBadgeId) : null;
+            if (extra) {
+                if (d.count > 0) { extra.style.display = 'block'; extra.textContent = d.count > 99 ? '99+' : d.count; }
+                else { extra.style.display = 'none'; }
+            }
             if (!badge) return;
             if (d.count > 0) {
                 const label = d.count > 99 ? '99+' : String(d.count);
@@ -1285,18 +1290,28 @@
     }
     function pollBadges() {
         updateBadge('{% url "community:notifications_count" %}', 'notifBadge', 'navBellBtn', 'gb_notif_c');
-        updateBadge('{% url "community:inbox_count" %}', 'dmBadge', 'navDmBtn', 'gb_dm_c');
+        // یک درخواست inbox_count، هم بج نوبار هم بج پیام‌رسان رو آپدیت می‌کنه
+        updateBadge('{% url "community:inbox_count" %}', 'dmBadge', 'navDmBtn', 'gb_dm_c', 'msgBadge');
     }
-    // اول صفحه بارگذاری می‌شه
-    pollBadges();
-    // هر ۱۰ ثانیه چک می‌کنه
-    setInterval(pollBadges, 10000);
-    // هر بار که تب فعال می‌شه هم آپدیت کنه
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) pollBadges();
-    });
     // expose برای صفحات دیگه
     window.refreshBadges = pollBadges;
+
+    // ── Visibility-aware polling: وقتی تب پس‌زمینه‌ست، هیچ درخواستی نزن ──
+    let _badgeTimer = null;
+    function startBadgePolling() {
+        if (_badgeTimer) return;
+        pollBadges();
+        _badgeTimer = setInterval(pollBadges, 10000);
+    }
+    function stopBadgePolling() {
+        clearInterval(_badgeTimer);
+        _badgeTimer = null;
+    }
+    if (!document.hidden) startBadgePolling();
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopBadgePolling();
+        else startBadgePolling();
+    });
     {% endif %}
 
     // ── Global Toast ──
@@ -1379,6 +1394,386 @@
 
 <!-- ═══ Global Reaction Picker (fixed, escapes card overflow) ═══ -->
 <div id="globalRxnPicker"></div>
+
+{% if user.is_authenticated %}
+<!-- ═══ Messenger Select-bar (global) ═══ -->
+<style>
+@keyframes msgSlideUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+#msgBar {
+    position:fixed; bottom:0; right:20px; z-index:8100;
+    width:240px;
+}
+#msgBarBtn {
+    width:100%;
+    background:#1e1e2e;
+    border:1px solid rgba(139,92,246,.35);
+    border-bottom:none;
+    border-radius:12px 12px 0 0;
+    padding:10px 14px;
+    display:flex; align-items:center; gap:10px;
+    cursor:pointer; color:#d0d0e8;
+    font-family:'Vazirmatn',sans-serif; font-size:.88rem; font-weight:700;
+    transition:background .15s;
+    user-select:none;
+}
+#msgBarBtn:hover { background:#252538; }
+#msgBarBtnLabel { flex:1; text-align:right; }
+#msgBarArrow {
+    font-size:.75rem; color:#7c6aaa;
+    transition:transform .2s;
+    display:inline-block;
+}
+#msgBarArrow.open { transform:rotate(180deg); }
+#msgBadge {
+    background:#ef4444; color:#fff; border-radius:50%;
+    font-size:.6rem; font-weight:900; min-width:18px; height:18px;
+    line-height:18px; text-align:center; padding:0 4px;
+    display:none;
+}
+#msgPanel {
+    position:absolute; bottom:100%; right:0; left:0;
+    background:#141420; border:1px solid rgba(139,92,246,.28);
+    border-radius:14px 14px 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.7);
+    display:none; flex-direction:column; overflow:hidden;
+    max-height:340px;
+    animation:msgSlideUp .2s cubic-bezier(.34,1.2,.64,1);
+}
+#msgPanel.open { display:flex; }
+#msgSearchWrap { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.05); flex-shrink:0; }
+#msgSearch {
+    width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+    border-radius:8px; padding:7px 10px; color:#d0d0d0; font-size:.8rem;
+    outline:none; font-family:'Vazirmatn',sans-serif; box-sizing:border-box;
+    transition:border-color .15s;
+}
+#msgSearch:focus { border-color:rgba(139,92,246,.5); }
+#msgSearch::placeholder { color:#383850; }
+#msgContactList { flex:1; overflow-y:auto; min-height:0; }
+#msgContactList::-webkit-scrollbar { width:3px; }
+#msgContactList::-webkit-scrollbar-thumb { background:#232340; border-radius:3px; }
+.msg-contact-row {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 12px; cursor:pointer; transition:background .12s;
+    border-bottom:1px solid rgba(255,255,255,.03);
+}
+.msg-contact-row:hover { background:rgba(139,92,246,.1); }
+.msg-contact-av { width:34px; height:34px; border-radius:50%; flex-shrink:0; object-fit:cover; }
+.msg-contact-av-ph {
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:#fff; font-size:.82rem;
+}
+.msg-contact-info { flex:1; min-width:0; }
+.msg-contact-name { font-size:.82rem; font-weight:700; color:#e2e2e2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.msg-contact-sub  { font-size:.68rem; color:#3d3d5a; margin-top:1px; }
+.msg-contact-unread {
+    background:#ef4444; color:#fff; border-radius:50%;
+    font-size:.6rem; font-weight:900; min-width:16px; height:16px;
+    line-height:16px; text-align:center; padding:0 3px;
+}
+#msgChat {
+    position:fixed; bottom:0; right:280px; z-index:8100;
+    width:300px; height:400px;
+    background:#141420; border:1px solid rgba(139,92,246,.25);
+    border-radius:14px 14px 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.7);
+    display:none; flex-direction:column; overflow:hidden;
+    animation:msgSlideUp .2s cubic-bezier(.34,1.2,.64,1);
+}
+#msgChatHead {
+    padding:10px 13px; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:9px; flex-shrink:0;
+    background:#1a1a2e;
+}
+#msgChatAv {
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#4c1d95,#7c3aed);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:#fff; font-size:.78rem; overflow:hidden;
+}
+#msgChatName { font-size:.84rem; font-weight:800; color:#f0f0f0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#msgChatFull { font-size:.68rem; color:#7c3aed; text-decoration:none; white-space:nowrap; padding:2px 7px; border-radius:6px; background:rgba(124,58,237,.1); }
+#msgChatFull:hover { background:rgba(124,58,237,.22); }
+#msgChatClose { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); color:#666; width:24px; height:24px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
+#msgChatClose:hover { background:#ef4444; color:#fff; border-color:#ef4444; }
+#msgChatMsgs {
+    flex:1; overflow-y:auto; padding:10px 12px;
+    display:flex; flex-direction:column; gap:5px; min-height:0;
+}
+#msgChatMsgs::-webkit-scrollbar { width:3px; }
+#msgChatMsgs::-webkit-scrollbar-thumb { background:#232340; border-radius:3px; }
+#msgChatInput {
+    padding:8px 10px; border-top:1px solid rgba(255,255,255,.06);
+    display:flex; gap:7px; flex-shrink:0; background:#141420;
+}
+#msgChatInputField {
+    flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
+    border-radius:9px; padding:7px 11px; color:#d0d0d0; font-size:.8rem;
+    outline:none; font-family:'Vazirmatn',sans-serif; transition:border-color .15s;
+}
+#msgChatInputField:focus { border-color:rgba(139,92,246,.5); }
+#msgChatInputField::placeholder { color:#383850; }
+#msgChatSendBtn {
+    background:linear-gradient(135deg,#6d28d9,#a855f7); border:none;
+    color:#fff; border-radius:9px; padding:0 12px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s; flex-shrink:0;
+}
+#msgChatSendBtn:hover { transform:scale(1.07); }
+#msgChatSendBtn svg { width:15px; height:15px; fill:currentColor; }
+.mb-mine {
+    align-self:flex-start;
+    background:linear-gradient(135deg,#6d28d9,#9333ea);
+    color:#fff; border-radius:12px 12px 3px 12px;
+    padding:7px 11px; font-size:.8rem; max-width:82%;
+    line-height:1.55; word-break:break-word;
+}
+.mb-other {
+    align-self:flex-end;
+    background:#1e1e32; border:1px solid rgba(255,255,255,.07);
+    color:#c8c8d0; border-radius:12px 12px 12px 3px;
+    padding:7px 11px; font-size:.8rem; max-width:82%;
+    line-height:1.55; word-break:break-word;
+}
+.mb-time { font-size:.58rem; color:#333350; margin-top:2px; }
+.mb-time-r { text-align:right; }
+</style>
+
+<div id="msgBar">
+    <div id="msgPanel">
+        <div id="msgSearchWrap">
+            <input id="msgSearch" type="text" placeholder="جستجوی مخاطب..." oninput="msgFilterContacts(this.value)">
+        </div>
+        <div id="msgContactList">
+            <div style="text-align:center;padding:28px;color:#2e2e50;font-size:.8rem;">در حال بارگذاری...</div>
+        </div>
+    </div>
+    <button id="msgBarBtn" onclick="msgTogglePanel()">
+        <span id="msgBadge">0</span>
+        <span id="msgBarBtnLabel">پیام‌رسان</span>
+        <span id="msgBarArrow">▲</span>
+    </button>
+</div>
+
+<div id="msgChat">
+    <div id="msgChatHead">
+        <div id="msgChatAv"></div>
+        <span id="msgChatName"></span>
+        <a id="msgChatFull" href="#">کامل</a>
+        <button id="msgChatClose" onclick="msgCloseChat()">✕</button>
+    </div>
+    <div id="msgChatMsgs">
+        <div style="text-align:center;padding:24px;color:#2e2e50;font-size:.8rem;">مخاطبی انتخاب کن</div>
+    </div>
+    <div id="msgChatInput">
+        <input id="msgChatInputField" type="text" placeholder="پیام بنویس..."
+               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}">
+        <button id="msgChatSendBtn" onclick="msgSend()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+(function(){
+    let _contacts = null;
+    let _activeChatUser = null;
+    let _lastMsgId = 0;
+    let _pollTimer = null;
+    let _panelOpen = false;
+
+    /* بج msgBadge الان از pollBadges (بالای صفحه) تغذیه می‌شه — اینجا poll جدا نمی‌زنیم */
+
+    /* heartbeat: تا وقتی تب باز و کاربر روی سایته last_activity سشن آنلاین تازه بمونه */
+    function heartbeat() {
+        fetch('{% url "community:heartbeat" %}', {credentials:'same-origin'}).catch(()=>{});
+    }
+    let _heartbeatTimer = null;
+    function startHeartbeat() {
+        if (_heartbeatTimer) return;
+        heartbeat();
+        _heartbeatTimer = setInterval(heartbeat, 60000);
+    }
+    function stopHeartbeat() {
+        clearInterval(_heartbeatTimer);
+        _heartbeatTimer = null;
+    }
+    if (!document.hidden) startHeartbeat();
+
+    /* وقتی تب پس‌زمینه می‌شه: heartbeat و poll چت فعال رو متوقف کن؛ برگشتن = فوری resume */
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopHeartbeat();
+            clearInterval(_pollTimer);
+            _pollTimer = null;
+        } else {
+            startHeartbeat();
+            if (_activeChatUser) {
+                pollMessages(_activeChatUser);
+                _pollTimer = setInterval(() => pollMessages(_activeChatUser), 3000);
+            }
+        }
+    });
+
+    window.msgTogglePanel = function() {
+        _panelOpen = !_panelOpen;
+        const panel  = document.getElementById('msgPanel');
+        const arrow  = document.getElementById('msgBarArrow');
+        if (_panelOpen) {
+            panel.classList.add('open');
+            if (arrow) arrow.classList.add('open');
+            loadContacts();
+            setTimeout(()=>{ const s=document.getElementById('msgSearch'); if(s) s.focus(); }, 200);
+        } else {
+            panel.classList.remove('open');
+            if (arrow) arrow.classList.remove('open');
+        }
+    };
+
+    function loadContacts() {
+        if (_contacts !== null) { renderContacts(_contacts); return; }
+        fetch('/api/dm-list/', {credentials:'same-origin'})
+            .then(r=>r.json())
+            .then(d=>{
+                _contacts = d.contacts || [];
+                renderContacts(_contacts);
+            })
+            .catch(()=>{
+                document.getElementById('msgContactList').innerHTML =
+                    '<div style="text-align:center;padding:24px;color:#555;font-size:.8rem;">خطا در بارگذاری</div>';
+            });
+    }
+
+    function renderContacts(list, filter='') {
+        const el = document.getElementById('msgContactList');
+        const q = filter.toLowerCase();
+        const shown = q ? list.filter(c=>c.display.toLowerCase().includes(q)||c.username.toLowerCase().includes(q)) : list;
+        if (!shown.length) {
+            el.innerHTML = '<div style="text-align:center;padding:28px;color:#444;font-size:.8rem;">کسی پیدا نشد</div>';
+            return;
+        }
+        el.innerHTML = shown.map(c=>`
+            <div class="msg-contact-row" onclick="msgOpenChat('${c.username}','${escM(c.display)}','${c.avatar||''}','${c.initial}')">
+                ${c.avatar
+                    ? `<img src="${c.avatar}" class="msg-contact-av">`
+                    : `<div class="msg-contact-av-ph">${c.initial}</div>`
+                }
+                <div class="msg-contact-info">
+                    <div class="msg-contact-name">${escM(c.display)}</div>
+                    <div class="msg-contact-sub">@${c.username}</div>
+                </div>
+                ${c.unread ? `<span class="msg-contact-unread">${c.unread}</span>` : ''}
+            </div>
+        `).join('');
+    }
+
+    window.msgFilterContacts = function(val) {
+        if (_contacts) renderContacts(_contacts, val);
+    };
+
+    window.msgOpenChat = function(username, display, avatar, initial) {
+        _activeChatUser = username;
+        _lastMsgId = 0;
+        clearInterval(_pollTimer);
+
+        const avatarEl = document.getElementById('msgChatAv');
+        if (avatar) {
+            avatarEl.innerHTML = `<img src="${avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`;
+        } else {
+            avatarEl.textContent = initial;
+            avatarEl.style.background = 'linear-gradient(135deg,#4c1d95,#7c3aed)';
+        }
+        document.getElementById('msgChatName').textContent = display;
+        document.getElementById('msgChatFull').href = '/dm/' + username + '/';
+        document.getElementById('msgChatMsgs').innerHTML =
+            '<div style="text-align:center;padding:20px;color:#2e2e50;font-size:.8rem;">در حال بارگذاری...</div>';
+
+        const win = document.getElementById('msgChat');
+        win.style.display = 'flex';
+
+        // بار اول فوری لود کن، بعد هر ۳ ثانیه poll
+        pollMessages(username);
+        _pollTimer = setInterval(()=>pollMessages(username), 3000);
+
+        fetch(`/dm/${username}/mark-read/`, {method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}'}}).catch(()=>{});
+    };
+
+    function pollMessages(username) {
+        if (!username) return;
+        fetch(`/dm/${username}/poll/?after=${_lastMsgId}`, {credentials:'same-origin'})
+            .then(r=>r.json())
+            .then(d=>{
+                if (d.new_messages && d.new_messages.length) {
+                    const box = document.getElementById('msgChatMsgs');
+                    d.new_messages.forEach(msg=>{
+                        _lastMsgId = Math.max(_lastMsgId, msg.id);
+                        const wrap = document.createElement('div');
+                        wrap.innerHTML = `
+                            <div class="${msg.is_mine ? 'mb-mine' : 'mb-other'}">${escM(msg.content)}</div>
+                            <div class="mb-time ${msg.is_mine ? '' : 'mb-time-r'}">${msg.created_at}</div>`;
+                        box.appendChild(wrap);
+                    });
+                    box.scrollTop = box.scrollHeight;
+                    if (window.refreshBadges) window.refreshBadges();
+                }
+            }).catch(()=>{});
+    }
+
+    window.msgSend = function() {
+        const input = document.getElementById('msgChatInputField');
+        const content = input.value.trim();
+        if (!content || !_activeChatUser) return;
+        input.value = '';
+
+        const box = document.getElementById('msgChatMsgs');
+        const wrap = document.createElement('div');
+        const now = new Date();
+        wrap.innerHTML = `
+            <div class="mb-mine">${escM(content)}</div>
+            <div class="mb-time">${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}</div>`;
+        box.appendChild(wrap);
+        box.scrollTop = box.scrollHeight;
+
+        fetch(`/dm/${_activeChatUser}/send/`, {
+            method:'POST',
+            headers:{'X-CSRFToken':'{{ csrf_token }}'},
+            body: new URLSearchParams({content})
+        }).then(r=>r.json()).then(d=>{
+            if (d.ok && d.message) _lastMsgId = Math.max(_lastMsgId, d.message.id);
+        }).catch(()=>{});
+    };
+
+    window.msgCloseChat = function() {
+        const win = document.getElementById('msgChat');
+        if (win) win.style.display = 'none';
+        clearInterval(_pollTimer);
+        _activeChatUser = null;
+    };
+
+    function escM(t) {
+        return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    document.addEventListener('click', function(e) {
+        const btn   = document.getElementById('msgBarBtn');
+        const panel = document.getElementById('msgPanel');
+        const chat  = document.getElementById('msgChat');
+        if (_panelOpen && panel && !panel.contains(e.target) && btn && !btn.contains(e.target)
+            && (!chat || !chat.contains(e.target))) {
+            panel.classList.remove('open');
+            const arrow = document.getElementById('msgBarArrow');
+            if (arrow) arrow.classList.remove('open');
+            _panelOpen = false;
+        }
+    });
+})();
+</script>
+{% endif %}
 
 </body>
 </html>
