@@ -148,9 +148,10 @@
                             </form>
                             <form method="post" action="{% url 'dashboard:user_verify' u.pk %}" style="display:inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-ghost" title="{% if u.gamer_profile.is_verified %}حذف تأیید{% else %}تأیید کاربر{% endif %}"
-                                        style="padding:5px 10px;font-size:0.8rem;display:inline-flex;align-items:center;gap:4px;{% if u.gamer_profile.is_verified %}color:#22d3ee;border-color:rgba(34,211,238,.35);{% endif %}">
+                                <button type="submit" class="btn-ghost"
+                                        style="padding:5px 10px;font-size:0.8rem;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;{% if u.gamer_profile.is_verified %}color:#22d3ee;border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08);{% endif %}">
                                     <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg>
+                                    {% if u.gamer_profile.is_verified %}حذف تأیید{% else %}تأیید کاربر{% endif %}
                                 </button>
                             </form>
                             {% endif %}

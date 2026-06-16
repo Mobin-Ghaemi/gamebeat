@@ -1,0 +1,214 @@
+{% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
+
+{% block title %}مانیتورینگ زنده - GameBeat{% endblock %}
+{% block page_title %}مانیتورینگ زنده <span style="color:var(--text-faint);font-weight:400;font-size:0.9rem">/ وضعیت سیستم</span>{% endblock %}
+
+{% block content %}
+
+<!-- ─── حکم کلی: همه چی سالمه یا نه؟ ─────────────────────────────── -->
+{% if issues %}
+<div class="dash-card mb-4" style="border-color:{% if has_critical %}rgba(239,68,68,.5){% else %}rgba(251,191,36,.4){% endif %};background:{% if has_critical %}rgba(239,68,68,.06){% else %}rgba(251,191,36,.05){% endif %};">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:{% if has_critical %}rgba(239,68,68,.15){% else %}rgba(251,191,36,.15){% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg class="bi bi-exclamation-triangle-fill" aria-hidden="true" style="width:22px;height:22px;color:{% if has_critical %}#ef4444{% else %}#fbbf24{% endif %}"><use href="#bi-exclamation-triangle-fill"></use></svg>
+        </div>
+        <div>
+            <div style="font-weight:800;font-size:1.05rem;color:{% if has_critical %}#ef4444{% else %}#fbbf24{% endif %}">
+                {{ issues|length }} مورد نیاز به توجه
+            </div>
+            <div style="font-size:.8rem;color:var(--text-muted);">قبل از انتشار عمومی این موارد رو حل کن</div>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for issue in issues %}
+        <div style="display:flex;align-items:flex-start;gap:8px;font-size:.86rem;color:var(--text-main);">
+            <svg class="bi {% if issue.level == 'critical' %}bi-x-circle-fill{% else %}bi-exclamation-circle{% endif %}" aria-hidden="true" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;color:{% if issue.level == 'critical' %}#ef4444{% else %}#fbbf24{% endif %}">
+                <use href="#{% if issue.level == 'critical' %}bi-x-circle-fill{% else %}bi-exclamation-circle{% endif %}"></use>
+            </svg>
+            {{ issue.text }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="dash-card mb-4" style="border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.05);">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg class="bi bi-check-circle-fill" aria-hidden="true" style="width:22px;height:22px;color:#34d399"><use href="#bi-check-circle-fill"></use></svg>
+        </div>
+        <div>
+            <div style="font-weight:800;font-size:1.05rem;color:#34d399">همه چیز سالمه</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">DEBUG خاموشه و رصد خطا فعاله</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ─── فعالیت زنده ────────────────────────────────────────────── -->
+<div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">فعالیت زنده</div>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card green">
+            <div class="stat-card-icon"><svg class="bi bi-broadcast" aria-hidden="true"><use href="#bi-broadcast"></use></svg></div>
+            <div class="stat-card-value" style="display:flex;align-items:center;gap:8px;">
+                <span style="width:9px;height:9px;border-radius:50%;background:#34d399;display:inline-block;animation:pulseDot 1.6s infinite;"></span>
+                {{ online_count }}
+            </div>
+            <div class="stat-card-label">آنلاین همین الان</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card blue">
+            <div class="stat-card-icon"><svg class="bi bi-activity" aria-hidden="true"><use href="#bi-activity"></use></svg></div>
+            <div class="stat-card-value">{{ active_last_hour }}</div>
+            <div class="stat-card-label">فعال در ۱ ساعت گذشته</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card purple">
+            <div class="stat-card-icon"><svg class="bi bi-calendar3" aria-hidden="true"><use href="#bi-calendar3"></use></svg></div>
+            <div class="stat-card-value">{{ active_last_24h }}</div>
+            <div class="stat-card-label">فعال در ۲۴ ساعت گذشته</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── سلامت سیستم ────────────────────────────────────────────── -->
+<div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">سلامت سیستم</div>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dash-card" style="height:100%;{% if debug_mode %}border-color:rgba(239,68,68,.4);{% endif %}">
+            <div class="dash-card-title">
+                <svg class="bi bi-cpu" aria-hidden="true" style="color:{% if debug_mode %}#ef4444{% else %}#34d399{% endif %}"><use href="#bi-cpu"></use></svg>
+                حالت Debug
+            </div>
+            {% if debug_mode %}
+                <div style="color:#ef4444;font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:6px;">
+                    <svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg> فعال — خطرناک
+                </div>
+                <p style="color:var(--text-muted);font-size:.82rem;margin:8px 0 0;">روی سرور واقعی env var <code>DJANGO_DEBUG</code> رو False کن.</p>
+            {% else %}
+                <div style="color:#34d399;font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:6px;">
+                    <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> خاموش — امن
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-card" style="height:100%;{% if not sentry_active %}border-color:rgba(251,191,36,.35);{% endif %}">
+            <div class="dash-card-title">
+                <svg class="bi bi-radar" aria-hidden="true" style="color:{% if sentry_active %}#34d399{% else %}#fbbf24{% endif %}"><use href="#bi-radar"></use></svg>
+                رصد خطا (Sentry)
+            </div>
+            {% if sentry_active %}
+                <div style="color:#34d399;font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:6px;">
+                    <svg class="bi bi-check-circle-fill" aria-hidden="true"><use href="#bi-check-circle-fill"></use></svg> فعال و در حال رصد
+                </div>
+            {% else %}
+                <div style="color:#fbbf24;font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:6px;">
+                    <svg class="bi bi-exclamation-circle" aria-hidden="true"><use href="#bi-exclamation-circle"></use></svg> تنظیم نشده
+                </div>
+                <p style="color:var(--text-muted);font-size:.82rem;margin:8px 0 0;"><code>SENTRY_DSN</code> رو از sentry.io بگیر و در env vars ست کن.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-card" style="height:100%;">
+            <div class="dash-card-title">
+                <svg class="bi bi-hdd-network-fill" aria-hidden="true" style="color:var(--purple-light)"><use href="#bi-hdd-network-fill"></use></svg>
+                حجم دیتابیس
+            </div>
+            <div style="color:var(--text-white);font-weight:800;font-size:1.4rem;">
+                {% if db_size_mb is not None %}{{ db_size_mb }} <span style="font-size:.8rem;color:var(--text-faint);">MB</span>{% else %}—{% endif %}
+            </div>
+            <p style="color:var(--text-muted);font-size:.78rem;margin:4px 0 0;">موتور: {{ db_engine }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- ─── آمار کلی ───────────────────────────────────────────────── -->
+<div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">آمار کلی دیتابیس</div>
+<div class="dash-card mb-4">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px;text-align:center;">
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.users }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">کاربر</div>
+        </div>
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.posts }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">پست</div>
+        </div>
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.comments }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">کامنت</div>
+        </div>
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.messages }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">پیام</div>
+        </div>
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.notifications }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">نوتیف</div>
+        </div>
+        <div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-white);">{{ counts.sessions_total }}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">سشن کل</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── کاربرهای آنلاین ────────────────────────────────────────── -->
+<div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">کاربرهای آنلاین همین الان ({{ online_count }})</div>
+<div class="dash-card">
+    {% if online_users %}
+    <div class="table-responsive">
+        <table class="table" style="margin-bottom:0;">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>آخرین فعالیت</th>
+                    <th>شروع سشن</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in online_users %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div style="position:relative;flex-shrink:0;">
+                                <div class="avatar-sm" style="background:{% cycle '#8b5cf6' '#10b981' '#3b82f6' '#f59e0b' '#ef4444' '#06b6d4' %}">
+                                    {{ s.user.username|slice:":1"|upper }}
+                                </div>
+                                <span style="position:absolute;bottom:-1px;left:-1px;width:9px;height:9px;border-radius:50%;background:#34d399;border:2px solid var(--bg-card);"></span>
+                            </div>
+                            <div style="font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:5px;">
+                                {{ s.user.username }}
+                                {% if s.user.gamer_profile.is_verified %}
+                                <svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.82rem">{{ s.last_activity|timesince }} پیش</td>
+                    <td style="color:var(--text-muted);font-size:0.82rem">{{ s.started_at|timesince }} پیش</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:30px;color:var(--text-faint);font-size:.85rem;">
+        الان هیچ‌کس آنلاین نیست
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,211,153,.5); }
+    50% { opacity: .6; box-shadow: 0 0 0 4px rgba(52,211,153,0); }
+}
+</style>
+
+{% endblock %}

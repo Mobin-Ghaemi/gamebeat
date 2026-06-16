@@ -690,6 +690,12 @@
             داشبورد
         </a>
 
+        <a href="{% url 'dashboard:monitoring' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'monitoring' %}active{% endif %}">
+            <svg class="bi bi-broadcast" aria-hidden="true"><use href="#bi-broadcast"></use></svg>
+            مانیتورینگ زنده
+        </a>
+
         <div class="sidebar-section-label" style="margin-top:8px">مدیریت</div>
 
         <a href="{% url 'dashboard:users' %}"

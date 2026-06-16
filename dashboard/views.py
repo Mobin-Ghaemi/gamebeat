@@ -147,6 +147,77 @@ def dashboard_index(request):
 
 @login_required
 @user_passes_test(is_admin)
+def monitoring(request):
+    now = timezone.now()
+    online_cutoff = now - timedelta(seconds=UserSession.SESSION_TIMEOUT)
+    last_hour = now - timedelta(hours=1)
+    last_24h = now - timedelta(hours=24)
+
+    online_sessions = list(
+        UserSession.objects.filter(ended_at__isnull=True, last_activity__gte=online_cutoff)
+        .select_related('user', 'user__gamer_profile')
+        .order_by('-last_activity')
+    )
+    seen_user_ids = set()
+    online_users = []
+    for s in online_sessions:
+        if s.user_id in seen_user_ids:
+            continue
+        seen_user_ids.add(s.user_id)
+        online_users.append(s)
+
+    active_last_hour = UserSession.objects.filter(started_at__gte=last_hour).values('user_id').distinct().count()
+    active_last_24h = UserSession.objects.filter(started_at__gte=last_24h).values('user_id').distinct().count()
+
+    db_path = settings.DATABASES['default']['NAME']
+    try:
+        db_size_mb = round(os.path.getsize(db_path) / (1024 * 1024), 2)
+    except OSError:
+        db_size_mb = None
+
+    counts = {
+        'users': User.objects.count(),
+        'posts': Post.objects.count(),
+        'comments': Comment.objects.count(),
+        'messages': Message.objects.count(),
+        'notifications': Notification.objects.count(),
+        'sessions_total': UserSession.objects.count(),
+    }
+
+    debug_mode = settings.DEBUG
+    sentry_active = bool(getattr(settings, 'SENTRY_DSN', ''))
+
+    # ── خلاصه‌ی سلامت سیستم: یک حکم کلی بالای صفحه ──
+    issues = []
+    if debug_mode:
+        issues.append({
+            'level': 'critical',
+            'text': 'DEBUG فعاله — روی سرور واقعی این یعنی اطلاعات داخلی سیستم لو می‌ره.',
+        })
+    if not sentry_active:
+        issues.append({
+            'level': 'warning',
+            'text': 'رصد خطا (Sentry) تنظیم نشده — اگه چیزی بترکه، خودت نمی‌فهمی.',
+        })
+
+    context = {
+        'online_users': online_users,
+        'online_count': len(online_users),
+        'active_last_hour': active_last_hour,
+        'active_last_24h': active_last_24h,
+        'sentry_active': sentry_active,
+        'debug_mode': debug_mode,
+        'db_size_mb': db_size_mb,
+        'db_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
+        'counts': counts,
+        'issues': issues,
+        'has_critical': any(i['level'] == 'critical' for i in issues),
+    }
+    return render(request, 'dashboard/monitoring.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
 def user_list(request):
     q = request.GET.get('q', '').strip()
     filter_type = request.GET.get('filter', 'all')
@@ -193,11 +264,10 @@ def user_toggle_ban(request, user_id):
 def user_toggle_verified(request, user_id):
     if request.method == 'POST':
         u = get_object_or_404(User, pk=user_id)
-        profile = GamerProfile.objects.filter(user=u).first()
-        if profile:
-            profile.is_verified = not profile.is_verified
-            profile.save(update_fields=['is_verified'])
-            messages.success(request, f'کاربر {u.username} {"تأیید شد ✓" if profile.is_verified else "از تأیید خارج شد"}.')
+        profile, _ = GamerProfile.objects.get_or_create(user=u)
+        profile.is_verified = not profile.is_verified
+        profile.save(update_fields=['is_verified'])
+        messages.success(request, f'کاربر {u.username} {"تأیید شد ✓" if profile.is_verified else "از تأیید خارج شد"}.')
     next_url = request.POST.get('next') or 'dashboard:users'
     if next_url == 'dashboard:user_detail':
         return redirect('dashboard:user_detail', user_id=user_id)
