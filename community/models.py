@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -1547,3 +1548,118 @@ class ProfileView(models.Model):
 
     def __str__(self):
         return f'{self.viewer.username} → {self.viewed_user.username} @ {self.viewed_at:%Y-%m-%d %H:%M}'
+
+
+# ════════════════════════════════════════════════════════
+#  🎯  ماموریت‌های روزانه
+# ════════════════════════════════════════════════════════
+
+# مبدأ ثابت برای محاسبه‌ی چرخه — تغییرش نده وگرنه ترتیب چرخه جابه‌جا می‌شود.
+MISSION_CYCLE_EPOCH = datetime.date(2024, 1, 1)
+
+
+class MissionDay(models.Model):
+    """یک روز در چرخه‌ی ماموریت‌های روزانه.
+    روزها به‌ترتیب day_number و به‌صورت چرخشی نمایش داده می‌شوند:
+    وقتی به آخرین روز رسید، دوباره از روز اول شروع می‌شود."""
+    day_number = models.PositiveSmallIntegerField(verbose_name='شماره روز در چرخه')
+    label      = models.CharField(max_length=60, blank=True, verbose_name='عنوان روز')
+    is_active  = models.BooleanField(default=True, verbose_name='فعال')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['day_number', 'id']
+        verbose_name = 'روز ماموریت'
+        verbose_name_plural = 'روزهای چرخه‌ی ماموریت'
+
+    def __str__(self):
+        return self.label or f'روز {self.day_number}'
+
+    @classmethod
+    def active_cycle(cls):
+        """لیست روزهای فعال به‌ترتیب چرخه."""
+        return list(cls.objects.filter(is_active=True).order_by('day_number', 'id'))
+
+    @classmethod
+    def current(cls):
+        """روزِ امروزِ چرخه را برمی‌گرداند (یا None اگر هیچ روزی تعریف نشده)."""
+        days = cls.active_cycle()
+        if not days:
+            return None
+        idx = (timezone.localdate() - MISSION_CYCLE_EPOCH).days % len(days)
+        return days[idx]
+
+    @property
+    def cycle_position(self):
+        """شماره‌ی این روز در چرخه (۱-based) و طول کل چرخه."""
+        days = MissionDay.active_cycle()
+        total = len(days)
+        try:
+            pos = days.index(self) + 1
+        except ValueError:
+            pos = self.day_number
+        return pos, total
+
+
+class DailyMission(models.Model):
+    """تعریف یک ماموریت روزانه — در ادمین قابل تنظیم."""
+    EVENT_LOGIN    = 'login'
+    EVENT_POST     = 'post'
+    EVENT_COMMENT  = 'comment'
+    EVENT_FOLLOW   = 'follow'
+    EVENT_LFG_JOIN = 'lfg_join'
+    EVENT_REACT    = 'react'
+    EVENT_CHOICES = [
+        (EVENT_LOGIN,    'ورود روزانه'),
+        (EVENT_POST,     'انتشار پست'),
+        (EVENT_COMMENT,  'ارسال کامنت'),
+        (EVENT_FOLLOW,   'دنبال کردن گیمر'),
+        (EVENT_LFG_JOIN, 'پیوستن به LFG'),
+        (EVENT_REACT,    'واکنش به پست'),
+    ]
+
+    day           = models.ForeignKey(
+        'MissionDay', null=True, blank=True, on_delete=models.CASCADE,
+        related_name='missions', verbose_name='روز چرخه (خالی = همیشگی)',
+    )
+    title         = models.CharField(max_length=100, verbose_name='عنوان ماموریت')
+    description   = models.CharField(max_length=200, blank=True, verbose_name='توضیح')
+    event         = models.CharField(max_length=20, choices=EVENT_CHOICES, verbose_name='رویداد')
+    target_count  = models.PositiveSmallIntegerField(default=1, verbose_name='تعداد هدف')
+    reward_zarban = models.PositiveIntegerField(default=10, verbose_name='جایزه (ضربان)')
+    icon          = models.CharField(max_length=40, default='bi-check-circle-fill', verbose_name='آیکون')
+    is_active     = models.BooleanField(default=True, verbose_name='فعال')
+    order         = models.PositiveSmallIntegerField(default=0, verbose_name='ترتیب نمایش')
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'ماموریت روزانه'
+        verbose_name_plural = 'ماموریت‌های روزانه'
+
+    def __str__(self):
+        return f'{self.title} ({self.get_event_display()} ×{self.target_count})'
+
+
+class DailyMissionProgress(models.Model):
+    """پیشرفت یک کاربر در یک ماموریت در یک روز مشخص."""
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mission_progress')
+    mission    = models.ForeignKey(DailyMission, on_delete=models.CASCADE, related_name='progress')
+    date       = models.DateField(verbose_name='تاریخ')
+    progress   = models.PositiveSmallIntegerField(default=0, verbose_name='پیشرفت')
+    claimed    = models.BooleanField(default=False, verbose_name='جایزه گرفته شده')
+    claimed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [('user', 'mission', 'date')]
+        ordering = ['-date']
+        verbose_name = 'پیشرفت ماموریت'
+        verbose_name_plural = 'پیشرفت ماموریت‌ها'
+        indexes = [models.Index(fields=['user', 'date'])]
+
+    def __str__(self):
+        return f'{self.user.username} | {self.mission.title} | {self.date}'
+
+    @property
+    def is_complete(self):
+        return self.progress >= self.mission.target_count

@@ -20,6 +20,7 @@ from community.models import Notification, Conversation, Message, ScoreSettings,
 from community.models import ZarbanWallet, ZarbanTransaction
 from community.models import SpinWheel, SpinWheelItem, SpinRecord
 from community.models import PremiumPlan, PremiumSubscription
+from community.models import MissionDay, DailyMission
 
 
 def _to_jalali(dt, fmt='%Y/%m/%d'):
@@ -1298,3 +1299,127 @@ def premium_adjust_days(request):
 
     messages.success(request, action_text)
     return redirect('dashboard:premium')
+
+
+# ══════════════════════════════════════════════════════════
+#  🎯  ماموریت‌های روزانه (چرخه‌ی روزها + ماموریت‌ها)
+# ══════════════════════════════════════════════════════════
+
+@login_required
+@user_passes_test(is_admin)
+def daily_mission_list(request):
+    days = MissionDay.objects.annotate(
+        mission_count=Count('missions')
+    ).order_by('day_number', 'id')
+    cycle = MissionDay.active_cycle()
+    today_day = MissionDay.current()
+    always_missions = DailyMission.objects.filter(day__isnull=True).order_by('order', 'id')
+    return render(request, 'dashboard/daily_missions.html', {
+        'days': days,
+        'cycle_len': len(cycle),
+        'today_day': today_day,
+        'always_missions': always_missions,
+        'event_choices': DailyMission.EVENT_CHOICES,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def mission_day_add(request):
+    if request.method == 'POST':
+        d = MissionDay()
+        d.day_number = max(1, _int(request.POST.get('day_number'), 1))
+        d.label      = request.POST.get('label', '').strip()
+        d.is_active  = request.POST.get('is_active') == 'on'
+        d.save()
+        messages.success(request, f'«{d}» اضافه شد ✓')
+        return redirect('dashboard:mission_day_edit', day_id=d.pk)
+    # شماره‌ی پیشنهادی روز بعدی
+    last = MissionDay.objects.order_by('-day_number').first()
+    next_num = (last.day_number + 1) if last else 1
+    return render(request, 'dashboard/mission_day_form.html', {
+        'action': 'add', 'day': None, 'next_num': next_num,
+        'event_choices': DailyMission.EVENT_CHOICES,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def mission_day_edit(request, day_id):
+    day = get_object_or_404(MissionDay, pk=day_id)
+    if request.method == 'POST':
+        day.day_number = max(1, _int(request.POST.get('day_number'), day.day_number))
+        day.label      = request.POST.get('label', '').strip()
+        day.is_active  = request.POST.get('is_active') == 'on'
+        day.save()
+        messages.success(request, 'تغییرات روز ذخیره شد ✓')
+        return redirect('dashboard:mission_day_edit', day_id=day.pk)
+    missions = day.missions.order_by('order', 'id')
+    return render(request, 'dashboard/mission_day_form.html', {
+        'action': 'edit', 'day': day, 'missions': missions,
+        'event_choices': DailyMission.EVENT_CHOICES,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def mission_day_delete(request, day_id):
+    day = get_object_or_404(MissionDay, pk=day_id)
+    if request.method == 'POST':
+        label = str(day)
+        day.delete()  # ماموریت‌های این روز هم cascade حذف می‌شوند
+        messages.success(request, f'«{label}» و ماموریت‌هایش حذف شد.')
+        return redirect('dashboard:daily_missions')
+    return redirect('dashboard:mission_day_edit', day_id=day.pk)
+
+
+@login_required
+@user_passes_test(is_admin)
+def mission_day_toggle(request, day_id):
+    day = get_object_or_404(MissionDay, pk=day_id)
+    day.is_active = not day.is_active
+    day.save(update_fields=['is_active'])
+    return JsonResponse({'ok': True, 'is_active': day.is_active})
+
+
+@login_required
+@user_passes_test(is_admin)
+def mission_save(request):
+    """AJAX: افزودن/ویرایش/حذف یک ماموریت (هم برای روزهای چرخه، هم ماموریت‌های همیشگی).
+    day_id خالی = ماموریت همیشگی."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'invalid'}, status=400)
+
+    action = request.POST.get('action')
+    valid_events = [e[0] for e in DailyMission.EVENT_CHOICES]
+
+    if action == 'delete':
+        m = get_object_or_404(DailyMission, pk=request.POST.get('mission_id'))
+        m.delete()
+        return JsonResponse({'ok': True})
+
+    if action == 'add':
+        m = DailyMission()
+        day_id = request.POST.get('day_id')
+        m.day = get_object_or_404(MissionDay, pk=day_id) if day_id else None
+    elif action == 'edit':
+        m = get_object_or_404(DailyMission, pk=request.POST.get('mission_id'))
+    else:
+        return JsonResponse({'ok': False, 'error': 'invalid action'}, status=400)
+
+    event = request.POST.get('event', '')
+    if event not in valid_events:
+        return JsonResponse({'ok': False, 'error': 'رویداد نامعتبر'}, status=400)
+    m.title         = request.POST.get('title', '').strip() or 'ماموریت'
+    m.description   = request.POST.get('description', '').strip()
+    m.event         = event
+    m.target_count  = max(1, _int(request.POST.get('target_count'), 1))
+    m.reward_zarban = max(0, _int(request.POST.get('reward_zarban'), 0))
+    m.icon          = request.POST.get('icon', '').strip() or 'bi-check-circle-fill'
+    m.order         = _int(request.POST.get('order'), 0)
+    if action == 'add':
+        m.is_active = True
+    else:
+        m.is_active = request.POST.get('is_active', 'true') == 'true'
+    m.save()
+    return JsonResponse({'ok': True, 'mission_id': m.pk})

@@ -41,6 +41,13 @@ urlpatterns = [
     path('spin/<int:wheel_id>/delete/', views.spin_wheel_delete, name='spin_wheel_delete'),
     path('spin/<int:wheel_id>/toggle/', views.spin_wheel_toggle, name='spin_wheel_toggle'),
     path('spin/<int:wheel_id>/items/', views.spin_wheel_items, name='spin_wheel_items'),
+    # ماموریت‌های روزانه
+    path('missions/', views.daily_mission_list, name='daily_missions'),
+    path('missions/day/add/', views.mission_day_add, name='mission_day_add'),
+    path('missions/day/<int:day_id>/', views.mission_day_edit, name='mission_day_edit'),
+    path('missions/day/<int:day_id>/delete/', views.mission_day_delete, name='mission_day_delete'),
+    path('missions/day/<int:day_id>/toggle/', views.mission_day_toggle, name='mission_day_toggle'),
+    path('missions/save/', views.mission_save, name='mission_save'),
     path('spin/upload-icon/', views.upload_spin_icon, name='spin_upload_icon'),
     # پریمیوم
     path('premium/', views.premium_index, name='premium'),

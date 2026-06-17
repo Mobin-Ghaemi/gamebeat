@@ -68,6 +68,7 @@
                     </button>
                 {% endif %}
             </form>
+            {% endif %}
             <form method="post" action="{% url 'dashboard:user_verify' u.pk %}" style="margin-top:8px">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="dashboard:user_detail">
@@ -81,7 +82,6 @@
                     </button>
                 {% endif %}
             </form>
-            {% endif %}
         </div>
     </div>
 

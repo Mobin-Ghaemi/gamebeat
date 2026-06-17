@@ -55,6 +55,9 @@ urlpatterns = [
     path('profile/set-pinned-game/', views.set_pinned_game, name='set_pinned_game'),
     # Challenges
     path('challenges/', views.challenges_page, name='challenges'),
+    # ماموریت‌های روزانه
+    path('missions/', views.daily_missions, name='daily_missions'),
+    path('missions/<int:mission_id>/claim/', views.claim_mission, name='claim_mission'),
     # Clubs
     path('clubs/', views.clubs_list, name='clubs_list'),
     path('clubs/create/', views.create_club, name='create_club'),

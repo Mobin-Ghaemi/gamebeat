@@ -146,6 +146,7 @@
                                     </button>
                                 {% endif %}
                             </form>
+                            {% endif %}
                             <form method="post" action="{% url 'dashboard:user_verify' u.pk %}" style="display:inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn-ghost"
@@ -154,7 +155,6 @@
                                     {% if u.gamer_profile.is_verified %}حذف تأیید{% else %}تأیید کاربر{% endif %}
                                 </button>
                             </form>
-                            {% endif %}
                         </div>
                     </td>
                 </tr>

@@ -1,0 +1,184 @@
+{% extends 'community/base.html' %}
+{% block title %}ماموریت‌های روزانه | GameBeat{% endblock %}
+{% block nav_missions %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.dm-wrap { max-width: 760px; margin: 0 auto; padding: 30px 16px 80px; }
+
+.dm-hero { text-align: center; padding: 36px 20px 26px; }
+.dm-hero-title { font-size: 2rem; font-weight: 900; color: #fff; display:flex; align-items:center; justify-content:center; gap:10px; }
+.dm-hero-title svg { width:1.1em; height:1.1em; fill: #a78bfa; }
+.dm-hero-sub { font-size: .88rem; color: rgba(255,255,255,0.4); margin-top: 8px; }
+
+.dm-stats { display:flex; gap:12px; justify-content:center; margin: 22px 0 30px; flex-wrap:wrap; }
+.dm-stat {
+    background:#130826; border:1px solid rgba(139,92,246,0.25); border-radius:16px;
+    padding:14px 22px; min-width:120px; text-align:center;
+}
+.dm-stat-num { font-size:1.5rem; font-weight:900; color:#a78bfa; }
+.dm-stat-num.gold { color:#fbbf24; }
+.dm-stat-lbl { font-size:.72rem; color:rgba(255,255,255,0.4); margin-top:2px; }
+
+.dm-card {
+    background:#130826; border:1px solid rgba(139,92,246,0.22); border-radius:18px;
+    padding:18px 20px; margin-bottom:14px;
+    display:flex; align-items:center; gap:16px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.dm-card.done { border-color: rgba(34,197,94,0.4); box-shadow:0 0 30px rgba(34,197,94,0.06); }
+.dm-card.claimed { opacity:.55; }
+
+.dm-icon {
+    width:48px; height:48px; border-radius:14px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#1a0a2e,#2d1154); border:1px solid rgba(139,92,246,0.3);
+}
+.dm-icon svg { width:22px; height:22px; fill:#a78bfa; }
+.dm-card.done .dm-icon { background:linear-gradient(135deg,#052e16,#14532d); border-color:rgba(34,197,94,0.4); }
+.dm-card.done .dm-icon svg { fill:#4ade80; }
+
+.dm-body { flex:1; min-width:0; }
+.dm-title { font-size:1rem; font-weight:800; color:#fff; }
+.dm-desc { font-size:.8rem; color:rgba(255,255,255,0.45); margin-top:2px; }
+
+.dm-bar-wrap { margin-top:10px; display:flex; align-items:center; gap:10px; }
+.dm-bar { flex:1; height:7px; background:rgba(255,255,255,0.07); border-radius:50px; overflow:hidden; }
+.dm-bar-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#a78bfa); border-radius:50px; transition:width .5s; }
+.dm-card.done .dm-bar-fill { background:linear-gradient(90deg,#22c55e,#4ade80); }
+.dm-bar-txt { font-size:.74rem; font-weight:700; color:rgba(255,255,255,0.5); white-space:nowrap; }
+
+.dm-right { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.dm-reward { font-size:.82rem; font-weight:900; color:#fbbf24; white-space:nowrap; }
+.dm-reward .heart { color:#a78bfa; }
+
+.dm-claim-btn {
+    border:none; border-radius:50px; padding:7px 18px; font-family:inherit;
+    font-size:.8rem; font-weight:800; cursor:pointer; white-space:nowrap;
+    background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
+    transition:transform .1s, filter .15s;
+}
+.dm-claim-btn:hover { filter:brightness(1.1); }
+.dm-claim-btn:active { transform:scale(.95); }
+.dm-claim-btn:disabled { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.3); cursor:default; filter:none; }
+
+.dm-locked { font-size:.74rem; color:rgba(255,255,255,0.3); font-weight:700; }
+.dm-claimed-tag { font-size:.74rem; color:#4ade80; font-weight:800; display:flex; align-items:center; gap:4px; }
+.dm-claimed-tag svg { width:.9em; height:.9em; fill:currentColor; }
+
+.dm-empty { text-align:center; padding:60px 20px; color:rgba(255,255,255,0.3); }
+.dm-empty svg { width:3rem; height:3rem; fill:rgba(139,92,246,0.25); margin-bottom:12px; }
+
+.dm-reset { text-align:center; font-size:.76rem; color:rgba(255,255,255,0.3); margin-top:24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dm-wrap">
+
+    <div class="dm-hero">
+        <div class="dm-hero-title">
+            <svg viewBox="0 0 16 16"><use href="#bi-calendar-check"></use></svg> ماموریت‌های روزانه
+        </div>
+        <div class="dm-hero-sub">هر روز ماموریت‌ها رو کامل کن و ضربان جایزه بگیر!</div>
+        {% if cycle_len %}
+        <div style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;padding:6px 16px;border-radius:50px;font-size:.82rem;font-weight:800;">
+            <svg class="bi bi-arrow-repeat" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;"><use href="#bi-arrow-repeat"></use></svg>
+            {% if today_day.label %}{{ today_day.label }} — {% endif %}روز {{ cycle_pos }} از {{ cycle_len }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="dm-stats">
+        <div class="dm-stat">
+            <div class="dm-stat-num">{{ claimed_count }}/{{ total_missions }}</div>
+            <div class="dm-stat-lbl">انجام‌شده امروز</div>
+        </div>
+        <div class="dm-stat">
+            <div class="dm-stat-num gold">{{ earned_today }}</div>
+            <div class="dm-stat-lbl">ضربان امروز</div>
+        </div>
+        <div class="dm-stat">
+            <div class="dm-stat-num">{{ balance }}</div>
+            <div class="dm-stat-lbl">موجودی ضربان</div>
+        </div>
+    </div>
+
+    {% if missions_data %}
+        {% for item in missions_data %}
+        {% with m=item.mission %}
+        <div class="dm-card {% if item.claimed %}claimed{% elif item.done %}done{% endif %}" id="mission-{{ m.id }}">
+            <div class="dm-icon">
+                <svg aria-hidden="true"><use href="#{{ m.icon }}"></use></svg>
+            </div>
+            <div class="dm-body">
+                <div class="dm-title">{{ m.title }}</div>
+                {% if m.description %}<div class="dm-desc">{{ m.description }}</div>{% endif %}
+                <div class="dm-bar-wrap">
+                    <div class="dm-bar"><div class="dm-bar-fill" style="width:{{ item.pct }}%"></div></div>
+                    <span class="dm-bar-txt">{{ item.progress }}/{{ m.target_count }}</span>
+                </div>
+            </div>
+            <div class="dm-right">
+                <div class="dm-reward"><span class="heart">💜</span> {{ m.reward_zarban }}</div>
+                <div class="dm-action">
+                    {% if item.claimed %}
+                        <span class="dm-claimed-tag"><svg><use href="#bi-check-circle-fill"></use></svg> دریافت شد</span>
+                    {% elif item.done %}
+                        <button class="dm-claim-btn" onclick="claimMission({{ m.id }}, this)">دریافت جایزه</button>
+                    {% else %}
+                        <span class="dm-locked">در حال انجام...</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+
+        <div class="dm-reset">ماموریت‌ها هر شب نیمه‌شب ریست می‌شن — فردا برگرد!</div>
+    {% else %}
+        <div class="dm-empty">
+            <svg aria-hidden="true"><use href="#bi-calendar-check"></use></svg>
+            <div>هنوز ماموریتی تعریف نشده. به‌زودی...</div>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+function claimMission(missionId, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    fetch(`/missions/${missionId}/claim/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.csrfToken },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const card = document.getElementById('mission-' + missionId);
+            card.classList.remove('done');
+            card.classList.add('claimed');
+            const action = btn.closest('.dm-action');
+            action.innerHTML = '<span class="dm-claimed-tag"><svg><use href="#bi-check-circle-fill"></use></svg> دریافت شد</span>';
+            // به‌روزرسانی شمارنده‌های بالای صفحه
+            const nums = document.querySelectorAll('.dm-stat-num');
+            if (nums[1]) nums[1].textContent = parseInt(nums[1].textContent || 0) + data.reward;
+            if (nums[2]) nums[2].textContent = data.balance;
+            if (nums[0]) {
+                const parts = nums[0].textContent.split('/');
+                nums[0].textContent = (parseInt(parts[0]) + 1) + '/' + parts[1];
+            }
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'دریافت جایزه';
+            alert(data.error || 'خطا در دریافت جایزه');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'دریافت جایزه';
+    });
+}
+</script>
+{% endblock %}

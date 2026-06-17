@@ -48,17 +48,7 @@
 {% block content %}
 <div class="pi-wrap">
 
-  {# پیام ارور اگر از who_viewed_me ریدایرکت شده #}
-  {% if messages %}
-  {% for msg in messages %}
-  <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;
-              padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:10px;
-              color:#f87171;font-size:.88rem;font-weight:600;">
-    <span style="font-size:1.2rem;">🔒</span>
-    {{ msg }}
-  </div>
-  {% endfor %}
-  {% endif %}
+  {# پیام ارور به‌صورت توست شناور خوشگل در base.html نمایش داده می‌شود — اینجا تکرار نمی‌کنیم #}
 
   <!-- هدر -->
   <div class="pi-hero">

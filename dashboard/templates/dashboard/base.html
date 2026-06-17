@@ -753,6 +753,12 @@
             گردونه شانس
         </a>
 
+        <a href="{% url 'dashboard:daily_missions' %}"
+           class="sidebar-link {% if 'mission' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="bi bi-calendar-check" aria-hidden="true"><use href="#bi-calendar-check"></use></svg>
+            ماموریت‌های روزانه
+        </a>
+
         <a href="{% url 'dashboard:premium' %}"
            class="sidebar-link {% if 'premium' in request.resolver_match.url_name %}active{% endif %}"
            style="{% if 'premium' in request.resolver_match.url_name %}background:linear-gradient(135deg,rgba(234,179,8,.15),rgba(202,138,4,.08));border-color:rgba(234,179,8,.4);color:#fde047;{% endif %}">

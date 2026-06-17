@@ -1,0 +1,110 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}ماموریت‌های روزانه | داشبورد{% endblock %}
+{% block page_title %}ماموریت‌های روزانه{% endblock %}
+
+{% block extra_css %}
+{% include 'dashboard/_mission_editor_assets.html' %}
+<style>
+.cycle-banner { background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(124,58,237,.06)); border:1px solid rgba(139,92,246,.3); border-radius:14px; padding:16px 20px; margin-bottom:22px; display:flex; align-items:center; gap:14px; }
+.cycle-banner .ic { font-size:1.6rem; color:#a78bfa; }
+.cycle-banner b { color:#fff; }
+.day-today-badge { background:rgba(34,197,94,.15); color:#4ade80; border:1px solid rgba(34,197,94,.35); padding:2px 10px; border-radius:20px; font-size:.72rem; font-weight:800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title"><svg class="bi bi-calendar-check" aria-hidden="true" style="vertical-align:-.125em"><use href="#bi-calendar-check"></use></svg> ماموریت‌های روزانه</div>
+        <div class="page-subtitle">روزهای چرخه رو تعریف کن — هر روز ماموریت‌های خودش رو داره و چرخشی تکرار می‌شه</div>
+    </div>
+    <a href="{% url 'dashboard:mission_day_add' %}" class="btn-purple">
+        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> روز جدید
+    </a>
+</div>
+
+<div class="cycle-banner">
+    <span class="ic"><svg class="bi bi-arrow-repeat" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;"><use href="#bi-arrow-repeat"></use></svg></span>
+    <div>
+        {% if cycle_len %}
+            چرخه‌ای <b>{{ cycle_len }} روزه</b> فعاله. امروز: <b>{{ today_day }}</b>.
+            بعد از روز آخر، دوباره از روز اول شروع می‌شه.
+        {% else %}
+            هنوز هیچ روزی برای چرخه تعریف نشده. با دکمه‌ی «روز جدید» شروع کن — یا فقط از «ماموریت‌های همیشگی» پایین استفاده کن.
+        {% endif %}
+    </div>
+</div>
+
+<!-- روزهای چرخه -->
+<div style="font-size:.95rem;font-weight:700;color:#a78bfa;margin-bottom:12px;">روزهای چرخه</div>
+{% if days %}
+<div class="dash-card" style="padding:0;overflow:hidden;margin-bottom:30px;">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>روز</th>
+                <th>عنوان</th>
+                <th>تعداد ماموریت</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in days %}
+            <tr>
+                <td>
+                    <strong>روز {{ d.day_number }}</strong>
+                    {% if today_day and d.id == today_day.id %}<span class="day-today-badge">امروز</span>{% endif %}
+                </td>
+                <td>{{ d.label|default:"—" }}</td>
+                <td><span style="background:rgba(139,92,246,.15);color:#a78bfa;padding:2px 10px;border-radius:20px;font-size:.8rem;">{{ d.mission_count }} ماموریت</span></td>
+                <td>
+                    <button class="toggle-btn" onclick="toggleDay({{ d.pk }}, this)" data-id="{{ d.pk }}">
+                        {% if d.is_active %}<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>{% else %}<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>{% endif %}
+                    </button>
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{% url 'dashboard:mission_day_edit' d.pk %}" class="btn-ghost" style="padding:4px 12px;font-size:.8rem;">
+                            <svg class="bi bi-pencil-fill" aria-hidden="true"><use href="#bi-pencil-fill"></use></svg> مدیریت
+                        </a>
+                        <form method="post" action="{% url 'dashboard:mission_day_delete' d.pk %}" onsubmit="return confirm('روز {{ d.day_number }} و همه‌ی ماموریت‌هاش حذف بشه؟')">
+                            {% csrf_token %}
+                            <button type="submit" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:4px 12px;border-radius:6px;font-size:.8rem;cursor:pointer;">
+                                <svg class="bi bi-trash-fill" aria-hidden="true"><use href="#bi-trash-fill"></use></svg>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:40px 20px;margin-bottom:30px;color:var(--text-dim);">
+    هنوز روزی تعریف نشده — <a href="{% url 'dashboard:mission_day_add' %}" style="color:#a78bfa;">اولین روز رو بساز</a>
+</div>
+{% endif %}
+
+<!-- ماموریت‌های همیشگی -->
+<div style="font-size:.95rem;font-weight:700;color:#a78bfa;margin-bottom:6px;">ماموریت‌های همیشگی</div>
+<div style="font-size:.8rem;color:var(--text-dim);margin-bottom:12px;">این ماموریت‌ها <b>هر روز</b> نمایش داده می‌شن (مستقل از چرخه). مثل «ورود روزانه».</div>
+<div class="dash-card">
+    {% include 'dashboard/_mission_editor.html' with missions=always_missions editor_day_id='' %}
+</div>
+
+<script>
+function toggleDay(id, btn) {
+    fetch(`/admin-panel/missions/day/${id}/toggle/`, {
+        method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    }).then(r => r.json()).then(d => {
+        if (d.ok) {
+            btn.innerHTML = d.is_active
+                ? '<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>'
+                : '<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>';
+        }
+    });
+}
+</script>
+{% endblock %}

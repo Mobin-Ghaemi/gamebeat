@@ -2,6 +2,30 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, Achievement
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
+from .models import DailyMission, DailyMissionProgress, MissionDay
+
+
+@admin.register(MissionDay)
+class MissionDayAdmin(admin.ModelAdmin):
+    list_display = ('day_number', 'label', 'is_active')
+    list_editable = ('label', 'is_active')
+    ordering = ('day_number',)
+
+
+@admin.register(DailyMission)
+class DailyMissionAdmin(admin.ModelAdmin):
+    list_display = ('title', 'day', 'event', 'target_count', 'reward_zarban', 'is_active', 'order')
+    list_editable = ('target_count', 'reward_zarban', 'is_active', 'order')
+    list_filter = ('event', 'is_active', 'day')
+    search_fields = ('title',)
+
+
+@admin.register(DailyMissionProgress)
+class DailyMissionProgressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'mission', 'date', 'progress', 'claimed')
+    list_filter = ('date', 'claimed', 'mission')
+    search_fields = ('user__username',)
+    date_hierarchy = 'date'
 
 admin.site.register(Post)
 admin.site.register(PostLike)

@@ -1,0 +1,69 @@
+{% comment %}CSS + JS مشترک ویرایشگر ماموریت — یک‌بار در هر صفحه include شود.{% endcomment %}
+<style>
+.m-row { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px; transition:border-color .25s; }
+.m-row.saved { border-color:rgba(34,197,94,.55); }
+.m-row-top { display:grid; grid-template-columns:1fr 150px 68px 84px 120px auto 34px 34px; gap:8px; align-items:center; }
+.m-row.new .m-row-top { grid-template-columns:1fr 150px 68px 84px 120px 110px; }
+.m-row input, .m-row select { background:var(--bg-input,#1e1b2e); border:1px solid var(--border); border-radius:6px; color:var(--text-white); padding:6px 9px; font-size:.82rem; width:100%; }
+.m-desc { margin-top:8px; }
+.m-active-lbl { font-size:.72rem; color:var(--text-dim); white-space:nowrap; display:flex; align-items:center; gap:4px; }
+.m-active-lbl input { width:auto; }
+.btn-save-item { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35); color:#4ade80; width:34px; height:34px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.btn-save-item:hover { background:rgba(34,197,94,.25); }
+.btn-del-item { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3); color:#f87171; width:34px; height:34px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.btn-del-item:hover { background:rgba(239,68,68,.22); }
+.m-add { border-top:1px solid var(--border); margin-top:14px; padding-top:14px; }
+.m-add-title { font-size:.85rem; color:#a78bfa; margin-bottom:10px; font-weight:600; }
+.m-empty { color:var(--text-dim); font-size:.85rem; padding:10px 0; }
+</style>
+<script>
+const MISSION_SAVE_URL = "{% url 'dashboard:mission_save' %}";
+const MCSRF = "{{ csrf_token }}";
+function _collectMission(row) {
+    const q = s => row.querySelector(s);
+    const active = q('.m-active');
+    return {
+        title: q('.m-title').value.trim(),
+        description: q('.m-desc').value.trim(),
+        event: q('.m-event').value,
+        target_count: q('.m-target').value,
+        reward_zarban: q('.m-reward').value,
+        icon: q('.m-icon').value.trim(),
+        is_active: active ? (active.checked ? 'true' : 'false') : 'true',
+    };
+}
+function _postMission(data) {
+    return fetch(MISSION_SAVE_URL, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': MCSRF },
+        body: new URLSearchParams(data),
+    }).then(r => r.json());
+}
+function saveMission(id, btn) {
+    const row = btn.closest('.m-row');
+    const data = _collectMission(row);
+    if (!data.title) { alert('عنوان ماموریت الزامیه'); return; }
+    data.action = 'edit'; data.mission_id = id;
+    _postMission(data).then(d => {
+        if (d.ok) { row.classList.add('saved'); setTimeout(() => row.classList.remove('saved'), 1200); }
+        else alert(d.error || 'خطا در ذخیره');
+    });
+}
+function deleteMission(id, btn) {
+    if (!confirm('این ماموریت حذف شود؟')) return;
+    _postMission({ action: 'delete', mission_id: id }).then(d => {
+        if (d.ok) { const r = btn.closest('.m-row'); r.parentNode.removeChild(r); }
+        else alert(d.error || 'خطا در حذف');
+    });
+}
+function addMission(btn, dayId) {
+    const row = btn.closest('.m-row');
+    const data = _collectMission(row);
+    if (!data.title) { alert('عنوان ماموریت الزامیه'); return; }
+    data.action = 'add'; if (dayId) data.day_id = dayId;
+    _postMission(data).then(d => {
+        if (d.ok) location.reload();
+        else alert(d.error || 'خطا در افزودن');
+    });
+}
+</script>

@@ -955,6 +955,11 @@
             <a href="{% url 'community:spin_list' %}" class="nav-link-item {% block nav_spin %}{% endblock %}" style="{% if request.resolver_match.url_name == 'spin_list' or request.resolver_match.url_name == 'spin_detail' %}color:#a78bfa;{% endif %}">
                 <svg class="bi bi-circle-half" aria-hidden="true"><use href="#bi-circle-half"></use></svg> گردونه
             </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'community:daily_missions' %}" class="nav-link-item {% block nav_missions %}{% endblock %}" style="{% if request.resolver_match.url_name == 'daily_missions' %}color:#a78bfa;{% endif %}">
+                <svg class="bi bi-calendar-check" aria-hidden="true"><use href="#bi-calendar-check"></use></svg> ماموریت‌ها
+            </a>
+            {% endif %}
             <a href="{% url 'community:gamer_finder' %}" class="nav-link-item {% block nav_gamer_finder %}{% endblock %}">
                 <svg class="bi bi-geo-alt-fill" aria-hidden="true"><use href="#bi-geo-alt-fill"></use></svg> گیمر یابی
             </a>
@@ -1060,15 +1065,41 @@
 </nav>
 
 <!-- Messages -->
+<style>
+.gb-toast-wrap{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:12px;width:min(460px,calc(100% - 28px));pointer-events:none;}
+.gb-toast{pointer-events:auto;display:flex;align-items:center;gap:13px;padding:16px 18px;border-radius:16px;font-family:'Vazirmatn',sans-serif;font-weight:800;font-size:.96rem;color:#fff;border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px);animation:gbToastIn .5s cubic-bezier(.16,1,.3,1);}
+.gb-toast-icon{font-size:1.5rem;flex-shrink:0;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));}
+.gb-toast-msg{flex:1;line-height:1.55;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.3);}
+.gb-toast-close{background:rgba(255,255,255,.18);border:none;color:#fff;width:27px;height:27px;border-radius:50%;cursor:pointer;font-size:1.15rem;line-height:1;flex-shrink:0;transition:.2s;display:flex;align-items:center;justify-content:center;}
+.gb-toast-close:hover{background:rgba(255,255,255,.34);transform:rotate(90deg);}
+/* ⛔ ارور — قرمز پررنگ خفن */
+.gb-toast-error,.gb-toast-danger{background:linear-gradient(135deg,#ef4444,#991b1b);border-color:rgba(248,113,113,.55);box-shadow:0 12px 42px rgba(220,38,38,.5),0 0 0 1px rgba(239,68,68,.3);animation:gbToastIn .5s cubic-bezier(.16,1,.3,1),gbPulse 2s ease-in-out infinite .6s;}
+.gb-toast-success{background:linear-gradient(135deg,#22c55e,#15803d);box-shadow:0 12px 42px rgba(22,163,74,.42);}
+.gb-toast-warning{background:linear-gradient(135deg,#f59e0b,#b45309);box-shadow:0 12px 42px rgba(245,158,11,.42);}
+.gb-toast-info,.gb-toast-debug,.gb-toast-{background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 12px 42px rgba(139,92,246,.42);}
+@keyframes gbToastIn{from{opacity:0;transform:translateY(-18px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes gbToastOut{to{opacity:0;transform:translateY(-12px) scale(.96);}}
+@keyframes gbPulse{0%,100%{box-shadow:0 12px 42px rgba(220,38,38,.5),0 0 0 1px rgba(239,68,68,.3);}50%{box-shadow:0 12px 50px rgba(220,38,38,.72),0 0 0 4px rgba(239,68,68,.22);}}
+.gb-toast.hide{animation:gbToastOut .35s forwards;}
+</style>
 {% if messages %}
-<div style="position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 999; min-width: 320px;">
+<div class="gb-toast-wrap">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-bottom: 8px;">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter: invert(1);"></button>
+    <div class="gb-toast gb-toast-{{ message.tags }}" role="alert">
+        <span class="gb-toast-icon">{% if 'error' in message.tags or 'danger' in message.tags %}⛔{% elif 'success' in message.tags %}✅{% elif 'warning' in message.tags %}⚠️{% else %}💜{% endif %}</span>
+        <span class="gb-toast-msg">{{ message }}</span>
+        <button type="button" class="gb-toast-close" onclick="this.parentElement.classList.add('hide');setTimeout(()=>this.parentElement.remove(),350)">×</button>
     </div>
     {% endfor %}
 </div>
+<script>
+(function(){
+    document.querySelectorAll('.gb-toast').forEach(function(t, i){
+        var delay = 5500 + i*400;
+        setTimeout(function(){ t.classList.add('hide'); setTimeout(function(){ t.remove(); }, 350); }, delay);
+    });
+})();
+</script>
 {% endif %}
 
 <!-- Content -->

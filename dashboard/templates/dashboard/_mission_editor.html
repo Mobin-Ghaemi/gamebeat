@@ -1,0 +1,47 @@
+{% comment %}
+ویرایشگر اینلاین ماموریت — در صفحه‌ی روز و کارت «همیشگی» استفاده می‌شود.
+ورودی‌ها: missions (لیست)، editor_day_id (pk روز یا '' برای همیشگی)، event_choices
+{% endcomment %}
+<div class="m-list" id="mlist-{{ editor_day_id|default:'always' }}">
+    {% for m in missions %}
+    <div class="m-row" data-id="{{ m.id }}">
+        <div class="m-row-top">
+            <input type="text" class="m-title" value="{{ m.title }}" placeholder="عنوان ماموریت *">
+            <select class="m-event">
+                {% for val, label in event_choices %}
+                <option value="{{ val }}" {% if m.event == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" class="m-target" value="{{ m.target_count }}" min="1" title="تعداد هدف">
+            <input type="number" class="m-reward" value="{{ m.reward_zarban }}" min="0" title="جایزه (ضربان)">
+            <input type="text" class="m-icon" value="{{ m.icon }}" placeholder="bi-..." title="آیکون">
+            <label class="m-active-lbl" title="فعال"><input type="checkbox" class="m-active" {% if m.is_active %}checked{% endif %}> فعال</label>
+            <button class="btn-save-item" onclick="saveMission({{ m.id }}, this)" title="ذخیره"><svg class="bi bi-check-lg" aria-hidden="true"><use href="#bi-check-lg"></use></svg></button>
+            <button class="btn-del-item" onclick="deleteMission({{ m.id }}, this)" title="حذف"><svg class="bi bi-trash" aria-hidden="true"><use href="#bi-trash"></use></svg></button>
+        </div>
+        <input type="text" class="m-desc" value="{{ m.description }}" placeholder="توضیح کوتاه (اختیاری)">
+    </div>
+    {% empty %}
+    <div class="m-empty" id="mempty-{{ editor_day_id|default:'always' }}">هنوز ماموریتی اضافه نشده.</div>
+    {% endfor %}
+</div>
+
+<!-- افزودن ماموریت جدید -->
+<div class="m-add" data-day="{{ editor_day_id }}">
+    <div class="m-add-title"><svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> افزودن ماموریت</div>
+    <div class="m-row new">
+        <div class="m-row-top">
+            <input type="text" class="m-title" placeholder="عنوان ماموریت *">
+            <select class="m-event">
+                {% for val, label in event_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" class="m-target" value="1" min="1" title="تعداد هدف">
+            <input type="number" class="m-reward" value="10" min="0" title="جایزه (ضربان)">
+            <input type="text" class="m-icon" value="bi-check-circle-fill" placeholder="bi-..." title="آیکون">
+            <button class="btn-purple" onclick="addMission(this, '{{ editor_day_id }}')">افزودن</button>
+        </div>
+        <input type="text" class="m-desc" placeholder="توضیح کوتاه (اختیاری)">
+    </div>
+</div>

@@ -15,6 +15,7 @@ from .models import PLATFORM_CHOICES, CITY_CHOICES, GAMING_STYLE_CHOICES, ScoreS
 from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
 from .models import ProfileView, PremiumPlan
+from .models import DailyMission, DailyMissionProgress, MissionDay
 from django.utils import timezone
 import re
 import json
@@ -46,6 +47,35 @@ def _award_zarban(user, amount, reason):
         wallet=wallet, amount=amount,
         tx_type=ZarbanTransaction.TX_CREDIT, reason=reason,
     )
+
+
+def get_today_missions():
+    """ماموریت‌های فعالِ امروز را برمی‌گرداند: ماموریت‌های همیشگی (بدون روز)
+    به‌علاوه‌ی ماموریت‌های روزِ جاریِ چرخه. خروجی: (queryset, today_day)."""
+    today_day = MissionDay.current()
+    qs = DailyMission.objects.filter(is_active=True)
+    if today_day:
+        qs = qs.filter(Q(day__isnull=True) | Q(day=today_day))
+    else:
+        qs = qs.filter(day__isnull=True)
+    return qs.order_by('order', 'id'), today_day
+
+
+def track_mission(user, event, amount=1):
+    """پیشرفت ماموریت‌های فعالِ امروزِ مربوط به این رویداد را افزایش می‌دهد.
+    جایزه در زمان «دریافت» توسط کاربر داده می‌شود، نه اینجا."""
+    if not getattr(user, 'is_authenticated', False):
+        return
+    today = timezone.localdate()
+    missions, _ = get_today_missions()
+    for mission in missions.filter(event=event):
+        prog, _ = DailyMissionProgress.objects.get_or_create(
+            user=user, mission=mission, date=today,
+        )
+        if prog.claimed or prog.progress >= mission.target_count:
+            continue
+        prog.progress = min(prog.progress + amount, mission.target_count)
+        prog.save(update_fields=['progress'])
 
 
 def _unlock_achievement(user, ach_type, title, desc='', icon='bi-trophy'):
@@ -216,6 +246,7 @@ def feed(request):
         })
 
     my_profile = get_or_create_gamer_profile(request.user)
+    track_mission(request.user, DailyMission.EVENT_LOGIN)
     following_ids = list(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
 
     posts = list(Post.objects.filter(
@@ -597,6 +628,7 @@ def create_post(request):
         profile.save()
 
         _award_zarban(request.user, 5, 'انتشار پست جدید')
+        track_mission(request.user, DailyMission.EVENT_POST)
         _unlock_achievement(
             request.user, 'first_post',
             'اولین پست', 'اولین پستت رو منتشر کردی!', 'bi-pencil-square',
@@ -825,6 +857,7 @@ def add_comment(request, post_id):
             )
 
         _award_zarban(request.user, 2, 'ارسال کامنت')
+        track_mission(request.user, DailyMission.EVENT_COMMENT)
         comment_count = Comment.objects.filter(author=request.user).count()
         if comment_count >= 10:
             _unlock_achievement(
@@ -898,6 +931,7 @@ def toggle_follow(request, username):
             post=None
         )
         _award_zarban(request.user, 3, f'دنبال کردن {target_user.username}')
+        track_mission(request.user, DailyMission.EVENT_FOLLOW)
         _unlock_achievement(
             request.user, 'first_follow',
             'اولین فالو', 'اولین گیمر رو دنبال کردی!', 'bi-person-plus',
@@ -1192,6 +1226,7 @@ def join_lfg(request, post_id):
             custom_text=f'{request.user.username} به پست «{post.game_name}» پیوست',
         )
         _award_zarban(request.user, 10, f'پیوستن به LFG: {post.game_name}')
+        track_mission(request.user, DailyMission.EVENT_LFG_JOIN)
         party = _maybe_create_party_group(post)
         return JsonResponse({'ok': True, 'type': 'joined',
                              'current': post.current_players, 'max': post.max_players,
@@ -2144,6 +2179,7 @@ def react_post(request, post_id):
     else:
         PostReaction.objects.create(user=request.user, post=post, reaction_type=rtype)
         active = rtype
+        track_mission(request.user, DailyMission.EVENT_REACT)
         # notification
         if post.author != request.user:
             Notification.objects.get_or_create(
@@ -2168,6 +2204,78 @@ def get_post_reactions(request, post_id):
         if c: counts[r[0]] = c
     my = PostReaction.objects.filter(user=request.user, post=post).first()
     return JsonResponse({'counts': counts, 'active': my.reaction_type if my else None})
+
+
+# ═══════════════════════════════════════
+#  🎯 ماموریت‌های روزانه
+# ═══════════════════════════════════════
+
+@login_required
+def daily_missions(request):
+    today = timezone.localdate()
+    missions_qs, today_day = get_today_missions()
+    missions = list(missions_qs)
+    cycle_pos, cycle_len = today_day.cycle_position if today_day else (0, 0)
+    prog_map = {
+        p.mission_id: p
+        for p in DailyMissionProgress.objects.filter(user=request.user, date=today)
+    }
+    data = []
+    claimed_count = 0
+    claimable = 0
+    earned_today = 0
+    for m in missions:
+        p = prog_map.get(m.id)
+        cur = p.progress if p else 0
+        claimed = p.claimed if p else False
+        done = cur >= m.target_count
+        pct = int(min(cur / m.target_count, 1) * 100) if m.target_count else 0
+        if claimed:
+            claimed_count += 1
+            earned_today += m.reward_zarban
+        elif done:
+            claimable += 1
+        data.append({
+            'mission': m, 'progress': cur, 'done': done,
+            'claimed': claimed, 'pct': pct,
+        })
+    wallet = ZarbanWallet.get_or_create_for(request.user)
+    return render(request, 'community/daily_missions.html', {
+        'missions_data': data,
+        'total_missions': len(missions),
+        'claimed_count': claimed_count,
+        'claimable': claimable,
+        'earned_today': earned_today,
+        'balance': wallet.balance,
+        'today_day': today_day,
+        'cycle_pos': cycle_pos,
+        'cycle_len': cycle_len,
+    })
+
+
+@login_required
+@require_POST
+def claim_mission(request, mission_id):
+    today = timezone.localdate()
+    mission = get_object_or_404(DailyMission, id=mission_id, is_active=True)
+    prog = DailyMissionProgress.objects.filter(
+        user=request.user, mission=mission, date=today,
+    ).first()
+    if not prog or prog.progress < mission.target_count:
+        return JsonResponse({'ok': False, 'error': 'ماموریت هنوز کامل نشده'}, status=400)
+    if prog.claimed:
+        return JsonResponse({'ok': False, 'error': 'جایزه قبلاً دریافت شده'}, status=400)
+    prog.claimed = True
+    prog.claimed_at = timezone.now()
+    prog.save(update_fields=['claimed', 'claimed_at'])
+    _award_zarban(request.user, mission.reward_zarban, f'ماموریت روزانه: {mission.title}')
+    Notification.objects.create(
+        recipient=request.user, sender=request.user,
+        notif_type='zarban',
+        custom_text=f'🎯 ماموریت «{mission.title}» رو کامل کردی — {mission.reward_zarban} ضربان گرفتی!',
+    )
+    wallet = ZarbanWallet.get_or_create_for(request.user)
+    return JsonResponse({'ok': True, 'reward': mission.reward_zarban, 'balance': wallet.balance})
 
 
 # ═══════════════════════════════════════
