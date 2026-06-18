@@ -638,7 +638,7 @@
                                 onclick="toggleLike({{ post.id }}, this)"
                                 style="padding-left:6px; gap:5px;">
                             <span class="like-ripple-wrap"></span>
-                            <i class="bi {% if post.id in liked_post_ids %}bi-heart-fill{% else %}bi-heart{% endif %}" style="font-size:1rem;transition:color .2s;"></i>
+                            <svg class="bi bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}" aria-hidden="true" style="width:1rem;height:1rem;transition:color .2s;"><use href="#bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}"></use></svg>
                         </button>
                         <button class="pf-btn like-count-btn {% if post.id in liked_post_ids %}liked{% endif %}"
                                 id="like-count-{{ post.id }}"
@@ -863,12 +863,13 @@ function toggleLike(postId, btn) {
     fetch(`/post/${postId}/like/`, {
         method:'POST', headers:{'X-CSRFToken':csrfToken}
     }).then(r=>r.json()).then(data=>{
-        const icon = btn.querySelector('i');
+        const icon = btn.querySelector('svg');
+        const use  = icon ? icon.querySelector('use') : null;
         const wrap = btn.querySelector('.like-ripple-wrap');
 
         btn.classList.toggle('liked', data.liked);
-        icon.className = data.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
-        icon.style.fontSize = '1rem';
+        if (icon) icon.setAttribute('class', data.liked ? 'bi bi-heart-fill' : 'bi bi-heart');
+        if (use)  use.setAttribute('href', data.liked ? '#bi-heart-fill' : '#bi-heart');
 
         /* ── آپدیت عدد در دکمه شمارش (جداست از دکمه heart) ── */
         const countBtn = document.getElementById('like-count-' + postId);

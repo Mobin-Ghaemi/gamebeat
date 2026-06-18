@@ -1690,18 +1690,26 @@ def link_preview(request):
 
 @login_required
 def notifications_list(request):
+    from django.core.paginator import Paginator
+
     has_unread = Notification.objects.filter(
         recipient=request.user, is_read=False
     ).exclude(notif_type='dm').exists()
 
-    notifs = Notification.objects.filter(
+    all_notifs = Notification.objects.filter(
         recipient=request.user
-    ).exclude(notif_type='dm').select_related('sender', 'sender__gamer_profile', 'post').order_by('-created_at')[:60]
+    ).exclude(notif_type='dm').select_related('sender', 'sender__gamer_profile', 'post').order_by('-created_at')
+
+    paginator = Paginator(all_notifs, 15)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
     # فقط نوتیف‌های غیر-DM رو بخوانده بزن
     Notification.objects.filter(
         recipient=request.user, is_read=False
     ).exclude(notif_type='dm').update(is_read=True)
-    return render(request, 'community/notifications.html', {'notifs': notifs, 'has_unread': has_unread})
+    return render(request, 'community/notifications.html', {
+        'notifs': page_obj, 'page_obj': page_obj, 'has_unread': has_unread,
+    })
 
 
 @login_required

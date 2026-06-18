@@ -1445,6 +1445,17 @@
                                 {% endfor %}
                             </div>
                             <div class="post-card-footer">
+                                {% if request.user.is_authenticated %}
+                                <button class="post-action-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                                        onclick="toggleLike({{ post.id }}, this)">
+                                    <svg class="bi bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}" aria-hidden="true"><use href="#bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}"></use></svg>
+                                    <span class="like-count">{{ post.likes_count }}</span>
+                                </button>
+                                {% else %}
+                                <span class="post-action-btn">
+                                    <svg class="bi bi-heart" aria-hidden="true"><use href="#bi-heart"></use></svg> {{ post.likes_count }}
+                                </span>
+                                {% endif %}
                                 <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
                                     <button class="post-action-btn" id="rxn-main-{{ post.id }}"
                                         data-my-reaction="{{ post.my_reaction }}"
@@ -1460,17 +1471,6 @@
                                     </button>
                                     <div class="reaction-picker"></div>
                                 </div>
-                                {% if request.user.is_authenticated %}
-                                <button class="post-action-btn {% if post.id in liked_post_ids %}liked{% endif %}"
-                                        onclick="toggleLike({{ post.id }}, this)">
-                                    <svg class="bi bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}" aria-hidden="true"><use href="#bi-heart"></use></svg>
-                                    <span class="like-count">{{ post.likes_count }}</span>
-                                </button>
-                                {% else %}
-                                <span class="post-action-btn">
-                                    <svg class="bi bi-heart" aria-hidden="true"><use href="#bi-heart"></use></svg> {{ post.likes_count }}
-                                </span>
-                                {% endif %}
                                 <span class="post-action-btn">
                                     <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> {{ post.comments_count }}
                                 </span>
@@ -1855,42 +1855,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Mini stats for own profile -->
-                {% if is_own_profile %}
-                <div class="sidebar-card" style="padding:18px;">
-                    <div class="sidebar-card-title" style="margin-bottom:14px;">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="color:var(--purple);vertical-align:-.125em"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg> آمار سریع
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-                        <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:12px 10px;text-align:center;">
-                            <div style="font-size:1.4rem;font-weight:900;color:#60a5fa;line-height:1;">{{ profile_views_30d }}</div>
-                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">بازدید ۳۰ روز</div>
-                        </div>
-                        <div style="background:rgba(244,114,182,.07);border:1px solid rgba(244,114,182,.15);border-radius:12px;padding:12px 10px;text-align:center;">
-                            <div style="font-size:1.4rem;font-weight:900;color:#f472b6;line-height:1;">{{ reactions_14d }}</div>
-                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">ری‌اکشن ۱۴ روز</div>
-                        </div>
-                        <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.15);border-radius:12px;padding:12px 10px;text-align:center;">
-                            <div style="font-size:1.4rem;font-weight:900;color:#4ade80;line-height:1;">{{ profile.followers_count }}</div>
-                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">دنبال‌کننده</div>
-                        </div>
-                        <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.15);border-radius:12px;padding:12px 10px;text-align:center;">
-                            <div style="font-size:1.4rem;font-weight:900;color:#a78bfa;line-height:1;">{{ zarban_balance }}</div>
-                            <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">ضربان 💜</div>
-                        </div>
-                    </div>
-                    {% if profile.is_premium %}
-                    <a href="{% url 'community:profile_stats' %}" style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:9px;color:#fbbf24;font-size:.8rem;font-weight:700;text-decoration:none;transition:.15s;" onmouseover="this.style.borderColor='rgba(251,191,36,.45)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="vertical-align:-.125em"><path d="M4 20h2V10H4v10zm3 0h2v-6H7v6zm3 0h2V4h-2v16zm3 0h2v-9h-2v9zm3 0h2v-5h-2v5z"/></svg> مشاهده آمار کامل
-                    </a>
-                    {% else %}
-                    <a href="{% url 'community:premium_info' %}" style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:9px;color:#a78bfa;font-size:.8rem;font-weight:700;text-decoration:none;transition:.15s;" onmouseover="this.style.borderColor='rgba(139,92,246,.45)'" onmouseout="this.style.borderColor='rgba(139,92,246,.2)'">
-                        🔒 آمار کامل — پریمیوم
-                    </a>
-                    {% endif %}
-                </div>
-                {% endif %}
-
                 <!-- Suggest follow (for other profiles) -->
                 {% if not is_own_profile %}
                 <div class="sidebar-card" style="text-align:center; padding:22px 18px;">
@@ -2009,16 +1973,26 @@ function toggleLike(postId, btn) {
     })
     .then(r => r.json())
     .then(data => {
-        const icon  = btn.querySelector('i');
+        const icon  = btn.querySelector('svg');
+        const use   = icon ? icon.querySelector('use') : null;
         const count = btn.querySelector('.like-count');
-        if (data.liked) { btn.classList.add('liked'); icon.className = 'bi bi-heart-fill'; }
-        else            { btn.classList.remove('liked'); icon.className = 'bi bi-heart'; }
+        if (data.liked) {
+            btn.classList.add('liked');
+            if (icon) icon.setAttribute('class', 'bi bi-heart-fill');
+            if (use)  use.setAttribute('href', '#bi-heart-fill');
+        } else {
+            btn.classList.remove('liked');
+            if (icon) icon.setAttribute('class', 'bi bi-heart');
+            if (use)  use.setAttribute('href', '#bi-heart');
+        }
         if (count) count.textContent = data.count;
 
         /* pop animation */
-        icon.classList.remove('like-pop');
-        void icon.offsetWidth;
-        icon.classList.add('like-pop');
+        if (icon) {
+            icon.classList.remove('like-pop');
+            void icon.offsetWidth;
+            icon.classList.add('like-pop');
+        }
     });
 }
 

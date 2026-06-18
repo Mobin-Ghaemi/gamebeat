@@ -940,8 +940,11 @@
             <a href="{% url 'community:feed' %}" class="nav-link-item {% block nav_feed %}{% endblock %}">
                 <svg class="bi bi-house-fill" aria-hidden="true"><use href="#bi-house-fill"></use></svg> خانه
             </a>
-            <a href="{% url 'community:search' %}" class="nav-link-item {% block nav_search %}{% endblock %}">
+            <a href="{% url 'community:search' %}" class="nav-link-item {% block nav_search %}{% endblock %}" style="position:relative;">
                 <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی گیمر
+                {% if pending_follow_requests %}
+                <span title="{{ pending_follow_requests }} درخواست فالو در انتظار" style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:.62rem;font-weight:900;min-width:18px;height:18px;line-height:1;border-radius:50%;padding:0 4px;margin-right:4px;vertical-align:middle;">{% if pending_follow_requests > 9 %}9+{% else %}{{ pending_follow_requests }}{% endif %}</span>
+                {% endif %}
             </a>
             <a href="{% url 'community:lfg' %}" class="nav-link-item {% block nav_lfg %}{% endblock %}">
                 <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> پیدا کردن هم‌بازی
@@ -1027,13 +1030,10 @@
 
                         <!-- Profile & Social -->
                         <a class="pf-item" href="{% url 'community:profile' username=user.username %}">
-                            <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></span> پروفایل گیمری
+                            <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466.ooo.5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729q-.211.27-.44.605C17.78 5.197 18 6.long 18 8s-.22 2.803-.68 3.965q-.23.336-.44.604a.5.5 0 0 1-.306.73l-1.932.517a.5.5 0 0 1-.62-.36 48 48 0 0 0-9.466 0 .5.5 0 0 1-.62.36l-1.932-.518a.5.5 0 0 1-.306-.729q.211-.27.44-.605C.22 10.803 0 9.731 0 8s.22-2.803.68-3.965q.23-.337.44-.605a.5.5 0 0 1-.069-.17M11.886 9.99q.342.034.683.073l1.894.51-.083-.22C14.786 9.958 15 9.02 15 8s-.214-1.958-.62-2.354l-.083-.22-1.894.51q-.341.04-.683.072C13.627 6.19 14 7.057 14 8s-.373 1.81-2.114 1.99M3.114 6.01Q2.773 5.971 2.43 5.932l-1.893-.51.082.22C.214 6.042 0 6.98 0 8s.214 1.958.619 2.354l.083.22 1.894-.51q.341-.04.683-.072C1.373 9.81 1 8.943 1 8s.373-1.81 2.114-1.99"/></svg></span> پروفایل
                         </a>
                         <a class="pf-item" href="{% url 'community:edit_profile' %}">
                             <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/></svg></span> ویرایش پروفایل
-                        </a>
-                        <a class="pf-item" href="{% url 'community:follow_requests' %}">
-                            <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6a5 5 0 0 1 10 0c0 .88.32 4.2 1.22 6"/></svg></span> درخواست‌های فالو
                         </a>
 
                         <div class="pf-sep"></div>
@@ -1509,7 +1509,7 @@
 }
 #msgChat {
     position:fixed; bottom:0; right:280px; z-index:8100;
-    width:300px; height:400px;
+    width:330px; height:440px; max-height:calc(100vh - 110px);
     background:#141420; border:1px solid rgba(139,92,246,.25);
     border-radius:14px 14px 0 0;
     box-shadow:0 -12px 40px rgba(0,0,0,.7);
@@ -1533,8 +1533,9 @@
 #msgChatClose { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); color:#666; width:24px; height:24px; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
 #msgChatClose:hover { background:#ef4444; color:#fff; border-color:#ef4444; }
 #msgChatMsgs {
-    flex:1; overflow-y:auto; padding:10px 12px;
-    display:flex; flex-direction:column; gap:5px; min-height:0;
+    flex:1; overflow-y:auto; padding:12px 14px;
+    display:flex; flex-direction:column; gap:9px; min-height:0;
+    direction:rtl;
 }
 #msgChatMsgs::-webkit-scrollbar { width:3px; }
 #msgChatMsgs::-webkit-scrollbar-thumb { background:#232340; border-radius:3px; }
@@ -1557,22 +1558,23 @@
 }
 #msgChatSendBtn:hover { transform:scale(1.07); }
 #msgChatSendBtn svg { width:15px; height:15px; fill:currentColor; }
+/* هر پیام داخل یک ردیف؛ پیام‌های خودم سمت راست، طرف مقابل سمت چپ */
+.mb-row { display:flex; flex-direction:column; max-width:78%; }
+.mb-row.mine  { margin-left:auto;  align-items:flex-end; }   /* راست */
+.mb-row.other { margin-right:auto; align-items:flex-start; } /* چپ */
 .mb-mine {
-    align-self:flex-start;
     background:linear-gradient(135deg,#6d28d9,#9333ea);
-    color:#fff; border-radius:12px 12px 3px 12px;
-    padding:7px 11px; font-size:.8rem; max-width:82%;
-    line-height:1.55; word-break:break-word;
+    color:#fff; border-radius:13px 13px 3px 13px;
+    padding:6px 10px; font-size:.72rem;
+    line-height:1.6; word-break:break-word;
 }
 .mb-other {
-    align-self:flex-end;
     background:#1e1e32; border:1px solid rgba(255,255,255,.07);
-    color:#c8c8d0; border-radius:12px 12px 12px 3px;
-    padding:7px 11px; font-size:.8rem; max-width:82%;
-    line-height:1.55; word-break:break-word;
+    color:#c8c8d0; border-radius:13px 13px 13px 3px;
+    padding:6px 10px; font-size:.72rem;
+    line-height:1.6; word-break:break-word;
 }
-.mb-time { font-size:.58rem; color:#333350; margin-top:2px; }
-.mb-time-r { text-align:right; }
+.mb-time { font-size:.54rem; color:#4a4a68; margin-top:3px; padding:0 4px; }
 </style>
 
 <div id="msgBar">
@@ -1599,7 +1601,7 @@
         <button id="msgChatClose" onclick="msgCloseChat()">✕</button>
     </div>
     <div id="msgChatMsgs">
-        <div style="text-align:center;padding:24px;color:#2e2e50;font-size:.8rem;">مخاطبی انتخاب کن</div>
+        <div class="msg-ph" style="text-align:center;padding:24px;color:#2e2e50;font-size:.8rem;">مخاطبی انتخاب کن</div>
     </div>
     <div id="msgChatInput">
         <input id="msgChatInputField" type="text" placeholder="پیام بنویس..."
@@ -1615,6 +1617,7 @@
     let _contacts = null;
     let _activeChatUser = null;
     let _lastMsgId = 0;
+    let _renderedIds = new Set();
     let _pollTimer = null;
     let _panelOpen = false;
 
@@ -1710,6 +1713,7 @@
     window.msgOpenChat = function(username, display, avatar, initial) {
         _activeChatUser = username;
         _lastMsgId = 0;
+        _renderedIds = new Set();
         clearInterval(_pollTimer);
 
         const avatarEl = document.getElementById('msgChatAv');
@@ -1722,7 +1726,7 @@
         document.getElementById('msgChatName').textContent = display;
         document.getElementById('msgChatFull').href = '/dm/' + username + '/';
         document.getElementById('msgChatMsgs').innerHTML =
-            '<div style="text-align:center;padding:20px;color:#2e2e50;font-size:.8rem;">در حال بارگذاری...</div>';
+            '<div class="msg-ph" style="text-align:center;padding:20px;color:#2e2e50;font-size:.8rem;">در حال بارگذاری...</div>';
 
         const win = document.getElementById('msgChat');
         win.style.display = 'flex';
@@ -1739,18 +1743,30 @@
         fetch(`/dm/${username}/poll/?after=${_lastMsgId}`, {credentials:'same-origin'})
             .then(r=>r.json())
             .then(d=>{
+                const box = document.getElementById('msgChatMsgs');
                 if (d.new_messages && d.new_messages.length) {
-                    const box = document.getElementById('msgChatMsgs');
+                    box.querySelectorAll('.msg-ph').forEach(el=>el.remove());
+                    let added = false;
                     d.new_messages.forEach(msg=>{
+                        if (_renderedIds.has(msg.id)) return;   // جلوگیری از تکرار
+                        _renderedIds.add(msg.id);
                         _lastMsgId = Math.max(_lastMsgId, msg.id);
                         const wrap = document.createElement('div');
+                        wrap.className = 'mb-row ' + (msg.is_mine ? 'mine' : 'other');
                         wrap.innerHTML = `
                             <div class="${msg.is_mine ? 'mb-mine' : 'mb-other'}">${escM(msg.content)}</div>
-                            <div class="mb-time ${msg.is_mine ? '' : 'mb-time-r'}">${msg.created_at}</div>`;
+                            <div class="mb-time">${msg.created_at}</div>`;
                         box.appendChild(wrap);
+                        added = true;
                     });
-                    box.scrollTop = box.scrollHeight;
-                    if (window.refreshBadges) window.refreshBadges();
+                    if (added) {
+                        box.scrollTop = box.scrollHeight;
+                        if (window.refreshBadges) window.refreshBadges();
+                    }
+                } else if (_renderedIds.size === 0) {
+                    // هنوز هیچ پیامی نیست — لودینگ رو با راهنما جایگزین کن
+                    const loading = box.querySelector('.msg-ph');
+                    if (loading) loading.innerHTML = 'هنوز پیامی نیست — اولین پیام رو بفرست 👋';
                 }
             }).catch(()=>{});
     }
@@ -1759,23 +1775,17 @@
         const input = document.getElementById('msgChatInputField');
         const content = input.value.trim();
         if (!content || !_activeChatUser) return;
+        const target = _activeChatUser;
         input.value = '';
+        input.focus();
 
-        const box = document.getElementById('msgChatMsgs');
-        const wrap = document.createElement('div');
-        const now = new Date();
-        wrap.innerHTML = `
-            <div class="mb-mine">${escM(content)}</div>
-            <div class="mb-time">${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}</div>`;
-        box.appendChild(wrap);
-        box.scrollTop = box.scrollHeight;
-
-        fetch(`/dm/${_activeChatUser}/send/`, {
+        fetch(`/dm/${target}/send/`, {
             method:'POST',
             headers:{'X-CSRFToken':'{{ csrf_token }}'},
             body: new URLSearchParams({content})
         }).then(r=>r.json()).then(d=>{
-            if (d.ok && d.message) _lastMsgId = Math.max(_lastMsgId, d.message.id);
+            // پیام از سرور با id واقعی pull می‌شه (یک‌بار، بدون تکرار)
+            if (d.ok && _activeChatUser === target) pollMessages(target);
         }).catch(()=>{});
     };
 
