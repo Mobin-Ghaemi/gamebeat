@@ -27,6 +27,7 @@ urlpatterns = [
     path('hashtags/<int:hashtag_id>/delete/', views.hashtag_delete, name='hashtag_delete'),
     path('games/', views.game_list, name='games'),
     path('games/add/', views.game_add, name='game_add'),
+    path('games/bulk-delete/', views.game_bulk_delete, name='game_bulk_delete'),
     path('games/<int:game_id>/edit/', views.game_edit, name='game_edit'),
     path('games/<int:game_id>/delete/', views.game_delete, name='game_delete'),
     path('games/<int:game_id>/toggle-active/', views.game_toggle_active, name='game_toggle_active'),

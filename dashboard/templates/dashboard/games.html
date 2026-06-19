@@ -39,8 +39,27 @@
             <svg class="bi bi-x me-1" aria-hidden="true"><use href="#bi-x"></use></svg>پاک
         </a>
         {% endif %}
+        <div style="margin-right:auto;display:flex;align-items:center;gap:8px">
+            <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">تعداد در صفحه:</span>
+            <select name="per_page" class="dash-input" onchange="this.form.submit()" style="cursor:pointer;width:auto;padding:8px 12px">
+                {% for opt in per_page_options %}
+                    <option value="{{ opt }}" {% if per_page == opt %}selected{% endif %}>{{ opt }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </form>
 </div>
+
+<!-- ─── Bulk action bar ────────────────────────────────────────── -->
+<div id="bulkBar" style="display:none;align-items:center;gap:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:12px 18px;margin-bottom:14px">
+    <span style="color:var(--text-main);font-weight:700;font-size:0.9rem"><b id="bulkCount" style="color:#f87171">0</b> بازی انتخاب شده</span>
+    <button type="button" onclick="bulkDelete()"
+            style="background:#ef4444;border:none;color:#fff;padding:8px 18px;border-radius:9px;font-weight:700;font-size:0.83rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف انتخاب‌شده‌ها
+    </button>
+    <button type="button" onclick="clearSel()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:8px 14px;border-radius:9px;font-size:0.82rem;cursor:pointer">لغو</button>
+</div>
+<form id="bulkForm" method="post" action="{% url 'dashboard:game_bulk_delete' %}" style="display:none">{% csrf_token %}</form>
 
 <!-- ─── Table ──────────────────────────────────────────────────── -->
 {% if games %}
@@ -49,6 +68,7 @@
     <table style="width:100%;border-collapse:collapse;font-size:0.875rem">
         <thead>
             <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border)">
+                <th style="padding:13px 12px;text-align:center;width:40px"><input type="checkbox" id="selectAll" onclick="toggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#8b5cf6"></th>
                 <th style="padding:13px 16px;text-align:right;font-weight:700;color:var(--text-muted);white-space:nowrap">#</th>
                 <th style="padding:13px 16px;text-align:right;font-weight:700;color:var(--text-muted);white-space:nowrap">کاور</th>
                 <th style="padding:13px 16px;text-align:right;font-weight:700;color:var(--text-muted);white-space:nowrap">نام بازی</th>
@@ -67,6 +87,8 @@
         <tbody>
         {% for game in games %}
         <tr style="border-bottom:1px solid var(--border);transition:background .15s" class="game-row">
+            <!-- select checkbox -->
+            <td style="padding:10px 12px;text-align:center"><input type="checkbox" class="game-check" value="{{ game.pk }}" onchange="updateSel()" style="width:16px;height:16px;cursor:pointer;accent-color:#8b5cf6"></td>
             <!-- # -->
             <td style="padding:10px 16px;color:var(--text-faint);font-size:0.78rem">{{ forloop.counter }}</td>
 
@@ -201,7 +223,7 @@
 {% if page_obj.has_other_pages %}
 <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:20px;flex-wrap:wrap">
     {% if page_obj.has_previous %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}page={{ page_obj.previous_page_number }}"
+    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ page_obj.previous_page_number }}"
        style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;font-size:0.82rem;background:var(--bg-card);transition:all .15s"
        class="page-btn">قبلی</a>
     {% endif %}
@@ -210,14 +232,14 @@
         {% if page_obj.number == num %}
         <span style="padding:7px 13px;border-radius:8px;background:var(--purple);color:#fff;font-size:0.82rem;font-weight:700">{{ num }}</span>
         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}page={{ num }}"
+        <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ num }}"
            style="padding:7px 13px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;font-size:0.82rem;background:var(--bg-card)"
            class="page-btn">{{ num }}</a>
         {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}page={{ page_obj.next_page_number }}"
+    <a href="?{% if q %}q={{ q }}&{% endif %}{% if filter_genre %}genre={{ filter_genre }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ page_obj.next_page_number }}"
        style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;font-size:0.82rem;background:var(--bg-card);transition:all .15s"
        class="page-btn">بعدی</a>
     {% endif %}
@@ -269,6 +291,38 @@ const CSRF = document.cookie.split(';').reduce(function(v, c) {
     var p = c.trim().split('=');
     return p[0] === 'csrftoken' ? decodeURIComponent(p[1]) : v;
 }, '');
+
+// ── انتخاب همگانی و حذف گروهی ──
+function toggleAll(cb) {
+    document.querySelectorAll('.game-check').forEach(function(c){ c.checked = cb.checked; });
+    updateSel();
+}
+function updateSel() {
+    var n = document.querySelectorAll('.game-check:checked').length;
+    document.getElementById('bulkCount').textContent = n;
+    document.getElementById('bulkBar').style.display = n ? 'flex' : 'none';
+    var all = document.querySelectorAll('.game-check').length;
+    var sa = document.getElementById('selectAll');
+    if (sa) sa.checked = (n > 0 && n === all);
+}
+function clearSel() {
+    document.querySelectorAll('.game-check').forEach(function(c){ c.checked = false; });
+    var sa = document.getElementById('selectAll'); if (sa) sa.checked = false;
+    updateSel();
+}
+function bulkDelete() {
+    var ids = Array.prototype.map.call(document.querySelectorAll('.game-check:checked'), function(c){ return c.value; });
+    if (!ids.length) return;
+    if (!confirm(ids.length + ' بازی حذف شود؟ این عمل برگشت‌ناپذیر است.')) return;
+    var f = document.getElementById('bulkForm');
+    f.querySelectorAll('input[name="ids"]').forEach(function(e){ e.remove(); });
+    ids.forEach(function(id){
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = 'ids'; i.value = id;
+        f.appendChild(i);
+    });
+    f.submit();
+}
 
 function toggleActive(gameId, btn) {
     fetch('/admin-panel/games/' + gameId + '/toggle-active/', {

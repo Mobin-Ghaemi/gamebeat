@@ -13,30 +13,36 @@
 
 .dm-stats { display:flex; gap:12px; justify-content:center; margin: 22px 0 30px; flex-wrap:wrap; }
 .dm-stat {
-    background:#130826; border:1px solid rgba(139,92,246,0.25); border-radius:16px;
-    padding:14px 22px; min-width:120px; text-align:center;
+    background:#16151f; border:1px solid rgba(255,255,255,0.07); border-radius:16px;
+    padding:14px 22px; min-width:120px; text-align:center; position:relative; overflow:hidden;
 }
-.dm-stat-num { font-size:1.5rem; font-weight:900; color:#a78bfa; }
-.dm-stat-num.gold { color:#fbbf24; }
-.dm-stat-lbl { font-size:.72rem; color:rgba(255,255,255,0.4); margin-top:2px; }
+.dm-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; opacity:.85; }
+.dm-stat.s-green::before  { background:linear-gradient(90deg,#22c55e,#4ade80); }
+.dm-stat.s-gold::before   { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+.dm-stat.s-violet::before { background:linear-gradient(90deg,#8b5cf6,#ec4899); }
+.dm-stat-num { font-size:1.5rem; font-weight:900; }
+.dm-stat.s-green  .dm-stat-num { color:#4ade80; }
+.dm-stat.s-gold   .dm-stat-num { color:#fbbf24; }
+.dm-stat.s-violet .dm-stat-num { color:#c084fc; }
+.dm-stat-lbl { font-size:.72rem; color:rgba(255,255,255,0.45); margin-top:2px; }
 
 .dm-card {
-    background:#130826; border:1px solid rgba(139,92,246,0.22); border-radius:18px;
+    background:#16151f; border:1px solid rgba(255,255,255,0.06); border-radius:18px;
     padding:18px 20px; margin-bottom:14px;
     display:flex; align-items:center; gap:16px;
     transition: border-color .2s, box-shadow .2s;
 }
-.dm-card.done { border-color: rgba(34,197,94,0.4); box-shadow:0 0 30px rgba(34,197,94,0.06); }
-.dm-card.claimed { opacity:.55; }
+.dm-card.done { border-color: rgba(34,197,94,0.4); box-shadow:0 0 30px rgba(34,197,94,0.07); }
+.dm-card.claimed { opacity:.5; }
 
 .dm-icon {
     width:48px; height:48px; border-radius:14px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    background:linear-gradient(135deg,#1a0a2e,#2d1154); border:1px solid rgba(139,92,246,0.3);
+    background:linear-gradient(135deg,#312e81,#7c3aed); border:1px solid rgba(139,92,246,0.35);
 }
-.dm-icon svg { width:22px; height:22px; fill:#a78bfa; }
-.dm-card.done .dm-icon { background:linear-gradient(135deg,#052e16,#14532d); border-color:rgba(34,197,94,0.4); }
-.dm-card.done .dm-icon svg { fill:#4ade80; }
+.dm-icon svg { width:22px; height:22px; fill:#e9d5ff; }
+.dm-card.done .dm-icon { background:linear-gradient(135deg,#065f46,#16a34a); border-color:rgba(34,197,94,0.45); }
+.dm-card.done .dm-icon svg { fill:#fff; }
 
 .dm-body { flex:1; min-width:0; }
 .dm-title { font-size:1rem; font-weight:800; color:#fff; }
@@ -44,13 +50,13 @@
 
 .dm-bar-wrap { margin-top:10px; display:flex; align-items:center; gap:10px; }
 .dm-bar { flex:1; height:7px; background:rgba(255,255,255,0.07); border-radius:50px; overflow:hidden; }
-.dm-bar-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#a78bfa); border-radius:50px; transition:width .5s; }
+.dm-bar-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#ec4899); border-radius:50px; transition:width .5s; }
 .dm-card.done .dm-bar-fill { background:linear-gradient(90deg,#22c55e,#4ade80); }
 .dm-bar-txt { font-size:.74rem; font-weight:700; color:rgba(255,255,255,0.5); white-space:nowrap; }
 
 .dm-right { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
-.dm-reward { font-size:.82rem; font-weight:900; color:#fbbf24; white-space:nowrap; }
-.dm-reward .heart { color:#a78bfa; }
+.dm-reward { font-size:.85rem; font-weight:900; color:#f87171; white-space:nowrap; display:flex; align-items:center; gap:4px; }
+.dm-reward .dm-ecg { width:20px; height:11px; color:#f87171; filter:drop-shadow(0 0 3px rgba(239,68,68,.6)); flex-shrink:0; }
 
 .dm-claim-btn {
     border:none; border-radius:50px; padding:7px 18px; font-family:inherit;
@@ -90,15 +96,15 @@
     </div>
 
     <div class="dm-stats">
-        <div class="dm-stat">
+        <div class="dm-stat s-green">
             <div class="dm-stat-num">{{ claimed_count }}/{{ total_missions }}</div>
             <div class="dm-stat-lbl">انجام‌شده امروز</div>
         </div>
-        <div class="dm-stat">
-            <div class="dm-stat-num gold">{{ earned_today }}</div>
+        <div class="dm-stat s-gold">
+            <div class="dm-stat-num">{{ earned_today }}</div>
             <div class="dm-stat-lbl">ضربان امروز</div>
         </div>
-        <div class="dm-stat">
+        <div class="dm-stat s-violet">
             <div class="dm-stat-num">{{ balance }}</div>
             <div class="dm-stat-lbl">موجودی ضربان</div>
         </div>
@@ -120,14 +126,12 @@
                 </div>
             </div>
             <div class="dm-right">
-                <div class="dm-reward"><span class="heart">💜</span> {{ m.reward_zarban }}</div>
+                <div class="dm-reward"><svg class="dm-ecg" viewBox="0 0 44 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L15 10 L17 6 L19 1 L21 19 L23 10 L44 10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> {{ m.reward_zarban }}</div>
                 <div class="dm-action">
                     {% if item.claimed %}
                         <span class="dm-claimed-tag"><svg><use href="#bi-check-circle-fill"></use></svg> دریافت شد</span>
                     {% elif item.done %}
                         <button class="dm-claim-btn" onclick="claimMission({{ m.id }}, this)">دریافت جایزه</button>
-                    {% else %}
-                        <span class="dm-locked">در حال انجام...</span>
                     {% endif %}
                 </div>
             </div>
@@ -163,11 +167,19 @@ function claimMission(missionId, btn) {
             action.innerHTML = '<span class="dm-claimed-tag"><svg><use href="#bi-check-circle-fill"></use></svg> دریافت شد</span>';
             // به‌روزرسانی شمارنده‌های بالای صفحه
             const nums = document.querySelectorAll('.dm-stat-num');
-            if (nums[1]) nums[1].textContent = parseInt(nums[1].textContent || 0) + data.reward;
+            if (nums[1]) nums[1].textContent = (parseInt((nums[1].textContent || '0').replace(/\D/g,'')) || 0) + data.reward;
             if (nums[2]) nums[2].textContent = data.balance;
             if (nums[0]) {
                 const parts = nums[0].textContent.split('/');
                 nums[0].textContent = (parseInt(parts[0]) + 1) + '/' + parts[1];
+            }
+            // به‌روزرسانی موجودی ضربانِ نوار بالا (هدر) — درجا، بدون رفرش
+            const navBal = document.getElementById('navZarbanBal');
+            if (navBal) {
+                navBal.textContent = data.balance;
+                navBal.classList.remove('popped');
+                void navBal.offsetWidth;
+                navBal.classList.add('popped');
             }
         } else {
             btn.disabled = false;

@@ -22,8 +22,5 @@ RUN mkdir -p /app/media
 
 EXPOSE 8000
 
-CMD ["gunicorn", "gamebeat.wsgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "3", \
-     "--timeout", "120", \
-     "--access-logfile", "-"]
+# migrate موقع استارت اجرا می‌شود چون دیتابیس روی دیسک mount‌شده (runtime) قرار دارد
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn gamebeat.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --access-logfile -"]

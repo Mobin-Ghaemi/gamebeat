@@ -647,10 +647,20 @@
     <!-- Filters -->
     <div class="lfg-filters">
         <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-funnel-fill" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-funnel-fill"></use></svg> پلتفرم:</span>
-        <a href="?{% if game_filter %}game={{ game_filter|urlencode }}{% endif %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
+        <a href="?{% if game_filter %}game={{ game_filter|urlencode }}&{% endif %}{% if skill_filter %}skill={{ skill_filter }}{% endif %}" class="filter-pill {% if not platform_filter %}active{% endif %}">همه</a>
         {% for val, label in platform_choices %}
-            <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter|urlencode }}{% endif %}"
+            <a href="?platform={{ val }}{% if game_filter %}&game={{ game_filter|urlencode }}{% endif %}{% if skill_filter %}&skill={{ skill_filter }}{% endif %}"
                class="filter-pill {% if platform_filter == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Skill filter -->
+    <div class="lfg-filters">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;"><svg class="bi bi-bar-chart-fill" aria-hidden="true" style="color:var(--blue-accent);"><use href="#bi-bar-chart-fill"></use></svg> سطح:</span>
+        <a href="?{% if platform_filter %}platform={{ platform_filter }}&{% endif %}{% if game_filter %}game={{ game_filter|urlencode }}{% endif %}" class="filter-pill {% if not skill_filter %}active{% endif %}">همه</a>
+        {% for val, label in skill_choices %}
+            <a href="?skill={{ val }}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if game_filter %}&game={{ game_filter|urlencode }}{% endif %}"
+               class="filter-pill {% if skill_filter == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
     </div>
 
@@ -753,6 +763,10 @@
                         <label class="g-label">توضیحات (اختیاری)</label>
                         <textarea name="description" class="g-input" style="min-height: 70px;" placeholder="رنک، ساعت بازی، یا هر چیزی که بخوای بگی..."></textarea>
                     </div>
+                    <div style="margin-bottom: 14px;">
+                        <label class="g-label"><svg class="bi bi-headset" aria-hidden="true" style="vertical-align:-.125em;"><use href="#bi-headset"></use></svg> دیسکورد / آیدی بازی (اختیاری)</label>
+                        <input type="text" name="contact" class="g-input" maxlength="120" placeholder="مثلاً: Discord: mobin#1234 یا Steam: mobingg">
+                    </div>
                     <div style="margin-bottom:12px;">
                         <label class="g-label">نوع پیوستن</label>
                         <select name="join_type" class="g-input">
@@ -799,6 +813,13 @@
 
                     {% if post.description %}
                         <div class="lfg-desc">{{ post.description }}</div>
+                    {% endif %}
+
+                    {% if post.contact %}
+                        <div class="lfg-contact" style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#7dd3fc;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:6px 10px;margin-bottom:10px;">
+                            <svg class="bi bi-headset" aria-hidden="true" style="flex-shrink:0;"><use href="#bi-headset"></use></svg>
+                            <span style="word-break:break-all;">{{ post.contact }}</span>
+                        </div>
                     {% endif %}
 
                     <div class="lfg-players-bar">

@@ -16,6 +16,8 @@ PLATFORM_CHOICES = [
 
 class Game(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name='نام بازی')
+    name_fa = models.CharField(max_length=300, blank=True, verbose_name='نام/معادل فارسی (فقط برای جستجو)',
+                               help_text='اسم‌های فارسی/فینگلیش که کاربر ممکنه باهاشون سرچ کنه. نمایش داده نمی‌شه.')
     cover = models.ImageField(upload_to='games/covers/', blank=True, null=True, verbose_name='کاور')
     genres = models.JSONField(default=list, verbose_name='ژانرها')
     platforms = models.JSONField(default=list, verbose_name='پلتفرم‌ها')
@@ -30,6 +32,8 @@ class Game(models.Model):
     is_crack_online = models.BooleanField(default=False, verbose_name='کرک آنلاین')
     steam_price  = models.CharField(max_length=50, blank=True, verbose_name='قیمت استیم')
     steam_url    = models.URLField(blank=True, verbose_name='لینک استیم')
+    steam_appid  = models.PositiveIntegerField(null=True, blank=True, unique=True, db_index=True, verbose_name='Steam AppID')
+    auto_imported = models.BooleanField(default=False, verbose_name='ایمپورت خودکار از استیم')
     metacritic   = models.IntegerField(null=True, blank=True, verbose_name='امتیاز متاکریتیک')
     screenshots  = models.JSONField(default=list, blank=True, verbose_name='اسکرین‌شات‌ها')
     created_at   = models.DateTimeField(auto_now_add=True)

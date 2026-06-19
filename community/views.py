@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -59,6 +60,22 @@ def get_today_missions():
     else:
         qs = qs.filter(day__isnull=True)
     return qs.order_by('order', 'id'), today_day
+
+
+def _game_search_q(q):
+    """ساخت شرط جستجوی بازی روی نام انگلیسی + نام فارسی (با نرمال‌سازی و سرچ توکنی)."""
+    from .ai_service import normalize_fa
+    q = (q or '').strip()
+    qn = normalize_fa(q)
+    cond = Q(name__icontains=q) | Q(name_fa__icontains=q) | Q(name_fa__icontains=qn)
+    # سرچ توکنی: همه‌ی کلمات کوئری در نام یا نام فارسی باشند
+    tokens = [t for t in qn.split() if len(t) >= 2]
+    if len(tokens) > 1:
+        tok = Q()
+        for t in tokens:
+            tok &= (Q(name__icontains=t) | Q(name_fa__icontains=t))
+        cond |= tok
+    return cond
 
 
 def track_mission(user, event, amount=1):
@@ -362,6 +379,13 @@ def gamer_profile(request, username):
     following = Follow.objects.filter(follower=profile_user).select_related('following', 'following__gamer_profile')[:12]
     gaming_accounts = GamingAccount.objects.filter(user=profile_user)
 
+    # نشان‌های استیم (برای تب مدال‌ها)
+    steam_badges, steam_level = [], 0
+    _steam_acc = gaming_accounts.filter(platform='steam').first()
+    if _steam_acc and _steam_acc.extra_data:
+        steam_badges = _steam_acc.extra_data.get('badges', []) or []
+        steam_level = _steam_acc.extra_data.get('steam_level', 0)
+
     bl_cols = [
         ('want',      'می‌خوام بازی کنم', '#60a5fa', '🎯'),
         ('playing',   'دارم بازی می‌کنم',  '#4ade80', '🎮'),
@@ -422,6 +446,8 @@ def gamer_profile(request, username):
         'followers': followers,
         'following': following,
         'gaming_accounts': gaming_accounts,
+        'steam_badges': steam_badges,
+        'steam_level': steam_level,
         'bl_cols': bl_cols,
         'showcase_favorites': showcase_favorites,
         'showcase_playing': showcase_playing,
@@ -1040,14 +1066,21 @@ def lfg_board(request):
     my_profile = get_or_create_gamer_profile(request.user) if request.user.is_authenticated else None
     platform_filter = request.GET.get('platform', '')
     game_filter = request.GET.get('game', '')
+    skill_filter = request.GET.get('skill', '')
     mine_filter = request.GET.get('mine') == '1'
 
     my_favorite_games = my_profile.get_favorite_games_list() if my_profile else []
+
+    # ── انقضای خودکار: پست‌های قدیمی‌تر از ۲۴ ساعت غیرفعال می‌شوند ──
+    expiry_cutoff = timezone.now() - timezone.timedelta(hours=LFGPost.EXPIRY_HOURS)
+    LFGPost.objects.filter(is_active=True, created_at__lt=expiry_cutoff).update(is_active=False)
 
     lfg_posts = LFGPost.objects.filter(is_active=True).select_related('author', 'author__gamer_profile')
 
     if platform_filter:
         lfg_posts = lfg_posts.filter(platform=platform_filter)
+    if skill_filter:
+        lfg_posts = lfg_posts.filter(skill_level=skill_filter)
     if game_filter:
         lfg_posts = lfg_posts.filter(game_name__icontains=game_filter)
     elif mine_filter and my_favorite_games:
@@ -1100,10 +1133,12 @@ def lfg_board(request):
         'lfg_posts': lfg_posts,
         'platform_filter': platform_filter,
         'game_filter': game_filter,
+        'skill_filter': skill_filter,
         'mine_filter': mine_filter,
         'my_favorite_games': my_favorite_games,
         'my_profile': my_profile,
         'platform_choices': PLATFORM_CHOICES,
+        'skill_choices': LFGPost.SKILL_LEVELS,
         'popular_games': _fallback,
         'game_choices': game_choices,
         'joined_ids': joined_ids,
@@ -1116,18 +1151,44 @@ def lfg_board(request):
 @login_required
 @require_POST
 def create_lfg(request):
-    LFGPost.objects.create(
+    game_name = request.POST.get('game_name', '').strip()
+    post = LFGPost.objects.create(
         author=request.user,
-        game_name=request.POST.get('game_name', ''),
+        game_name=game_name,
         game_mode=request.POST.get('game_mode', 'normal'),
         platform=request.POST.get('platform', 'pc'),
         skill_level=request.POST.get('skill_level', 'any'),
         description=request.POST.get('description', ''),
+        contact=request.POST.get('contact', '').strip(),
         max_players=int(request.POST.get('max_players', 4)),
         join_type=request.POST.get('join_type', 'open'),
     )
+    # اعلان فوری به گیمرهایی که این بازی جزو علاقه‌مندی‌هاشونه
+    _notify_lfg_interested(post)
     messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش 🎮')
     return redirect('community:lfg')
+
+
+def _notify_lfg_interested(post):
+    """به کاربرانی که این بازی در لیست علاقه‌مندی‌هاشونه اعلان LFG بفرست."""
+    game = (post.game_name or '').strip()
+    if not game:
+        return
+    # کاربرانی که این بازی را در favorite_games دارند (به‌جز خود نویسنده)
+    candidates = GamerProfile.objects.filter(
+        favorite_games__icontains=game
+    ).exclude(user=post.author).select_related('user')[:200]
+    notifs = []
+    for prof in candidates:
+        favs = [g.strip().lower() for g in prof.get_favorite_games_list()]
+        if game.lower() in favs:
+            notifs.append(Notification(
+                recipient=prof.user, sender=post.author,
+                notif_type='lfg_req',
+                custom_text=f'برای «{game}» دنبال هم‌تیمیه — بپیوند!',
+            ))
+    if notifs:
+        Notification.objects.bulk_create(notifs)
 
 
 def _maybe_create_party_group(post):
@@ -1529,6 +1590,7 @@ def connect_gaming_account(request):
     result = lookup_account(platform, username)
 
     if result['ok']:
+        extra = result.get('extra', {})
         account, created = GamingAccount.objects.update_or_create(
             user=request.user,
             platform=platform,
@@ -1537,17 +1599,24 @@ def connect_gaming_account(request):
                 'display_name': result.get('display_name', username),
                 'avatar_url': result.get('avatar_url', ''),
                 'profile_url': result.get('profile_url', ''),
-                'extra_data': result.get('extra', {}),
+                'extra_data': extra,
                 'verified': True,
                 'last_synced': timezone.now(),
             }
         )
+        # ساعت بازیِ استیم را روی پروفایل ذخیره کن
+        if platform == 'steam' and extra.get('total_hours'):
+            profile = get_or_create_gamer_profile(request.user)
+            profile.total_hours_played = extra['total_hours']
+            profile.save(update_fields=['total_hours_played'])
         return JsonResponse({
             'ok': True,
             'display_name': account.display_name,
             'avatar_url': account.avatar_url,
             'profile_url': account.profile_url,
             'platform': platform,
+            'total_hours': extra.get('total_hours'),
+            'game_count': extra.get('game_count'),
         })
     else:
         return JsonResponse({'ok': False, 'error': result.get('error', 'خطا')})
@@ -1559,6 +1628,129 @@ def disconnect_gaming_account(request):
     platform = request.POST.get('platform', '')
     GamingAccount.objects.filter(user=request.user, platform=platform).delete()
     return JsonResponse({'ok': True})
+
+
+# ── ورود با استیم (Steam OpenID 2.0) ──────────────────────────────
+STEAM_OPENID_URL = 'https://steamcommunity.com/openid/login'
+
+
+@login_required
+def steam_login(request):
+    """کاربر را به صفحه‌ی لاگین استیم می‌فرستد (Sign in through Steam)."""
+    from urllib.parse import urlencode
+    return_to = request.build_absolute_uri('/gaming/steam/callback/')
+    realm = request.build_absolute_uri('/')
+    params = {
+        'openid.ns': 'http://specs.openid.net/auth/2.0',
+        'openid.mode': 'checkid_setup',
+        'openid.return_to': return_to,
+        'openid.realm': realm,
+        'openid.identity': 'http://specs.openid.net/auth/2.0/identifier_select',
+        'openid.claimed_id': 'http://specs.openid.net/auth/2.0/identifier_select',
+    }
+    return redirect(f'{STEAM_OPENID_URL}?{urlencode(params)}')
+
+
+@login_required
+def steam_callback(request):
+    """بازگشت از استیم — پاسخ را تأیید و حساب را متصل می‌کند."""
+    import requests as _requests
+    from .gaming_apis import lookup_steam
+
+    profile_url_redirect = redirect('community:profile', username=request.user.username)
+
+    # ۱) تأیید پاسخ با خود استیم (جلوگیری از جعل)
+    params = dict(request.GET.items())
+    params['openid.mode'] = 'check_authentication'
+    try:
+        resp = _requests.post(STEAM_OPENID_URL, data=params, timeout=8)
+        if 'is_valid:true' not in resp.text:
+            messages.error(request, 'تأیید استیم ناموفق بود. دوباره تلاش کن.')
+            return profile_url_redirect
+    except Exception:
+        messages.error(request, 'خطا در ارتباط با استیم. لطفاً دوباره تلاش کنید.')
+        return profile_url_redirect
+
+    # ۲) استخراج steam64 از claimed_id
+    claimed = request.GET.get('openid.claimed_id', '')
+    m = re.search(r'/openid/id/(\d+)', claimed)
+    if not m:
+        messages.error(request, 'شناسه استیم دریافت نشد.')
+        return profile_url_redirect
+    steam64 = m.group(1)
+
+    # ۳) واکشی پروفایل + بازی‌ها و ذخیره
+    result = lookup_steam(steam64)
+    if not result.get('ok'):
+        messages.error(request, 'دریافت پروفایل استیم ناموفق بود.')
+        return profile_url_redirect
+
+    extra = result.get('extra', {})
+    GamingAccount.objects.update_or_create(
+        user=request.user, platform='steam',
+        defaults={
+            'username': result.get('display_name', steam64),
+            'display_name': result.get('display_name', ''),
+            'avatar_url': result.get('avatar_url', ''),
+            'profile_url': result.get('profile_url', '') or f'https://steamcommunity.com/profiles/{steam64}',
+            'extra_data': extra,
+            'verified': True,
+            'last_synced': timezone.now(),
+        }
+    )
+    if extra.get('total_hours'):
+        prof = get_or_create_gamer_profile(request.user)
+        prof.total_hours_played = extra['total_hours']
+        prof.save(update_fields=['total_hours_played'])
+
+    # ایمپورت بازی‌ها + غنی‌سازی AI + نشان‌ها — در پس‌زمینه (اتصال بلاک نشود)
+    import threading
+    from .gaming_apis import import_and_enrich_steam
+    threading.Thread(
+        target=import_and_enrich_steam, args=(steam64, request.user.id), daemon=True,
+    ).start()
+
+    # steam64 را برای اکشنِ «افزودن به بازی‌های من» نگه دار
+    request.session['steam64'] = steam64
+
+    name = result.get('display_name', '') or 'استیم'
+    if extra.get('total_hours'):
+        messages.success(request, f'حساب استیم «{name}» متصل شد — {extra["total_hours"]} ساعت بازی! 🎮')
+    else:
+        messages.success(request, f'حساب استیم «{name}» متصل شد! (برای نمایش ساعت، پروفایلت رو Public کن)')
+    # با فلگ مودال به پروفایل برگرد
+    return redirect(reverse('community:profile', kwargs={'username': request.user.username}) + '?steam_modal=1')
+
+
+@login_required
+@require_POST
+def steam_import_backlog(request):
+    """افزودن بازی‌های استیم کاربر به «بازی‌های من» (GameBacklog)."""
+    steam64 = request.session.get('steam64')
+    if not steam64:
+        ga = GamingAccount.objects.filter(user=request.user, platform='steam').first()
+        if ga:
+            m = re.search(r'/(?:profiles|id)/(\d+)', ga.profile_url or '')
+            steam64 = m.group(1) if m else None
+    if not steam64:
+        return JsonResponse({'ok': False, 'error': 'اکانت استیم پیدا نشد'}, status=400)
+
+    from .gaming_apis import get_steam_owned_games
+    owned = get_steam_owned_games(steam64)
+    added = 0
+    for g in owned:
+        appid, name = g['appid'], g['name'].strip()
+        if not name:
+            continue
+        cover = f'https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg'
+        status = 'playing' if g['playtime_hours'] > 0 else 'want'
+        _, created = GameBacklog.objects.get_or_create(
+            user=request.user, game_name=name,
+            defaults={'status': status, 'platform': 'pc', 'cover_url': cover},
+        )
+        if created:
+            added += 1
+    return JsonResponse({'ok': True, 'added': added})
 
 
 def hashtag_feed(request, tag_name):
@@ -2447,10 +2639,10 @@ def games_ranking(request):
     games = Game.objects.filter(is_active=True)
 
     if q:
-        games = games.filter(name__icontains=q)
+        games = games.filter(_game_search_q(q))
     if genre and genre != 'all':
-        # genres یه JSONField است (list)
-        games = games.filter(genres__contains=[genre])
+        # genres یه JSONField است؛ SQLite از contains پشتیبانی نمی‌کند → icontains با کوتیشن
+        games = games.filter(genres__icontains='"%s"' % genre)
 
     games = games.order_by('-is_featured', 'name')
 
@@ -4103,7 +4295,7 @@ def game_search_api(request):
     q = request.GET.get('q', '').strip()
     qs = DashboardGame.objects.filter(is_active=True)
     if q:
-        qs = qs.filter(name__icontains=q)
+        qs = qs.filter(_game_search_q(q))
     qs = qs.order_by('-is_popular', '-is_featured', 'name')[:20]
     results = []
     for g in qs:

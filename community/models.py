@@ -368,11 +368,18 @@ class LFGPost(models.Model):
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES, verbose_name='پلتفرم')
     skill_level = models.CharField(max_length=15, choices=SKILL_LEVELS, default='any', verbose_name='سطح مهارت')
     description = models.TextField(max_length=300, blank=True, verbose_name='توضیحات')
+    contact = models.CharField(max_length=120, blank=True, verbose_name='دیسکورد / آیدی بازی')
     max_players = models.PositiveSmallIntegerField(default=4, verbose_name='حداکثر بازیکن')
     current_players = models.PositiveSmallIntegerField(default=1, verbose_name='بازیکنان فعلی')
     join_type = models.CharField(max_length=10, choices=JOIN_TYPES, default='open', verbose_name='نوع پیوستن')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    EXPIRY_HOURS = 24  # پست‌های قدیمی‌تر از این به‌صورت خودکار غیرفعال می‌شوند
+
+    @property
+    def is_expired(self):
+        return (timezone.now() - self.created_at).total_seconds() > self.EXPIRY_HOURS * 3600
 
     class Meta:
         verbose_name = 'پست LFG'

@@ -448,23 +448,55 @@ def hashtag_delete(request, hashtag_id):
 @login_required
 @user_passes_test(is_admin)
 def game_list(request):
+    from django.core.paginator import Paginator
     q = request.GET.get('q', '')
     genre = request.GET.get('genre', '')
     filter_genre = request.GET.get('filter_genre', genre)
-    games = Game.objects.all()
+    games = Game.objects.all().order_by('name')
     if q:
-        games = games.filter(name__icontains=q)
+        games = games.filter(Q(name__icontains=q) | Q(name_fa__icontains=q))
     if filter_genre and filter_genre != 'all':
-        games = games.filter(genre=filter_genre)
-    elif genre:
-        games = games.filter(genre=genre)
+        # SQLite از contains روی JSONField پشتیبانی نمی‌کند؛ با icontains و کوتیشن مچ دقیق
+        games = games.filter(genres__icontains='"%s"' % filter_genre)
+
+    total_count = games.count()
+
+    per_page_options = [20, 50, 100]
+    try:
+        per_page = int(request.GET.get('per_page', 20))
+    except (TypeError, ValueError):
+        per_page = 20
+    if per_page not in per_page_options:
+        per_page = 20
+
+    paginator = Paginator(games, per_page)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
     return render(request, 'dashboard/games.html', {
-        'games': games,
+        'games': page_obj,
+        'page_obj': page_obj,
+        'total_count': total_count,
+        'per_page': per_page,
+        'per_page_options': per_page_options,
         'q': q,
         'genre': genre,
         'filter_genre': filter_genre,
         'genre_choices': GENRE_CHOICES,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def game_bulk_delete(request):
+    if request.method == 'POST':
+        ids = request.POST.getlist('ids')
+        if ids:
+            n = Game.objects.filter(id__in=ids).count()
+            Game.objects.filter(id__in=ids).delete()
+            messages.success(request, f'{n} بازی حذف شد.')
+        else:
+            messages.error(request, 'هیچ بازی‌ای انتخاب نشده بود.')
+    return redirect('dashboard:games')
 
 
 @login_required
