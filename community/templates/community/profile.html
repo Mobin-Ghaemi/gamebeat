@@ -554,9 +554,77 @@
 .medal-img { position:relative; width:84px; height:84px; border-radius:16px; overflow:hidden; background:linear-gradient(135deg,#1b2838,#2a475e); border:2px solid rgba(102,192,244,.4); display:flex; align-items:center; justify-content:center; transition:transform .18s, box-shadow .18s; }
 .medal:hover .medal-img, .medal:focus .medal-img { transform:translateY(-4px) scale(1.05); box-shadow:0 8px 24px rgba(102,192,244,.4); }
 .medal-img img { width:100%; height:100%; object-fit:cover; }
-.medal-level { position:absolute; bottom:4px; left:4px; background:#66c0f4; color:#0b1722; font-size:.66rem; font-weight:900; min-width:18px; height:18px; line-height:18px; text-align:center; border-radius:50%; padding:0 4px; box-shadow:0 2px 6px rgba(0,0,0,.4); }
-.medal-tip { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(6px); background:#0d1620; border:1px solid rgba(102,192,244,.4); border-radius:10px; padding:8px 12px; font-size:.74rem; color:#fff; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:20; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+/* نشان ویژه‌ی استیم — مدال طلایی (چون عکس واقعی از API در دسترس نیست) */
+.medal-special-art { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:radial-gradient(circle at 50% 35%,#3a2a00,#1a1206); }
+.medal-img.special { border-color:rgba(251,191,36,.5); box-shadow:inset 0 0 24px rgba(251,191,36,.15); }
+.medal-img.special .medal-special-art { display:flex; }
+.medal-special-art svg { width:30px; height:30px; fill:#fbbf24; filter:drop-shadow(0 2px 6px rgba(251,191,36,.5)); }
+.medal-special-art .medal-xp { font-size:.56rem; font-weight:800; color:#fcd34d; }
+.medal-img.special .medal-level { background:#fbbf24; color:#2a1c00; }
+.medal-level { position:absolute; bottom:4px; left:4px; background:#66c0f4; color:#0b1722; font-size:.66rem; font-weight:900; min-width:18px; height:18px; line-height:18px; text-align:center; border-radius:50%; padding:0 4px; box-shadow:0 2px 6px rgba(0,0,0,.4); z-index:2; }
+.medal-tip { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(6px); width:230px; max-width:80vw; background:#0d1620; border:1px solid rgba(102,192,244,.4); border-radius:10px; padding:10px 13px; font-size:.78rem; color:#fff; text-align:right; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:20; box-shadow:0 8px 24px rgba(0,0,0,.5); }
 .medal:hover .medal-tip, .medal:focus .medal-tip { opacity:1; transform:translateX(-50%) translateY(0); }
+.medal-tip-desc { font-size:.72rem; color:rgba(255,255,255,.7); line-height:1.6; margin-top:5px; }
+
+/* ── دستاوردهای بازی (Steam achievements) ── */
+.sach-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:16px; }
+.sach-card { position:relative; background:#16151f; border:1px solid rgba(251,191,36,.18); border-radius:14px; overflow:visible; cursor:default; outline:none; transition:transform .18s, box-shadow .18s, border-color .18s; }
+.sach-card:hover, .sach-card:focus { transform:translateY(-4px) scale(1.04); border-color:rgba(251,191,36,.65); box-shadow:0 16px 40px rgba(251,191,36,.18); }
+.sach-cover { position:relative; aspect-ratio:16/9; border-radius:13px 13px 0 0; overflow:hidden; background:linear-gradient(135deg,#2a1c00,#3a2800); }
+.sach-cover img { width:100%; height:100%; object-fit:cover; transition:filter .25s, transform .25s; }
+.sach-card:hover .sach-cover img, .sach-card:focus .sach-cover img { filter:blur(4px) brightness(.45); transform:scale(1.08); }
+.sach-hover-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; opacity:0; transition:opacity .25s; pointer-events:none; }
+.sach-card:hover .sach-hover-overlay, .sach-card:focus .sach-hover-overlay { opacity:1; }
+.sach-hover-count { font-size:1.75rem; font-weight:900; color:#fbbf24; text-shadow:0 2px 14px rgba(0,0,0,.95), 0 0 28px rgba(251,191,36,.55); letter-spacing:.02em; line-height:1; }
+.sach-hover-label { font-size:.58rem; font-weight:800; color:rgba(255,255,255,.8); text-shadow:0 1px 6px rgba(0,0,0,.95); letter-spacing:.12em; text-transform:uppercase; }
+.sach-count { display:none; }
+.sach-name { padding:8px 10px; font-size:.78rem; font-weight:700; color:var(--text-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sach-tip { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(6px); width:290px; max-width:84vw; background:#0d1620; border:1px solid rgba(251,191,36,.35); border-radius:12px; padding:11px 13px; font-size:.74rem; color:#fff; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:30; box-shadow:0 10px 30px rgba(0,0,0,.6); text-align:right; }
+.sach-card:hover .sach-tip, .sach-card:focus .sach-tip { opacity:1; transform:translateX(-50%) translateY(0); }
+.sach-tip-list { margin-top:7px; display:flex; flex-direction:column; gap:7px; max-height:320px; overflow-y:auto; }
+.sach-tip-item { display:flex; flex-direction:column; gap:1px; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,.06); }
+.sach-tip-item:last-child { border-bottom:none; padding-bottom:0; }
+.sach-tip-name { font-size:.74rem; font-weight:700; color:#fcd34d; }
+.sach-tip-desc { font-size:.68rem; color:rgba(255,255,255,.6); line-height:1.5; }
+/* مودال دستاوردها */
+.ach-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(4px); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px; }
+.ach-modal-overlay.open { display:flex; animation:achFade .2s ease; }
+@keyframes achFade { from { opacity:0; } to { opacity:1; } }
+.ach-modal { background:#12111c; border:1px solid rgba(251,191,36,.3); border-radius:18px; width:min(480px,94vw); max-height:84vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.6); }
+.ach-modal-close { position:absolute; top:14px; left:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.08); border:none; color:#fff; font-size:1.3rem; cursor:pointer; z-index:2; }
+.ach-modal-close:hover { background:rgba(239,68,68,.4); }
+.ach-modal-head { display:flex; gap:14px; align-items:center; padding:18px 20px; border-bottom:1px solid var(--border); background:linear-gradient(135deg,rgba(251,191,36,.08),transparent); }
+.ach-modal-head img { width:84px; height:40px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+.ach-modal-title { font-size:1.05rem; font-weight:900; color:#fff; }
+.ach-modal-count { font-size:.85rem; color:#fbbf24; font-weight:700; margin-top:4px; }
+.ach-prog-bar { height:6px; background:rgba(255,255,255,.1); border-radius:20px; margin:8px 0 3px; overflow:hidden; }
+.ach-prog-fill { height:100%; background:linear-gradient(90deg,#d97706,#fbbf24,#fde68a); border-radius:20px; }
+.ach-pct { font-size:.72rem; color:rgba(255,255,255,.45); font-weight:700; }
+.ach-modal-list { overflow-y:auto; padding:8px 20px 18px; display:flex; flex-direction:column; gap:0; }
+.ach-item { padding:14px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.ach-item:last-child { border-bottom:none; }
+.ach-item-name { font-size:.95rem; font-weight:800; color:#fcd34d; display:flex; align-items:center; gap:8px; }
+.ach-item-desc { font-size:.88rem; color:rgba(255,255,255,.72); line-height:1.75; margin-top:6px; padding-right:28px; }
+.ach-item-nodesc { font-size:.78rem; color:rgba(255,255,255,.25); font-style:italic; margin-top:4px; padding-right:28px; }
+
+/* ── CS2 Medals ── */
+.cs2-section { margin-top: 30px; }
+.cs2-section-head { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.cs2-section-head img { width:32px; height:32px; border-radius:6px; }
+.cs2-section-title { font-size:.95rem; font-weight:900; color:#fff; }
+.cs2-section-sub { font-size:.75rem; color:var(--text-dim); margin-top:2px; }
+.cs2-medals-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; }
+.cs2-medal-card { background:linear-gradient(135deg,rgba(235,75,75,.06),rgba(20,18,30,.9)); border:1px solid rgba(235,75,75,.25); border-radius:16px; padding:16px 14px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; transition:transform .18s, box-shadow .18s, border-color .18s; position:relative; overflow:hidden; }
+.cs2-medal-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%,rgba(235,75,75,.08),transparent 70%); pointer-events:none; }
+.cs2-medal-card:hover { transform:translateY(-4px); border-color:rgba(235,75,75,.55); box-shadow:0 12px 32px rgba(235,75,75,.15); }
+.cs2-medal-img { width:72px; height:72px; border-radius:12px; object-fit:contain; background:rgba(0,0,0,.3); padding:4px; filter:drop-shadow(0 4px 12px rgba(235,75,75,.3)); }
+.cs2-medal-name { font-size:.82rem; font-weight:800; color:#fff; line-height:1.3; }
+.cs2-medal-desc { font-size:.72rem; color:rgba(255,255,255,.6); line-height:1.6; }
+.cs2-medal-date { font-size:.68rem; color:rgba(235,75,75,.8); font-weight:700; margin-top:2px; }
+.cs2-ach-row { display:flex; align-items:center; gap:12px; background:rgba(235,75,75,.05); border:1px solid rgba(235,75,75,.18); border-radius:12px; padding:12px 16px; margin-bottom:10px; }
+.cs2-ach-icon { font-size:1.6rem; flex-shrink:0; }
+.cs2-ach-name { font-size:.9rem; font-weight:800; color:#fcd34d; }
+.cs2-ach-desc { font-size:.78rem; color:rgba(255,255,255,.6); margin-top:2px; line-height:1.5; }
 
 /* ── مودال اتصال استیم ── */
 .steam-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(4px); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
@@ -572,6 +640,40 @@
 .sm-yes:hover { filter:brightness(1.1); }
 .sm-yes:disabled { opacity:.6; cursor:default; }
 .sm-no { background:none; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; padding:12px 20px; font-size:.88rem; cursor:pointer; }
+
+/* ── کارت‌های بازی‌های من (backlog) ── */
+.bl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px; }
+.bl-card { background:#16151f; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; transition:transform .18s, box-shadow .18s, border-color .18s; }
+.bl-card:hover { transform:translateY(-3px); border-color:rgba(139,92,246,.4); box-shadow:0 10px 28px rgba(0,0,0,.4); }
+.bl-card-cover { position:relative; aspect-ratio:16/9; background:linear-gradient(135deg,#1e1b2e,#2d1154); overflow:hidden; }
+.bl-card-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+.bl-card-cover-ph { position:absolute; inset:0; display:none; align-items:center; justify-content:center; }
+.bl-card.no-cover .bl-card-cover img { display:none; }
+.bl-card.no-cover .bl-card-cover-ph { display:flex; }
+.bl-card-cover-ph svg { width:34px; height:34px; fill:rgba(255,255,255,.22); }
+.bl-card-status { position:absolute; bottom:6px; right:6px; font-size:.6rem; font-weight:800; padding:2px 8px; border-radius:20px; }
+.bl-cs-playing { background:rgba(74,222,128,.92); color:#06210f; }
+.bl-cs-want { background:rgba(96,165,250,.92); color:#06182e; }
+.bl-cs-completed { background:rgba(251,191,36,.95); color:#2a1c00; }
+.bl-cs-dropped { background:rgba(248,113,113,.92); color:#2a0606; }
+.bl-card-fav { position:absolute; top:6px; left:6px; background:rgba(0,0,0,.5); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:.88rem; line-height:1; display:flex; align-items:center; justify-content:center; transition:transform .15s; }
+.bl-card-fav:hover { transform:scale(1.15); }
+.bl-card-body { padding:10px 12px; }
+.bl-card-name { font-size:.82rem; font-weight:700; color:var(--text-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bl-card-stars { margin-top:5px; line-height:1; }
+.bl-card-ctrl { display:flex; gap:6px; margin-top:10px; align-items:center; }
+.bl-card-ctrl .bl-inline-select { flex:1; min-width:0; background:#1e1b2e; border:1px solid var(--border); color:var(--text-white); border-radius:7px; padding:5px 6px; font-size:.72rem; font-family:inherit; }
+.bl-card-ctrl .bl-del-btn { flex-shrink:0; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#f87171; width:28px; height:28px; border-radius:7px; cursor:pointer; font-size:1rem; line-height:1; }
+.bl-card-ctrl .bl-del-btn:hover { background:rgba(239,68,68,.25); }
+
+/* ── نتایج جستجوی کاتالوگ (افزودن بازی) ── */
+.bl-cat-row { display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:10px; cursor:pointer; transition:background .12s; border:1px solid transparent; }
+.bl-cat-row:hover { background:rgba(139,92,246,.1); border-color:rgba(139,92,246,.25); }
+.bl-cat-cover { width:54px; height:30px; border-radius:6px; object-fit:cover; flex-shrink:0; background:#1e1b2e; }
+.bl-cat-ph { display:flex; align-items:center; justify-content:center; }
+.bl-cat-ph svg { width:16px; height:16px; fill:rgba(255,255,255,.25); }
+.bl-cat-name { flex:1; font-size:.85rem; font-weight:700; color:var(--text-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bl-cat-add { flex-shrink:0; font-size:.74rem; font-weight:800; color:#a78bfa; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.3); border-radius:8px; padding:4px 10px; }
 
 .ga-connect-status {
     width: 100%; font-size: 0.83rem; padding: 8px 12px;
@@ -604,45 +706,56 @@
 .ach-desc { font-size: 0.74rem; color: var(--text-dim); margin-top: 4px; }
 .ach-date { font-size: 0.68rem; color: var(--text-dim); margin-top: 8px; }
 
-/* ===== FOLLOWERS GRID ===== */
-.followers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
-    gap: 12px;
+/* ===== FOLLOWERS LIST ===== */
+.follow-list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
 }
-.follower-card {
-    background: var(--bg-card2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 12px;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    transition: all 0.22s;
+.follow-list-count {
+    font-size: 0.82rem; font-weight: 800; color: var(--text-muted);
+    letter-spacing: 0.05em;
 }
-.follower-card:hover {
-    border-color: var(--purple-mid);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(139,92,246,0.12);
+.follow-list { display: flex; flex-direction: column; gap: 4px; }
+.follow-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 12px;
+    text-decoration: none; transition: background 0.18s;
 }
-.follower-avatar-img {
-    width: 52px; height: 52px;
-    border-radius: 50%; object-fit: cover;
+.follow-row:hover { background: rgba(139,92,246,0.08); }
+.follow-row-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
     border: 2px solid var(--border);
-    margin: 0 auto 8px;
-    display: block;
 }
-.follower-avatar-ph {
-    width: 52px; height: 52px;
-    border-radius: 50%;
+.follow-row-avatar-ph {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
     background: linear-gradient(135deg, #1a0a2e, #2d1154);
     border: 2px solid var(--border);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; font-weight: 800; color: var(--purple);
-    margin: 0 auto 8px;
+    font-size: 1rem; font-weight: 800; color: var(--purple);
 }
-.follower-name { font-size: 0.83rem; font-weight: 700; color: #fff; }
-.follower-platform { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+.follow-row-info { flex: 1; min-width: 0; }
+.follow-row-name {
+    font-size: 0.88rem; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.follow-row-username {
+    font-size: 0.75rem; color: var(--text-dim); margin-top: 1px;
+}
+.follow-row-platform {
+    font-size: 0.72rem; color: var(--text-muted);
+    background: rgba(139,92,246,0.12); border-radius: 20px;
+    padding: 2px 9px; flex-shrink: 0; white-space: nowrap;
+}
+.follow-load-more {
+    display: block; width: 100%; margin-top: 12px;
+    padding: 10px; border-radius: 12px; border: 1px dashed var(--border);
+    background: transparent; color: var(--text-muted); font-size: 0.83rem;
+    cursor: pointer; transition: all 0.18s; font-family: inherit;
+}
+.follow-load-more:hover { border-color: var(--purple-mid); color: var(--purple); }
+.follow-load-more:disabled { opacity: 0.45; cursor: default; }
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
@@ -1374,8 +1487,8 @@
 
         </div>
 
-        <!-- ═══ GAMING SHOWCASE ═══ -->
-        <div class="gaming-showcase" id="gamingShowcase">
+        <!-- ═══ GAMING SHOWCASE (حذف‌شده — بازی‌ها در تب «بازی‌ها» نمایش داده می‌شوند) ═══ -->
+        <div class="gaming-showcase" id="gamingShowcase" style="display:none;">
 
             <!-- Two-column grid for playing + completed -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
@@ -1596,21 +1709,23 @@
                             <svg class="bi bi-plus-circle-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-plus-circle-fill"></use></svg> اضافه کردن بازی
                         </div>
 
-                        <!-- ── Tabs ── -->
-                        <div class="bl-tabs">
-                            <button class="bl-tab active" onclick="blSwitchTab('steam-url',this)">
-                                <svg class="bi bi-steam" aria-hidden="true"><use href="#bi-steam"></use></svg> لینک استیم
-                            </button>
-                            <button class="bl-tab" onclick="blSwitchTab('steam-search',this)">
-                                <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجو
-                            </button>
-                            <button class="bl-tab" onclick="blSwitchTab('manual',this)">
-                                <svg class="bi bi-pencil" aria-hidden="true"><use href="#bi-pencil"></use></svg> دستی
-                            </button>
+                        <!-- ── جستجو در کاتالوگ سایت (تنها راه افزودن) ── -->
+                        <div style="font-size:.74rem;color:var(--text-dim);margin-bottom:10px;line-height:1.6;">
+                            بازی رو از بین بازی‌های ثبت‌شده‌ی سایت انتخاب کن. (افزودن دستیِ بازی دلخواه ممکن نیست)
                         </div>
+                        <div class="bl-add-row">
+                            <input type="text" id="blCatSearch" class="g-input" placeholder="نام بازی (فارسی یا انگلیسی)..." oninput="blCatSearchDebounce()" style="flex:1;">
+                            <select id="blCatStatus" class="g-input" style="min-width:145px;">
+                                <option value="want">🎯 می‌خوام</option>
+                                <option value="playing">🎮 بازی می‌کنم</option>
+                                <option value="completed">🏆 تموم کردم</option>
+                                <option value="dropped">💔 رها کردم</option>
+                            </select>
+                        </div>
+                        <div id="blCatResults" style="margin-top:12px;"></div>
 
-                        <!-- Tab 1: Steam URL -->
-                        <div class="bl-tab-panel" id="bl-tab-steam-url">
+                        <!-- Tab 1: Steam URL (غیرفعال) -->
+                        <div class="bl-tab-panel" id="bl-tab-steam-url" style="display:none;">
                             <div class="bl-steam-row">
                                 <input type="text" id="blSteamUrl"
                                     class="g-input"
@@ -1712,22 +1827,8 @@
                     </div>
 
                     <!-- Data Table -->
-                    <div class="bl-table-wrap">
-                        <table class="bl-table">
-                            <thead>
-                                <tr>
-                                    <th>نام بازی</th>
-                                    <th>وضعیت</th>
-                                    <th>پلتفرم</th>
-                                    <th>امتیاز ★</th>
-                                    <th><svg style="width:1em;height:1em;fill:#f87171;vertical-align:-.125em" viewBox="0 0 16 16"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01z"/></svg></th>
-                                    {% if is_own_profile %}<th>ویرایش</th>{% endif %}
-                                </tr>
-                            </thead>
-                            <tbody id="blTableBody">
-                                <tr><td colspan="6" style="text-align:center;padding:36px;color:var(--text-dim);">در حال بارگذاری...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="bl-grid" id="blGrid">
+                        <div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--text-dim);">در حال بارگذاری...</div>
                     </div>
 
                     <div id="blPagination"></div>
@@ -1819,38 +1920,103 @@
                     {% endif %}
                 </div>
 
-                <!-- Medals Panel (Steam badges) -->
+                <!-- Medals Panel (Steam badges + achievements) -->
                 <div class="tab-panel" id="panel-medals">
                     {% if steam_badges %}
                         <div class="medals-head">
-                            <svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;width:1.1em;height:1.1em;fill:currentColor;"><use href="#bi-steam"></use></svg>
-                            سطح استیم: <b>{{ steam_level }}</b> — <b>{{ steam_badges|length }}</b> نشان
+                            <svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;width:1.05em;height:1.05em;fill:currentColor;"><use href="#bi-steam"></use></svg>
+                            نشان‌های استیم — سطح <b>{{ steam_level }}</b>
                         </div>
                         <div class="medals-grid">
                             {% for b in steam_badges %}
                             <div class="medal" tabindex="0">
-                                <div class="medal-img">
+                                <div class="medal-img {% if not b.cover %}special{% endif %}">
                                     {% if b.cover %}
-                                        <img src="{{ b.cover }}" alt="" loading="lazy">
-                                    {% else %}
-                                        <svg class="bi bi-shield-fill-check" aria-hidden="true" style="width:34px;height:34px;fill:#66c0f4;"><use href="#bi-shield-fill-check"></use></svg>
+                                        <img src="{{ b.cover }}" alt="" loading="lazy" onerror="this.style.display='none';this.closest('.medal-img').classList.add('special')">
                                     {% endif %}
+                                    <div class="medal-special-art">
+                                        <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg>
+                                        <span class="medal-xp">{{ b.xp }} XP</span>
+                                    </div>
                                     {% if b.level %}<span class="medal-level">{{ b.level }}</span>{% endif %}
                                 </div>
                                 <div class="medal-tip">
-                                    <b>{{ b.game_name }}</b><br>
-                                    <span style="color:#66c0f4;">نشان سطح {{ b.level }} · {{ b.xp }} XP</span>
+                                    <b>{{ b.game_name }}</b>
+                                    {% if b.desc_fa %}<div class="medal-tip-desc">{{ b.desc_fa }}</div>{% endif %}
+                                    <span style="color:#66c0f4;display:block;margin-top:5px;font-weight:700;">سطح {{ b.level }} · {{ b.xp }} XP</span>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
-                        <div style="font-size:.74rem;color:var(--text-dim);text-align:center;margin-top:16px;">روی هر نشان نگه‌دار تا ببینی برای چه بازی‌ایه</div>
-                    {% else %}
-                        <div class="empty-state">
-                            <svg class="bi bi-shield-check" aria-hidden="true"><use href="#bi-shield-check"></use></svg>
-                            <p>هنوز نشانی نیست</p>
-                            {% if is_own_profile %}<p style="font-size:.82rem;margin-top:6px;color:var(--text-dim);">اگه استیمت رو وصل کردی، نشان‌هات چند لحظه بعد اینجا میان (پروفایلت باید Public باشه)</p>{% endif %}
+                    {% endif %}
+
+                    {% if steam_achievements %}
+                        <div class="medals-head" style="margin-top:{% if steam_badges %}30px{% else %}0{% endif %};">
+                            <svg class="bi bi-trophy-fill" aria-hidden="true" style="color:#fbbf24;width:1.05em;height:1.05em;fill:currentColor;"><use href="#bi-trophy-fill"></use></svg>
+                            دستاوردهای بازی <span style="color:var(--text-dim);font-size:.8rem;">({{ steam_achievements|length }} بازی)</span>
                         </div>
+                        {{ steam_achievements|json_script:"achDataJson" }}
+                        <div class="sach-grid">
+                            {% for a in steam_achievements %}
+                            <div class="sach-card" tabindex="0" onclick="openAchModal({{ forloop.counter0 }})" title="کلیک برای دیدن دستاوردها">
+                                <div class="sach-cover">
+                                    <img src="{{ a.cover }}" alt="" loading="lazy" onerror="this.style.display='none'">
+                                    <div class="sach-hover-overlay">
+                                        <span class="sach-hover-count">{{ a.unlocked }}/{{ a.total }}</span>
+                                        <span class="sach-hover-label">دستاورد</span>
+                                    </div>
+                                </div>
+                                <div class="sach-name">{{ a.game_name }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- مودال دستاوردهای یک بازی -->
+                        <div id="achModal" class="ach-modal-overlay" onclick="if(event.target===this)closeAchModal()">
+                            <div class="ach-modal">
+                                <button class="ach-modal-close" onclick="closeAchModal()">×</button>
+                                <div class="ach-modal-head">
+                                    <img id="achModalCover" src="" alt="">
+                                    <div style="flex:1;min-width:0;">
+                                        <div id="achModalTitle" class="ach-modal-title"></div>
+                                        <div id="achModalCount" class="ach-modal-count"></div>
+                                    </div>
+                                </div>
+                                <div id="achModalList" class="ach-modal-list"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if cs2_medals %}
+                    <div class="cs2-section">
+                        <div class="cs2-section-head">
+                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg" alt="CS2" style="width:48px;height:22px;border-radius:5px;object-fit:cover;">
+                            <div>
+                                <div class="cs2-section-title">مدال‌های Counter-Strike 2</div>
+                                <div class="cs2-section-sub">{{ cs2_medals|length }} مدال از Steam Inventory</div>
+                            </div>
+                        </div>
+                        <div class="cs2-medals-grid">
+                            {% for m in cs2_medals %}
+                            <div class="cs2-medal-card">
+                                <img class="cs2-medal-img" src="{{ m.icon_url }}" alt="{{ m.name }}" onerror="this.style.opacity='.3'">
+                                <div class="cs2-medal-name">{{ m.name }}</div>
+                                {% if m.desc %}<div class="cs2-medal-desc">{{ m.desc }}</div>{% endif %}
+                                {% if m.date_issued %}<div class="cs2-medal-date">{{ m.date_issued }}</div>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if not steam_achievements and not steam_badges and not cs2_medals %}
+                        <div class="empty-state">
+                            <svg class="bi bi-trophy" aria-hidden="true"><use href="#bi-trophy"></use></svg>
+                            <p>هنوز مدالی نیست</p>
+                            {% if is_own_profile %}<p style="font-size:.82rem;margin-top:6px;color:var(--text-dim);">اگه استیمت رو وصل کردی، دستاوردها و نشان‌هات چند دقیقه بعد اینجا میان (پروفایل و Game details باید Public باشن)</p>{% endif %}
+                        </div>
+                    {% else %}
+                        <div style="font-size:.74rem;color:var(--text-dim);text-align:center;margin-top:18px;">روی هر مدال نگه‌دار تا جزئیاتش رو ببینی</div>
                     {% endif %}
                 </div>
 
@@ -1879,23 +2045,39 @@
 
                 <!-- Followers Panel -->
                 <div class="tab-panel" id="panel-followers">
+                    <div class="follow-list-header">
+                        <span class="follow-list-count">{{ followers_total }} فالوور</span>
+                    </div>
                     {% if followers %}
-                        <div class="followers-grid">
+                        <div class="follow-list" id="followers-list">
                             {% for f in followers %}
-                            <a href="{% url 'community:profile' username=f.follower.username %}" class="follower-card">
+                            <a href="{% url 'community:profile' username=f.follower.username %}" class="follow-row">
                                 {% if f.follower.gamer_profile.avatar %}
-                                    <img src="{{ f.follower.gamer_profile.avatar.url }}" class="follower-avatar-img">
+                                    <img src="{{ f.follower.gamer_profile.avatar.url }}" class="follow-row-avatar" loading="lazy">
                                 {% else %}
-                                    <div class="follower-avatar-ph">{{ f.follower.username|first|upper }}</div>
+                                    <div class="follow-row-avatar-ph">{{ f.follower.username|first|upper }}</div>
                                 {% endif %}
-                                <div class="follower-name">{{ f.follower.username }}</div>
-                                <div class="follower-platform">{{ f.follower.gamer_profile.get_platform_display }}</div>
+                                <div class="follow-row-info">
+                                    <div class="follow-row-name">{{ f.follower.gamer_profile.display_name|default:f.follower.username }}</div>
+                                    <div class="follow-row-username">@{{ f.follower.username }}</div>
+                                </div>
+                                {% if f.follower.gamer_profile.platform %}
+                                <span class="follow-row-platform">{{ f.follower.gamer_profile.get_platform_display }}</span>
+                                {% endif %}
                             </a>
                             {% endfor %}
                         </div>
+                        {% if followers_total > 20 %}
+                        <button class="follow-load-more" id="followers-load-more"
+                                data-username="{{ profile_user.username }}"
+                                data-type="followers" data-page="2"
+                                data-total="{{ followers_total }}">
+                            بیشتر نشون بده ({{ followers_total|add:"-20" }} نفر دیگه)
+                        </button>
+                        {% endif %}
                     {% else %}
                         <div class="empty-state">
-                            <svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg>
+                            <i class="bi bi-people"></i>
                             <p>هنوز فالووری ندارد</p>
                         </div>
                     {% endif %}
@@ -1903,23 +2085,39 @@
 
                 <!-- Following Panel -->
                 <div class="tab-panel" id="panel-following">
+                    <div class="follow-list-header">
+                        <span class="follow-list-count">{{ following_total }} دنبال‌شده</span>
+                    </div>
                     {% if following %}
-                        <div class="followers-grid">
+                        <div class="follow-list" id="following-list">
                             {% for f in following %}
-                            <a href="{% url 'community:profile' username=f.following.username %}" class="follower-card">
+                            <a href="{% url 'community:profile' username=f.following.username %}" class="follow-row">
                                 {% if f.following.gamer_profile.avatar %}
-                                    <img src="{{ f.following.gamer_profile.avatar.url }}" class="follower-avatar-img">
+                                    <img src="{{ f.following.gamer_profile.avatar.url }}" class="follow-row-avatar" loading="lazy">
                                 {% else %}
-                                    <div class="follower-avatar-ph">{{ f.following.username|first|upper }}</div>
+                                    <div class="follow-row-avatar-ph">{{ f.following.username|first|upper }}</div>
                                 {% endif %}
-                                <div class="follower-name">{{ f.following.username }}</div>
-                                <div class="follower-platform">{{ f.following.gamer_profile.get_platform_display }}</div>
+                                <div class="follow-row-info">
+                                    <div class="follow-row-name">{{ f.following.gamer_profile.display_name|default:f.following.username }}</div>
+                                    <div class="follow-row-username">@{{ f.following.username }}</div>
+                                </div>
+                                {% if f.following.gamer_profile.platform %}
+                                <span class="follow-row-platform">{{ f.following.gamer_profile.get_platform_display }}</span>
+                                {% endif %}
                             </a>
                             {% endfor %}
                         </div>
+                        {% if following_total > 20 %}
+                        <button class="follow-load-more" id="following-load-more"
+                                data-username="{{ profile_user.username }}"
+                                data-type="following" data-page="2"
+                                data-total="{{ following_total }}">
+                            بیشتر نشون بده ({{ following_total|add:"-20" }} نفر دیگه)
+                        </button>
+                        {% endif %}
                     {% else %}
                         <div class="empty-state">
-                            <svg class="bi bi-person-check" aria-hidden="true"><use href="#bi-person-check"></use></svg>
+                            <i class="bi bi-person-check"></i>
                             <p>هنوز کسی دنبال نشده</p>
                         </div>
                     {% endif %}
@@ -1965,34 +2163,44 @@
                     </div>
                 </div>
 
-                <!-- Steam summary -->
-                {% for ga in gaming_accounts %}{% if ga.platform == 'steam' %}
-                <div class="sidebar-card">
-                    <div class="sidebar-card-title">
-                        <svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;"><use href="#bi-steam"></use></svg> استیم
+                <!-- Gaming Accounts sidebar -->
+                {% if gaming_accounts %}
+                <div class="sidebar-card" style="padding:16px 18px;">
+                    <div class="sidebar-card-title" style="margin-bottom:14px;">
+                        <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> حساب‌های گیم
                     </div>
-                    <div class="quick-ga-row">
-                        {% if ga.avatar_url %}
-                            <img src="{{ ga.avatar_url }}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">
-                        {% else %}
-                            <span class="quick-ga-icon"><svg class="bi bi-steam" aria-hidden="true" style="color:#66c0f4;"><use href="#bi-steam"></use></svg></span>
-                        {% endif %}
-                        <div class="quick-ga-info" style="flex:1;">
-                            <div class="quick-ga-name">{{ ga.display_name|default:ga.username }}</div>
-                            {% if ga.extra_data.total_hours or ga.extra_data.game_count %}
-                            <div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;">
-                                {% if ga.extra_data.game_count %}{{ ga.extra_data.game_count }} بازی{% endif %}{% if ga.extra_data.total_hours %} · {{ ga.extra_data.total_hours }} ساعت{% endif %}
-                            </div>
+                    {% for ga in gaming_accounts %}
+                    <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--bg-void);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;{% if not forloop.last %}{% endif %}">
+                        <!-- platform icon badge -->
+                        <div style="position:relative;flex-shrink:0;">
+                            {% if ga.avatar_url %}
+                                <img src="{{ ga.avatar_url }}" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;">
+                            {% else %}
+                                <div style="width:40px;height:40px;border-radius:10px;background:{% if ga.platform == 'steam' %}#1b2838{% elif ga.platform == 'xbox' %}#107c10{% elif ga.platform == 'psn' %}#00439c{% else %}#1a1a2e{% endif %};display:flex;align-items:center;justify-content:center;">
+                                    <svg style="width:22px;height:22px;fill:{% if ga.platform == 'steam' %}#66c0f4{% elif ga.platform == 'xbox' %}#52b043{% elif ga.platform == 'psn' %}#4d9ff5{% else %}#c084fc{% endif %};" aria-hidden="true"><use href="#bi-{% if ga.platform == 'steam' %}steam{% elif ga.platform == 'xbox' %}xbox{% elif ga.platform == 'psn' %}playstation{% else %}controller{% endif %}"></use></svg>
+                                </div>
                             {% endif %}
+                            <!-- small platform badge -->
+                            <div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:5px;background:{% if ga.platform == 'steam' %}#1b2838{% elif ga.platform == 'xbox' %}#107c10{% elif ga.platform == 'psn' %}#00439c{% else %}#1a1a2e{% endif %};border:2px solid var(--bg-card);display:flex;align-items:center;justify-content:center;">
+                                <svg style="width:10px;height:10px;fill:{% if ga.platform == 'steam' %}#66c0f4{% elif ga.platform == 'xbox' %}#52b043{% elif ga.platform == 'psn' %}#4d9ff5{% else %}#c084fc{% endif %};" aria-hidden="true"><use href="#bi-{% if ga.platform == 'steam' %}steam{% elif ga.platform == 'xbox' %}xbox{% elif ga.platform == 'psn' %}playstation{% else %}controller{% endif %}"></use></svg>
+                            </div>
                         </div>
+                        <!-- info -->
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:.72rem;font-weight:700;color:{% if ga.platform == 'steam' %}#66c0f4{% elif ga.platform == 'xbox' %}#52b043{% elif ga.platform == 'psn' %}#4d9ff5{% else %}#c084fc{% endif %};letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px;">{{ ga.get_platform_display }}</div>
+                            <div style="font-size:.88rem;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ga.display_name|default:ga.username }}</div>
+                        </div>
+                        <!-- view button -->
                         {% if ga.profile_url %}
-                            <a href="{{ ga.profile_url }}" target="_blank" class="quick-ga-link">
-                                <svg class="bi bi-arrow-up-right-square" aria-hidden="true"><use href="#bi-arrow-up-right-square"></use></svg>
-                            </a>
+                        <a href="{{ ga.profile_url }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:8px;text-decoration:none;color:{% if ga.platform == 'steam' %}#66c0f4{% elif ga.platform == 'xbox' %}#52b043{% elif ga.platform == 'psn' %}#4d9ff5{% else %}#c084fc{% endif %};background:{% if ga.platform == 'steam' %}rgba(102,192,244,.1){% elif ga.platform == 'xbox' %}rgba(82,176,67,.1){% elif ga.platform == 'psn' %}rgba(77,159,245,.1){% else %}rgba(192,132,252,.1){% endif %};border:1px solid {% if ga.platform == 'steam' %}rgba(102,192,244,.25){% elif ga.platform == 'xbox' %}rgba(82,176,67,.25){% elif ga.platform == 'psn' %}rgba(77,159,245,.25){% else %}rgba(192,132,252,.25){% endif %};transition:opacity .15s;">
+                            مشاهده
+                            <svg style="width:.8em;height:.8em;fill:currentColor;" aria-hidden="true"><use href="#bi-arrow-up-right-square"></use></svg>
+                        </a>
                         {% endif %}
                     </div>
+                    {% endfor %}
                 </div>
-                {% endif %}{% endfor %}
+                {% endif %}
 
                 <!-- Suggest follow (for other profiles) -->
                 {% if not is_own_profile %}
@@ -2089,6 +2297,7 @@ function previewCpImage(input) {
 }
 
 let blLoaded = false;
+const _profileTabKey = 'profileTab_{{ profile_user.username }}';
 function switchTab(name) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
@@ -2097,7 +2306,15 @@ function switchTab(name) {
     if (panel) panel.classList.add('active');
     if (tab)   tab.classList.add('active');
     if (name === 'backlog' && !blLoaded) { blLoaded = true; blLoad(); }
+    try { localStorage.setItem(_profileTabKey, name); } catch(e) {}
 }
+// restore last active tab on page load
+(function(){
+    try {
+        const saved = localStorage.getItem(_profileTabKey);
+        if (saved && document.getElementById('panel-' + saved)) switchTab(saved);
+    } catch(e) {}
+})();
 
 // ── مودال اتصال استیم ──
 (function(){
@@ -2287,6 +2504,71 @@ function blSetFilter(f, btn) {
     blFilterRender();
 }
 
+// ── مودال دستاوردهای استیم ──
+let ACH_DATA = [];
+try { ACH_DATA = JSON.parse(document.getElementById('achDataJson')?.textContent || '[]'); } catch(e) {}
+function openAchModal(i) {
+    const a = ACH_DATA[i]; if (!a) return;
+    document.getElementById('achModalCover').src = a.cover || '';
+    document.getElementById('achModalTitle').textContent = a.game_name;
+    const pct = a.total ? Math.round(a.unlocked / a.total * 100) : 0;
+    document.getElementById('achModalCount').innerHTML =
+        `<span>${a.unlocked} از ${a.total} دستاورد باز شده</span>` +
+        `<div class="ach-prog-bar"><div class="ach-prog-fill" style="width:${pct}%"></div></div>` +
+        `<span class="ach-pct">${pct}٪ تکمیل</span>`;
+    document.getElementById('achModalList').innerHTML = (a.items || []).map(it => `
+        <div class="ach-item">
+            <div class="ach-item-name"><span>🏆</span> ${escH(it.name)}</div>
+            ${it.desc
+                ? `<div class="ach-item-desc">${escH(it.desc)}</div>`
+                : `<div class="ach-item-nodesc">بدون توضیح</div>`}
+        </div>`).join('');
+    document.getElementById('achModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeAchModal() {
+    document.getElementById('achModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAchModal(); });
+
+// ── جستجو و افزودن از کاتالوگ سایت ──
+let _blCatTimer = null;
+function blCatSearchDebounce() { clearTimeout(_blCatTimer); _blCatTimer = setTimeout(blCatSearch, 300); }
+function blCatSearch() {
+    const q = document.getElementById('blCatSearch').value.trim();
+    const box = document.getElementById('blCatResults');
+    if (q.length < 2) { box.innerHTML = ''; return; }
+    fetch('/api/game-search/?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(d => {
+        const games = d.games || [];
+        if (!games.length) { box.innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:10px;">بازی‌ای با این نام در سایت نیست</div>'; return; }
+        box.innerHTML = games.map(g => {
+            const nm = (g.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+            const cv = (g.cover||'').replace(/"/g,'&quot;');
+            return `<div class="bl-cat-row" data-name="${nm}" data-cover="${cv}" onclick="blAddFromCatalog(this)">
+                ${g.cover ? `<img src="${cv}" class="bl-cat-cover" alt="">` : `<div class="bl-cat-cover bl-cat-ph"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>`}
+                <span class="bl-cat-name">${nm}</span>
+                <span class="bl-cat-add">+ افزودن</span>
+            </div>`;
+        }).join('');
+      });
+}
+function blAddFromCatalog(el) {
+    const name = el.dataset.name, cover = el.dataset.cover || '';
+    const status = document.getElementById('blCatStatus').value;
+    el.style.pointerEvents = 'none'; el.style.opacity = '.6';
+    fetch('/backlog/add/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `game_name=${encodeURIComponent(name)}&status=${status}&platform=pc&cover_url=${encodeURIComponent(cover)}`
+    }).then(r => r.json()).then(() => {
+        el.querySelector('.bl-cat-add').textContent = '✓ اضافه شد';
+        blLoad();
+    }).catch(() => { el.style.pointerEvents = ''; el.style.opacity = ''; });
+}
+
 function blRender() {
     const filtered = blGetFiltered();
     const total    = filtered.length;
@@ -2295,32 +2577,50 @@ function blRender() {
     const slice    = filtered.slice((blPage-1)*BL_PG, blPage*BL_PG);
 
     const empty = document.getElementById('blEmpty');
-    const tbody = document.getElementById('blTableBody');
-    if (!tbody) return;
+    const grid  = document.getElementById('blGrid');
+    if (!grid) return;
 
     if (!blItems.length) {
         if (empty) empty.style.display = 'block';
-        tbody.innerHTML = '';
+        grid.innerHTML = '';
         document.getElementById('blPagination').innerHTML = '';
         return;
     }
     if (empty) empty.style.display = 'none';
 
     if (!slice.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-dim);">نتیجه‌ای پیدا نشد</td></tr>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-dim);">نتیجه‌ای پیدا نشد</div>`;
     } else {
-        tbody.innerHTML = slice.map(item => `
-<tr class="bl-row" id="bli-${item.id}">
-  <td><div style="font-weight:700;color:var(--text-white);font-size:0.88rem;">${escH(item.game_name)}</div>${item.notes?`<div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;">${escH(item.notes)}</div>`:''}</td>
-  <td><span class="bl-status-badge bl-status-${item.status}">${BL_STATUS_EMOJI[item.status]} ${BL_STATUS_LABELS[item.status]}</span></td>
-  <td><span style="color:var(--text-dim);font-size:0.78rem;text-transform:uppercase;">${item.platform?escH(item.platform):'—'}</span></td>
-  <td style="min-width:100px;">${blStarsHtml(item)}</td>
-  <td>${IS_OWN?`<button class="bl-fav-btn ${item.is_favorite?'active':''}" onclick="blToggleFav(${item.id},this)" title="${item.is_favorite?'حذف از علاقه‌مندی':'افزودن به علاقه‌مندی'}">${item.is_favorite?'❤️':'🤍'}</button>`:(item.is_favorite?'❤️':'<span style="color:var(--text-dim);">—</span>')}</td>
-  ${IS_OWN?`<td><div style="display:flex;gap:5px;align-items:center;"><select onchange="blChangeStatus(${item.id},this.value)" class="bl-inline-select">${['want','playing','completed','dropped'].map(st=>`<option value="${st}" ${st===item.status?'selected':''}>${BL_STATUS_EMOJI[st]} ${BL_STATUS_LABELS[st]}</option>`).join('')}</select><button onclick="blRemove(${item.id})" class="bl-del-btn" title="حذف">×</button></div></td>`:''}
-</tr>`).join('');
+        grid.innerHTML = slice.map(blCardHtml).join('');
     }
     blRenderPagination(pages, total);
     if (IS_OWN) updateShowcase();
+}
+
+function blCardHtml(item) {
+    const cover = item.cover_url
+        ? `<img src="${escH(item.cover_url)}" alt="" loading="lazy" onerror="this.closest('.bl-card').classList.add('no-cover')">`
+        : '';
+    const fav = IS_OWN
+        ? `<button class="bl-card-fav ${item.is_favorite?'active':''}" onclick="blToggleFav(${item.id},this)" title="علاقه‌مندی">${item.is_favorite?'❤️':'🤍'}</button>`
+        : (item.is_favorite ? `<span class="bl-card-fav active" style="pointer-events:none">❤️</span>` : '');
+    const stars = (item.status==='completed'||item.status==='dropped')
+        ? `<div class="bl-card-stars">${blStarsHtml(item)}</div>` : '';
+    const ctrl = IS_OWN ? `<div class="bl-card-ctrl">
+        <select onchange="blChangeStatus(${item.id},this.value)" class="bl-inline-select">${['want','playing','completed','dropped'].map(st=>`<option value="${st}" ${st===item.status?'selected':''}>${BL_STATUS_EMOJI[st]} ${BL_STATUS_LABELS[st]}</option>`).join('')}</select>
+        <button onclick="blRemove(${item.id})" class="bl-del-btn" title="حذف">×</button></div>` : '';
+    return `<div class="bl-card ${item.cover_url?'':'no-cover'}" id="bli-${item.id}">
+  <div class="bl-card-cover">
+    ${cover}
+    <div class="bl-card-cover-ph"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>
+    <span class="bl-card-status bl-cs-${item.status}">${BL_STATUS_EMOJI[item.status]} ${BL_STATUS_LABELS[item.status]}</span>
+    ${fav}
+  </div>
+  <div class="bl-card-body">
+    <div class="bl-card-name" title="${escH(item.game_name)}">${escH(item.game_name)}</div>
+    ${stars}${ctrl}
+  </div>
+</div>`;
 }
 
 function blStarsHtml(item) {
@@ -2727,6 +3027,50 @@ function bmShowErr(msg) {
     const el = document.getElementById('bmErr');
     el.textContent = msg; el.style.display = 'block';
 }
+
+// ===== FOLLOW LIST LOAD MORE =====
+document.querySelectorAll('.follow-load-more').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const username = this.dataset.username;
+        const type = this.dataset.type;
+        const page = parseInt(this.dataset.page);
+        const total = parseInt(this.dataset.total);
+        const listEl = document.getElementById(type + '-list');
+        this.disabled = true;
+        this.textContent = 'در حال بارگذاری...';
+        try {
+            const res = await fetch(`/community/profile/${username}/follow-list/?type=${type}&page=${page}`);
+            const data = await res.json();
+            data.users.forEach(u => {
+                const row = document.createElement('a');
+                row.href = `/community/profile/${u.username}/`;
+                row.className = 'follow-row';
+                const avatarHtml = u.avatar_url
+                    ? `<img src="${u.avatar_url}" class="follow-row-avatar" loading="lazy">`
+                    : `<div class="follow-row-avatar-ph">${(u.display_name || u.username)[0].toUpperCase()}</div>`;
+                const platformHtml = u.platform
+                    ? `<span class="follow-row-platform">${u.platform}</span>` : '';
+                row.innerHTML = `${avatarHtml}
+                    <div class="follow-row-info">
+                        <div class="follow-row-name">${u.display_name || u.username}</div>
+                        <div class="follow-row-username">@${u.username}</div>
+                    </div>${platformHtml}`;
+                listEl.appendChild(row);
+            });
+            if (data.has_more) {
+                this.dataset.page = page + 1;
+                const remaining = total - page * 20;
+                this.textContent = `بیشتر نشون بده (${remaining} نفر دیگه)`;
+                this.disabled = false;
+            } else {
+                this.remove();
+            }
+        } catch(e) {
+            this.textContent = 'خطا در بارگذاری — دوباره امتحان کن';
+            this.disabled = false;
+        }
+    });
+});
 </script>
 
 {% endblock %}

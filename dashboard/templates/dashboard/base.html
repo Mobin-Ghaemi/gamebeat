@@ -759,6 +759,12 @@
             ماموریت‌های روزانه
         </a>
 
+        <a href="{% url 'dashboard:achievements' %}"
+           class="sidebar-link {% if 'achievement' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg>
+            دستاوردها
+        </a>
+
         <a href="{% url 'dashboard:premium' %}"
            class="sidebar-link {% if 'premium' in request.resolver_match.url_name %}active{% endif %}"
            style="{% if 'premium' in request.resolver_match.url_name %}background:linear-gradient(135deg,rgba(234,179,8,.15),rgba(202,138,4,.08));border-color:rgba(234,179,8,.4);color:#fde047;{% endif %}">

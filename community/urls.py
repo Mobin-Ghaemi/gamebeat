@@ -23,6 +23,7 @@ urlpatterns = [
     path('settings/', views.user_settings, name='settings'),
     path('profile/me/', views.my_profile_dashboard, name='my_profile'),
     path('profile/<str:username>/', views.gamer_profile, name='profile'),
+    path('profile/<str:username>/follow-list/', views.profile_follow_list, name='profile_follow_list'),
     path('follow/<str:username>/', views.toggle_follow, name='toggle_follow'),
     path('post/<int:post_id>/delete/', views.delete_post, name='delete_post'),
     path('post/<int:post_id>/boost/', views.boost_post, name='boost_post'),

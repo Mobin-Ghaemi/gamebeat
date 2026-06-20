@@ -21,6 +21,7 @@ from community.models import ZarbanWallet, ZarbanTransaction
 from community.models import SpinWheel, SpinWheelItem, SpinRecord
 from community.models import PremiumPlan, PremiumSubscription
 from community.models import MissionDay, DailyMission
+from community.models import AchievementDefinition
 
 
 def _to_jalali(dt, fmt='%Y/%m/%d'):
@@ -220,31 +221,58 @@ def monitoring(request):
 @login_required
 @user_passes_test(is_admin)
 def user_list(request):
-    q = request.GET.get('q', '').strip()
+    from community.models import CITY_CHOICES, CITY_BY_PROVINCE
+    from urllib.parse import urlencode
+    q           = request.GET.get('q', '').strip()
     filter_type = request.GET.get('filter', 'all')
+    cities      = [c.strip() for c in request.GET.getlist('city') if c.strip()]
+
+    city_label_map = dict(CITY_CHOICES)
 
     users = User.objects.select_related('gamer_profile').annotate(post_count=Count('posts')).order_by('-date_joined')
 
     if q:
         users = users.filter(Q(username__icontains=q) | Q(email__icontains=q))
-
     if filter_type == 'active':
         users = users.filter(is_active=True, is_staff=False)
     elif filter_type == 'banned':
         users = users.filter(is_active=False)
     elif filter_type == 'staff':
         users = users.filter(is_staff=True)
+    if cities:
+        users = users.filter(gamer_profile__city__in=cities)
 
     paginator = Paginator(users, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Annotate each user with their city's Persian label
+    for u in page_obj.object_list:
+        profile = getattr(u, 'gamer_profile', None)
+        raw_city = getattr(profile, 'city', '') or ''
+        u.city_label = city_label_map.get(raw_city, '')
+
+    # Base query string for pagination (preserves q, filter, and all city params)
+    qd = request.GET.copy()
+    qd.pop('page', None)
+    pagination_qs = qd.urlencode()
+
+    # Base query string for filter-type links (preserves q and all city params, no filter/page)
+    qd2 = request.GET.copy()
+    qd2.pop('page', None)
+    qd2.pop('filter', None)
+    filter_links_base = qd2.urlencode()
 
     return render(request, 'dashboard/users.html', {
-        'page_obj': page_obj,
-        'users': page_obj,  # backward-compat
-        'q': q,
-        'status': filter_type,
-        'filter_type': filter_type,
+        'page_obj':          page_obj,
+        'users':             page_obj,
+        'q':                 q,
+        'status':            filter_type,
+        'filter_type':       filter_type,
+        'cities':            cities,
+        'city_choices':      CITY_CHOICES,
+        'city_by_province':  CITY_BY_PROVINCE,
+        'pagination_qs':     pagination_qs,
+        'filter_links_base': filter_links_base,
     })
 
 
@@ -1340,9 +1368,10 @@ def premium_adjust_days(request):
 @login_required
 @user_passes_test(is_admin)
 def daily_mission_list(request):
-    days = MissionDay.objects.annotate(
-        mission_count=Count('missions')
-    ).order_by('day_number', 'id')
+    from django.db.models import Prefetch
+    days = MissionDay.objects.prefetch_related(
+        Prefetch('missions', queryset=DailyMission.objects.order_by('order', 'id'))
+    ).annotate(mission_count=Count('missions')).order_by('day_number', 'id')
     cycle = MissionDay.active_cycle()
     today_day = MissionDay.current()
     always_missions = DailyMission.objects.filter(day__isnull=True).order_by('order', 'id')
@@ -1384,6 +1413,9 @@ def mission_day_edit(request, day_id):
         day.label      = request.POST.get('label', '').strip()
         day.is_active  = request.POST.get('is_active') == 'on'
         day.save()
+        # اگه AJAX بود JSON برگردون، وگرنه redirect معمولی
+        if request.headers.get('X-CSRFToken') and request.POST.get('ajax') == '1':
+            return JsonResponse({'ok': True})
         messages.success(request, 'تغییرات روز ذخیره شد ✓')
         return redirect('dashboard:mission_day_edit', day_id=day.pk)
     missions = day.missions.order_by('order', 'id')
@@ -1455,3 +1487,71 @@ def mission_save(request):
         m.is_active = request.POST.get('is_active', 'true') == 'true'
     m.save()
     return JsonResponse({'ok': True, 'mission_id': m.pk})
+
+
+# ══════════════════════════════════════════════════════════
+# دستاوردها
+# ══════════════════════════════════════════════════════════
+
+@login_required
+@user_passes_test(is_admin)
+def achievements_list(request):
+    definitions = AchievementDefinition.objects.all().order_by('order', 'title')
+    return render(request, 'dashboard/achievements.html', {
+        'definitions': definitions,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def achievement_definition_save(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    action = request.POST.get('action')
+    if action == 'delete':
+        defn = get_object_or_404(AchievementDefinition, pk=request.POST.get('id'))
+        defn.delete()
+        return JsonResponse({'ok': True})
+    if action == 'add':
+        defn = AchievementDefinition()
+    else:
+        defn = get_object_or_404(AchievementDefinition, pk=request.POST.get('id'))
+    ach_type = request.POST.get('ach_type', '').strip()
+    title    = request.POST.get('title', '').strip()
+    if not ach_type or not title:
+        return JsonResponse({'ok': False, 'error': 'کد یکتا و عنوان الزامی‌اند'})
+    defn.ach_type      = ach_type
+    defn.level         = max(1, _int(request.POST.get('level'), 1))
+    defn.title         = title
+    defn.description   = request.POST.get('description', '').strip()
+    defn.icon          = request.POST.get('icon', 'bi-trophy').strip() or 'bi-trophy'
+    defn.reward_zarban = max(0, _int(request.POST.get('reward_zarban'), 0))
+    defn.is_active     = request.POST.get('is_active', 'true') == 'true'
+    defn.order         = _int(request.POST.get('order'), 0)
+    defn.target = max(0, _int(request.POST.get('target'), 0))
+    try:
+        defn.save()
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
+    return JsonResponse({'ok': True, 'id': defn.pk})
+
+
+@login_required
+@user_passes_test(is_admin)
+def achievement_icon_upload(request):
+    """آپلود SVG آیکون برای یک سطح دستاورد"""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    defn = get_object_or_404(AchievementDefinition, pk=request.POST.get('id'))
+    f = request.FILES.get('icon_svg')
+    if not f:
+        return JsonResponse({'ok': False, 'error': 'فایلی ارسال نشد'})
+    if f.size > 2 * 1024 * 1024:
+        return JsonResponse({'ok': False, 'error': 'حداکثر ۲ مگابایت'})
+    allowed = ('image/svg+xml', 'image/png', 'image/webp', 'image/jpeg')
+    if f.content_type not in allowed and not f.name.lower().endswith('.svg'):
+        return JsonResponse({'ok': False, 'error': 'فقط SVG / PNG / WebP'})
+    if defn.icon_svg:
+        defn.icon_svg.delete(save=False)
+    defn.icon_svg.save(f.name, f, save=True)
+    return JsonResponse({'ok': True, 'url': defn.icon_svg.url})

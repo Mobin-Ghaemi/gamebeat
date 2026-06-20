@@ -252,11 +252,69 @@ def import_steam_games_to_catalog(steam64, max_games=200):
     return created
 
 
+def _localize_badge_image(url):
+    """عکس نشان را در media سایت دانلود می‌کند تا محلی شود (دور زدنِ adblock/CSP).
+    URL محلی برمی‌گرداند؛ در صورت خطا همان URL خارجی."""
+    if not url:
+        return ''
+    try:
+        import hashlib
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+        h = hashlib.md5(url.encode()).hexdigest()[:18]
+        path = f'steam_badges/{h}.png'
+        if not default_storage.exists(path):
+            ir = requests.get(url, timeout=12, headers={'User-Agent': 'Mozilla/5.0'})
+            if ir.status_code != 200 or not ir.content:
+                return url
+            default_storage.save(path, ContentFile(ir.content))
+        return default_storage.url(path)
+    except Exception:
+        return url
+
+
 def fetch_steam_badges(steam64):
-    """نشان‌های استیم کاربر را برمی‌گرداند، هر نشان به بازیِ خودش (appid) وصل.
+    """نشان‌های استیم با عکس‌های واقعی (اسکرپ صفحه‌ی badges) + fallback به API.
+    عکس‌ها در media سایت دانلود می‌شوند تا محلی و قابل‌نمایش باشند.
     خروجی: {'level': int, 'badges': [{appid, level, xp, game_name, cover}]}"""
+    import html as _html
     empty = {'level': 0, 'badges': []}
-    if not STEAM_API_KEY or not steam64:
+    if not steam64:
+        return empty
+
+    # ── ۱) اسکرپ صفحه‌ی badges استیم — برای عکس و نام واقعیِ هر نشان ──
+    try:
+        r = requests.get(
+            f'https://steamcommunity.com/profiles/{steam64}/badges/?l=english',
+            timeout=25, headers={'User-Agent': 'Mozilla/5.0'},
+        )
+        if r.status_code == 200 and 'badge_row_inner' in r.text:
+            page = r.text
+            lvl_m = re.search(r'friendPlayerLevelNum">(\d+)', page) or re.search(r'Steam Level: (\d+)', page)
+            steam_level = int(lvl_m.group(1)) if lvl_m else 0
+            out = []
+            for blk in page.split('badge_row_inner')[1:]:
+                title_m = re.search(r'badge_title">\s*([^<]+?)\s*(?:<span|</div)', blk)
+                img_m = re.search(r'data-delayed-image="([^"]+)"', blk)
+                if not title_m or not img_m:
+                    continue
+                lvl = re.search(r'Level (\d+)', blk)
+                xp = re.search(r'([\d,]+) XP', blk)
+                appid = re.search(r'/gamecards/(\d+)', blk)
+                out.append({
+                    'appid': int(appid.group(1)) if appid else None,
+                    'game_name': _html.unescape(title_m.group(1).strip()),
+                    'cover': _localize_badge_image(img_m.group(1)),
+                    'level': int(lvl.group(1)) if lvl else 0,
+                    'xp': int(xp.group(1).replace(',', '')) if xp else 0,
+                })
+            if out:
+                return {'level': steam_level, 'badges': out}
+    except Exception:
+        pass
+
+    # ── ۲) fallback: GetBadges API (بدون عکس) ──
+    if not STEAM_API_KEY:
         return empty
     for _ in range(3):
         try:
@@ -269,10 +327,8 @@ def fetch_steam_badges(steam64):
             out = []
             for b in d.get('badges', []):
                 appid = b.get('appid')
-                item = {
-                    'appid': appid, 'level': b.get('level', 0), 'xp': b.get('xp', 0),
-                    'game_name': '', 'cover': '',
-                }
+                item = {'appid': appid, 'level': b.get('level', 0), 'xp': b.get('xp', 0),
+                        'game_name': '', 'cover': ''}
                 if appid:
                     g = Game.objects.filter(steam_appid=appid).first()
                     item['game_name'] = g.name if g else f'AppID {appid}'
@@ -285,6 +341,95 @@ def fetch_steam_badges(steam64):
         except Exception:
             time.sleep(1.5)
     return empty
+
+
+def fetch_steam_achievements(steam64, owned_games=None, max_games=120):
+    """دستاوردهای داخل بازیِ کاربر را برمی‌گرداند (per-game).
+    خروجی: [{appid, game_name, cover, total, unlocked, names:[...]}]"""
+    if not STEAM_API_KEY or not steam64:
+        return []
+    if owned_games is None:
+        owned_games = get_steam_owned_games(steam64)
+    played = sorted([g for g in owned_games if g['playtime_hours'] > 0],
+                    key=lambda g: g['playtime_hours'], reverse=True)[:max_games]
+    from dashboard.models import Game
+    out = []
+    for g in played:
+        appid = g['appid']
+        data = None
+        for _ in range(2):  # retry برای خطای SSL موقتی
+            try:
+                r = requests.get(
+                    'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/',
+                    params={'key': STEAM_API_KEY, 'steamid': steam64, 'appid': appid, 'l': 'english'},
+                    timeout=20,
+                )
+                data = r.json().get('playerstats', {})
+                break
+            except Exception:
+                time.sleep(1)
+        if not data or not data.get('success'):
+            continue
+        achs = data.get('achievements', [])
+        unlocked = [a for a in achs if a.get('achieved') == 1]
+        if not unlocked:
+            continue
+        gobj = Game.objects.filter(steam_appid=appid).first()
+        out.append({
+            'appid': appid,
+            'game_name': data.get('gameName') or g['name'],
+            'cover': (gobj.cover.url if (gobj and gobj.cover)
+                      else f'https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg'),
+            'total': len(achs),
+            'unlocked': len(unlocked),
+            'items': [{'name': a.get('name') or a.get('apiname'),
+                       'desc': (a.get('description') or '').strip()} for a in unlocked][:40],
+        })
+    return out
+
+
+def fetch_cs2_medals(steam64):
+    """مدال‌ها و سکه‌های CS2 را از Steam Inventory کاربر می‌خواند.
+    خروجی: list of {name, icon_url, desc, date_issued}"""
+    STEAM_CDN = 'https://community.cloudflare.steamstatic.com/economy/image/'
+    try:
+        r = requests.get(
+            f'https://steamcommunity.com/inventory/{steam64}/730/2',
+            params={'l': 'english', 'count': 500},
+            headers={'User-Agent': 'Mozilla/5.0'},
+            timeout=20,
+        )
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        if not data.get('success'):
+            return []
+        descriptions = {
+            (d['classid'], d['instanceid']): d
+            for d in data.get('descriptions', [])
+        }
+        seen, out = set(), []
+        for a in data.get('assets', []):
+            key = (a['classid'], a['instanceid'])
+            if key in seen:
+                continue
+            seen.add(key)
+            d = descriptions.get(key, {})
+            tags = {t['category']: t['localized_tag_name'] for t in d.get('tags', [])}
+            if tags.get('Type') != 'Collectible':
+                continue
+            raw_descs = [x.get('value', '').strip() for x in d.get('descriptions', []) if x.get('value', '').strip()]
+            main_desc = raw_descs[0] if raw_descs else ''
+            date_issued = next((x for x in raw_descs if x.startswith('Date of Issue')), '')
+            out.append({
+                'name': d.get('market_name') or d.get('name', ''),
+                'icon_url': STEAM_CDN + (d.get('icon_url_large') or d.get('icon_url', '')),
+                'desc': main_desc,
+                'date_issued': date_issued,
+            })
+        return out
+    except Exception:
+        return []
 
 
 def import_and_enrich_steam(steam64, user_id=None):
@@ -306,11 +451,25 @@ def import_and_enrich_steam(steam64, user_id=None):
             try:
                 from .models import GamingAccount
                 bdata = fetch_steam_badges(steam64)
+                badges = bdata.get('badges', [])
+                # توضیح فارسیِ نشان‌ها با AI (مَچ انعطاف‌پذیر)
+                try:
+                    from .ai_service import ai_badge_descriptions
+                    descs = ai_badge_descriptions([b['game_name'] for b in badges])
+                    if descs:
+                        norm = lambda s: re.sub(r'[^a-z0-9]', '', (s or '').lower())
+                        dn = {norm(k): v for k, v in descs.items()}
+                        for b in badges:
+                            b['desc_fa'] = descs.get(b['game_name']) or dn.get(norm(b['game_name']), '')
+                except Exception:
+                    pass
                 ga = GamingAccount.objects.filter(user_id=user_id, platform='steam').first()
                 if ga:
                     extra = dict(ga.extra_data or {})
                     extra['steam_level'] = bdata.get('level', 0)
-                    extra['badges'] = bdata.get('badges', [])
+                    extra['badges'] = badges
+                    extra['achievements'] = fetch_steam_achievements(steam64)
+                    extra['cs2_medals'] = fetch_cs2_medals(steam64)
                     ga.extra_data = extra
                     ga.save(update_fields=['extra_data'])
             except Exception:

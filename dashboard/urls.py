@@ -57,4 +57,8 @@ urlpatterns = [
     path('premium/assign/', views.premium_assign, name='premium_assign'),
     path('premium/<int:sub_id>/revoke/', views.premium_revoke, name='premium_revoke'),
     path('premium/adjust-days/', views.premium_adjust_days, name='premium_adjust_days'),
+    # دستاوردها
+    path('achievements/', views.achievements_list, name='achievements'),
+    path('achievements/save/', views.achievement_definition_save, name='achievement_save'),
+    path('achievements/icon-upload/', views.achievement_icon_upload, name='achievement_icon_upload'),
 ]

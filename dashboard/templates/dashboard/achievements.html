@@ -1,0 +1,410 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}دستاوردها | داشبورد{% endblock %}
+{% block page_title %}دستاوردها{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══ گروه دستاورد ═══ */
+.ach-group {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+.ach-group-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px; cursor: pointer;
+    user-select: none; transition: background .15s;
+}
+.ach-group-header:hover { background: rgba(139,92,246,.06); }
+.ach-group-icon-wrap {
+    width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(139,92,246,.15);
+    display: flex; align-items: center; justify-content: center;
+}
+.ach-group-icon-wrap svg { width: 22px; height: 22px; fill: #a78bfa; }
+.ach-group-icon-wrap img { width: 28px; height: 28px; object-fit: contain; }
+.ach-group-info { flex: 1; min-width: 0; }
+.ach-group-name { font-size: .95rem; font-weight: 800; color: #fff; }
+.ach-group-code { font-size: .72rem; color: var(--text-muted); margin-top: 2px; font-family: monospace; }
+.ach-group-tags { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.tag { font-size: .72rem; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+.tag-lvl { background: rgba(139,92,246,.15); color: #a78bfa; }
+.tag-today { background: rgba(34,197,94,.12); color: #4ade80; }
+.ach-chevron { color: var(--text-muted); width: 18px; height: 18px; fill: currentColor; transition: transform .2s; flex-shrink: 0; }
+.ach-group.open .ach-chevron { transform: rotate(-90deg); }
+
+/* ═══ بدنه گروه ═══ */
+.ach-group-body { display: none; border-top: 1px solid var(--border); }
+.ach-group.open .ach-group-body { display: block; }
+
+/* ═══ سطر سطح ═══ */
+.lvl-row {
+    display: grid;
+    grid-template-columns: 54px 1fr 1.2fr 80px 90px 56px auto;
+    gap: 10px; align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(53,53,74,.5);
+    transition: background .12s;
+}
+.lvl-row:hover { background: rgba(139,92,246,.04); }
+.lvl-row:last-child { border-bottom: none; }
+
+.lvl-icon-cell {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.lvl-icon-preview {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(139,92,246,.12);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: 1px dashed rgba(139,92,246,.3);
+    transition: all .15s; position: relative; overflow: hidden;
+}
+.lvl-icon-preview:hover { border-color: #a78bfa; background: rgba(139,92,246,.22); }
+.lvl-icon-preview svg { width: 18px; height: 18px; fill: #a78bfa; }
+.lvl-icon-preview img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+.lvl-icon-upload-hint { font-size: .6rem; color: var(--text-muted); text-align: center; line-height: 1.2; }
+
+.lvl-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    font-size: .78rem; font-weight: 900;
+    background: rgba(139,92,246,.2); color: #c4b5fd;
+    position: absolute; top: -6px; right: -6px;
+    border: 2px solid var(--bg-card);
+}
+
+.lvl-input {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text-main);
+    padding: 7px 10px; font-size: .83rem; width: 100%;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: border-color .15s;
+}
+.lvl-input:focus { outline: none; border-color: var(--purple); }
+.lvl-input-sm { padding: 7px 8px; text-align: center; }
+
+.lvl-active-wrap {
+    display: flex; align-items: center; justify-content: center;
+}
+.lvl-toggle {
+    width: 36px; height: 20px; border-radius: 10px; border: none;
+    cursor: pointer; position: relative; transition: background .2s;
+    background: var(--border); flex-shrink: 0;
+}
+.lvl-toggle.on { background: #22c55e; }
+.lvl-toggle::after {
+    content: ''; position: absolute;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; top: 3px; right: 3px; transition: transform .2s;
+}
+.lvl-toggle.on::after { transform: translateX(-16px); }
+
+.lvl-actions { display: flex; gap: 6px; align-items: center; }
+.btn-save-l {
+    width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer;
+    background: rgba(34,197,94,.12); color: #4ade80;
+    display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.btn-save-l:hover { background: rgba(34,197,94,.25); }
+.btn-del-l {
+    width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer;
+    background: rgba(239,68,68,.1); color: #f87171;
+    display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.btn-del-l:hover { background: rgba(239,68,68,.22); }
+
+/* ═══ ردیف افزودن سطح ═══ */
+.add-lvl-row {
+    display: grid;
+    grid-template-columns: 54px 1fr 1.2fr 80px 90px 56px auto;
+    gap: 10px; align-items: center;
+    padding: 12px 20px; background: rgba(34,197,94,.03);
+}
+.add-lvl-num {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(34,197,94,.1); color: #4ade80;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .82rem; font-weight: 900; border: 1px dashed rgba(34,197,94,.3);
+}
+
+/* ═══ ردیف هدر ستون‌ها ═══ */
+.lvl-col-head {
+    display: grid;
+    grid-template-columns: 54px 1fr 1.2fr 80px 90px 56px auto;
+    gap: 10px; padding: 8px 20px 6px;
+    font-size: .68rem; color: var(--text-muted); font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ═══ کارت جدید ═══ */
+.new-ach-card {
+    border: 1px dashed rgba(139,92,246,.35); border-radius: 16px;
+    padding: 20px 22px; background: rgba(139,92,246,.03); margin-top: 6px;
+}
+.new-ach-title { font-size: .9rem; font-weight: 800; color: #a78bfa; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px; }
+.new-ach-grid {
+    display: grid; grid-template-columns: 130px 1fr 1.2fr 80px 90px; gap: 10px;
+}
+.new-ach-grid label { font-size: .72rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+
+/* ═══ ذخیره شد ═══ */
+@keyframes saved-flash { 0%,100%{border-color:var(--border)} 40%{border-color:#22c55e} }
+.lvl-row.saved { animation: saved-flash .8s ease; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">
+            <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg>
+            دستاوردها
+        </div>
+        <div class="page-subtitle">هر دستاورد چند سطح دارد — هر سطح عدد هدف و جایزه مستقل دارد</div>
+    </div>
+</div>
+
+<!-- ─── گروه‌های دستاورد ─── -->
+{% regroup definitions by ach_type as type_groups %}
+
+{% for group in type_groups %}
+{% with first=group.list.0 %}
+<div class="ach-group" id="grp-{{ group.grouper }}">
+
+    <div class="ach-group-header" onclick="toggleGrp('{{ group.grouper }}')">
+        <div class="ach-group-icon-wrap">
+            {% if first.icon_svg %}
+                <img src="{{ first.icon_svg.url }}" alt="">
+            {% else %}
+                <svg class="bi {{ first.icon }}" aria-hidden="true"><use href="#{{ first.icon }}"></use></svg>
+            {% endif %}
+        </div>
+        <div class="ach-group-info">
+            <div class="ach-group-name">{{ first.title }}</div>
+            <div class="ach-group-code">{{ group.grouper }}</div>
+        </div>
+        <div class="ach-group-tags">
+            <span class="tag tag-lvl">{{ group.list|length }} سطح</span>
+        </div>
+        <svg class="ach-chevron" viewBox="0 0 16 16"><path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
+    </div>
+
+    <div class="ach-group-body">
+        <!-- هدر ستون‌ها -->
+        <div class="lvl-col-head">
+            <span>آیکون</span>
+            <span>عنوان</span>
+            <span>توضیح</span>
+            <span>هدف 🎯</span>
+            <span>جایزه ⚡</span>
+            <span>فعال</span>
+            <span>عملیات</span>
+        </div>
+
+        <!-- سطح‌ها -->
+        {% for d in group.list %}
+        <div class="lvl-row" data-id="{{ d.pk }}">
+
+            <!-- آیکون + آپلود -->
+            <div class="lvl-icon-cell">
+                <div class="lvl-icon-preview" onclick="document.getElementById('icon-file-{{ d.pk }}').click()" title="کلیک برای تغییر آیکون">
+                    {% if d.icon_svg %}
+                        <img src="{{ d.icon_svg.url }}" id="icon-img-{{ d.pk }}" alt="">
+                    {% else %}
+                        <svg class="bi {{ d.icon }}" id="icon-svg-{{ d.pk }}" aria-hidden="true" style="width:18px;height:18px;fill:#a78bfa;">
+                            <use href="#{{ d.icon }}"></use>
+                        </svg>
+                    {% endif %}
+                    <span class="lvl-badge">{{ d.level }}</span>
+                </div>
+                <span class="lvl-icon-upload-hint">SVG/PNG</span>
+                <input type="file" id="icon-file-{{ d.pk }}" accept=".svg,.png,.webp" style="display:none"
+                       onchange="uploadIcon({{ d.pk }}, this)">
+            </div>
+
+            <input type="text"   class="lvl-input lv-title" value="{{ d.title }}" placeholder="عنوان *">
+            <input type="text"   class="lvl-input lv-desc"  value="{{ d.description }}" placeholder="توضیح">
+            <input type="number" class="lvl-input lvl-input-sm lv-target"  value="{{ d.target }}"  min="0" placeholder="۰" title="هدف عددی">
+            <input type="number" class="lvl-input lvl-input-sm lv-reward"  value="{{ d.reward_zarban }}" min="0" title="جایزه ضربان">
+
+            <div class="lvl-active-wrap">
+                <button class="lvl-toggle {% if d.is_active %}on{% endif %} lv-active-btn"
+                        onclick="this.classList.toggle('on')" type="button"></button>
+            </div>
+
+            <div class="lvl-actions">
+                <button class="btn-save-l" onclick="saveLvl({{ d.pk }}, '{{ group.grouper }}', {{ d.level }}, this)" title="ذخیره">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>
+                </button>
+                <button class="btn-del-l" onclick="delLvl({{ d.pk }}, this)" title="حذف">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- ردیف افزودن سطح جدید -->
+        <div class="add-lvl-row" id="addrow-{{ group.grouper }}">
+            <div class="add-lvl-num">{{ group.list|length|add:1 }}</div>
+            <input type="text"   class="lvl-input lv-title"  placeholder="عنوان سطح جدید *">
+            <input type="text"   class="lvl-input lv-desc"   placeholder="توضیح">
+            <input type="number" class="lvl-input lvl-input-sm lv-target" value="0" min="0">
+            <input type="number" class="lvl-input lvl-input-sm lv-reward" value="0" min="0">
+            <span></span>
+            <button class="btn-purple" style="padding:7px 14px;font-size:.82rem;white-space:nowrap;"
+                    onclick="addLvl('{{ group.grouper }}', {{ group.list|length|add:1 }}, '{{ first.icon }}', this)">
+                + سطح
+            </button>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% empty %}
+<div class="dash-card" style="text-align:center;padding:40px;color:var(--text-muted);">
+    <svg class="bi bi-trophy" aria-hidden="true" style="font-size:2.5rem;opacity:.25;display:block;margin:0 auto 12px;"><use href="#bi-trophy"></use></svg>
+    هنوز هیچ دستاوردی تعریف نشده.
+</div>
+{% endfor %}
+
+<!-- ─── دستاورد جدید ─── -->
+<div class="new-ach-card">
+    <div class="new-ach-title">
+        <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg>
+        دستاورد جدید (سطح ۱)
+    </div>
+    <div class="new-ach-grid">
+        <div>
+            <label>کد یکتا *</label>
+            <input type="text" class="lvl-input" id="ng-type" placeholder="مثلاً: social">
+        </div>
+        <div>
+            <label>عنوان *</label>
+            <input type="text" class="lvl-input" id="ng-title" placeholder="گیمر اجتماعی — سطح ۱">
+        </div>
+        <div>
+            <label>توضیح</label>
+            <input type="text" class="lvl-input" id="ng-desc" placeholder="توضیح کوتاه">
+        </div>
+        <div>
+            <label>هدف 🎯</label>
+            <input type="number" class="lvl-input lvl-input-sm" id="ng-target" value="0" min="0">
+        </div>
+        <div>
+            <label>جایزه ⚡</label>
+            <input type="number" class="lvl-input lvl-input-sm" id="ng-reward" value="0" min="0">
+        </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:12px;">
+        <div>
+            <label style="font-size:.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">آیکون Bootstrap</label>
+            <input type="text" class="lvl-input" id="ng-icon" value="bi-trophy" placeholder="bi-trophy" style="width:160px;">
+        </div>
+        <div style="margin-top:18px;">
+            <a href="https://icons.getbootstrap.com/" target="_blank" style="color:#a78bfa;font-size:.78rem;">
+                لیست آیکون‌ها ↗
+            </a>
+        </div>
+        <button class="btn-purple" style="margin-top:18px;" onclick="addNewGroup()">
+            ساخت دستاورد
+        </button>
+    </div>
+</div>
+
+<script>
+const ACH_URL    = "{% url 'dashboard:achievement_save' %}";
+const ICON_URL   = "{% url 'dashboard:achievement_icon_upload' %}";
+const ACH_CSRF   = "{{ csrf_token }}";
+
+function _post(data) {
+    return fetch(ACH_URL, {
+        method: 'POST', headers: { 'X-CSRFToken': ACH_CSRF },
+        body: new URLSearchParams(data),
+    }).then(r => r.json());
+}
+
+function toggleGrp(type) {
+    document.getElementById('grp-' + type).classList.toggle('open');
+}
+
+function _collectRow(row) {
+    return {
+        title:         row.querySelector('.lv-title').value.trim(),
+        description:   row.querySelector('.lv-desc') ? row.querySelector('.lv-desc').value.trim() : '',
+        target:        row.querySelector('.lv-target').value || '0',
+        reward_zarban: row.querySelector('.lv-reward').value || '0',
+        is_active:     (row.querySelector('.lv-active-btn') || {classList:{contains:()=>true}}).classList.contains('on') ? 'true' : 'false',
+    };
+}
+
+function saveLvl(id, achType, level, btn) {
+    const row  = btn.closest('.lvl-row');
+    const data = { ..._collectRow(row), action: 'edit', id, ach_type: achType, level };
+    if (!data.title) { alert('عنوان الزامیه'); return; }
+    _post(data).then(d => {
+        if (d.ok) row.classList.add('saved');
+        else alert(d.error || 'خطا');
+        setTimeout(() => row.classList.remove('saved'), 900);
+    });
+}
+
+function delLvl(id, btn) {
+    if (!confirm('این سطح حذف شود؟')) return;
+    _post({ action: 'delete', id }).then(d => {
+        if (d.ok) location.reload();
+        else alert(d.error || 'خطا');
+    });
+}
+
+function addLvl(achType, nextLevel, defaultIcon, btn) {
+    const row  = btn.closest('.add-lvl-row');
+    const data = {
+        ..._collectRow(row),
+        action: 'add', ach_type: achType, level: nextLevel,
+        icon: defaultIcon, is_active: 'true',
+    };
+    if (!data.title) { alert('عنوان الزامیه'); return; }
+    _post(data).then(d => {
+        if (d.ok) location.reload();
+        else alert(d.error || 'خطا: ' + (d.error || ''));
+    });
+}
+
+function addNewGroup() {
+    const data = {
+        action: 'add', level: 1,
+        ach_type:      document.getElementById('ng-type').value.trim(),
+        title:         document.getElementById('ng-title').value.trim(),
+        description:   document.getElementById('ng-desc').value.trim(),
+        target:        document.getElementById('ng-target').value || '0',
+        reward_zarban: document.getElementById('ng-reward').value || '0',
+        icon:          document.getElementById('ng-icon').value.trim() || 'bi-trophy',
+        is_active: 'true',
+    };
+    if (!data.ach_type || !data.title) { alert('کد یکتا و عنوان الزامی‌اند'); return; }
+    _post(data).then(d => {
+        if (d.ok) location.reload();
+        else alert(d.error || 'خطا');
+    });
+}
+
+function uploadIcon(id, input) {
+    if (!input.files[0]) return;
+    const fd = new FormData();
+    fd.append('id', id);
+    fd.append('icon_svg', input.files[0]);
+    fetch(ICON_URL, {
+        method: 'POST', headers: { 'X-CSRFToken': ACH_CSRF }, body: fd,
+    }).then(r => r.json()).then(d => {
+        if (d.ok) {
+            // پیش‌نمایش آیکون جدید
+            const preview = input.closest('.lvl-icon-cell').querySelector('.lvl-icon-preview');
+            preview.innerHTML = `<img src="${d.url}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;"><span class="lvl-badge">${preview.querySelector('.lvl-badge') ? preview.querySelector('.lvl-badge').textContent : ''}</span>`;
+        } else alert(d.error || 'خطا در آپلود');
+    });
+}
+</script>
+{% endblock %}

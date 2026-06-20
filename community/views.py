@@ -96,17 +96,43 @@ def track_mission(user, event, amount=1):
 
 
 def _unlock_achievement(user, ach_type, title, desc='', icon='bi-trophy'):
-    """باز کردن دستاورد — اگه قبلاً وجود داشت، نادیده می‌گیره."""
-    if Achievement.objects.filter(user=user, achievement_type=ach_type).exists():
-        return False
+    """باز کردن دستاورد — سطح بعدی که کاربر هنوز نداره باز می‌کند.
+    اطلاعات و جایزه از AchievementDefinition خوانده می‌شه."""
+    from .models import AchievementDefinition
+    earned_levels = set(
+        Achievement.objects.filter(user=user, achievement_type=ach_type)
+        .values_list('level', flat=True)
+    )
+    # پیدا کردن سطح بعدی
+    defns = AchievementDefinition.objects.filter(
+        ach_type=ach_type, is_active=True
+    ).order_by('level')
+    next_defn = next((d for d in defns if d.level not in earned_levels), None)
+
+    if defns.exists():
+        if next_defn is None:
+            return False  # همه سطح‌ها کسب شدن
+        level = next_defn.level
+        title = next_defn.title
+        desc  = next_defn.description
+        icon  = next_defn.icon
+        if next_defn.reward_zarban:
+            _award_zarban(user, next_defn.reward_zarban, f'دستاورد: {next_defn.title} — سطح {level}')
+    else:
+        # هیچ definition‌ای نیست — سطح ۱ ساده
+        level = 1
+        if level in earned_levels:
+            return False
+
     Achievement.objects.create(
         user=user, achievement_type=ach_type,
-        title=title, description=desc, icon=icon,
+        level=level, title=title, description=desc, icon=icon,
     )
+    level_txt = f' (سطح {level})' if level > 1 else ''
     Notification.objects.create(
         recipient=user, sender=user,
         notif_type='zarban',
-        custom_text=f'🏆 دستاورد جدید باز کردی: {title}',
+        custom_text=f'🏆 دستاورد جدید باز کردی: {title}{level_txt}',
     )
     return True
 
@@ -375,16 +401,22 @@ def gamer_profile(request, username):
     _annotate_reactions(posts, request.user)
     liked_post_ids = set(PostLike.objects.filter(user=request.user).values_list('post_id', flat=True)) if request.user.is_authenticated else set()
     achievements = Achievement.objects.filter(user=profile_user)
-    followers = Follow.objects.filter(following=profile_user).select_related('follower', 'follower__gamer_profile')[:12]
-    following = Follow.objects.filter(follower=profile_user).select_related('following', 'following__gamer_profile')[:12]
+    _followers_qs = Follow.objects.filter(following=profile_user).select_related('follower', 'follower__gamer_profile').order_by('-created_at')
+    _following_qs = Follow.objects.filter(follower=profile_user).select_related('following', 'following__gamer_profile').order_by('-created_at')
+    followers_total = _followers_qs.count()
+    following_total = _following_qs.count()
+    followers = _followers_qs[:20]
+    following = _following_qs[:20]
     gaming_accounts = GamingAccount.objects.filter(user=profile_user)
 
-    # نشان‌های استیم (برای تب مدال‌ها)
-    steam_badges, steam_level = [], 0
+    # نشان‌ها و دستاوردهای استیم (برای تب مدال‌ها)
+    steam_badges, steam_level, steam_achievements, cs2_medals = [], 0, [], []
     _steam_acc = gaming_accounts.filter(platform='steam').first()
     if _steam_acc and _steam_acc.extra_data:
         steam_badges = _steam_acc.extra_data.get('badges', []) or []
         steam_level = _steam_acc.extra_data.get('steam_level', 0)
+        steam_achievements = _steam_acc.extra_data.get('achievements', []) or []
+        cs2_medals = _steam_acc.extra_data.get('cs2_medals', []) or []
 
     bl_cols = [
         ('want',      'می‌خوام بازی کنم', '#60a5fa', '🎯'),
@@ -444,10 +476,14 @@ def gamer_profile(request, username):
         'liked_post_ids': liked_post_ids,
         'achievements': achievements,
         'followers': followers,
+        'followers_total': followers_total,
         'following': following,
+        'following_total': following_total,
         'gaming_accounts': gaming_accounts,
         'steam_badges': steam_badges,
         'steam_level': steam_level,
+        'steam_achievements': steam_achievements,
+        'cs2_medals': cs2_medals,
         'bl_cols': bl_cols,
         'showcase_favorites': showcase_favorites,
         'showcase_playing': showcase_playing,
@@ -464,6 +500,47 @@ def gamer_profile(request, username):
         'zarban_balance': zarban_balance,
     }
     return render(request, 'community/profile.html', context)
+
+
+def profile_follow_list(request, username):
+    """AJAX — صفحه‌بندی فالوورها / فالوینگ‌ها"""
+    profile_user = get_object_or_404(User, username=username)
+    list_type = request.GET.get('type', 'followers')
+    try:
+        page = max(1, int(request.GET.get('page', 1)))
+    except (ValueError, TypeError):
+        page = 1
+    PER_PAGE = 20
+    offset = (page - 1) * PER_PAGE
+
+    if list_type == 'following':
+        qs = Follow.objects.filter(follower=profile_user).select_related('following', 'following__gamer_profile').order_by('-created_at')
+        total = qs.count()
+        rows = []
+        for f in qs[offset:offset + PER_PAGE]:
+            u = f.following
+            p = u.gamer_profile
+            rows.append({
+                'username': u.username,
+                'display_name': p.display_name or u.username,
+                'avatar_url': p.avatar.url if p.avatar else None,
+                'platform': p.get_platform_display(),
+            })
+    else:
+        qs = Follow.objects.filter(following=profile_user).select_related('follower', 'follower__gamer_profile').order_by('-created_at')
+        total = qs.count()
+        rows = []
+        for f in qs[offset:offset + PER_PAGE]:
+            u = f.follower
+            p = u.gamer_profile
+            rows.append({
+                'username': u.username,
+                'display_name': p.display_name or u.username,
+                'avatar_url': p.avatar.url if p.avatar else None,
+                'platform': p.get_platform_display(),
+            })
+
+    return JsonResponse({'users': rows, 'total': total, 'page': page, 'has_more': offset + PER_PAGE < total})
 
 
 @login_required
@@ -2487,12 +2564,21 @@ def claim_mission(request, mission_id):
 def backlog_add(request):
     name      = request.POST.get('game_name', '').strip()
     status    = request.POST.get('status', 'want')
-    plat      = request.POST.get('platform', '')
-    cover_url = request.POST.get('cover_url', '').strip()
+    plat      = request.POST.get('platform', '') or 'pc'
     if not name:
         return JsonResponse({'error': 'no name'}, status=400)
+
+    # فقط بازی‌های ثبت‌شده در کاتالوگ سایت (Game = راس). افزودن دلخواه ممنوع.
+    from dashboard.models import Game as DashboardGame
+    game = DashboardGame.objects.filter(name__iexact=name, is_active=True).first()
+    if not game:
+        return JsonResponse({'ok': False, 'error': 'این بازی در سایت ثبت نشده — فقط از بین بازی‌های موجود انتخاب کن.'}, status=400)
+
+    # کاور از کاتالوگ گرفته می‌شود، نه از کلاینت
+    cover_url = game.cover.url if game.cover else ''
+
     obj, created = GameBacklog.objects.get_or_create(
-        user=request.user, game_name=name,
+        user=request.user, game_name=game.name,
         defaults={'status': status, 'platform': plat, 'cover_url': cover_url}
     )
     if not created:
@@ -2501,8 +2587,7 @@ def backlog_add(request):
         if cover_url:
             obj.cover_url = cover_url
         obj.save()
-    # Log activity
-    ActivityLog.objects.create(user=request.user, activity_type='added_to_list', game_name=name)
+    ActivityLog.objects.create(user=request.user, activity_type='added_to_list', game_name=game.name)
     return JsonResponse({'ok': True, 'id': obj.id, 'status': obj.status, 'created': created})
 
 

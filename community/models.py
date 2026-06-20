@@ -24,22 +24,143 @@ GAMING_STYLE_CHOICES = [
 ]
 
 CITY_CHOICES = [
-    ('tehran', 'تهران'),
-    ('mashhad', 'مشهد'),
-    ('isfahan', 'اصفهان'),
-    ('shiraz', 'شیراز'),
-    ('tabriz', 'تبریز'),
-    ('ahvaz', 'اهواز'),
-    ('karaj', 'کرج'),
+    # تهران
+    ('tehran', 'تهران'), ('rey', 'ری'), ('shemiranat', 'شمیرانات'),
+    ('eslamshahr', 'اسلامشهر'), ('varamin', 'ورامین'), ('robatkarim', 'رباط‌کریم'),
+    ('pakdasht', 'پاکدشت'), ('malard', 'ملارد'),
+    # البرز
+    ('karaj', 'کرج'), ('fardis', 'فردیس'), ('hashtgerd', 'هشتگرد'),
+    ('nazar_abad', 'نظرآباد'), ('mahdasht', 'ماهدشت'),
+    # اصفهان
+    ('isfahan', 'اصفهان'), ('kashan', 'کاشان'), ('najafabad', 'نجف‌آباد'),
+    ('shahreza', 'شهرضا'), ('khomeyni_shahr', 'خمینی‌شهر'), ('mobarakeh', 'مبارکه'),
+    ('golpayegan', 'گلپایگان'), ('ardestan', 'اردستان'), ('natanz', 'نطنز'),
+    # فارس
+    ('shiraz', 'شیراز'), ('marvdasht', 'مرودشت'), ('jahrom', 'جهرم'),
+    ('fasa', 'فسا'), ('darab', 'داراب'), ('larestan', 'لارستان'),
+    ('abadeh', 'آباده'), ('neyriz', 'نی‌ریز'),
+    # خراسان رضوی
+    ('mashhad', 'مشهد'), ('nishapur', 'نیشابور'), ('sabzevar', 'سبزوار'),
+    ('torbat_heydarieh', 'تربت حیدریه'), ('kashmar', 'کاشمر'), ('gonabad', 'گناباد'),
+    ('torbat_jam', 'تربت جام'), ('quchan', 'قوچان'), ('neyshabur', 'نیشابور'),
+    # آذربایجان شرقی
+    ('tabriz', 'تبریز'), ('maragheh', 'مراغه'), ('marand', 'مرند'),
+    ('shabestar', 'شبستر'), ('bonab', 'بناب'), ('ahar', 'اهر'),
+    ('mianeh', 'میانه'), ('sarab', 'سراب'),
+    # آذربایجان غربی
+    ('urmia', 'ارومیه'), ('khoy', 'خوی'), ('miandoab', 'میاندوآب'),
+    ('maku', 'ماکو'), ('salmas', 'سلماس'), ('naghadeh', 'نقده'),
+    ('piranshahr', 'پیرانشهر'), ('oshnavieh', 'اشنویه'),
+    # خوزستان
+    ('ahvaz', 'اهواز'), ('dezful', 'دزفول'), ('shushtar', 'شوشتر'),
+    ('abadan', 'آبادان'), ('khorramshahr', 'خرمشهر'), ('masjed_soleyman', 'مسجدسلیمان'),
+    ('behbahan', 'بهبهان'), ('andimeshk', 'اندیمشک'), ('shoosh', 'شوش'),
+    ('omidiyeh', 'امیدیه'), ('ramhormoz', 'رامهرمز'),
+    # کرمانشاه
+    ('kermanshah', 'کرمانشاه'), ('harsin', 'هرسین'), ('kangavar', 'کنگاور'),
+    ('islami_abad', 'اسلام‌آباد غرب'), ('javanrud', 'جوانرود'), ('sonqor', 'سنقر'),
+    # گیلان
+    ('rasht', 'رشت'), ('anzali', 'بندرانزلی'), ('lahijan', 'لاهیجان'),
+    ('langrood', 'لنگرود'), ('roodbar', 'رودبار'), ('astara', 'آستارا'),
+    ('fuman', 'فومن'), ('rudsar', 'رودسر'),
+    # مازندران
+    ('sari', 'ساری'), ('babol', 'بابل'), ('amol', 'آمل'),
+    ('qaemshahr', 'قائمشهر'), ('chalous', 'چالوس'), ('nowshahr', 'نوشهر'),
+    ('tonekabon', 'تنکابن'), ('noor', 'نور'), ('behshahr', 'بهشهر'),
+    ('savadkuh', 'سوادکوه'), ('ramsar', 'رامسر'),
+    # قم
     ('qom', 'قم'),
-    ('rasht', 'رشت'),
-    ('kermanshah', 'کرمانشاه'),
-    ('urmia', 'ارومیه'),
-    ('zahedan', 'زاهدان'),
-    ('hamadan', 'همدان'),
-    ('arak', 'اراک'),
-    ('yazd', 'یزد'),
+    # کرمان
+    ('kerman', 'کرمان'), ('jiroft', 'جیرفت'), ('zarand', 'زرند'),
+    ('sirjan', 'سیرجان'), ('rafsanjan', 'رفسنجان'), ('bam', 'بم'),
+    ('shahrbabak', 'شهربابک'),
+    # همدان
+    ('hamadan', 'همدان'), ('malayer', 'ملایر'), ('nahavand', 'نهاوند'),
+    ('asadabad', 'اسدآباد'), ('tuyserkan', 'تویسرکان'),
+    # لرستان
+    ('khorramabad', 'خرم‌آباد'), ('borujerd', 'بروجرد'), ('dorud', 'دورود'),
+    ('azna', 'ازنا'), ('aligudarz', 'الیگودرز'), ('koohdasht', 'کوهدشت'),
+    # قزوین
+    ('qazvin', 'قزوین'), ('takestan', 'تاکستان'), ('abyek', 'آبیک'),
+    # سمنان
+    ('semnan', 'سمنان'), ('shahrood', 'شاهرود'), ('damghan', 'دامغان'),
+    ('garmsar', 'گرمسار'),
+    # گلستان
+    ('gorgan', 'گرگان'), ('gonbad_kavus', 'گنبدکاووس'), ('aliabad', 'علی‌آباد کتول'),
+    ('kordkuy', 'کردکوی'), ('bandar_torkaman', 'بندر ترکمن'),
+    # کردستان
+    ('sanandaj', 'سنندج'), ('saghez', 'سقز'), ('marivan', 'مریوان'),
+    ('baneh', 'بانه'), ('bijar', 'بیجار'), ('qorveh', 'قروه'),
+    # سیستان و بلوچستان
+    ('zahedan', 'زاهدان'), ('zabol', 'زابل'), ('iranshahr', 'ایرانشهر'),
+    ('chabahar', 'چابهار'), ('khash', 'خاش'), ('saravan', 'سراوان'),
+    # هرمزگان
+    ('bandar_abbas', 'بندرعباس'), ('kish', 'کیش'), ('qeshm', 'قشم'),
+    ('minab', 'میناب'), ('bandar_lengeh', 'بندرلنگه'),
+    # یزد
+    ('yazd', 'یزد'), ('meybod', 'میبد'), ('ardakan', 'اردکان'),
+    ('taft', 'تفت'), ('abarkuh', 'ابرکوه'),
+    # اردبیل
+    ('ardabil', 'اردبیل'), ('meshkin_shahr', 'مشکین‌شهر'), ('khalkhal', 'خلخال'),
+    ('parsabad', 'پارس‌آباد'), ('sarein', 'سرعین'),
+    # ایلام
+    ('ilam', 'ایلام'), ('mehran', 'مهران'), ('dehloran', 'دهلران'),
+    ('abdanan', 'آبدانان'),
+    # بوشهر
+    ('bushehr', 'بوشهر'), ('genaveh', 'گناوه'), ('borazjan', 'برازجان'),
+    ('bandar_daylam', 'بندر دیلم'), ('dashti', 'دشتی'),
+    # خراسان شمالی
+    ('bojnurd', 'بجنورد'), ('shirvan', 'شیروان'), ('esfarayen', 'اسفراین'),
+    # خراسان جنوبی
+    ('birjand', 'بیرجند'), ('tabas', 'طبس'), ('ferdows', 'فردوس'),
+    ('qaen', 'قائن'),
+    # چهارمحال و بختیاری
+    ('shahrekord', 'شهرکرد'), ('farsan', 'فارسان'), ('ardal', 'اردل'),
+    # زنجان
+    ('zanjan', 'زنجان'), ('abhar', 'ابهر'), ('khorramdarreh', 'خرمدره'),
+    # کهگیلویه و بویراحمد
+    ('yasuj', 'یاسوج'), ('dehdasht', 'دهدشت'), ('dogonbadan', 'دوگنبدان'),
+    # مرکزی
+    ('arak', 'اراک'), ('saveh', 'ساوه'), ('mahallat', 'محلات'),
+    ('khomein', 'خمین'), ('delijan', 'دلیجان'),
+    # سایر
     ('other', 'سایر'),
+]
+
+# ساختار گروه‌بندی استانی — برای UI
+CITY_BY_PROVINCE = [
+    ('استان تهران', ['tehran','rey','shemiranat','eslamshahr','varamin','robatkarim','pakdasht','malard']),
+    ('استان البرز', ['karaj','fardis','hashtgerd','nazar_abad','mahdasht']),
+    ('استان اصفهان', ['isfahan','kashan','najafabad','shahreza','khomeyni_shahr','mobarakeh','golpayegan','ardestan','natanz']),
+    ('استان فارس', ['shiraz','marvdasht','jahrom','fasa','darab','larestan','abadeh','neyriz']),
+    ('استان خراسان رضوی', ['mashhad','nishapur','sabzevar','torbat_heydarieh','kashmar','gonabad','torbat_jam','quchan']),
+    ('استان آذربایجان شرقی', ['tabriz','maragheh','marand','shabestar','bonab','ahar','mianeh','sarab']),
+    ('استان آذربایجان غربی', ['urmia','khoy','miandoab','maku','salmas','naghadeh','piranshahr','oshnavieh']),
+    ('استان خوزستان', ['ahvaz','dezful','shushtar','abadan','khorramshahr','masjed_soleyman','behbahan','andimeshk','shoosh','omidiyeh','ramhormoz']),
+    ('استان کرمانشاه', ['kermanshah','harsin','kangavar','islami_abad','javanrud','sonqor']),
+    ('استان گیلان', ['rasht','anzali','lahijan','langrood','roodbar','astara','fuman','rudsar']),
+    ('استان مازندران', ['sari','babol','amol','qaemshahr','chalous','nowshahr','tonekabon','noor','behshahr','savadkuh','ramsar']),
+    ('استان قم', ['qom']),
+    ('استان کرمان', ['kerman','jiroft','zarand','sirjan','rafsanjan','bam','shahrbabak']),
+    ('استان همدان', ['hamadan','malayer','nahavand','asadabad','tuyserkan']),
+    ('استان لرستان', ['khorramabad','borujerd','dorud','azna','aligudarz','koohdasht']),
+    ('استان قزوین', ['qazvin','takestan','abyek']),
+    ('استان سمنان', ['semnan','shahrood','damghan','garmsar']),
+    ('استان گلستان', ['gorgan','gonbad_kavus','aliabad','kordkuy','bandar_torkaman']),
+    ('استان کردستان', ['sanandaj','saghez','marivan','baneh','bijar','qorveh']),
+    ('استان سیستان و بلوچستان', ['zahedan','zabol','iranshahr','chabahar','khash','saravan']),
+    ('استان هرمزگان', ['bandar_abbas','kish','qeshm','minab','bandar_lengeh']),
+    ('استان یزد', ['yazd','meybod','ardakan','taft','abarkuh']),
+    ('استان اردبیل', ['ardabil','meshkin_shahr','khalkhal','parsabad','sarein']),
+    ('استان ایلام', ['ilam','mehran','dehloran','abdanan']),
+    ('استان بوشهر', ['bushehr','genaveh','borazjan','bandar_daylam','dashti']),
+    ('استان خراسان شمالی', ['bojnurd','shirvan','esfarayen']),
+    ('استان خراسان جنوبی', ['birjand','tabas','ferdows','qaen']),
+    ('استان چهارمحال و بختیاری', ['shahrekord','farsan','ardal']),
+    ('استان زنجان', ['zanjan','abhar','khorramdarreh']),
+    ('استان کهگیلویه و بویراحمد', ['yasuj','dehdasht','dogonbadan']),
+    ('استان مرکزی', ['arak','saveh','mahallat','khomein','delijan']),
+    ('سایر', ['other']),
 ]
 
 RANK_CHOICES = [
@@ -66,7 +187,7 @@ class GamerProfile(models.Model):
     name_display = models.CharField(max_length=10, choices=NAME_DISPLAY_CHOICES, default='full', verbose_name='نمایش نام در پروفایل')
     avatar = models.ImageField(upload_to='community/avatars/', blank=True, null=True, verbose_name='آواتار')
     banner = models.ImageField(upload_to='community/banners/', blank=True, null=True, verbose_name='بنر پروفایل')
-    city = models.CharField(max_length=20, choices=CITY_CHOICES, blank=True, verbose_name='شهر')
+    city = models.CharField(max_length=50, choices=CITY_CHOICES, blank=True, verbose_name='شهر')
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES, default='pc', verbose_name='پلتفرم اصلی')
     platforms = models.JSONField(default=list, blank=True, verbose_name='پلتفرم‌ها')
     gaming_style = models.CharField(max_length=20, choices=GAMING_STYLE_CHOICES, blank=True, verbose_name='سبک بازی')
@@ -415,6 +536,30 @@ class LFGJoinRequest(models.Model):
         return f'{self.user.username} → {self.post}'
 
 
+class AchievementDefinition(models.Model):
+    """تعریف مرکزی دستاوردها — از ادمین پنل مدیریت می‌شود.
+    هر ach_type می‌تواند چند سطح (level) داشته باشد."""
+    ach_type      = models.CharField(max_length=50, verbose_name='کد یکتا')
+    level         = models.PositiveSmallIntegerField(default=1, verbose_name='سطح')
+    title         = models.CharField(max_length=100, verbose_name='عنوان')
+    description   = models.CharField(max_length=300, blank=True, verbose_name='توضیح')
+    icon          = models.CharField(max_length=60, default='bi-trophy', verbose_name='آیکون Bootstrap')
+    icon_svg      = models.FileField(upload_to='achievements/icons/', blank=True, null=True, verbose_name='آیکون SVG (اختیاری)')
+    target        = models.PositiveIntegerField(default=0, verbose_name='هدف عددی (مثلاً ۱۰ فالوور)')
+    reward_zarban = models.PositiveIntegerField(default=0, verbose_name='جایزه ضربان')
+    is_active     = models.BooleanField(default=True, verbose_name='فعال')
+    order         = models.PositiveSmallIntegerField(default=0, verbose_name='ترتیب نمایش')
+
+    class Meta:
+        verbose_name = 'تعریف دستاورد'
+        verbose_name_plural = 'تعاریف دستاوردها'
+        unique_together = [('ach_type', 'level')]
+        ordering = ['order', 'ach_type', 'level']
+
+    def __str__(self):
+        return f'{self.title} — سطح {self.level} ({self.ach_type})'
+
+
 class Achievement(models.Model):
     ACHIEVEMENT_TYPES = [
         ('first_post', 'اولین پست'),
@@ -427,19 +572,21 @@ class Achievement(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements', verbose_name='کاربر')
-    achievement_type = models.CharField(max_length=20, choices=ACHIEVEMENT_TYPES, verbose_name='نوع دستاورد')
+    achievement_type = models.CharField(max_length=50, choices=ACHIEVEMENT_TYPES, verbose_name='نوع دستاورد')
+    level = models.PositiveSmallIntegerField(default=1, verbose_name='سطح')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.CharField(max_length=200, blank=True, verbose_name='توضیح')
-    icon = models.CharField(max_length=50, default='bi-trophy', verbose_name='آیکون')
+    icon = models.CharField(max_length=60, default='bi-trophy', verbose_name='آیکون')
     earned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'دستاورد'
         verbose_name_plural = 'دستاوردها'
+        unique_together = [('user', 'achievement_type', 'level')]
         ordering = ['-earned_at']
 
     def __str__(self):
-        return f'{self.user.username} - {self.title}'
+        return f'{self.user.username} - {self.title} (سطح {self.level})'
 
 
 class GamingAccount(models.Model):

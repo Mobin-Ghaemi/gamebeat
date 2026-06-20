@@ -120,3 +120,45 @@ def ai_game_info(name):
             time.sleep(1.5)
             continue
     return None
+
+
+def ai_badge_descriptions(names):
+    """برای لیستی از نام نشان‌های استیم، توضیح کوتاهِ فارسی و خفن می‌سازد.
+    خروجی: dict {name: 'توضیح فارسی'} یا {} در صورت خطا."""
+    if not AVALAI_API_KEY or not names:
+        return {}
+    uniq = list(dict.fromkeys([n for n in names if n]))
+    lst = '\n'.join(f'- {n}' for n in uniq)
+    user_prompt = (
+        'این‌ها نام نشان‌های (badge) استیم هستن. برای هر نشان یه توضیح کوتاهِ فارسی بنویس '
+        '(یک جمله) که فقط خودِ نشان رو توضیح بده — نشان چیه، چه رویدادی یا شرطی داره، '
+        'یا چه دستاوردی رو نشون میده. هیچ‌وقت از «کسانی که» یا «افرادی که» یا ساختار '
+        'شخصی استفاده نکن؛ مستقیم نشان رو توصیف کن. لحن خلاصه و واقعی.\n'
+        f'نشان‌ها:\n{lst}\n\n'
+        'فقط JSON معتبر برگردون: کلید = نام دقیقِ نشان (همون انگلیسی)، مقدار = توضیح فارسی.'
+    )
+    payload = {
+        'model': AVALAI_MODEL, 'temperature': 0.5,
+        'messages': [
+            {'role': 'system', 'content': 'تو یه دستیار گیمینگ هستی. فقط JSON معتبر برگردون.'},
+            {'role': 'user', 'content': user_prompt},
+        ],
+    }
+    for _ in range(3):
+        try:
+            r = requests.post(
+                f'{AVALAI_BASE}/chat/completions',
+                headers={'Authorization': f'Bearer {AVALAI_API_KEY}', 'Content-Type': 'application/json'},
+                json=payload, timeout=45,
+            )
+            if r.status_code != 200:
+                time.sleep(1.5); continue
+            content = r.json()['choices'][0]['message']['content']
+            m = re.search(r'\{.*\}', content, re.S)
+            if not m:
+                return {}
+            data = json.loads(m.group(0))
+            return {k: (v or '').strip() for k, v in data.items() if isinstance(v, str)}
+        except Exception:
+            time.sleep(1.5); continue
+    return {}

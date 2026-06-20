@@ -5,104 +5,243 @@
 {% block extra_css %}
 {% include 'dashboard/_mission_editor_assets.html' %}
 <style>
-.cycle-banner { background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(124,58,237,.06)); border:1px solid rgba(139,92,246,.3); border-radius:14px; padding:16px 20px; margin-bottom:22px; display:flex; align-items:center; gap:14px; }
-.cycle-banner .ic { font-size:1.6rem; color:#a78bfa; }
+/* ─── نوار روزها ─── */
+.day-tabs-bar {
+    display:flex; align-items:center; gap:8px;
+    flex-wrap:wrap; margin-bottom:24px;
+}
+.day-tab {
+    display:flex; align-items:center; gap:7px;
+    padding:9px 18px; border-radius:10px; cursor:pointer;
+    font-size:.88rem; font-weight:700; border:1px solid var(--border);
+    background:var(--bg-card); color:var(--text-muted);
+    transition:all .18s; white-space:nowrap; position:relative;
+}
+.day-tab:hover { border-color:var(--purple); color:var(--text-main); }
+.day-tab.active {
+    background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(109,40,217,.1));
+    border-color:rgba(139,92,246,.6); color:#a78bfa;
+}
+.day-tab .today-dot {
+    width:7px; height:7px; border-radius:50%; background:#4ade80;
+    box-shadow:0 0 6px rgba(74,222,128,.7);
+}
+.day-tab .mission-cnt {
+    font-size:.72rem; font-weight:600;
+    background:rgba(139,92,246,.18); color:#a78bfa;
+    padding:1px 7px; border-radius:20px;
+}
+.day-tab-add {
+    padding:9px 16px; border-radius:10px;
+    border:1px dashed rgba(139,92,246,.45); color:#a78bfa;
+    font-size:.85rem; font-weight:700; cursor:pointer;
+    background:transparent; transition:all .18s;
+    text-decoration:none; display:flex; align-items:center; gap:6px;
+}
+.day-tab-add:hover { border-color:#a78bfa; background:rgba(139,92,246,.08); color:#a78bfa; }
+
+/* ─── پنل هر روز ─── */
+.day-panel { display:none; }
+.day-panel.active { display:block; }
+
+.day-panel-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px; gap:12px; flex-wrap:wrap;
+}
+.day-panel-title { font-size:1rem; font-weight:800; color:#fff; }
+.day-panel-meta { font-size:.8rem; color:var(--text-muted); }
+
+/* تنظیمات سریع روز */
+.day-quick-settings {
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-card2); border:1px solid var(--border);
+    border-radius:10px; padding:10px 16px; margin-bottom:18px;
+    flex-wrap:wrap;
+}
+.day-quick-settings label { font-size:.8rem; color:var(--text-muted); margin-left:4px; }
+.day-quick-settings input[type=text] {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:6px; color:var(--text-main);
+    padding:5px 10px; font-size:.83rem;
+}
+.day-save-btn {
+    padding:5px 14px; border-radius:6px;
+    background:rgba(139,92,246,.18); border:1px solid rgba(139,92,246,.45);
+    color:#a78bfa; font-size:.82rem; cursor:pointer; transition:all .15s;
+}
+.day-save-btn:hover { background:rgba(139,92,246,.3); }
+.day-del-btn {
+    padding:5px 12px; border-radius:6px;
+    background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
+    color:#f87171; font-size:.82rem; cursor:pointer; transition:all .15s;
+}
+.day-del-btn:hover { background:rgba(239,68,68,.22); }
+
+/* ─── بنر چرخه ─── */
+.cycle-banner {
+    background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(124,58,237,.05));
+    border:1px solid rgba(139,92,246,.25); border-radius:12px;
+    padding:12px 18px; margin-bottom:20px;
+    display:flex; align-items:center; gap:12px;
+    font-size:.85rem; color:var(--text-muted);
+}
 .cycle-banner b { color:#fff; }
-.day-today-badge { background:rgba(34,197,94,.15); color:#4ade80; border:1px solid rgba(34,197,94,.35); padding:2px 10px; border-radius:20px; font-size:.72rem; font-weight:800; }
+.day-today-badge {
+    background:rgba(34,197,94,.15); color:#4ade80;
+    border:1px solid rgba(34,197,94,.35);
+    padding:1px 9px; border-radius:20px; font-size:.72rem; font-weight:800;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <div class="page-title"><svg class="bi bi-calendar-check" aria-hidden="true" style="vertical-align:-.125em"><use href="#bi-calendar-check"></use></svg> ماموریت‌های روزانه</div>
-        <div class="page-subtitle">روزهای چرخه رو تعریف کن — هر روز ماموریت‌های خودش رو داره و چرخشی تکرار می‌شه</div>
+        <div class="page-title">
+            <svg class="bi bi-calendar-check" aria-hidden="true" style="vertical-align:-.125em"><use href="#bi-calendar-check"></use></svg>
+            ماموریت‌های روزانه
+        </div>
+        <div class="page-subtitle">روزهای چرخه رو تعریف کن — هر روز ماموریت‌های خودش رو داره</div>
     </div>
-    <a href="{% url 'dashboard:mission_day_add' %}" class="btn-purple">
-        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> روز جدید
-    </a>
 </div>
 
+<!-- بنر وضعیت چرخه -->
 <div class="cycle-banner">
-    <span class="ic"><svg class="bi bi-arrow-repeat" aria-hidden="true" style="width:1em;height:1em;fill:currentColor;"><use href="#bi-arrow-repeat"></use></svg></span>
+    <svg class="bi bi-arrow-repeat" aria-hidden="true" style="font-size:1.3rem;color:#a78bfa;flex-shrink:0;"><use href="#bi-arrow-repeat"></use></svg>
     <div>
         {% if cycle_len %}
-            چرخه‌ای <b>{{ cycle_len }} روزه</b> فعاله. امروز: <b>{{ today_day }}</b>.
-            بعد از روز آخر، دوباره از روز اول شروع می‌شه.
+            چرخه‌ای <b>{{ cycle_len }} روزه</b> فعاله.
+            {% if today_day %}امروز: <b>{{ today_day }}</b> — {% endif %}
+            بعد از روز آخر، دوباره از اول شروع می‌شه.
         {% else %}
-            هنوز هیچ روزی برای چرخه تعریف نشده. با دکمه‌ی «روز جدید» شروع کن — یا فقط از «ماموریت‌های همیشگی» پایین استفاده کن.
+            هنوز هیچ روزی تعریف نشده. روز جدید بساز.
         {% endif %}
     </div>
 </div>
 
-<!-- روزهای چرخه -->
-<div style="font-size:.95rem;font-weight:700;color:#a78bfa;margin-bottom:12px;">روزهای چرخه</div>
-{% if days %}
-<div class="dash-card" style="padding:0;overflow:hidden;margin-bottom:30px;">
-    <table class="dash-table">
-        <thead>
-            <tr>
-                <th>روز</th>
-                <th>عنوان</th>
-                <th>تعداد ماموریت</th>
-                <th>وضعیت</th>
-                <th>عملیات</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in days %}
-            <tr>
-                <td>
-                    <strong>روز {{ d.day_number }}</strong>
-                    {% if today_day and d.id == today_day.id %}<span class="day-today-badge">امروز</span>{% endif %}
-                </td>
-                <td>{{ d.label|default:"—" }}</td>
-                <td><span style="background:rgba(139,92,246,.15);color:#a78bfa;padding:2px 10px;border-radius:20px;font-size:.8rem;">{{ d.mission_count }} ماموریت</span></td>
-                <td>
-                    <button class="toggle-btn" onclick="toggleDay({{ d.pk }}, this)" data-id="{{ d.pk }}">
-                        {% if d.is_active %}<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>{% else %}<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>{% endif %}
-                    </button>
-                </td>
-                <td>
-                    <div style="display:flex;gap:6px;">
-                        <a href="{% url 'dashboard:mission_day_edit' d.pk %}" class="btn-ghost" style="padding:4px 12px;font-size:.8rem;">
-                            <svg class="bi bi-pencil-fill" aria-hidden="true"><use href="#bi-pencil-fill"></use></svg> مدیریت
-                        </a>
-                        <form method="post" action="{% url 'dashboard:mission_day_delete' d.pk %}" onsubmit="return confirm('روز {{ d.day_number }} و همه‌ی ماموریت‌هاش حذف بشه؟')">
-                            {% csrf_token %}
-                            <button type="submit" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:4px 12px;border-radius:6px;font-size:.8rem;cursor:pointer;">
-                                <svg class="bi bi-trash-fill" aria-hidden="true"><use href="#bi-trash-fill"></use></svg>
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<div class="dash-card" style="text-align:center;padding:40px 20px;margin-bottom:30px;color:var(--text-dim);">
-    هنوز روزی تعریف نشده — <a href="{% url 'dashboard:mission_day_add' %}" style="color:#a78bfa;">اولین روز رو بساز</a>
-</div>
-{% endif %}
+<!-- نوار روزها -->
+<div class="day-tabs-bar">
+    {% for d in days %}
+    <button class="day-tab {% if forloop.first %}active{% endif %}"
+            data-panel="day-{{ d.pk }}"
+            onclick="switchDay(this, 'day-{{ d.pk }}')">
+        <span>روز {{ d.day_number }}</span>
+        {% if today_day and d.id == today_day.id %}<span class="today-dot" title="امروز"></span>{% endif %}
+        <span class="mission-cnt">{{ d.mission_count }}</span>
+    </button>
+    {% endfor %}
 
-<!-- ماموریت‌های همیشگی -->
-<div style="font-size:.95rem;font-weight:700;color:#a78bfa;margin-bottom:6px;">ماموریت‌های همیشگی</div>
-<div style="font-size:.8rem;color:var(--text-dim);margin-bottom:12px;">این ماموریت‌ها <b>هر روز</b> نمایش داده می‌شن (مستقل از چرخه). مثل «ورود روزانه».</div>
-<div class="dash-card">
-    {% include 'dashboard/_mission_editor.html' with missions=always_missions editor_day_id='' %}
+    <!-- تب ماموریت‌های همیشگی -->
+    <button class="day-tab {% if not days %}active{% endif %}"
+            data-panel="day-always"
+            onclick="switchDay(this, 'day-always')">
+        <svg class="bi bi-infinity" aria-hidden="true" style="font-size:.85rem;"><use href="#bi-infinity"></use></svg>
+        همیشگی
+        <span class="mission-cnt">{{ always_missions.count }}</span>
+    </button>
+
+    <a href="{% url 'dashboard:mission_day_add' %}" class="day-tab-add">
+        <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg>
+        روز جدید
+    </a>
+</div>
+
+<!-- پنل‌های روزها -->
+{% for d in days %}
+<div class="day-panel {% if forloop.first %}active{% endif %}" id="day-{{ d.pk }}">
+    <div class="day-panel-header">
+        <div>
+            <span class="day-panel-title">روز {{ d.day_number }}{% if d.label %} — {{ d.label }}{% endif %}</span>
+            {% if today_day and d.id == today_day.id %}
+                <span class="day-today-badge" style="margin-right:8px;">امروز</span>
+            {% endif %}
+        </div>
+        <span class="day-panel-meta">{{ d.mission_count }} ماموریت</span>
+    </div>
+
+    <!-- تنظیمات سریع روز -->
+    <div class="day-quick-settings">
+        <label>عنوان روز:</label>
+        <input type="text" id="label-{{ d.pk }}" value="{{ d.label|default:'' }}" placeholder="اختیاری">
+        <label>
+            <input type="checkbox" id="active-{{ d.pk }}" {% if d.is_active %}checked{% endif %}> فعال
+        </label>
+        <button class="day-save-btn" onclick="saveDay({{ d.pk }})">ذخیره</button>
+        <form method="post" action="{% url 'dashboard:mission_day_delete' d.pk %}"
+              style="display:inline;"
+              onsubmit="return confirm('روز {{ d.day_number }} و همه ماموریت‌هاش حذف شود؟')">
+            {% csrf_token %}
+            <button type="submit" class="day-del-btn">حذف روز</button>
+        </form>
+    </div>
+
+    <!-- ماموریت‌های این روز -->
+    <div class="dash-card">
+        {% include 'dashboard/_mission_editor.html' with missions=d.missions.all editor_day_id=d.pk %}
+    </div>
+</div>
+{% empty %}
+<div class="day-panel {% if not days %}active{% endif %}" id="day-empty-state"
+     style="text-align:center;padding:50px 20px;color:var(--text-muted);">
+    <svg class="bi bi-calendar-x" aria-hidden="true" style="font-size:2.5rem;opacity:.3;display:block;margin:0 auto 12px;"><use href="#bi-calendar-x"></use></svg>
+    هنوز روزی تعریف نشده —
+    <a href="{% url 'dashboard:mission_day_add' %}" style="color:#a78bfa;">اولین روز رو بساز</a>
+</div>
+{% endfor %}
+
+<!-- پنل همیشگی -->
+<div class="day-panel {% if not days %}active{% endif %}" id="day-always">
+    <div class="day-panel-header">
+        <div>
+            <span class="day-panel-title">ماموریت‌های همیشگی</span>
+        </div>
+        <span class="day-panel-meta" style="font-size:.8rem;">هر روز نمایش داده می‌شن — مستقل از چرخه</span>
+    </div>
+    <div class="dash-card">
+        {% include 'dashboard/_mission_editor.html' with missions=always_missions editor_day_id='' %}
+    </div>
 </div>
 
 <script>
+function switchDay(btn, panelId) {
+    document.querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('active');
+}
+
+function saveDay(dayId) {
+    const label    = document.getElementById('label-' + dayId).value;
+    const isActive = document.getElementById('active-' + dayId).checked;
+    fetch(`/admin-panel/missions/day/${dayId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            label, is_active: isActive ? 'on' : '', day_number: dayId, ajax: '1',
+        }),
+    }).then(r => r.json()).then(d => {
+        const btn = document.querySelector(`[onclick="saveDay(${dayId})"]`);
+        if (d.ok) {
+            btn.textContent = '✓ ذخیره شد';
+            btn.style.color = '#4ade80';
+            setTimeout(() => { btn.textContent = 'ذخیره'; btn.style.color = ''; }, 1500);
+        } else {
+            alert('خطا در ذخیره');
+        }
+    }).catch(() => alert('خطا در ارتباط با سرور'));
+}
+
 function toggleDay(id, btn) {
     fetch(`/admin-panel/missions/day/${id}/toggle/`, {
         method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' }
     }).then(r => r.json()).then(d => {
         if (d.ok) {
-            btn.innerHTML = d.is_active
-                ? '<svg class="bi bi-toggle-on" aria-hidden="true" style="color:#22c55e;font-size:1.3rem;"><use href="#bi-toggle-on"></use></svg>'
-                : '<svg class="bi bi-toggle-off" aria-hidden="true" style="color:#6b7280;font-size:1.3rem;"><use href="#bi-toggle-off"></use></svg>';
+            const chk = document.getElementById('active-' + id);
+            if (chk) chk.checked = d.is_active;
         }
     });
 }

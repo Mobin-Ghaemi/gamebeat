@@ -2,9 +2,22 @@ from django import template
 from django.urls import reverse
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
+from django.utils.timesince import timesince
 import re
 
 register = template.Library()
+
+
+@register.filter
+def smart_time(value):
+    """مثل timesince ولی وقتی کمتر از ۱ دقیقه‌ست می‌نویسد «همین الان»."""
+    if not value:
+        return ''
+    result = timesince(value)
+    # Django timesince در حالت زیر یک دقیقه می‌نویسد "0\xa0minutes"
+    if result.startswith('0'):
+        return 'همین الان'
+    return result + ' پیش'
 
 MONTHS_FA = [
     '', 'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',

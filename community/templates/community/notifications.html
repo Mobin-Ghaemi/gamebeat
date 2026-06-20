@@ -1,5 +1,5 @@
 {% extends 'community/base.html' %}
-{% load jalali_filters %}
+{% load jalali_filters community_tags %}
 {% block title %}اعلان‌ها | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -162,7 +162,7 @@
                     <b>مدیریت گیم بیت</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </div>
 
@@ -188,7 +188,7 @@
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
                     {% endif %}
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
             {% if n.post %}
                 {% if n.post.image %}
@@ -223,7 +223,7 @@
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
                     {% endif %}
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
             {% if n.post %}
                 {% if n.post.image %}
@@ -253,7 +253,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> شما را دنبال کرد</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -276,7 +276,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> درخواست دنبال کردن فرستاد</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -299,7 +299,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#4ade80;font-weight:700">پذیرفت</span></span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -322,7 +322,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#f87171;font-weight:700">رد کرد</span></span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -348,7 +348,7 @@
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
                     {% endif %}
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
             {% if n.post %}
                 {% if n.post.image %}
@@ -373,7 +373,7 @@
                     <b>پیدا کردن هم‌بازی</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -393,7 +393,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -413,7 +413,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -433,7 +433,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -453,7 +453,7 @@
                     <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </a>
 
@@ -468,7 +468,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">{{ n.custom_text }}</div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </div>
 
@@ -484,7 +484,7 @@
             </div>
             <div class="notif-body" style="flex:1;">
                 <div class="notif-text">{{ n.custom_text }}</div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
             <a href="{% url 'community:who_viewed_me' %}"
                style="flex-shrink:0;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
@@ -507,7 +507,7 @@
             </div>
             <div class="notif-body" style="flex:1;">
                 <div class="notif-text">{{ n.custom_text }}</div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </div>
 
@@ -523,7 +523,7 @@
             </div>
             <div class="notif-body" style="flex:1;">
                 <div class="notif-text">{{ n.custom_text|default:'اعلان جدید' }}</div>
-                <div class="notif-time">{{ n.created_at|timesince }} پیش</div>
+                <div class="notif-time">{{ n.created_at|smart_time }}</div>
             </div>
         </div>
 

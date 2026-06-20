@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, Achievement
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 from .models import DailyMission, DailyMissionProgress, MissionDay
+from .models import AchievementDefinition
 
 
 @admin.register(MissionDay)
@@ -32,7 +33,28 @@ admin.site.register(PostLike)
 admin.site.register(Comment)
 admin.site.register(Follow)
 admin.site.register(LFGPost)
-admin.site.register(Achievement)
+@admin.register(AchievementDefinition)
+class AchievementDefinitionAdmin(admin.ModelAdmin):
+    list_display       = ('order', 'icon_preview', 'title', 'ach_type', 'description', 'reward_zarban', 'is_active')
+    list_editable      = ('title', 'description', 'reward_zarban', 'is_active', 'order')
+    list_display_links = ('ach_type',)
+    ordering           = ('order',)
+    search_fields      = ('title', 'ach_type')
+    list_filter        = ('is_active',)
+    fields             = ('ach_type', 'title', 'description', 'icon', 'reward_zarban', 'is_active', 'order')
+
+    def icon_preview(self, obj):
+        return format_html('<i class="bi {}" style="font-size:1.3rem;color:#a78bfa;"></i>', obj.icon)
+    icon_preview.short_description = '🎨'
+
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display  = ('user', 'achievement_type', 'title', 'earned_at')
+    list_filter   = ('achievement_type',)
+    search_fields = ('user__username', 'title')
+    date_hierarchy = 'earned_at'
+    readonly_fields = ('earned_at',)
 admin.site.register(ActivityLog)
 admin.site.register(Club)
 admin.site.register(ClubMember)
