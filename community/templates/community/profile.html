@@ -1330,9 +1330,15 @@
                                 <svg class="bi bi-plus-lg" aria-hidden="true"><use href="#bi-plus-lg"></use></svg> دنبال کن
                             {% endif %}
                         </button>
+                        {% if can_dm %}
                         <a href="{% url 'community:conversation' username=profile_user.username %}" class="btn-edit-profile">
                             <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> پیام
                         </a>
+                        {% elif user.is_authenticated and not profile.allow_dm %}
+                        <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-size:.82rem;color:var(--text-muted);border:1px solid var(--border);cursor:default;" title="این کاربر پیام‌های مستقیم را غیرفعال کرده">
+                            <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> پیام غیرفعال
+                        </span>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

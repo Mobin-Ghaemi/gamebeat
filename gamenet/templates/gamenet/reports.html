@@ -840,6 +840,7 @@
     <!-- کرایه‌های اخیر -->
     <div class="sessions-card">
         <div class="card-title">🕐 کرایه‌های اخیر</div>
+        <div style="overflow-x:auto;">
         <table class="sessions-table">
             <thead>
                 <tr>
@@ -866,7 +867,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        
+        </div>
+
         <!-- Pagination -->
         {% if recent_sessions.has_other_pages %}
         <div class="pagination">

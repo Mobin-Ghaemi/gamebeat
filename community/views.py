@@ -466,12 +466,23 @@ def gamer_profile(request, username):
         ).count()
         zarban_balance = ZarbanWallet.get_or_create_for(profile_user).balance
 
+    # ── can_dm: آیا کاربر لاگین‌شده می‌تونه DM بفرسته؟ ──
+    can_dm = False
+    if not is_own_profile and request.user.is_authenticated:
+        if profile.allow_dm:
+            not_blocked = not Block.objects.filter(
+                blocker=profile_user, blocked=request.user
+            ).exists()
+            dm_ok = (not profile.dm_followers_only) or is_following
+            can_dm = not_blocked and dm_ok
+
     context = {
         'profile_user': profile_user,
         'profile': profile,
         'my_profile': my_profile,
         'is_following': is_following,
         'is_own_profile': is_own_profile,
+        'can_dm': can_dm,
         'posts': posts,
         'liked_post_ids': liked_post_ids,
         'achievements': achievements,
@@ -559,7 +570,21 @@ def user_settings(request):
         profile.show_on_map    = 'show_on_map'     in request.POST
         profile.save()
         return JsonResponse({'ok': True})
-    return render(request, 'community/settings.html', {'profile': profile})
+    gaming_accounts = request.user.gaming_accounts.all()
+    return render(request, 'community/settings.html', {
+        'profile': profile,
+        'gaming_accounts': gaming_accounts,
+    })
+
+
+@login_required
+@require_POST
+def toggle_gaming_account_visibility(request, pk):
+    from .models import GamingAccount
+    account = get_object_or_404(GamingAccount, pk=pk, user=request.user)
+    account.is_public = not account.is_public
+    account.save(update_fields=['is_public'])
+    return JsonResponse({'ok': True, 'is_public': account.is_public})
 
 
 @login_required
@@ -2716,20 +2741,22 @@ def steam_search(request):
 
 def games_ranking(request):
     """لیست بازی‌های فعال با فیلتر ژانر و جستجو"""
+    from django.core.cache import cache
     from dashboard.models import Game, GENRE_CHOICES as GAME_GENRE_CHOICES
 
     q     = request.GET.get('q', '').strip()
     genre = request.GET.get('genre', '')
 
-    games = Game.objects.filter(is_active=True)
-
-    if q:
-        games = games.filter(_game_search_q(q))
-    if genre and genre != 'all':
-        # genres یه JSONField است؛ SQLite از contains پشتیبانی نمی‌کند → icontains با کوتیشن
-        games = games.filter(genres__icontains='"%s"' % genre)
-
-    games = games.order_by('-is_featured', 'name')
+    cache_key = f'games_list_{q}_{genre}'
+    games = cache.get(cache_key)
+    if games is None:
+        qs = Game.objects.filter(is_active=True)
+        if q:
+            qs = qs.filter(_game_search_q(q))
+        if genre and genre != 'all':
+            qs = qs.filter(genres__icontains='"%s"' % genre)
+        games = list(qs.order_by('-is_featured', 'name'))
+        cache.set(cache_key, games, 300)
 
     my_backlog = {}
     if request.user.is_authenticated:
@@ -4389,3 +4416,173 @@ def game_search_api(request):
             'cover': g.cover.url if g.cover else '',
         })
     return JsonResponse({'ok': True, 'games': results})
+
+
+# ═══════════════════════════════════════
+#  NOTIFICATIONS RECENT (dropdown API)
+# ═══════════════════════════════════════
+
+@login_required
+def notifications_recent(request):
+    """آخرین ۶ اعلان نخوانده برای dropdown در navbar"""
+    from django.utils.timesince import timesince
+    notifs = (Notification.objects
+              .filter(recipient=request.user, is_read=False)
+              .exclude(notif_type='dm')
+              .select_related('sender', 'sender__gamer_profile')
+              .order_by('-created_at')[:6])
+
+    data = []
+    for n in notifs:
+        avatar = None
+        try:
+            if n.sender and n.sender.gamer_profile.avatar:
+                avatar = n.sender.gamer_profile.avatar.url
+        except Exception:
+            pass
+        data.append({
+            'id':     n.pk,
+            'type':   n.notif_type,
+            'text':   n.text,
+            'icon':   n.icon,
+            'sender': n.sender.username if n.sender else '',
+            'avatar': avatar,
+            'time':   timesince(n.created_at) + ' پیش',
+        })
+
+    count = Notification.objects.filter(
+        recipient=request.user, is_read=False
+    ).exclude(notif_type='dm').count()
+    return JsonResponse({'notifications': data, 'unread_count': count})
+
+
+# ═══════════════════════════════════════
+#  GLOBAL SEARCH
+# ═══════════════════════════════════════
+
+def global_search(request):
+    """جستجوی سراسری: گیمر + بازی + پست"""
+    q = request.GET.get('q', '').strip()
+    as_json = request.GET.get('json') == '1'
+
+    users_results, games_results, posts_results = [], [], []
+
+    if q and len(q) >= 2:
+        from dashboard.models import Game as DashboardGame
+
+        # کاربران
+        users_qs = (User.objects
+                    .filter(Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q))
+                    .select_related('gamer_profile')[:8])
+        for u in users_qs:
+            try:
+                avatar = u.gamer_profile.avatar.url if u.gamer_profile.avatar else None
+                is_premium = u.gamer_profile.is_premium
+            except Exception:
+                avatar, is_premium = None, False
+            users_results.append({
+                'username': u.username,
+                'name': u.get_full_name() or u.username,
+                'avatar': avatar,
+                'is_premium': is_premium,
+            })
+
+        # بازی‌ها
+        games_qs = (DashboardGame.objects
+                    .filter(is_active=True)
+                    .filter(_game_search_q(q))
+                    .order_by('-is_featured', 'name')[:8])
+        for g in games_qs:
+            cover = g.cover.url if g.cover else (
+                f'https://cdn.cloudflare.steamstatic.com/steam/apps/{g.steam_appid}/library_600x900.jpg'
+                if g.steam_appid else None
+            )
+            games_results.append({
+                'id': g.pk,
+                'name': g.name,
+                'cover': cover,
+                'developer': g.developer,
+                'year': g.release_year,
+            })
+
+        # پست‌ها
+        posts_qs = (Post.objects
+                    .filter(content__icontains=q)
+                    .select_related('author', 'author__gamer_profile')
+                    .order_by('-created_at')[:8])
+        for p in posts_qs:
+            try:
+                avatar = p.author.gamer_profile.avatar.url if p.author.gamer_profile.avatar else None
+            except Exception:
+                avatar = None
+            posts_results.append({
+                'id': p.pk,
+                'author': p.author.username,
+                'avatar': avatar,
+                'content': p.content[:120] + ('...' if len(p.content) > 120 else ''),
+            })
+
+    if as_json:
+        return JsonResponse({
+            'users': users_results,
+            'games': games_results,
+            'posts': posts_results,
+            'q': q,
+        })
+
+    return render(request, 'community/global_search.html', {
+        'q': q,
+        'users_results': users_results,
+        'games_results': games_results,
+        'posts_results': posts_results,
+    })
+
+
+# ═══════════════════════════════════════
+#  ONBOARDING WIZARD
+# ═══════════════════════════════════════
+
+@login_required
+def onboarding(request):
+    """ویزارد خوش‌آمدگویی برای کاربران جدید"""
+    profile = get_or_create_gamer_profile(request.user)
+
+    if request.method == 'POST':
+        from dashboard.models import Game as DashboardGame
+        # Step data
+        platforms = request.POST.getlist('platforms')
+        favorite_games = request.POST.getlist('game_names')
+        bio = request.POST.get('bio', '').strip()
+        city = request.POST.get('city', '').strip()
+
+        if platforms:
+            profile.platforms = platforms
+            if platforms:
+                profile.platform = platforms[0]
+        if favorite_games:
+            profile.favorite_games = ', '.join(favorite_games)
+        if bio:
+            profile.bio = bio
+        if city:
+            profile.city = city
+        profile.has_onboarded = True
+        profile.save(update_fields=['platforms', 'platform', 'favorite_games', 'bio', 'city', 'has_onboarded'])
+
+        messages.success(request, 'خوش اومدی به GameBeat! 🎮')
+        return redirect(reverse('community:feed'))
+
+    from dashboard.models import Game as DashboardGame, GENRE_CHOICES as GAME_GENRE_CHOICES
+    popular_games = list(
+        DashboardGame.objects.filter(is_active=True, is_popular=True).order_by('name').values('name', 'steam_appid')[:30]
+    )
+    if len(popular_games) < 10:
+        popular_games = list(
+            DashboardGame.objects.filter(is_active=True).order_by('-is_featured', 'name').values('name', 'steam_appid')[:30]
+        )
+
+    return render(request, 'community/onboarding.html', {
+        'profile': profile,
+        'platform_choices': PLATFORM_CHOICES,
+        'city_choices': CITY_CHOICES,
+        'popular_games': popular_games,
+    })

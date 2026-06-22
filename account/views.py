@@ -46,7 +46,7 @@ def register(request):
             UserProfile.objects.create(user=user)
             login(request, user)
             messages.success(request, 'حساب کاربری شما با موفقیت ایجاد شد!')
-            return redirect(reverse('community:feed'))
+            return redirect(reverse('community:onboarding'))
     else:
         form = UserCreationForm()
     return render(request, 'account/register.html', {'form': form})

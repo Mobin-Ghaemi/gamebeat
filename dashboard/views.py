@@ -202,6 +202,26 @@ def monitoring(request):
             'text': 'رصد خطا (Sentry) تنظیم نشده — اگه چیزی بترکه، خودت نمی‌فهمی.',
         })
 
+    # ── Chart data: last 30 days ──
+    import json
+    since_30 = now - timedelta(days=29)
+    new_users_qs = (
+        User.objects.filter(date_joined__gte=since_30)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day').annotate(cnt=Count('id')).order_by('day')
+    )
+    new_posts_qs = (
+        Post.objects.filter(created_at__gte=since_30)
+        .annotate(day=TruncDate('created_at'))
+        .values('day').annotate(cnt=Count('id')).order_by('day')
+    )
+    chart_days = [(since_30 + timedelta(days=i)).date() for i in range(30)]
+    user_map = {row['day']: row['cnt'] for row in new_users_qs}
+    post_map = {row['day']: row['cnt'] for row in new_posts_qs}
+    chart_labels = json.dumps([d.strftime('%-m/%-d') for d in chart_days])
+    chart_users  = json.dumps([user_map.get(d, 0) for d in chart_days])
+    chart_posts  = json.dumps([post_map.get(d, 0) for d in chart_days])
+
     context = {
         'online_users': online_users,
         'online_count': len(online_users),
@@ -214,6 +234,9 @@ def monitoring(request):
         'counts': counts,
         'issues': issues,
         'has_critical': any(i['level'] == 'critical' for i in issues),
+        'chart_labels': chart_labels,
+        'chart_users': chart_users,
+        'chart_posts': chart_posts,
     }
     return render(request, 'dashboard/monitoring.html', context)
 
@@ -247,8 +270,10 @@ def user_list(request):
 
     # Annotate each user with their city's Persian label
     for u in page_obj.object_list:
-        profile = getattr(u, 'gamer_profile', None)
-        raw_city = getattr(profile, 'city', '') or ''
+        try:
+            raw_city = u.gamer_profile.city or ''
+        except Exception:
+            raw_city = ''
         u.city_label = city_label_map.get(raw_city, '')
 
     # Base query string for pagination (preserves q, filter, and all city params)
@@ -274,6 +299,54 @@ def user_list(request):
         'pagination_qs':     pagination_qs,
         'filter_links_base': filter_links_base,
     })
+
+
+@login_required
+@user_passes_test(is_admin)
+def export_users_csv(request):
+    import csv
+    from django.http import HttpResponse
+    from community.models import CITY_CHOICES
+
+    q           = request.GET.get('q', '').strip()
+    filter_type = request.GET.get('filter', 'all')
+    cities      = [c.strip() for c in request.GET.getlist('city') if c.strip()]
+
+    users = User.objects.select_related('gamer_profile').annotate(post_count=Count('posts')).order_by('-date_joined')
+    if q:
+        users = users.filter(Q(username__icontains=q) | Q(email__icontains=q))
+    if filter_type == 'active':
+        users = users.filter(is_active=True, is_staff=False)
+    elif filter_type == 'banned':
+        users = users.filter(is_active=False)
+    elif filter_type == 'staff':
+        users = users.filter(is_staff=True)
+    if cities:
+        users = users.filter(gamer_profile__city__in=cities)
+
+    city_label_map = dict(CITY_CHOICES)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="users_export.csv"'
+    response.write('﻿')
+
+    writer = csv.writer(response)
+    writer.writerow(['نام کاربری', 'ایمیل', 'تاریخ ثبت‌نام', 'وضعیت', 'تعداد پست', 'شهر', 'ادمین'])
+    for u in users:
+        try:
+            raw_city = u.gamer_profile.city or ''
+        except Exception:
+            raw_city = ''
+        writer.writerow([
+            u.username,
+            u.email,
+            u.date_joined.strftime('%Y-%m-%d %H:%M'),
+            'فعال' if u.is_active else 'مسدود',
+            u.post_count,
+            city_label_map.get(raw_city, raw_city),
+            'بله' if u.is_staff else 'خیر',
+        ])
+    return response
 
 
 @login_required
@@ -1528,7 +1601,10 @@ def achievement_definition_save(request):
     defn.reward_zarban = max(0, _int(request.POST.get('reward_zarban'), 0))
     defn.is_active     = request.POST.get('is_active', 'true') == 'true'
     defn.order         = _int(request.POST.get('order'), 0)
-    defn.target = max(0, _int(request.POST.get('target'), 0))
+    defn.target        = max(0, _int(request.POST.get('target'), 0))
+    valid_triggers = {c[0] for c in AchievementDefinition.TRIGGER_CHOICES}
+    raw_trigger = request.POST.get('trigger', '').strip()
+    defn.trigger = raw_trigger if raw_trigger in valid_triggers else ''
     try:
         defn.save()
     except Exception as e:

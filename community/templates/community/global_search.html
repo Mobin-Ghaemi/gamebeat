@@ -1,0 +1,183 @@
+{% extends 'community/base.html' %}
+{% block title %}جستجو{% if q %} — {{ q }}{% endif %} | GameBeat{% endblock %}
+{% block nav_search %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.gs-wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 80px; }
+
+.gs-searchbar {
+    display: flex; gap: 10px; margin-bottom: 32px;
+}
+.gs-searchbar input {
+    flex: 1; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(139,92,246,0.35); color: #fff;
+    border-radius: 14px; padding: 13px 18px;
+    font-family: 'Vazirmatn', sans-serif; font-size: 1rem; outline: none;
+}
+.gs-searchbar input:focus { border-color: #8b5cf6; background: rgba(139,92,246,0.08); }
+.gs-searchbar button {
+    background: linear-gradient(135deg,#7c3aed,#8b5cf6); color: #fff;
+    border: none; border-radius: 14px; padding: 0 22px;
+    font-family: 'Vazirmatn', sans-serif; font-weight: 800; cursor: pointer; font-size:.9rem;
+}
+
+.gs-section-title {
+    font-size: .75rem; font-weight: 800; color: rgba(255,255,255,0.35);
+    letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Users */
+.gs-users { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
+.gs-user-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; border-radius: 14px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    text-decoration: none; transition: border-color .15s, background .15s;
+}
+.gs-user-row:hover { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.06); }
+.gs-user-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(139,92,246,0.2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #a78bfa; font-size: 1.1rem; overflow: hidden;
+}
+.gs-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.gs-user-name { font-size: .9rem; font-weight: 700; color: #fff; }
+.gs-user-sub { font-size: .75rem; color: rgba(255,255,255,0.35); }
+
+/* Games */
+.gs-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 36px; }
+.gs-game-card {
+    border-radius: 14px; overflow: hidden; position: relative;
+    text-decoration: none; background: #130826;
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: transform .2s, border-color .2s;
+    display: flex; flex-direction: column;
+}
+.gs-game-card:hover { transform: translateY(-3px); border-color: rgba(139,92,246,0.4); }
+.gs-game-cover { height: 160px; background: rgba(139,92,246,0.1); overflow: hidden; }
+.gs-game-cover img { width: 100%; height: 100%; object-fit: cover; }
+.gs-game-info { padding: 10px 12px; font-size: .8rem; font-weight: 700; color: #fff; }
+.gs-game-sub { font-size: .7rem; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+/* Posts */
+.gs-posts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
+.gs-post-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 14px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    text-decoration: none; transition: border-color .15s, background .15s;
+}
+.gs-post-row:hover { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.06); }
+.gs-post-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(139,92,246,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #a78bfa; overflow: hidden;
+}
+.gs-post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.gs-post-author { font-size: .78rem; font-weight: 800; color: #a78bfa; margin-bottom: 4px; }
+.gs-post-content { font-size: .85rem; color: rgba(255,255,255,0.65); line-height: 1.6; }
+
+.gs-empty { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.25); }
+.gs-empty svg { font-size: 3rem; display: block; margin: 0 auto 14px; width: 48px; height: 48px; }
+
+.gs-total { font-size: .78rem; color: rgba(255,255,255,0.3); margin-bottom: 28px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gs-wrap">
+
+    <form method="get" action="{% url 'community:global_search' %}" class="gs-searchbar">
+        <input type="text" name="q" value="{{ q }}" placeholder="جستجو در GameBeat..." autocomplete="off" autofocus>
+        <button type="submit">جستجو</button>
+    </form>
+
+    {% if q %}
+    {% with total=users_results|length|add:games_results|length|add:posts_results|length %}
+    <div class="gs-total">{{ total }} نتیجه برای «{{ q }}»</div>
+    {% endwith %}
+
+    {% if users_results %}
+    <div class="gs-section-title">گیمرها</div>
+    <div class="gs-users">
+        {% for u in users_results %}
+        <a href="{% url 'community:profile' username=u.username %}" class="gs-user-row">
+            <div class="gs-user-avatar">
+                {% if u.avatar %}<img src="{{ u.avatar }}" alt="">{% else %}{{ u.username|first|upper }}{% endif %}
+            </div>
+            <div>
+                <div class="gs-user-name">{{ u.name }}{% if u.is_premium %} <span style="color:#fbbf24;font-size:.7rem;">✦ پرمیوم</span>{% endif %}</div>
+                <div class="gs-user-sub">@{{ u.username }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if games_results %}
+    <div class="gs-section-title">بازی‌ها</div>
+    <div class="gs-games">
+        {% for g in games_results %}
+        <a href="{% url 'community:game_detail' g.id %}" class="gs-game-card">
+            <div class="gs-game-cover">
+                {% if g.cover %}<img src="{{ g.cover }}" alt="{{ g.name }}">{% endif %}
+            </div>
+            <div class="gs-game-info">
+                {{ g.name }}
+                <div class="gs-game-sub">{% if g.developer %}{{ g.developer }}{% if g.year %} · {{ g.year }}{% endif %}{% endif %}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if posts_results %}
+    <div class="gs-section-title">پست‌ها</div>
+    <div class="gs-posts">
+        {% for p in posts_results %}
+        <a href="{% url 'community:post_detail' pk=p.id %}" class="gs-post-row">
+            <div class="gs-post-avatar">
+                {% if p.avatar %}<img src="{{ p.avatar }}" alt="">{% else %}{{ p.author|first|upper }}{% endif %}
+            </div>
+            <div>
+                <div class="gs-post-author">@{{ p.author }}</div>
+                <div class="gs-post-content">{{ p.content }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not users_results and not games_results and not posts_results %}
+    <div class="gs-empty">
+        <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+        <p>هیچ نتیجه‌ای برای «{{ q }}» پیدا نشد</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="gs-empty">
+        <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+        <p>چیزی جستجو کن تا نتایج اینجا نشون داده بشه</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live search with debounce
+const inp = document.querySelector('.gs-searchbar input');
+let _t;
+inp.addEventListener('input', function() {
+    clearTimeout(_t);
+    if (this.value.length < 2) return;
+    _t = setTimeout(() => this.closest('form').submit(), 600);
+});
+</script>
+{% endblock %}

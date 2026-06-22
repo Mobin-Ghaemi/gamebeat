@@ -718,6 +718,119 @@
             letter-spacing: -0.3px;
         }
 
+        /* ── Notification dropdown panel ── */
+        .notif-wrap { position: relative; display: inline-flex; }
+        .notif-panel {
+            position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+            width: 320px; background: #1a0d30;
+            border: 1px solid rgba(139,92,246,0.3); border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 2000; overflow: hidden;
+            animation: npFadeIn .18s ease;
+        }
+        @keyframes npFadeIn { from { opacity:0; transform: translateX(-50%) translateY(-6px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        .notif-panel-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .notif-panel-hdr-title { font-size: .88rem; font-weight: 800; color: #fff; }
+        .notif-mark-all-btn {
+            font-size: .72rem; color: #a78bfa; background: none; border: none; cursor: pointer;
+            font-family: 'Vazirmatn', sans-serif; padding: 0;
+        }
+        .notif-panel-list { max-height: 310px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.3) transparent; }
+        .notif-panel-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background .12s;
+        }
+        .notif-panel-item:hover { background: rgba(139,92,246,0.08); }
+        .notif-panel-item:last-child { border-bottom: none; }
+        .npi-avatar {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(139,92,246,0.2); display: flex; align-items: center;
+            justify-content: center; font-size: .9rem; overflow: hidden; color: #a78bfa; font-weight: 700;
+        }
+        .npi-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .npi-text { font-size: .8rem; color: rgba(255,255,255,0.8); line-height: 1.5; }
+        .npi-time { font-size: .68rem; color: rgba(255,255,255,0.3); margin-top: 2px; }
+        .notif-panel-loading { padding: 22px; text-align: center; font-size: .8rem; color: rgba(255,255,255,0.3); }
+        .notif-panel-footer {
+            display: block; text-align: center; padding: 11px;
+            font-size: .8rem; font-weight: 700; color: #a78bfa;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            text-decoration: none; transition: background .12s;
+        }
+        .notif-panel-footer:hover { background: rgba(139,92,246,0.1); }
+        .notif-panel-empty { padding: 24px; text-align: center; font-size: .8rem; color: rgba(255,255,255,0.25); }
+
+        /* ── Toast notification ── */
+        .gb-toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+            background: #1e0a35; border: 1px solid rgba(139,92,246,0.4);
+            border-radius: 14px; padding: 13px 18px;
+            display: flex; align-items: center; gap: 10px; min-width: 240px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            animation: toastIn .3s cubic-bezier(.34,1.56,.64,1);
+            cursor: pointer;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .gb-toast-icon { font-size: 1.2rem; }
+        .gb-toast-text { font-size: .82rem; color: #fff; font-weight: 600; }
+
+        /* ── Global Search Overlay ── */
+        .gs-overlay {
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(5,0,18,0.92); backdrop-filter: blur(10px);
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 60px 16px 0;
+            animation: gsIn .18s ease;
+        }
+        @keyframes gsIn { from { opacity:0; } to { opacity:1; } }
+        .gs-overlay-inner { width: 100%; max-width: 660px; }
+        .gs-overlay-bar {
+            display: flex; align-items: center; gap: 12px;
+            background: #1a0d30; border: 1.5px solid rgba(139,92,246,0.5);
+            border-radius: 16px; padding: 10px 16px; margin-bottom: 20px;
+        }
+        .gs-overlay-bar svg { color: rgba(255,255,255,0.35); flex-shrink: 0; width: 18px; height: 18px; }
+        .gs-overlay-bar input {
+            flex: 1; background: none; border: none; color: #fff; outline: none;
+            font-family: 'Vazirmatn', sans-serif; font-size: 1.05rem;
+        }
+        .gs-overlay-close {
+            background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.5);
+            width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+        }
+        .gs-overlay-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .gs-overlay-results { color: #fff; }
+        .gs-ov-section { margin-bottom: 20px; }
+        .gs-ov-label { font-size: .7rem; font-weight: 800; color: rgba(255,255,255,0.3); letter-spacing: .08em; margin-bottom: 8px; }
+        .gs-ov-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px; text-decoration: none;
+            transition: background .12s; color: #fff;
+        }
+        .gs-ov-item:hover { background: rgba(139,92,246,0.12); }
+        .gs-ov-avatar {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(139,92,246,0.2); display: flex; align-items: center;
+            justify-content: center; overflow: hidden; font-weight: 700; color: #a78bfa;
+        }
+        .gs-ov-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .gs-ov-game-thumb {
+            width: 36px; height: 48px; border-radius: 6px; flex-shrink: 0;
+            background: rgba(139,92,246,0.15); overflow: hidden;
+        }
+        .gs-ov-game-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .gs-ov-name { font-size: .87rem; font-weight: 700; }
+        .gs-ov-sub { font-size: .73rem; color: rgba(255,255,255,0.4); margin-top: 1px; }
+        .gs-ov-hint { font-size: .78rem; color: rgba(255,255,255,0.25); text-align: center; padding: 20px; }
+        .gs-ov-loading { text-align: center; padding: 30px; color: rgba(255,255,255,0.3); font-size: .85rem; }
+        .gs-ov-all { display: block; text-align: center; padding: 10px; font-size: .8rem; color: #a78bfa; text-decoration: none; margin-top: 4px; }
+        .gs-ov-all:hover { color: #c4b5fd; }
+
         /* Nav account button */
         .nav-account-btn {
             display: flex;
@@ -872,15 +985,98 @@
             border-radius: 8px;
         }
 
-        /* Responsive */
+        /* ── Hamburger Button ── */
+        .nav-hamburger {
+            display: none;
+            align-items: center; justify-content: center;
+            width: 38px; height: 38px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            transition: background .2s, color .2s;
+        }
+        .nav-hamburger:hover { background: rgba(255,255,255,.11); color: var(--text-white); }
+
+        /* ── Mobile Drawer ── */
+        .nav-drawer-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1099;
+            backdrop-filter: blur(3px);
+        }
+        .nav-drawer-overlay.nd-open { display: block; }
+
+        .nav-drawer {
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: min(300px, 82vw);
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            z-index: 1100;
+            transform: translateX(110%);
+            transition: transform .32s cubic-bezier(.22,1,.36,1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .nav-drawer.nd-open { transform: translateX(0); }
+
+        .nd-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0;
+            background: var(--bg-card); z-index: 1;
+        }
+        .nd-brand {
+            font-weight: 900; font-size: 1.1rem;
+            background: linear-gradient(135deg,#c084fc,#a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nd-close {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; line-height: 1;
+            transition: background .15s, color .15s;
+        }
+        .nd-close:hover { background: rgba(239,68,68,.15); color: #f87171; }
+
+        .nd-links { padding: 6px 0; flex: 1; }
+
+        .nd-link {
+            display: flex; align-items: center; gap: 11px;
+            padding: 12px 18px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: .88rem; font-weight: 600;
+            transition: background .15s, color .15s;
+            border-bottom: 1px solid rgba(255,255,255,.03);
+            border-right: 3px solid transparent;
+        }
+        .nd-link:hover { background: rgba(139,92,246,.08); color: var(--text-white); }
+        .nd-link.nd-active { color: #c084fc; border-right-color: #c084fc; background: rgba(139,92,246,.1); }
+        .nd-link svg { flex-shrink: 0; opacity: .75; }
+        .nd-sep { height: 1px; background: var(--border); margin: 6px 0; }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .community-nav .container-fluid { padding: 0 16px; }
-            .nav-profile-name, .nav-profile-tag { display: none; }
-            .nav-profile-btn { padding: 5px; border-radius: 50%; }
+            .nav-hamburger { display: flex; }
+            .nav-links { display: none !important; }
+            .community-nav .container-fluid { padding: 0 14px; }
             .nav-account-label { display: none; }
             .nzt-label { display: none; }
             .nav-account-btn { padding: 4px 10px 4px 4px; gap: 6px; }
+        }
+        @media (max-width: 480px) {
+            .nav-icon-btn { width: 34px; height: 34px; font-size: .9rem; }
+            .nav-actions { gap: 6px; }
         }
 
         /* Bootstrap overrides */
@@ -981,11 +1177,27 @@
                     <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg>
                     <span class="nav-badge" id="dmBadge" style="display:none;">0</span>
                 </a>
-                <!-- Notifications Bell -->
-                <a href="{% url 'community:notifications' %}" class="nav-icon-btn" id="navBellBtn" title="اعلان‌ها">
-                    <svg class="bi bi-bell-fill" aria-hidden="true"><use href="#bi-bell-fill"></use></svg>
-                    <span class="nav-badge" id="notifBadge" style="display:none;">0</span>
-                </a>
+                <!-- Global Search Button -->
+                <button class="nav-icon-btn" id="navSearchBtn" title="جستجو" onclick="openGlobalSearch()" style="cursor:pointer;border:none;">
+                    <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+                </button>
+                <!-- Notifications Bell + Dropdown -->
+                <div class="notif-wrap">
+                    <button class="nav-icon-btn" id="navBellBtn" title="اعلان‌ها" onclick="toggleNotifPanel(event)" style="cursor:pointer;border:1px solid var(--border);">
+                        <svg class="bi bi-bell-fill" aria-hidden="true"><use href="#bi-bell-fill"></use></svg>
+                        <span class="nav-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel" style="display:none;">
+                        <div class="notif-panel-hdr">
+                            <span class="notif-panel-hdr-title">اعلان‌ها</span>
+                            <button class="notif-mark-all-btn" onclick="markAllNotifRead()">خواندن همه</button>
+                        </div>
+                        <div class="notif-panel-list" id="notifPanelList">
+                            <div class="notif-panel-loading">در حال بارگذاری...</div>
+                        </div>
+                        <a href="{% url 'community:notifications' %}" class="notif-panel-footer">مشاهده همه اعلان‌ها ←</a>
+                    </div>
+                </div>
                 <!-- Account Dropdown (custom) -->
                 <div class="pf-wrap" id="pfWrap">
                     <button class="pf-trigger" id="pfTrigger" onclick="togglePfMenu(event)">
@@ -1060,9 +1272,100 @@
                 <a href="{% url 'account:login' %}" class="btn-ghost">ورود</a>
                 <a href="{% url 'account:register' %}" class="btn-red">ثبت نام</a>
             {% endif %}
+            <!-- Mobile Hamburger -->
+            <button class="nav-hamburger" id="navHamburger" onclick="navDrawerOpen()" aria-label="منو">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                </svg>
+            </button>
         </div>
     </div>
 </nav>
+
+<!-- Global Search Overlay -->
+<div class="gs-overlay" id="gsOverlay" style="display:none;" onclick="gsOverlayBgClick(event)">
+    <div class="gs-overlay-inner">
+        <div class="gs-overlay-bar">
+            <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+            <input type="text" id="gsOverlayInput" placeholder="جستجو در GameBeat..." autocomplete="off">
+            <button class="gs-overlay-close" onclick="closeGlobalSearch()">✕</button>
+        </div>
+        <div class="gs-overlay-results" id="gsOverlayResults">
+            <div class="gs-ov-hint">نام گیمر، بازی یا متن پست رو تایپ کن</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="gbToastContainer"></div>
+
+<!-- Mobile Navigation Drawer -->
+<div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="navDrawerClose()"></div>
+<div class="nav-drawer" id="navDrawer" aria-hidden="true">
+    <div class="nd-head">
+        <span class="nd-brand">GameBeat</span>
+        <button class="nd-close" onclick="navDrawerClose()" aria-label="بستن">×</button>
+    </div>
+    <nav class="nd-links">
+        <a href="{% url 'community:feed' %}" class="nd-link {% if request.resolver_match.url_name == 'feed' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-4h3v4H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354z"/></svg>
+            خانه
+        </a>
+        <a href="{% url 'community:search' %}" class="nd-link {% if request.resolver_match.url_name == 'search' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
+            جستجوی گیمر
+            {% if pending_follow_requests %}<span style="background:#ef4444;color:#fff;font-size:.6rem;font-weight:900;min-width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;margin-right:4px;">{% if pending_follow_requests > 9 %}9+{% else %}{{ pending_follow_requests }}{% endif %}</span>{% endif %}
+        </a>
+        <a href="{% url 'community:lfg' %}" class="nd-link {% if request.resolver_match.url_name == 'lfg' or request.resolver_match.url_name == 'create_lfg' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/></svg>
+            پیدا کردن هم‌بازی
+        </a>
+        <a href="{% url 'community:leaderboard' %}" class="nd-link {% if request.resolver_match.url_name == 'leaderboard' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M9.669.864 8 0 6.331.864l-1.858.282-.842 1.68-1.337 1.32L2.6 6l-.306 1.854 1.337 1.32.842 1.68 1.858.282L8 12l1.669-.864 1.858-.282.842-1.68 1.337-1.32L13.4 6l.306-1.854-1.337-1.32-.842-1.68zm1.196 1.193.684 1.365 1.086 1.072L12.387 6l.248 1.506-1.086 1.072-.684 1.365-1.51.229L8 10.874l-1.355-.702-1.51-.229-.684-1.365-1.086-1.072L3.614 6l-.25-1.506 1.087-1.072.684-1.365 1.51-.229L8 1.126l1.356.702z"/><path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1z"/></svg>
+            برترین‌ها
+        </a>
+        <a href="{% url 'community:games_ranking' %}" class="nd-link {% if request.resolver_match.url_name == 'games_ranking' or request.resolver_match.url_name == 'game_detail' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M15 7.5a.5.5 0 0 1-.5.5h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2a.5.5 0 0 1 1 0v2h2a.5.5 0 0 1 .5.5"/></svg>
+            بازی‌ها
+        </a>
+        <a href="{% url 'community:spin_list' %}" class="nd-link {% if request.resolver_match.url_name == 'spin_list' or request.resolver_match.url_name == 'spin_detail' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/></svg>
+            گردونه
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'community:daily_missions' %}" class="nd-link {% if request.resolver_match.url_name == 'daily_missions' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/></svg>
+            ماموریت‌ها
+        </a>
+        {% endif %}
+        <a href="{% url 'community:gamer_finder' %}" class="nd-link {% if request.resolver_match.url_name == 'gamer_finder' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>
+            گیمر یابی
+        </a>
+        {% if user.is_staff or user.is_superuser %}
+        <a href="/admin-panel/" class="nd-link" style="color:#a78bfa;">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg>
+            پنل ادمین
+        </a>
+        {% endif %}
+        <div class="nd-sep"></div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'community:settings' %}" class="nd-link {% if request.resolver_match.url_name == 'settings' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52z"/></svg>
+            تنظیمات
+        </a>
+        <a href="{% url 'account:logout' %}" class="nd-link" style="color:#f87171;">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+            خروج
+        </a>
+        {% else %}
+        <a href="{% url 'account:login' %}" class="nd-link">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.288 10 6 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/></svg>
+            ورود
+        </a>
+        {% endif %}
+    </nav>
+</div>
 
 <!-- Messages -->
 <style>
@@ -1134,8 +1437,23 @@
         if (e.key === 'Escape') {
             document.getElementById('pfMenu')?.classList.remove('open');
             document.getElementById('pfTrigger')?.classList.remove('open');
+            navDrawerClose();
         }
     });
+
+    /* ── Mobile Drawer ── */
+    function navDrawerOpen() {
+        document.getElementById('navDrawer').classList.add('nd-open');
+        document.getElementById('navDrawerOverlay').classList.add('nd-open');
+        document.getElementById('navDrawer').removeAttribute('aria-hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function navDrawerClose() {
+        document.getElementById('navDrawer')?.classList.remove('nd-open');
+        document.getElementById('navDrawerOverlay')?.classList.remove('nd-open');
+        document.getElementById('navDrawer')?.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
 
     // CSRF helper for fetch calls
     function getCookie(name) {
@@ -1343,7 +1661,187 @@
         if (document.hidden) stopBadgePolling();
         else startBadgePolling();
     });
+
+    // ── Notification Dropdown ──
+    let _notifPanelOpen = false;
+    let _notifLoaded = false;
+
+    function toggleNotifPanel(e) {
+        e.stopPropagation();
+        const panel = document.getElementById('notifPanel');
+        _notifPanelOpen = !_notifPanelOpen;
+        panel.style.display = _notifPanelOpen ? 'block' : 'none';
+        if (_notifPanelOpen && !_notifLoaded) loadNotifPanel();
+    }
+
+    function loadNotifPanel() {
+        fetch('{% url "community:notifications_recent" %}', {credentials:'same-origin'})
+            .then(r => r.json()).then(d => {
+                _notifLoaded = true;
+                const list = document.getElementById('notifPanelList');
+                if (!d.notifications.length) {
+                    list.innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری 🎉</div>';
+                    return;
+                }
+                list.innerHTML = d.notifications.map(n => `
+                    <div class="notif-panel-item">
+                        <div class="npi-avatar">
+                            ${n.avatar ? `<img src="${n.avatar}" alt="">` : (n.icon || '🔔')}
+                        </div>
+                        <div>
+                            <div class="npi-text">${n.text}</div>
+                            <div class="npi-time">${n.time}</div>
+                        </div>
+                    </div>`).join('');
+            }).catch(() => {
+                document.getElementById('notifPanelList').innerHTML =
+                    '<div class="notif-panel-empty">خطا در بارگذاری</div>';
+            });
+    }
+
+    function markAllNotifRead() {
+        fetch('{% url "community:notifications_mark_all_read" %}', {
+            method: 'POST', credentials: 'same-origin',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        }).then(() => {
+            _notifLoaded = false;
+            document.getElementById('notifBadge').style.display = 'none';
+            document.getElementById('navBellBtn').classList.remove('has-notif');
+            document.getElementById('notifPanelList').innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری 🎉</div>';
+            localStorage.removeItem('gb_notif_c');
+        });
+    }
+
+    // بستن panel با کلیک بیرون
+    document.addEventListener('click', function(e) {
+        if (_notifPanelOpen && !e.target.closest('.notif-wrap')) {
+            document.getElementById('notifPanel').style.display = 'none';
+            _notifPanelOpen = false;
+        }
+    });
+
+    // وقتی notif جدید میاد → toast نشون بده
+    const _origUpdate = updateBadge;
+    function updateBadge(url, badgeId, btnId, storageKey, extraBadgeId) {
+        const prevCount = parseInt(localStorage.getItem(storageKey) || '0');
+        fetch(url, {credentials:'same-origin'}).then(r => r.json()).then(d => {
+            if (badgeId === 'notifBadge' && d.count > prevCount && prevCount > 0) {
+                showGbToast('🔔 اعلان جدید داری!');
+                _notifLoaded = false;
+            }
+            const badge = document.getElementById(badgeId);
+            const btn   = document.getElementById(btnId);
+            const extra = extraBadgeId ? document.getElementById(extraBadgeId) : null;
+            if (extra) {
+                if (d.count > 0) { extra.style.display = 'block'; extra.textContent = d.count > 99 ? '99+' : d.count; }
+                else { extra.style.display = 'none'; }
+            }
+            if (!badge) return;
+            if (d.count > 0) {
+                const label = d.count > 99 ? '99+' : String(d.count);
+                if (label !== String(prevCount)) localStorage.setItem(storageKey, label);
+                if (d.count > prevCount && prevCount >= 0) {
+                    badge.style.animation = 'none'; badge.offsetHeight; badge.style.animation = '';
+                    btn && btn.classList.add('has-notif');
+                }
+                badge.textContent = label; badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+                btn && btn.classList.remove('has-notif');
+                localStorage.removeItem(storageKey);
+            }
+        }).catch(() => {});
+    }
+
+    function showGbToast(msg) {
+        const t = document.createElement('div');
+        t.className = 'gb-toast';
+        t.innerHTML = `<span class="gb-toast-icon">🔔</span><span class="gb-toast-text">${msg}</span>`;
+        t.onclick = () => t.remove();
+        document.getElementById('gbToastContainer').appendChild(t);
+        setTimeout(() => t && t.remove && t.remove(), 5000);
+    }
+    window.showGbToast = showGbToast;
     {% endif %}
+
+    // ── Global Search Overlay ──
+    function openGlobalSearch() {
+        document.getElementById('gsOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('gsOverlayInput').focus(), 50);
+    }
+    function closeGlobalSearch() {
+        document.getElementById('gsOverlay').style.display = 'none';
+        document.getElementById('gsOverlayResults').innerHTML = '<div class="gs-ov-hint">نام گیمر، بازی یا متن پست رو تایپ کن</div>';
+        document.getElementById('gsOverlayInput').value = '';
+    }
+    function gsOverlayBgClick(e) {
+        if (e.target === document.getElementById('gsOverlay')) closeGlobalSearch();
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeGlobalSearch();
+            if (_notifPanelOpen) {
+                document.getElementById('notifPanel').style.display = 'none';
+                _notifPanelOpen = false;
+            }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault(); openGlobalSearch();
+        }
+    });
+
+    let _gsTimer = null;
+    document.getElementById('gsOverlayInput').addEventListener('input', function() {
+        clearTimeout(_gsTimer);
+        const q = this.value.trim();
+        if (q.length < 2) {
+            document.getElementById('gsOverlayResults').innerHTML = '<div class="gs-ov-hint">نام گیمر، بازی یا متن پست رو تایپ کن</div>';
+            return;
+        }
+        document.getElementById('gsOverlayResults').innerHTML = '<div class="gs-ov-loading">در حال جستجو...</div>';
+        _gsTimer = setTimeout(() => {
+            fetch('{% url "community:global_search" %}?q=' + encodeURIComponent(q) + '&json=1', {credentials:'same-origin'})
+                .then(r => r.json()).then(renderGsResults).catch(() => {});
+        }, 350);
+    });
+
+    function renderGsResults(d) {
+        const box = document.getElementById('gsOverlayResults');
+        let html = '';
+        if (d.users && d.users.length) {
+            html += '<div class="gs-ov-section"><div class="gs-ov-label">گیمرها</div>';
+            d.users.slice(0,5).forEach(u => {
+                html += `<a class="gs-ov-item" href="/profile/${u.username}/" onclick="closeGlobalSearch()">
+                    <div class="gs-ov-avatar">${u.avatar ? `<img src="${u.avatar}" alt="">` : u.username[0].toUpperCase()}</div>
+                    <div><div class="gs-ov-name">${u.name}</div><div class="gs-ov-sub">@${u.username}</div></div></a>`;
+            });
+            html += '</div>';
+        }
+        if (d.games && d.games.length) {
+            html += '<div class="gs-ov-section"><div class="gs-ov-label">بازی‌ها</div>';
+            d.games.slice(0,5).forEach(g => {
+                html += `<a class="gs-ov-item" href="/games/${g.id}/" onclick="closeGlobalSearch()">
+                    <div class="gs-ov-game-thumb">${g.cover ? `<img src="${g.cover}" alt="">` : ''}</div>
+                    <div><div class="gs-ov-name">${g.name}</div><div class="gs-ov-sub">${g.developer || ''}</div></div></a>`;
+            });
+            html += '</div>';
+        }
+        if (d.posts && d.posts.length) {
+            html += '<div class="gs-ov-section"><div class="gs-ov-label">پست‌ها</div>';
+            d.posts.slice(0,4).forEach(p => {
+                html += `<a class="gs-ov-item" href="/post/${p.id}/" onclick="closeGlobalSearch()">
+                    <div class="gs-ov-avatar">${p.avatar ? `<img src="${p.avatar}" alt="">` : p.author[0].toUpperCase()}</div>
+                    <div><div class="gs-ov-sub">@${p.author}</div><div class="gs-ov-name" style="font-weight:400;font-size:.82rem;">${p.content}</div></div></a>`;
+            });
+            html += '</div>';
+        }
+        if (!html) {
+            html = '<div class="gs-ov-hint">نتیجه‌ای پیدا نشد</div>';
+        } else {
+            html += `<a class="gs-ov-all" href="{% url 'community:global_search' %}?q=${encodeURIComponent(d.q)}" onclick="closeGlobalSearch()">مشاهده همه نتایج →</a>`;
+        }
+        box.innerHTML = html;
+    }
 
     // ── Global Toast ──
     (function(){

@@ -128,6 +128,21 @@
     color:rgba(255,255,255,0.5); font-weight:600;
 }
 
+/* Skeleton shimmer */
+@keyframes gpShimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+.gp-cover.sk {
+    background: linear-gradient(90deg,#1a0535 0%,#2d1050 40%,#1a0535 80%);
+    background-size: 800px 100%;
+    animation: gpShimmer 1.4s infinite linear;
+}
+.gp-cover.sk .bg-blur,
+.gp-cover.sk .fg-img { opacity: 0; transition: opacity .3s; }
+.gp-cover.loaded .bg-blur,
+.gp-cover.loaded .fg-img { opacity: 1; }
+
 /* Empty */
 .gp-empty { text-align:center; padding:80px 20px; color:rgba(255,255,255,0.25); }
 .gp-empty i { font-size:3.5rem; display:block; margin-bottom:14px; }
@@ -179,10 +194,15 @@
         <div style="position:relative;">
         <a class="gp-card" href="{% url 'community:game_detail' game.pk %}" style="text-decoration:none;color:inherit;">
             <!-- Cover -->
-            <div class="gp-cover">
+            <div class="gp-cover {% if game.cover or game.steam_appid %}sk{% endif %}"
+                 {% if game.steam_appid and not game.cover %}data-appid="{{ game.steam_appid|stringformat:'d' }}"{% endif %}>
                 {% if game.cover %}
-                    <img src="{{ game.cover.url }}" alt="" class="bg-blur">
+                    <img src="{{ game.cover.url }}" alt="" class="bg-blur"
+                         onload="this.closest('.gp-cover').classList.replace('sk','loaded')">
                     <img src="{{ game.cover.url }}" alt="{{ game.name }}" class="fg-img">
+                {% elif game.steam_appid %}
+                    <img src="" alt="" class="bg-blur">
+                    <img src="" alt="{{ game.name }}" class="fg-img">
                 {% else %}
                     <div class="no-cover"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>
                 {% endif %}
@@ -253,6 +273,44 @@ let _st;
 document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(_st);
     _st = setTimeout(()=>{ document.getElementById('filterForm').submit(); }, 500);
+});
+
+// Steam cover loader با fallback
+const NO_COVER_HTML = '<div class="no-cover"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>';
+
+function loadSteamCover(coverDiv, appid) {
+    const urls = [
+        'https://cdn.cloudflare.steamstatic.com/steam/apps/' + appid + '/library_600x900.jpg',
+        'https://cdn.cloudflare.steamstatic.com/steam/apps/' + appid + '/header.jpg',
+    ];
+
+    function tryUrl(idx) {
+        if (idx >= urls.length) {
+            coverDiv.classList.remove('sk');
+            // حذف img ها و نمایش placeholder
+            coverDiv.querySelector('.bg-blur').remove();
+            coverDiv.querySelector('.fg-img').remove();
+            coverDiv.insertAdjacentHTML('afterbegin', NO_COVER_HTML);
+            return;
+        }
+        const probe = new Image();
+        probe.onload = function() {
+            const blur = coverDiv.querySelector('.bg-blur');
+            const fg   = coverDiv.querySelector('.fg-img');
+            if (blur) blur.src = urls[idx];
+            if (fg)   fg.src   = urls[idx];
+            coverDiv.classList.replace('sk', 'loaded');
+        };
+        probe.onerror = function() { tryUrl(idx + 1); };
+        probe.src = urls[idx];
+    }
+
+    tryUrl(0);
+}
+
+// اجرا برای همه کارت‌هایی که data-appid دارن
+document.querySelectorAll('.gp-cover[data-appid]').forEach(function(div) {
+    loadSteamCover(div, div.dataset.appid);
 });
 </script>
 {% endblock %}

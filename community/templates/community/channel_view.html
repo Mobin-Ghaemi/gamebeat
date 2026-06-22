@@ -207,6 +207,13 @@
 .role-owner { background:rgba(234,179,8,.15);color:#fbbf24;border:1px solid rgba(234,179,8,.3); }
 .role-admin { background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3); }
 .mute-badge { display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:5px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);color:#a78bfa;font-size:.6rem; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .messenger { grid-template-columns: 1fr; height: auto; min-height: calc(100vh - 64px); }
+  .ms-sidebar { display: none; }
+  .ch-area { height: calc(100vh - 64px); }
+}
 </style>
 {% endblock %}
 

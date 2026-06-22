@@ -4,6 +4,18 @@
 
 {% block extra_css %}
 <style>
+/* ═══ Skeleton shimmer ═══ */
+@keyframes achShimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+}
+.ach-skeleton {
+    background: linear-gradient(90deg, rgba(139,92,246,.06) 0%, rgba(139,92,246,.15) 40%, rgba(139,92,246,.06) 80%);
+    background-size: 1200px 100%;
+    animation: achShimmer 1.5s infinite linear;
+    border-radius: 12px; height: 62px; margin-bottom: 6px;
+}
+
 /* ═══ گروه دستاورد ═══ */
 .ach-group {
     background: var(--bg-card);
@@ -168,6 +180,13 @@
     </div>
 </div>
 
+<!-- ─── skeleton (قبل از بارگذاری) ─── -->
+<div id="achSkeletonWrap">
+    <div class="ach-skeleton"></div>
+    <div class="ach-skeleton" style="opacity:.7;"></div>
+    <div class="ach-skeleton" style="opacity:.4;"></div>
+</div>
+
 <!-- ─── گروه‌های دستاورد ─── -->
 {% regroup definitions by ach_type as type_groups %}
 
@@ -230,6 +249,13 @@
             <input type="text"   class="lvl-input lv-desc"  value="{{ d.description }}" placeholder="توضیح">
             <input type="number" class="lvl-input lvl-input-sm lv-target"  value="{{ d.target }}"  min="0" placeholder="۰" title="هدف عددی">
             <input type="number" class="lvl-input lvl-input-sm lv-reward"  value="{{ d.reward_zarban }}" min="0" title="جایزه ضربان">
+            <select class="lvl-input lv-trigger" title="تریگر خودکار" style="min-width:120px;">
+                <option value="" {% if not d.trigger %}selected{% endif %}>دستی</option>
+                <option value="followers" {% if d.trigger == 'followers' %}selected{% endif %}>فالوور</option>
+                <option value="posts" {% if d.trigger == 'posts' %}selected{% endif %}>پست</option>
+                <option value="comments" {% if d.trigger == 'comments' %}selected{% endif %}>کامنت</option>
+                <option value="reactions_received" {% if d.trigger == 'reactions_received' %}selected{% endif %}>واکنش دریافتی</option>
+            </select>
 
             <div class="lvl-active-wrap">
                 <button class="lvl-toggle {% if d.is_active %}on{% endif %} lv-active-btn"
@@ -254,6 +280,13 @@
             <input type="text"   class="lvl-input lv-desc"   placeholder="توضیح">
             <input type="number" class="lvl-input lvl-input-sm lv-target" value="0" min="0">
             <input type="number" class="lvl-input lvl-input-sm lv-reward" value="0" min="0">
+            <select class="lvl-input lv-trigger" style="min-width:110px;">
+                <option value="">دستی</option>
+                <option value="followers">فالوور</option>
+                <option value="posts">پست</option>
+                <option value="comments">کامنت</option>
+                <option value="reactions_received">واکنش دریافتی</option>
+            </select>
             <span></span>
             <button class="btn-purple" style="padding:7px 14px;font-size:.82rem;white-space:nowrap;"
                     onclick="addLvl('{{ group.grouper }}', {{ group.list|length|add:1 }}, '{{ first.icon }}', this)">
@@ -297,6 +330,16 @@
             <label>جایزه ⚡</label>
             <input type="number" class="lvl-input lvl-input-sm" id="ng-reward" value="0" min="0">
         </div>
+        <div>
+            <label>تریگر خودکار</label>
+            <select class="lvl-input" id="ng-trigger">
+                <option value="">دستی</option>
+                <option value="followers">فالوور</option>
+                <option value="posts">پست</option>
+                <option value="comments">کامنت</option>
+                <option value="reactions_received">واکنش دریافتی</option>
+            </select>
+        </div>
     </div>
     <div style="display:flex;align-items:center;gap:14px;margin-top:12px;">
         <div>
@@ -336,6 +379,7 @@ function _collectRow(row) {
         description:   row.querySelector('.lv-desc') ? row.querySelector('.lv-desc').value.trim() : '',
         target:        row.querySelector('.lv-target').value || '0',
         reward_zarban: row.querySelector('.lv-reward').value || '0',
+        trigger:       row.querySelector('.lv-trigger') ? row.querySelector('.lv-trigger').value : '',
         is_active:     (row.querySelector('.lv-active-btn') || {classList:{contains:()=>true}}).classList.contains('on') ? 'true' : 'false',
     };
 }
@@ -381,6 +425,7 @@ function addNewGroup() {
         description:   document.getElementById('ng-desc').value.trim(),
         target:        document.getElementById('ng-target').value || '0',
         reward_zarban: document.getElementById('ng-reward').value || '0',
+        trigger:       document.getElementById('ng-trigger').value,
         icon:          document.getElementById('ng-icon').value.trim() || 'bi-trophy',
         is_active: 'true',
     };
@@ -390,6 +435,15 @@ function addNewGroup() {
         else alert(d.error || 'خطا');
     });
 }
+
+// skeleton را بعد از رندر واقعی حذف کن
+(function() {
+    const sk = document.getElementById('achSkeletonWrap');
+    if (!sk) return;
+    sk.style.transition = 'opacity .25s';
+    sk.style.opacity = '0';
+    setTimeout(() => sk && sk.remove(), 260);
+})();
 
 function uploadIcon(id, input) {
     if (!input.files[0]) return;

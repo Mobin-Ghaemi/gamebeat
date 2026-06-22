@@ -561,6 +561,15 @@
 .dm-toast.show {
   opacity:1;transform:translateX(-50%) translateY(0);
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .messenger { grid-template-columns: 1fr; height: auto; min-height: calc(100vh - 64px); }
+  .ms-sidebar { display: none; }
+  .ms-chat { height: calc(100vh - 64px); }
+  .ms-chat-header { padding: 10px 14px; }
+  .ms-msg-input-wrap { padding: 10px 12px; }
+}
 </style>
 {% endblock %}
 

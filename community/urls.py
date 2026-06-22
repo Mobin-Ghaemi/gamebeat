@@ -29,6 +29,7 @@ urlpatterns = [
     path('post/<int:post_id>/boost/', views.boost_post, name='boost_post'),
     path('gaming/connect/', views.connect_gaming_account, name='connect_gaming'),
     path('gaming/disconnect/', views.disconnect_gaming_account, name='disconnect_gaming'),
+    path('gaming/<int:pk>/toggle-visibility/', views.toggle_gaming_account_visibility, name='toggle_gaming_visibility'),
     path('gaming/steam/login/', views.steam_login, name='steam_login'),
     path('gaming/steam/callback/', views.steam_callback, name='steam_callback'),
     path('gaming/steam/import-backlog/', views.steam_import_backlog, name='steam_import_backlog'),
@@ -76,6 +77,9 @@ urlpatterns = [
     path('notifications/', views.notifications_list, name='notifications'),
     path('notifications/mark-all-read/', views.notifications_mark_all_read, name='notifications_mark_all_read'),
     path('api/notifications/count/', views.notifications_count, name='notifications_count'),
+    path('api/notifications/recent/', views.notifications_recent, name='notifications_recent'),
+    path('search/global/', views.global_search, name='global_search'),
+    path('onboarding/', views.onboarding, name='onboarding'),
     # Direct Messages
     path('inbox/', views.inbox, name='inbox'),
     path('dm/<str:username>/', views.conversation, name='conversation'),

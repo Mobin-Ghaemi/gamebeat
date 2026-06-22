@@ -611,6 +611,8 @@
                 right: 0 !important;
                 margin-right: 0 !important;
             }
+            .dash-main { padding: 20px 18px; }
+            .dash-topbar { padding: 0 18px; }
             .sidebar-overlay {
                 display: none;
                 position: fixed;
@@ -619,6 +621,12 @@
                 z-index: 999;
             }
             .sidebar-overlay.open { display: block; }
+        }
+        @media (max-width: 576px) {
+            .dash-main { padding: 14px 12px; }
+            .dash-topbar { padding: 0 12px; }
+            .page-title { font-size: 1.2rem; }
+            .dash-card:has(.dash-table) { overflow-x: auto; }
         }
 
         /* ─── Scrollbar ───────────────────────────────────────────── */

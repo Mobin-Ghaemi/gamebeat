@@ -222,6 +222,8 @@ class GamerProfile(models.Model):
     show_location  = models.BooleanField(default=False, verbose_name='نمایش موقعیت')
     show_on_map    = models.BooleanField(default=True,  verbose_name='نمایش دقیق روی نقشه')
 
+    has_onboarded  = models.BooleanField(default=False, verbose_name='انجام آنبوردینگ اولیه')
+
     class Meta:
         verbose_name = 'پروفایل گیمر'
         verbose_name_plural = 'پروفایل‌های گیمران'
@@ -539,6 +541,14 @@ class LFGJoinRequest(models.Model):
 class AchievementDefinition(models.Model):
     """تعریف مرکزی دستاوردها — از ادمین پنل مدیریت می‌شود.
     هر ach_type می‌تواند چند سطح (level) داشته باشد."""
+    TRIGGER_CHOICES = [
+        ('', 'دستی (manual)'),
+        ('followers', 'تعداد فالوور'),
+        ('posts', 'تعداد پست'),
+        ('comments', 'تعداد کامنت'),
+        ('reactions_received', 'تعداد واکنش دریافتی'),
+    ]
+
     ach_type      = models.CharField(max_length=50, verbose_name='کد یکتا')
     level         = models.PositiveSmallIntegerField(default=1, verbose_name='سطح')
     title         = models.CharField(max_length=100, verbose_name='عنوان')
@@ -549,6 +559,11 @@ class AchievementDefinition(models.Model):
     reward_zarban = models.PositiveIntegerField(default=0, verbose_name='جایزه ضربان')
     is_active     = models.BooleanField(default=True, verbose_name='فعال')
     order         = models.PositiveSmallIntegerField(default=0, verbose_name='ترتیب نمایش')
+    trigger       = models.CharField(
+        max_length=20, choices=TRIGGER_CHOICES, default='', blank=True,
+        verbose_name='تریگر خودکار',
+        help_text='اگه انتخاب کنی، وقتی عدد target رسید خودکار باز میشه',
+    )
 
     class Meta:
         verbose_name = 'تعریف دستاورد'
@@ -605,6 +620,7 @@ class GamingAccount(models.Model):
     profile_url = models.URLField(blank=True)
     extra_data = models.JSONField(default=dict, blank=True)
     verified = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True, verbose_name='قابل مشاهده برای دیگران')
     connected_at = models.DateTimeField(auto_now_add=True)
     last_synced = models.DateTimeField(null=True, blank=True)
 

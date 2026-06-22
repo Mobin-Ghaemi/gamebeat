@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.dashboard_index, name='index'),
     path('monitoring/', views.monitoring, name='monitoring'),
     path('users/', views.user_list, name='users'),
+    path('users/export-csv/', views.export_users_csv, name='users_export_csv'),
     path('users/<int:user_id>/ban/', views.user_toggle_ban, name='user_ban'),
     path('users/<int:user_id>/verify/', views.user_toggle_verified, name='user_verify'),
     path('users/<int:user_id>/', views.user_detail, name='user_detail'),

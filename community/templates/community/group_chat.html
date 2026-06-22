@@ -334,6 +334,13 @@
   font-size:.62rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center;
 }
 .ms-conv-icons { display:flex;gap:3px;margin-top:2px; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .messenger { grid-template-columns: 1fr; height: auto; min-height: calc(100vh - 64px); }
+  .ms-sidebar { display: none; }
+  .gc-area { height: calc(100vh - 64px); }
+}
 </style>
 {% endblock %}
 
