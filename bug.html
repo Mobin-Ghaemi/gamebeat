@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>باگ‌های GameBeat</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0f0f1a;
+    color: #e2e8f0;
+    padding: 32px 16px 80px;
+    direction: rtl;
+  }
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 32px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .critical .section-title { color: #f87171; }
+  .warning  .section-title { color: #fbbf24; }
+  .info     .section-title { color: #60a5fa; }
+
+  .bug-card {
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    border: 1px solid;
+    position: relative;
+  }
+  .critical .bug-card { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.3); }
+  .warning  .bug-card { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.25); }
+  .info     .bug-card { background: rgba(96,165,250,0.07); border-color: rgba(96,165,250,0.2); }
+
+  .bug-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .critical .bug-title { color: #f87171; }
+  .warning  .bug-title { color: #fbbf24; }
+  .info     .bug-title { color: #60a5fa; }
+
+  .bug-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .bug-fix {
+    font-size: 0.82rem;
+    color: #4ade80;
+    background: rgba(74,222,128,0.06);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    line-height: 1.6;
+  }
+  .bug-fix strong { color: #86efac; }
+  code {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.82rem;
+    direction: ltr;
+    display: inline-block;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .badge-critical { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+  .badge-warning  { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .badge-info     { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+
+  .summary-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .summary-chip {
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 800;
+  }
+  .chip-red    { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .chip-yellow { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+  .chip-blue   { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+  .wrap { max-width: 820px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🐛 باگ‌های GameBeat</h1>
+  <p class="subtitle">مشکلاتی که مانع استفاده درست از سامانه می‌شوند — تاریخ بررسی: ۱۴۰۴/۴/۲</p>
+
+  <div class="summary-bar">
+    <div class="summary-chip chip-red">🔴 بحرانی: ۲ باگ</div>
+    <div class="summary-chip chip-yellow">🟡 مهم: ۳ باگ</div>
+    <div class="summary-chip chip-blue">🔵 متوسط: ۲ باگ</div>
+  </div>
+
+  <!-- ═══════════════════ CRITICAL ═══════════════════ -->
+  <div class="critical">
+    <div class="section-title">🔴 بحرانی — مانع کارکرد سامانه</div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-critical">CRITICAL</span>
+        کتابخانه <code>requests</code> در requirements.txt نیست
+      </div>
+      <div class="bug-desc">
+        ماژول <code>requests</code> در فایل‌های زیر استفاده می‌شود اما در <code>requirements.txt</code> وجود ندارد:<br>
+        • <code>community/views.py</code> — اتصال Steam<br>
+        • <code>community/gaming_apis.py</code> — دریافت اطلاعات Steam<br>
+        • <code>community/ai_service.py</code> — سرویس هوش مصنوعی<br>
+        • <code>trading/views.py</code> و <code>trading/services/binance_service.py</code><br><br>
+        در هنگام <code>docker build</code> روی لیارا، این ماژول نصب نمی‌شود و سرور با خطا بالا نمی‌آید
+        یا اتصال Steam کاملاً از کار می‌افتد.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> به فایل <code>requirements.txt</code> اضافه کن:<br>
+        <code>requests==2.31.0</code>
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-critical">CRITICAL</span>
+        فایل‌های media (آواتار، تصاویر) در production نمایش داده نمی‌شوند
+      </div>
+      <div class="bug-desc">
+        در Django، وقتی <code>DEBUG=False</code> است، خط<br>
+        <code>urlpatterns += static(MEDIA_URL, ...)</code><br>
+        اجرا نمی‌شود و Django فایل‌های media را serve نمی‌کند.<br><br>
+        WhiteNoise فقط فایل‌های <code>static</code> را مدیریت می‌کند، نه <code>media</code>.<br>
+        نتیجه: آواتار کاربران، کاور بازی‌های آپلودشده، و هر تصویر آپلودشده‌ای در سایت لایو
+        شکسته نمایش داده می‌شود.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع در لیارا:</strong> دیسک <code>media</code> در <code>liara.json</code> روی <code>/app/media</code> mount شده.
+        برای serve کردن، باید یکی از روش‌های زیر را اضافه کنی:<br><br>
+        <strong>گزینه ۱ — ساده‌ترین:</strong> در <code>gamebeat/urls.py</code>:<br>
+        <code>urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)</code>
+        را بدون شرط <code>DEBUG</code> اضافه کن (برای لیارا که خودش nginx داره کافیه).<br><br>
+        <strong>گزینه ۲ — بهتر:</strong> از Liara Object Storage یا S3 برای ذخیره media استفاده کن.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ WARNING ═══════════════════ -->
+  <div class="warning">
+    <div class="section-title">🟡 مهم — تجربه کاربری را خراب می‌کند</div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        تغییر رمز عبور و فراموشی رمز وجود ندارد
+      </div>
+      <div class="bug-desc">
+        هیچ view، URL یا template‌ای برای تغییر رمز عبور یا بازیابی رمز (Forgot Password)
+        در پروژه وجود ندارد. کاربری که رمزش را فراموش کرده هیچ راهی برای بازیابی ندارد
+        و باید از طریق Admin پنل رمزش عوض شود.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> Django built-in password reset را فعال کن:<br>
+        در <code>account/urls.py</code> اضافه کن:<br>
+        <code>path('password/', include('django.contrib.auth.urls'))</code><br>
+        و template‌های مربوطه را بساز، یا یک view سفارشی برای تغییر رمز بنویس.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        app ماژول <code>trading</code> در <code>INSTALLED_APPS</code> ثبت نشده
+      </div>
+      <div class="bug-desc">
+        ماژول <code>trading</code> دارای models، migrations، views و templates است
+        اما در <code>INSTALLED_APPS</code> تعریف نشده و هیچ URLای به آن اشاره نمی‌کند.
+        Migration‌های آن اجرا نمی‌شوند و قابلیت‌های trading کاملاً غیرفعال است.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> اگر ماژول trading باید فعال باشد:<br>
+        ۱) در <code>settings.py</code> به INSTALLED_APPS اضافه کن: <code>'trading'</code><br>
+        ۲) در <code>gamebeat/urls.py</code> اضافه کن: <code>path('trading/', include('trading.urls'))</code><br>
+        اگر نمی‌خواهی فعال باشد، پوشه را حذف کن تا کد مرده نماند.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        خرید پریمیوم هیچ درگاه پرداختی ندارد
+      </div>
+      <div class="bug-desc">
+        دکمه «خرید پریمیوم» در صفحه <code>/premium/</code> فقط یک لینک
+        <code>mailto:support@gamebeat.ir</code> باز می‌کند.
+        کاربر نمی‌تواند مستقلاً پریمیوم تهیه کند و باید از طریق ایمیل درخواست دهد.
+        این یعنی هیچ درآمد اتوماتیکی وجود ندارد.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> پس از دریافت درگاه پرداخت (زرین‌پال یا آیدی‌پی)،
+        view خرید را پیاده‌سازی کن. فعلاً صفحه کار می‌کند و کاربر را مسدود نمی‌کند.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ INFO ═══════════════════ -->
+  <div class="info">
+    <div class="section-title">🔵 متوسط — محدودیت یا ناقص</div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-info">INFO</span>
+        توضیح ۴۵ بازی هنوز فارسی ندارد
+      </div>
+      <div class="bug-desc">
+        از ۹۱ بازی فعال، ۴۵ بازی هنوز توضیح فارسی دریافت نکرده‌اند.
+        دلیل: quota AVALAI API هنگام تولید توضیحات تمام شد.
+        این بازی‌ها در صفحه جزئیات بدون بخش «درباره بازی» نمایش داده می‌شوند.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> پس از شارژ مجدد AVALAI، اجرا کن:<br>
+        <code>python3 manage.py shell -c "exec(open('retry_persian_descs.py').read())"</code>
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-info">INFO</span>
+        اعلان‌های push (پیامک / ایمیل) پیاده‌سازی نشده‌اند
+      </div>
+      <div class="bug-desc">
+        اعلان‌ها فقط درون سایت (in-app) کار می‌کنند. اگر کاربر آنلاین نباشد،
+        هیچ پیامک یا ایمیلی برای رویدادهای مهم (فالوور جدید، پیام، دستاورد) ارسال نمی‌شود.
+        زیرساخت SMS هنوز متصل نشده است.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> پس از اتصال سرویس پیامکی (کاوه‌نگار یا ملی‌پیامک)،
+        در signal‌های مربوطه تابع ارسال SMS اضافه کن.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
