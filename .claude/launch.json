@@ -3,16 +3,9 @@
   "configurations": [
     {
       "name": "gamebeat",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["manage.py", "runserver", "8007"],
-      "port": 8007,
-      "autoPort": false
-    },
-    {
-      "name": "basirat-frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/mobinghaemi/Projects/Basirat/frontend"],
-      "port": 5173
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["manage.py", "runserver", "8080"],
+      "port": 8080
     }
   ]
 }

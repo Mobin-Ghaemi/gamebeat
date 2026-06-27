@@ -1,0 +1,494 @@
+{% extends 'community/base.html' %}
+{% load jalali_filters %}
+{% load community_tags %}
+{% block title %}پست {{ post.author.username }} | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.pd-wrap {
+    max-width: 680px;
+    margin: 32px auto;
+    padding: 0 16px 60px;
+}
+.pd-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+    font-size: .84rem;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color .2s;
+}
+.pd-back:hover { color: var(--purple-light); }
+.pd-back svg { width: 1em; height: 1em; }
+
+.post-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 0;
+}
+.post-card.t-achievement { border-top: 3px solid #fbbf24; }
+.post-card.t-highlight   { border-top: 3px solid #a78bfa; }
+
+.post-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex: 1;
+}
+.pa-name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.pa-meta { font-size: .75rem; color: var(--text-dim); margin-top: 2px; }
+
+.post-body { margin-bottom: 14px; }
+.post-text {
+    font-size: .95rem;
+    color: var(--text-main);
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.game-tag {
+    font-size: .75rem;
+    background: rgba(139,92,246,.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139,92,246,.3);
+    border-radius: 20px;
+    padding: 2px 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+.post-img {
+    width: 100%;
+    border-radius: 14px;
+    margin-top: 12px;
+    max-height: 520px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* reactions */
+.post-reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.rxn-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: .82rem;
+    cursor: pointer;
+    transition: background .15s;
+}
+.rxn-chip:hover { background: rgba(139,92,246,.2); }
+.rxn-chip.mine { background: rgba(139,92,246,.25); border-color: rgba(139,92,246,.5); }
+
+/* footer */
+.post-foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+.pf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: .84rem;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+}
+.pf-btn:hover { background: rgba(255,255,255,.07); color: var(--text-main); }
+.pf-btn.liked { color: #f43f5e; }
+.pf-btn svg { width: 1.05em; height: 1.05em; }
+
+/* share */
+.pf-share {
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(139,92,246,.12);
+    border: 1px solid rgba(139,92,246,.3);
+    border-radius: 10px;
+    color: #a78bfa;
+    font-size: .84rem;
+    cursor: pointer;
+    transition: background .15s;
+}
+.pf-share:hover { background: rgba(139,92,246,.22); }
+
+/* comments */
+.pd-comments { margin-top: 28px; }
+.pd-comments-title {
+    font-size: .85rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pd-comments-title span {
+    background: rgba(139,92,246,.2);
+    color: #a78bfa;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: .75rem;
+}
+.c-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+}
+.c-bubble {
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    flex: 1;
+}
+.c-author { font-size: .78rem; font-weight: 700; color: #a78bfa; margin-bottom: 4px; }
+.c-text { font-size: .88rem; color: var(--text-main); line-height: 1.6; }
+.c-time { font-size: .72rem; color: var(--text-dim); margin-top: 4px; }
+
+.c-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+.no-comments {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-dim);
+    font-size: .88rem;
+}
+.post-type-badge {
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.ptb-achievement { background: rgba(251,191,36,.12); color: #fbbf24; border: 1px solid rgba(251,191,36,.3); }
+.ptb-highlight   { background: rgba(167,139,250,.12); color: #a78bfa; border: 1px solid rgba(167,139,250,.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pd-wrap">
+
+  <a href="javascript:history.back()" class="pd-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    بازگشت
+  </a>
+
+  <!-- Post Card -->
+  <div class="post-card t-{{ post.post_type }}">
+
+    <div class="post-head">
+      <a href="{% url 'community:profile' username=post.author.username %}" class="post-author">
+        {% avatar_with_frame post.author.gamer_profile 'md' %}
+        <div>
+          <div class="pa-name">
+            {{ post.author.get_full_name|default:post.author.username }}
+            {% verified_badge post.author.gamer_profile 'sm' %}
+          </div>
+          <div class="pa-meta">
+            @{{ post.author.username }}
+            {% if post.author.gamer_profile.platform %}
+              <span class="game-tag" style="margin-bottom:0;padding:1px 7px;font-size:.68rem;">{{ post.author.gamer_profile.get_platform_display }}</span>
+            {% endif %}
+            · {{ post.created_at|timesince }} پیش
+          </div>
+        </div>
+      </a>
+      <div style="display:flex;align-items:center;gap:8px;">
+        {% if post.boost_active %}
+          <span class="post-type-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.35);">🚀 بوست</span>
+        {% endif %}
+        {% if post.post_type == 'achievement' %}
+          <span class="post-type-badge ptb-achievement"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاورد</span>
+        {% elif post.post_type == 'highlight' %}
+          <span class="post-type-badge ptb-highlight"><svg class="bi bi-lightning-fill" aria-hidden="true"><use href="#bi-lightning-fill"></use></svg> هایلایت</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="post-body">
+      {% if post.game_tag %}
+        <span class="game-tag"><svg class="bi bi-controller" style="width:.9em;height:.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ post.game_tag }}</span>
+      {% endif %}
+      <p class="post-text">{{ post.content|hashtagify }}</p>
+      {% if post.image %}
+        <img src="{{ post.image.url }}" class="post-img" onclick="openLightbox(this.src)" alt="post image">
+      {% endif %}
+      {% if post.video %}
+        <video src="{{ post.video.url }}" class="post-img" controls preload="metadata"
+               style="max-height:480px;background:#111;border-radius:14px;margin-top:12px;"></video>
+      {% endif %}
+      {% if post.link_url %}
+        <a href="{{ post.link_url }}" target="_blank" rel="noopener noreferrer"
+           style="display:flex;gap:14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:12px;text-decoration:none;">
+          {% if post.link_image_url %}<img src="{{ post.link_image_url }}" style="width:100px;height:80px;object-fit:cover;flex-shrink:0;">{% endif %}
+          <div style="padding:12px;flex:1;min-width:0;">
+            <div style="font-size:.86rem;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ post.link_title|default:post.link_url }}</div>
+            {% if post.link_description %}<div style="font-size:.76rem;color:var(--text-dim);margin-top:4px;line-height:1.5;">{{ post.link_description|truncatechars:100 }}</div>{% endif %}
+          </div>
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Reaction chips -->
+    {% if post.reactions_summary %}
+    <div class="post-reactions" id="rxn-chips-{{ post.id }}">
+      {% for rxn, cnt in post.reactions_summary.items %}
+        <span class="rxn-chip {% if rxn == post.my_reaction %}mine{% endif %}"
+              onclick="sendReaction({{ post.id }}, '{{ rxn }}')" title="{{ rxn }}">
+          {{ cnt.emoji }} <span class="rxn-count">{{ cnt.count }}</span>
+        </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="post-foot">
+      {% if user.is_authenticated %}
+        <!-- Like -->
+        <div style="display:flex;align-items:center;gap:0;">
+          <button class="pf-btn {% if liked %}liked{% endif %}"
+                  id="like-btn-{{ post.id }}"
+                  onclick="toggleLike({{ post.id }}, this)"
+                  style="padding-left:6px;">
+            <span class="like-ripple-wrap"></span>
+            <svg class="bi bi-heart{% if liked %}-fill{% endif %}" aria-hidden="true" style="width:1rem;height:1rem;"><use href="#bi-heart{% if liked %}-fill{% endif %}"></use></svg>
+          </button>
+          <button class="pf-btn like-count-btn {% if liked %}liked{% endif %}"
+                  id="like-count-{{ post.id }}"
+                  onclick="showLikesModal({{ post.id }})"
+                  style="padding:7px 10px 7px 4px;gap:0;border-radius:8px;">
+            <span class="like-count" style="font-size:.88rem;font-weight:700;min-width:14px;display:inline-block;text-align:center;">{{ post.likes_count }}</span>
+          </button>
+        </div>
+        <!-- Reaction -->
+        <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
+          <button class="pf-btn" id="rxn-main-{{ post.id }}"
+              data-my-reaction="{{ post.my_reaction }}"
+              onclick="toggleReactionPicker({{ post.id }})">
+            {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.8rem;">خفن</span>
+            {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.8rem;">GG</span>
+            {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.8rem;">عصبانی</span>
+            {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.8rem;">لجند</span>
+            {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.8rem;">GG EZ</span>
+            {% elif post.my_reaction == 'cry' %}😢 <span style="font-size:.8rem;">گریه</span>
+            {% elif post.my_reaction == 'sob' %}😭 <span style="font-size:.8rem;">اشک</span>
+            {% else %}<svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> واکنش{% endif %}
+          </button>
+          <div class="reaction-picker"></div>
+        </div>
+      {% else %}
+        <a href="{% url 'account:login' %}?next={{ request.path }}" class="pf-btn" style="text-decoration:none;">
+          <svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> ورود برای واکنش
+        </a>
+      {% endif %}
+
+      <!-- Share / copy link -->
+      <button class="pf-share" onclick="shareCopyPostLink()" title="کپی لینک پست">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1em;height:1em;">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <span id="copyLinkTxt">کپی لینک</span>
+      </button>
+
+      {% if user == post.author %}
+        <button class="pf-btn" onclick="deletePostConfirm({{ post.id }})"
+                style="margin-right:auto;color:#f87171;" title="حذف پست">
+          <svg class="bi bi-trash" aria-hidden="true"><use href="#bi-trash"></use></svg>
+        </button>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Comments Section -->
+  <div class="pd-comments">
+    <div class="pd-comments-title">
+      کامنت‌ها <span>{{ post.comments_count }}</span>
+    </div>
+
+    {% if user.is_authenticated %}
+    <form class="c-input-row" onsubmit="submitCommentDetail(event, {{ post.id }}, this)" style="margin-bottom:24px;">
+      {% csrf_token %}
+      {% if my_profile and my_profile.avatar %}
+        <img src="{{ my_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
+      {% else %}
+        <div class="avatar-placeholder avatar-sm" style="font-size:.7rem;flex-shrink:0;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;">{{ user.username|first|upper }}</div>
+      {% endif %}
+      <input type="text" name="content" class="g-input"
+             style="padding:8px 14px;border-radius:50px;"
+             placeholder="کامنت بذار..."
+             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.closest('form').requestSubmit();}">
+      <button type="submit" class="btn-red" style="padding:8px 16px;flex-shrink:0;border-radius:50px;">
+        <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>
+      </button>
+    </form>
+    {% else %}
+    <a href="{% url 'account:login' %}?next={{ request.path }}"
+       style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:14px;text-decoration:none;color:var(--text-dim);font-size:.86rem;margin-bottom:24px;">
+      <svg class="bi bi-lock-fill" aria-hidden="true" style="color:#8b5cf6;"><use href="#bi-lock-fill"></use></svg>
+      برای کامنت گذاشتن ورود کن
+    </a>
+    {% endif %}
+
+    <div id="comments-list-{{ post.id }}">
+    {% for comment in post.comments.all %}
+    <div class="c-item" id="citem-{{ comment.pk }}">
+      {% if comment.author.gamer_profile.avatar %}
+        <img src="{{ comment.author.gamer_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
+      {% else %}
+        <div class="avatar-placeholder avatar-sm" style="font-size:.7rem;flex-shrink:0;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;">{{ comment.author.username|first|upper }}</div>
+      {% endif %}
+      <div class="c-bubble" style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
+          <a href="{% url 'community:profile' username=comment.author.username %}" class="c-author" style="text-decoration:none;">@{{ comment.author.username }}</a>
+          <span class="c-time">{{ comment.created_at|timesince }} پیش</span>
+        </div>
+        <div class="c-text">{{ comment.content }}</div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="no-comments" id="no-comments-msg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;opacity:.3;display:block;margin:0 auto 12px;">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      اولین کامنت رو بذار!
+    </div>
+    {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+function shareCopyPostLink() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyLinkTxt');
+    btn.textContent = '✓ کپی شد!';
+    setTimeout(() => { btn.textContent = 'کپی لینک'; }, 2000);
+  }).catch(() => {
+    // fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copyLinkTxt');
+    btn.textContent = '✓ کپی شد!';
+    setTimeout(() => { btn.textContent = 'کپی لینک'; }, 2000);
+  });
+}
+
+function submitCommentDetail(e, postId, form) {
+  e.preventDefault();
+  const input = form.querySelector('input[name="content"]');
+  const content = input.value.trim();
+  if (!content) return;
+
+  const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  fetch(`/post/${postId}/comment/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+    body: new URLSearchParams({ content })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok || data.comment) {
+      const c = data.comment || data;
+      const list = document.getElementById(`comments-list-${postId}`);
+      const noMsg = document.getElementById('no-comments-msg');
+      if (noMsg) noMsg.remove();
+
+      const avatar = c.avatar
+        ? `<img src="${c.avatar}" class="avatar avatar-sm" style="flex-shrink:0;">`
+        : `<div class="avatar-placeholder avatar-sm" style="font-size:.7rem;flex-shrink:0;background:linear-gradient(135deg,#4c1d95,#6d28d9);border:none;color:#fff;">${(c.username || c.author || '?')[0].toUpperCase()}</div>`;
+
+      const name = c.username || c.author || '?';
+      const html = `<div class="c-item">
+        ${avatar}
+        <div class="c-bubble">
+          <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
+            <a href="/profile/${name}/" class="c-author" style="text-decoration:none;">@${name}</a>
+            <span class="c-time">الان</span>
+          </div>
+          <div class="c-text">${c.content}</div>
+        </div>
+      </div>`;
+      list.insertAdjacentHTML('beforeend', html);
+      input.value = '';
+
+      // Update comment count badge
+      const countBadge = document.querySelector('.pd-comments-title span');
+      if (countBadge) countBadge.textContent = parseInt(countBadge.textContent || 0) + 1;
+    } else {
+      showToast(data.error || 'خطا در ارسال کامنت');
+    }
+  })
+  .catch(() => showToast('خطا در ارتباط'));
+}
+
+function deletePostConfirm(postId) {
+  if (!confirm('پست حذف شود؟')) return;
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+  const token = csrf ? csrf.value : '';
+  fetch(`/post/${postId}/delete/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': token }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) window.location.href = '/';
+    else showToast(data.error || 'خطا در حذف');
+  })
+  .catch(() => showToast('خطا در ارتباط'));
+}
+</script>
+{% endblock %}
+{% endblock %}

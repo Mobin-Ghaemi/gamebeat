@@ -13,6 +13,7 @@ urlpatterns = [
     path('lfg/join-requests/<int:req_id>/respond/', views.respond_lfg_join, name='lfg_join_respond'),
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('post/create/', views.create_post, name='create_post'),
+    path('post/<int:post_id>/', views.post_detail, name='post_detail'),
     path('post/<int:post_id>/like/', views.toggle_like, name='toggle_like'),
     path('post/<int:post_id>/interactions/', views.post_interactions, name='post_interactions'),
     path('post/<int:post_id>/likes/', views.post_likes_list, name='post_likes_list'),

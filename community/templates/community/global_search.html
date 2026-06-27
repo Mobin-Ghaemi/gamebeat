@@ -97,9 +97,7 @@
     </form>
 
     {% if q %}
-    {% with total=users_results|length|add:games_results|length|add:posts_results|length %}
-    <div class="gs-total">{{ total }} نتیجه برای «{{ q }}»</div>
-    {% endwith %}
+    <div class="gs-total">{{ total_count }} نتیجه برای «{{ q }}»</div>
 
     {% if users_results %}
     <div class="gs-section-title">گیمرها</div>

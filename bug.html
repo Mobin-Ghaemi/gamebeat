@@ -13,161 +13,107 @@
     padding: 32px 16px 80px;
     direction: rtl;
   }
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-  .subtitle {
-    color: #64748b;
-    font-size: 0.9rem;
-    margin-bottom: 36px;
-  }
+  h1 { font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 36px; }
   .section-title {
-    font-size: 1rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin: 32px 0 14px;
-    padding-bottom: 8px;
+    font-size: 1rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1.5px; margin: 32px 0 14px; padding-bottom: 8px;
     border-bottom: 1px solid rgba(255,255,255,0.07);
   }
   .critical .section-title { color: #f87171; }
   .warning  .section-title { color: #fbbf24; }
   .info     .section-title { color: #60a5fa; }
+  .fixed    .section-title { color: #4ade80; }
 
   .bug-card {
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 12px;
-    border: 1px solid;
-    position: relative;
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 12px;
+    border: 1px solid; position: relative;
   }
-  .critical .bug-card { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.3); }
-  .warning  .bug-card { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.25); }
-  .info     .bug-card { background: rgba(96,165,250,0.07); border-color: rgba(96,165,250,0.2); }
+  .critical .bug-card { background: rgba(239,68,68,0.07);   border-color: rgba(239,68,68,0.3); }
+  .warning  .bug-card { background: rgba(251,191,36,0.07);  border-color: rgba(251,191,36,0.25); }
+  .info     .bug-card { background: rgba(96,165,250,0.07);  border-color: rgba(96,165,250,0.2); }
+  .fixed    .bug-card { background: rgba(74,222,128,0.05);  border-color: rgba(74,222,128,0.2); }
 
-  .bug-title {
-    font-size: 0.95rem;
-    font-weight: 800;
-    margin-bottom: 6px;
-  }
+  .bug-title { font-size: 0.95rem; font-weight: 800; margin-bottom: 6px; }
   .critical .bug-title { color: #f87171; }
   .warning  .bug-title { color: #fbbf24; }
   .info     .bug-title { color: #60a5fa; }
+  .fixed    .bug-title { color: #4ade80; }
 
   .bug-desc {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    line-height: 1.7;
-    margin-bottom: 8px;
+    font-size: 0.85rem; color: #94a3b8; line-height: 1.7; margin-bottom: 8px;
   }
   .bug-fix {
-    font-size: 0.82rem;
-    color: #4ade80;
-    background: rgba(74,222,128,0.06);
-    border: 1px solid rgba(74,222,128,0.2);
-    border-radius: 8px;
-    padding: 8px 12px;
-    line-height: 1.6;
+    font-size: 0.82rem; color: #4ade80;
+    background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 8px; padding: 8px 12px; line-height: 1.6;
   }
   .bug-fix strong { color: #86efac; }
   code {
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 0.82rem;
-    direction: ltr;
-    display: inline-block;
+    background: rgba(255,255,255,0.08); border-radius: 4px;
+    padding: 1px 6px; font-size: 0.82rem; direction: ltr; display: inline-block;
+  }
+  pre {
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; direction: ltr;
+    overflow-x: auto; margin-top: 8px; line-height: 1.6;
   }
   .badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-right: 6px;
-    vertical-align: middle;
+    display: inline-block; font-size: 0.68rem; font-weight: 800;
+    padding: 2px 8px; border-radius: 20px; margin-right: 6px; vertical-align: middle;
   }
-  .badge-critical { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+  .badge-critical { background: rgba(239,68,68,0.2);   color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
   .badge-warning  { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
   .badge-info     { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+  .badge-fixed    { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
 
-  .summary-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-  }
-  .summary-chip {
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    font-weight: 800;
-  }
+  .summary-bar { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  .summary-chip { padding: 10px 20px; border-radius: 50px; font-size: 0.85rem; font-weight: 800; }
   .chip-red    { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
   .chip-yellow { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
   .chip-blue   { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
-  .wrap { max-width: 820px; margin: 0 auto; }
+  .chip-green  { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .file-ref { font-size: 0.75rem; color: #475569; font-family: monospace; direction: ltr; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <h1>🐛 باگ‌های GameBeat</h1>
-  <p class="subtitle">مشکلاتی که مانع استفاده درست از سامانه می‌شوند — تاریخ بررسی: ۱۴۰۴/۴/۲</p>
+  <p class="subtitle">تست کامل فلو سایت — تاریخ بررسی: ۱۴۰۴/۴/۲</p>
 
   <div class="summary-bar">
-    <div class="summary-chip chip-red">🔴 بحرانی: ۲ باگ</div>
-    <div class="summary-chip chip-yellow">🟡 مهم: ۳ باگ</div>
-    <div class="summary-chip chip-blue">🔵 متوسط: ۲ باگ</div>
+    <div class="summary-chip chip-red">🔴 بحرانی: ۱ باگ</div>
+    <div class="summary-chip chip-yellow">🟡 مهم: ۴ باگ</div>
+    <div class="summary-chip chip-blue">🔵 متوسط: ۴ باگ</div>
+    <div class="summary-chip chip-green">✅ رفع‌شده: ۲ مورد</div>
   </div>
 
   <!-- ═══════════════════ CRITICAL ═══════════════════ -->
   <div class="critical">
-    <div class="section-title">🔴 بحرانی — مانع کارکرد سامانه</div>
+    <div class="section-title">🔴 بحرانی — نمایش غلط برای همه کاربران</div>
 
     <div class="bug-card">
       <div class="bug-title">
         <span class="badge badge-critical">CRITICAL</span>
-        کتابخانه <code>requests</code> در requirements.txt نیست
+        شمارنده جستجوی سراسری همیشه «۰ نتیجه» نشان می‌دهد
       </div>
-      <div class="bug-desc">
-        ماژول <code>requests</code> در فایل‌های زیر استفاده می‌شود اما در <code>requirements.txt</code> وجود ندارد:<br>
-        • <code>community/views.py</code> — اتصال Steam<br>
-        • <code>community/gaming_apis.py</code> — دریافت اطلاعات Steam<br>
-        • <code>community/ai_service.py</code> — سرویس هوش مصنوعی<br>
-        • <code>trading/views.py</code> و <code>trading/services/binance_service.py</code><br><br>
-        در هنگام <code>docker build</code> روی لیارا، این ماژول نصب نمی‌شود و سرور با خطا بالا نمی‌آید
-        یا اتصال Steam کاملاً از کار می‌افتد.
-      </div>
-      <div class="bug-fix">
-        <strong>رفع:</strong> به فایل <code>requirements.txt</code> اضافه کن:<br>
-        <code>requests==2.31.0</code>
-      </div>
-    </div>
-
-    <div class="bug-card">
-      <div class="bug-title">
-        <span class="badge badge-critical">CRITICAL</span>
-        فایل‌های media (آواتار، تصاویر) در production نمایش داده نمی‌شوند
-      </div>
-      <div class="bug-desc">
-        در Django، وقتی <code>DEBUG=False</code> است، خط<br>
-        <code>urlpatterns += static(MEDIA_URL, ...)</code><br>
-        اجرا نمی‌شود و Django فایل‌های media را serve نمی‌کند.<br><br>
-        WhiteNoise فقط فایل‌های <code>static</code> را مدیریت می‌کند، نه <code>media</code>.<br>
-        نتیجه: آواتار کاربران، کاور بازی‌های آپلودشده، و هر تصویر آپلودشده‌ای در سایت لایو
-        شکسته نمایش داده می‌شود.
+      <p class="file-ref">community/templates/community/global_search.html — خط ۱۰۰</p>
+      <div class="bug-desc" style="margin-top:8px">
+        صفحه <code>/search/global/?q=...</code> نتایج را درست نمایش می‌دهد، ولی بالای صفحه
+        همیشه <strong>«۰ نتیجه»</strong> می‌زند حتی وقتی بازی‌ها و گیمرها پیدا شده‌اند.<br><br>
+        دلیل: زنجیره filter در Django template اشتباه است:
+        <pre>{% with total=users_results|length|add:games_results|length|add:posts_results|length %}</pre>
+        فیلتر <code>|add:</code> وقتی آرگومانش یک list باشه (نه عدد)، مقدار خالی <code>""</code> برمی‌گردونه.
+        بعدش <code>|length</code> روی <code>""</code> می‌شه ۰. پس total همیشه ۰ است.
       </div>
       <div class="bug-fix">
-        <strong>رفع در لیارا:</strong> دیسک <code>media</code> در <code>liara.json</code> روی <code>/app/media</code> mount شده.
-        برای serve کردن، باید یکی از روش‌های زیر را اضافه کنی:<br><br>
-        <strong>گزینه ۱ — ساده‌ترین:</strong> در <code>gamebeat/urls.py</code>:<br>
-        <code>urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)</code>
-        را بدون شرط <code>DEBUG</code> اضافه کن (برای لیارا که خودش nginx داره کافیه).<br><br>
-        <strong>گزینه ۲ — بهتر:</strong> از Liara Object Storage یا S3 برای ذخیره media استفاده کن.
+        <strong>رفع — در view (community/views.py خط ۴۵۳۳):</strong><br>
+        به context اضافه کن:
+        <pre>'total_count': len(users_results) + len(games_results) + len(posts_results),</pre>
+        <strong>در template خط ۱۰۰ تغییر بده به:</strong>
+        <pre>&lt;div class="gs-total"&gt;{{ total_count }} نتیجه برای «{{ q }}»&lt;/div&gt;</pre>
       </div>
     </div>
   </div>
@@ -179,55 +125,86 @@
     <div class="bug-card">
       <div class="bug-title">
         <span class="badge badge-warning">WARNING</span>
-        تغییر رمز عبور و فراموشی رمز وجود ندارد
+        اینباکس — پنل سمت چپ هنگام عدم انتخاب مکالمه کاملاً مشکی است
       </div>
-      <div class="bug-desc">
-        هیچ view، URL یا template‌ای برای تغییر رمز عبور یا بازیابی رمز (Forgot Password)
-        در پروژه وجود ندارد. کاربری که رمزش را فراموش کرده هیچ راهی برای بازیابی ندارد
-        و باید از طریق Admin پنل رمزش عوض شود.
+      <p class="file-ref">community/templates/community/inbox.html — خط ۵۳۴</p>
+      <div class="bug-desc" style="margin-top:8px">
+        وقتی کاربر وارد <code>/inbox/</code> می‌شود و هیچ مکالمه‌ای انتخاب نشده، پنل سمت چپ
+        یک فضای کاملاً سیاه و خالی نشان می‌دهد. دلیل اینه که div
+        <code>.ms-empty</code> هیچ محتوایی ندارد:
+        <pre>&lt;div class="ms-empty"&gt;&lt;/div&gt;</pre>
+        در حالی که CSS برای <code>.ms-empty h3</code> و <code>.ms-empty p</code> تعریف شده.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع — خط ۵۳۴ inbox.html را تغییر بده به:</strong>
+        <pre>&lt;div class="ms-empty"&gt;
+  &lt;div class="ms-empty-icon"&gt;
+    &lt;svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"&gt;
+      &lt;path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/&gt;
+    &lt;/svg&gt;
+  &lt;/div&gt;
+  &lt;h3&gt;یک مکالمه انتخاب کن&lt;/h3&gt;
+  &lt;p&gt;برای شروع گفتگو، از لیست سمت راست یک مکالمه انتخاب کن&lt;/p&gt;
+&lt;/div&gt;</pre>
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        نوار پیشرفت آنبوردینگ — مرحله اول در سمت چپ (آخر) هایلایت می‌شود
+      </div>
+      <p class="file-ref">community/templates/community/onboarding.html — خط ۱۲۶</p>
+      <div class="bug-desc" style="margin-top:8px">
+        در صفحه آنبوردینگ <code>/onboarding/</code>، نوار پیشرفت سه مرحله‌ای دارد.
+        کد HTML، <code>prog0</code> را active می‌کند (مرحله اول)، اما چون صفحه RTL است و
+        <code>display: flex</code> آیتم‌ها را از راست به چپ مرتب می‌کند،
+        <code>prog0</code> در سمت راست (آخر بصری) قرار می‌گیرد و به نظر می‌رسد مرحله سوم
+        هایلایت شده است.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع — در CSS آنبوردینگ:</strong>
+        <pre>.ob-progress { flex-direction: row-reverse; }</pre>
+        یا ترتیب HTML را برعکس کن (<code>prog2</code>، بعد <code>prog1</code>، بعد <code>prog0</code>).
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        پست‌ها هیچ صفحه جزئیاتی ندارند
+      </div>
+      <p class="file-ref">community/urls.py</p>
+      <div class="bug-desc" style="margin-top:8px">
+        هیچ URL مثل <code>/post/&lt;id&gt;/</code> وجود ندارد. کاربران نمی‌توانند لینک مستقیم
+        به یک پست بفرستند. همچنین برای دیدن تمام کامنت‌های یک پست راه مستقیمی نیست
+        (فقط از طریق AJAX درون feed کار می‌کند). این یعنی پست‌ها قابل اشتراک‌گذاری نیستند.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> یک view و template برای جزئیات پست بساز:<br>
+        در <code>community/urls.py</code>: <code>path('post/&lt;int:post_id&gt;/', views.post_detail, name='post_detail')</code><br>
+        view باید پست + تمام کامنت‌ها + فرم کامنت جدید را رندر کند.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-warning">WARNING</span>
+        فراموشی رمز عبور وجود ندارد
+      </div>
+      <p class="file-ref">account/urls.py</p>
+      <div class="bug-desc" style="margin-top:8px">
+        هیچ view، URL یا template‌ای برای بازیابی رمز (Forgot Password) وجود ندارد.
+        کاربری که رمزش را فراموش کرده هیچ راهی برای بازیابی ندارد و باید از Admin پنل
+        رمزش تغییر کند.
       </div>
       <div class="bug-fix">
         <strong>رفع:</strong> Django built-in password reset را فعال کن:<br>
-        در <code>account/urls.py</code> اضافه کن:<br>
-        <code>path('password/', include('django.contrib.auth.urls'))</code><br>
-        و template‌های مربوطه را بساز، یا یک view سفارشی برای تغییر رمز بنویس.
+        در <code>account/urls.py</code>: <code>path('', include('django.contrib.auth.urls'))</code><br>
+        و template‌های <code>registration/</code> را بساز.
       </div>
     </div>
 
-    <div class="bug-card">
-      <div class="bug-title">
-        <span class="badge badge-warning">WARNING</span>
-        app ماژول <code>trading</code> در <code>INSTALLED_APPS</code> ثبت نشده
-      </div>
-      <div class="bug-desc">
-        ماژول <code>trading</code> دارای models، migrations، views و templates است
-        اما در <code>INSTALLED_APPS</code> تعریف نشده و هیچ URLای به آن اشاره نمی‌کند.
-        Migration‌های آن اجرا نمی‌شوند و قابلیت‌های trading کاملاً غیرفعال است.
-      </div>
-      <div class="bug-fix">
-        <strong>رفع:</strong> اگر ماژول trading باید فعال باشد:<br>
-        ۱) در <code>settings.py</code> به INSTALLED_APPS اضافه کن: <code>'trading'</code><br>
-        ۲) در <code>gamebeat/urls.py</code> اضافه کن: <code>path('trading/', include('trading.urls'))</code><br>
-        اگر نمی‌خواهی فعال باشد، پوشه را حذف کن تا کد مرده نماند.
-      </div>
-    </div>
-
-    <div class="bug-card">
-      <div class="bug-title">
-        <span class="badge badge-warning">WARNING</span>
-        خرید پریمیوم هیچ درگاه پرداختی ندارد
-      </div>
-      <div class="bug-desc">
-        دکمه «خرید پریمیوم» در صفحه <code>/premium/</code> فقط یک لینک
-        <code>mailto:support@gamebeat.ir</code> باز می‌کند.
-        کاربر نمی‌تواند مستقلاً پریمیوم تهیه کند و باید از طریق ایمیل درخواست دهد.
-        این یعنی هیچ درآمد اتوماتیکی وجود ندارد.
-      </div>
-      <div class="bug-fix">
-        <strong>رفع:</strong> پس از دریافت درگاه پرداخت (زرین‌پال یا آیدی‌پی)،
-        view خرید را پیاده‌سازی کن. فعلاً صفحه کار می‌کند و کاربر را مسدود نمی‌کند.
-      </div>
-    </div>
   </div>
 
   <!-- ═══════════════════ INFO ═══════════════════ -->
@@ -237,15 +214,50 @@
     <div class="bug-card">
       <div class="bug-title">
         <span class="badge badge-info">INFO</span>
+        خرید پریمیوم — درگاه پرداخت وجود ندارد
+      </div>
+      <p class="file-ref">community/templates/community/premium_info.html — خط ۱۰۰</p>
+      <div class="bug-desc" style="margin-top:8px">
+        دکمه «خرید پریمیوم» در صفحه <code>/premium/</code> فقط یک لینک
+        <code>mailto:support@gamebeat.ir</code> باز می‌کند.
+        کاربر نمی‌تواند مستقلاً پریمیوم تهیه کند.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> پس از دریافت درگاه پرداخت (زرین‌پال / آیدی‌پی)، view خرید را
+        پیاده‌سازی کن. view اولیه (<code>account/views.py:97</code>) وجود دارد ولی template
+        آن فقط یک صفحه placeholder است.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-info">INFO</span>
+        ماژول <code>trading</code> در <code>INSTALLED_APPS</code> ثبت نشده
+      </div>
+      <p class="file-ref">gamebeat/settings.py</p>
+      <div class="bug-desc" style="margin-top:8px">
+        ماژول <code>trading</code> دارای models، migrations، views و templates است اما
+        در INSTALLED_APPS تعریف نشده و هیچ URLی به آن اشاره نمی‌کند.
+        Migration‌های آن اجرا نمی‌شوند.
+      </div>
+      <div class="bug-fix">
+        <strong>رفع:</strong> اگر این ماژول باید فعال باشد، در <code>INSTALLED_APPS</code> اضافه کن.
+        اگر نه، پوشه را حذف کن تا کد مرده نماند.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-info">INFO</span>
         توضیح ۴۵ بازی هنوز فارسی ندارد
       </div>
-      <div class="bug-desc">
+      <div class="bug-desc" style="margin-top:8px">
         از ۹۱ بازی فعال، ۴۵ بازی هنوز توضیح فارسی دریافت نکرده‌اند.
         دلیل: quota AVALAI API هنگام تولید توضیحات تمام شد.
         این بازی‌ها در صفحه جزئیات بدون بخش «درباره بازی» نمایش داده می‌شوند.
       </div>
       <div class="bug-fix">
-        <strong>رفع:</strong> پس از شارژ مجدد AVALAI، اجرا کن:<br>
+        <strong>رفع:</strong> پس از شارژ مجدد AVALAI، در ریشه پروژه اجرا کن:<br>
         <code>python3 manage.py shell -c "exec(open('retry_persian_descs.py').read())"</code>
       </div>
     </div>
@@ -255,14 +267,41 @@
         <span class="badge badge-info">INFO</span>
         اعلان‌های push (پیامک / ایمیل) پیاده‌سازی نشده‌اند
       </div>
-      <div class="bug-desc">
-        اعلان‌ها فقط درون سایت (in-app) کار می‌کنند. اگر کاربر آنلاین نباشد،
-        هیچ پیامک یا ایمیلی برای رویدادهای مهم (فالوور جدید، پیام، دستاورد) ارسال نمی‌شود.
-        زیرساخت SMS هنوز متصل نشده است.
+      <div class="bug-desc" style="margin-top:8px">
+        اعلان‌ها فقط درون سایت (in-app) کار می‌کنند. اگر کاربر آفلاین باشد،
+        هیچ پیامک یا ایمیلی برای رویدادهای مهم ارسال نمی‌شود.
       </div>
       <div class="bug-fix">
         <strong>رفع:</strong> پس از اتصال سرویس پیامکی (کاوه‌نگار یا ملی‌پیامک)،
         در signal‌های مربوطه تابع ارسال SMS اضافه کن.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ FIXED ═══════════════════ -->
+  <div class="fixed">
+    <div class="section-title">✅ رفع‌شده — قبلاً باگ بود، الان درست است</div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-fixed">FIXED</span>
+        کتابخانه <code>requests</code> در requirements.txt نبود
+      </div>
+      <div class="bug-desc" style="margin-top:8px">
+        ماژول <code>requests</code> در ۵ فایل استفاده می‌شد اما در <code>requirements.txt</code>
+        نبود — باعث خطا هنگام <code>docker build</code> می‌شد. اضافه شد: <code>requests==2.31.0</code>
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <div class="bug-title">
+        <span class="badge badge-fixed">FIXED</span>
+        فایل‌های media در production نمایش داده نمی‌شدند
+      </div>
+      <div class="bug-desc" style="margin-top:8px">
+        خط <code>urlpatterns += static(MEDIA_URL, ...)</code> شرط <code>if DEBUG:</code>
+        داشت و در production اجرا نمی‌شد. شرط حذف شد تا روی لیارا هم کار کند.
       </div>
     </div>
 

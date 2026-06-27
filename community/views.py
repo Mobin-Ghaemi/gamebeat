@@ -2168,7 +2168,7 @@ def conversation(request, username):
     ))
 
     # هیچ‌کس نمی‌تونه به چت مدیریت گیم بیت پاسخ بده (یک‌طرفه برای همه)
-    is_locked = is_admin_other
+    is_locked = (other_user.username == 'admin')
     other_gp = getattr(other_user, 'gamer_profile', None)
     if request.user != other_user and other_gp:
         if not other_gp.allow_dm:
@@ -2185,7 +2185,7 @@ def conversation(request, username):
         'other_user': other_user,
         'other_profile': other_profile,
         'conv_data': conv_data,
-        'is_admin_other': is_admin_other,
+        'is_admin_other': (other_user.username == 'admin'),
         'is_locked': is_locked,
         'is_blocked': is_blocked,
         'is_pinned': is_pinned,
@@ -2963,6 +2963,7 @@ def set_pinned_game(request):
 #  CHALLENGES
 # ═══════════════════════════════════════
 
+@login_required
 def challenges_page(request):
     from django.utils import timezone
     now = timezone.now()
@@ -4535,6 +4536,24 @@ def global_search(request):
         'users_results': users_results,
         'games_results': games_results,
         'posts_results': posts_results,
+        'total_count': len(users_results) + len(games_results) + len(posts_results),
+    })
+
+
+def post_detail(request, post_id):
+    post = get_object_or_404(
+        Post.objects.select_related('author', 'author__gamer_profile')
+                    .prefetch_related('reactions', 'comments__author__gamer_profile'),
+        pk=post_id,
+        is_public=True,
+    )
+    _annotate_reactions([post], request.user)
+    liked = PostLike.objects.filter(post=post, user=request.user).exists() if request.user.is_authenticated else False
+    my_profile = get_or_create_gamer_profile(request.user) if request.user.is_authenticated else None
+    return render(request, 'community/post_detail.html', {
+        'post': post,
+        'liked': liked,
+        'my_profile': my_profile,
     })
 
 
