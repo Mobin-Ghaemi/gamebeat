@@ -86,7 +86,7 @@
   <div class="summary-bar">
     <div class="summary-chip chip-red">🔴 بحرانی: ۱ باگ</div>
     <div class="summary-chip chip-yellow">🟡 مهم: ۴ باگ</div>
-    <div class="summary-chip chip-blue">🔵 متوسط: ۴ باگ</div>
+    <div class="summary-chip chip-blue">🔵 متوسط: ۳ باگ</div>
     <div class="summary-chip chip-green">✅ رفع‌شده: ۲ مورد</div>
   </div>
 
@@ -229,22 +229,6 @@
       </div>
     </div>
 
-    <div class="bug-card">
-      <div class="bug-title">
-        <span class="badge badge-info">INFO</span>
-        ماژول <code>trading</code> در <code>INSTALLED_APPS</code> ثبت نشده
-      </div>
-      <p class="file-ref">gamebeat/settings.py</p>
-      <div class="bug-desc" style="margin-top:8px">
-        ماژول <code>trading</code> دارای models، migrations، views و templates است اما
-        در INSTALLED_APPS تعریف نشده و هیچ URLی به آن اشاره نمی‌کند.
-        Migration‌های آن اجرا نمی‌شوند.
-      </div>
-      <div class="bug-fix">
-        <strong>رفع:</strong> اگر این ماژول باید فعال باشد، در <code>INSTALLED_APPS</code> اضافه کن.
-        اگر نه، پوشه را حذف کن تا کد مرده نماند.
-      </div>
-    </div>
 
     <div class="bug-card">
       <div class="bug-title">
