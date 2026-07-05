@@ -330,6 +330,31 @@
 .tip-item:last-child { border-bottom: none; }
 .tip-item i { color: var(--blue-accent); margin-top: 2px; flex-shrink: 0; }
 
+.lfg-trust {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px; border-radius:20px;
+    background:rgba(34,197,94,.1); color:#4ade80;
+    border:1px solid rgba(34,197,94,.22);
+    font-size:.68rem; font-weight:800;
+}
+.lfg-feedback-box {
+    margin-top:12px; padding:10px 12px; border-radius:12px;
+    background:rgba(255,255,255,.035); border:1px solid var(--border);
+}
+.lfg-feedback-title { font-size:.78rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; }
+.lfg-feedback-row { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:7px 0; border-top:1px solid rgba(255,255,255,.05); }
+.lfg-feedback-row:first-of-type { border-top:none; }
+.lfg-feedback-name { color:var(--text-white); font-size:.82rem; font-weight:700; }
+.lfg-feedback-actions { display:flex; gap:5px; flex-wrap:wrap; }
+.lfg-feedback-btn {
+    border:1px solid var(--border); border-radius:8px; padding:5px 9px;
+    background:rgba(255,255,255,.04); color:var(--text-muted);
+    font-size:.74rem; font-weight:700; cursor:pointer; font-family:'Vazirmatn',sans-serif;
+}
+.lfg-feedback-btn.good { color:#4ade80; border-color:rgba(74,222,128,.28); background:rgba(74,222,128,.08); }
+.lfg-feedback-btn.warn { color:#fbbf24; border-color:rgba(251,191,36,.28); background:rgba(251,191,36,.08); }
+.lfg-feedback-btn.bad { color:#f87171; border-color:rgba(248,113,113,.28); background:rgba(248,113,113,.08); }
+
 @media (max-width: 900px) {
     .lfg-layout { grid-template-columns: 1fr; }
     .lfg-sidebar { position: static; }
@@ -763,10 +788,24 @@
                         <label class="g-label">توضیحات (اختیاری)</label>
                         <textarea name="description" class="g-input" style="min-height: 70px;" placeholder="رنک، ساعت بازی، یا هر چیزی که بخوای بگی..."></textarea>
                     </div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label class="g-label">زمان پیشنهادی</label>
+                            <input type="datetime-local" name="scheduled_for" class="g-input">
+                        </div>
+                        <div>
+                            <label class="g-label">سرور / منطقه</label>
+                            <input type="text" name="region" class="g-input" maxlength="60" placeholder="مثلاً Europe، Middle East، ایران">
+                        </div>
+                    </div>
                     <div style="margin-bottom: 14px;">
                         <label class="g-label"><svg class="bi bi-headset" aria-hidden="true" style="vertical-align:-.125em;"><use href="#bi-headset"></use></svg> دیسکورد / آیدی بازی (اختیاری)</label>
                         <input type="text" name="contact" class="g-input" maxlength="120" placeholder="مثلاً: Discord: mobin#1234 یا Steam: mobingg">
                     </div>
+                    <label style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:.82rem;margin-bottom:12px;">
+                        <input type="checkbox" name="voice_required" style="accent-color:var(--blue-accent);width:16px;height:16px;">
+                        ویس لازم است
+                    </label>
                     <div style="margin-bottom:12px;">
                         <label class="g-label">نوع پیوستن</label>
                         <select name="join_type" class="g-input">
@@ -799,6 +838,9 @@
                                 <span class="lfg-badge lfg-badge-platform">{{ post.get_platform_display }}</span>
                                 <span class="lfg-badge lfg-badge-mode">{{ post.get_game_mode_display }}</span>
                                 <span class="lfg-badge lfg-badge-skill">{{ post.get_skill_level_display }}</span>
+                                {% if post.voice_required %}<span class="lfg-badge lfg-badge-mode">ویس لازم</span>{% endif %}
+                                {% if post.region %}<span class="lfg-badge lfg-badge-platform">{{ post.region }}</span>{% endif %}
+                                {% if not post.is_approved %}<span class="lfg-badge lfg-badge-skill">در انتظار تأیید</span>{% endif %}
                             </div>
                         </div>
                         <a href="{% url 'community:profile' username=post.author.username %}" class="lfg-author">
@@ -807,6 +849,7 @@
                             <div class="lfg-author-info">
                                 <span class="lfg-author-name" style="display:inline-flex;align-items:center;gap:4px;">{{ post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</span>
                                 <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>
+                                <span class="lfg-trust">{{ post.author.gamer_profile.trust_label }} · {{ post.author.gamer_profile.trust_score }}</span>
                             </div>
                         </a>
                     </div>
@@ -840,6 +883,9 @@
                     </div>
 
                     <div class="lfg-time"><svg class="bi bi-clock" aria-hidden="true"><use href="#bi-clock"></use></svg> {{ post.created_at|timesince }} پیش</div>
+                    {% if post.scheduled_for %}
+                    <div class="lfg-time"><svg class="bi bi-calendar-event" aria-hidden="true"><use href="#bi-calendar-event"></use></svg> زمان بازی: {{ post.scheduled_for|jalali:"Y/m/d H:i" }}</div>
+                    {% endif %}
 
                     <!-- ── join row ── -->
                     {% if request.user.is_authenticated %}
@@ -907,6 +953,21 @@
                         </div>
                         {% endif %}
                     {% endif %}
+                    {% endif %}
+                    {% if post.feedback_targets %}
+                    <div class="lfg-feedback-box" id="feedback-box-{{ post.pk }}">
+                        <div class="lfg-feedback-title">بعد از بازی، تجربه‌ات با هم‌تیمی‌ها را ثبت کن</div>
+                        {% for target in post.feedback_targets %}
+                        <div class="lfg-feedback-row" id="feedback-row-{{ post.pk }}-{{ target.pk }}">
+                            <span class="lfg-feedback-name">{{ target.username }}</span>
+                            <div class="lfg-feedback-actions">
+                                <button class="lfg-feedback-btn good" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'good', this)">خوب بود</button>
+                                <button class="lfg-feedback-btn warn" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'no_show', this)">نیامد</button>
+                                <button class="lfg-feedback-btn bad" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'toxic', this)">رفتار بد</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -1289,6 +1350,36 @@ function joinLFG(btn){
     .catch(function(){
       btn.disabled = false;
       btn.textContent = origText;
+      showToast('خطا در اتصال به سرور', 'error');
+    });
+}
+
+function sendLfgFeedback(postId, revieweeId, result, btn){
+  btn.disabled = true;
+  var fd = new FormData();
+  fd.append('csrfmiddlewaretoken', _csrf());
+  fd.append('reviewee_id', revieweeId);
+  fd.append('result', result);
+
+  fetch('/lfg/' + postId + '/feedback/', { method:'POST', body:fd })
+    .then(function(r){
+      if(!r.ok) return r.json().then(function(e){ return Object.assign(e,{_httpErr:true}); });
+      return r.json();
+    })
+    .then(function(d){
+      if(d.ok){
+        var row = document.getElementById('feedback-row-' + postId + '-' + revieweeId);
+        if(row){
+          row.innerHTML = '<span class="lfg-feedback-name" style="color:#4ade80">ثبت شد: ' + d.label + '</span>';
+          row.style.opacity = '.75';
+        }
+      } else {
+        btn.disabled = false;
+        showToast(d.error || 'ثبت بازخورد انجام نشد', 'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
       showToast('خطا در اتصال به سرور', 'error');
     });
 }

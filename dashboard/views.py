@@ -16,6 +16,7 @@ import jdatetime
 from django.conf import settings
 from .models import Game, GENRE_CHOICES, PLATFORM_CHOICES
 from community.models import Post, Comment, Hashtag, GamerProfile, PostLike, PostReaction, GameBacklog
+from community.models import LFGPost, LFGFeedback, GameReview
 from community.models import Notification, Conversation, Message, ScoreSettings, UserSession
 from community.models import ZarbanWallet, ZarbanTransaction
 from community.models import SpinWheel, SpinWheelItem, SpinRecord
@@ -239,6 +240,135 @@ def monitoring(request):
         'chart_posts': chart_posts,
     }
     return render(request, 'dashboard/monitoring.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def lfg_moderation(request):
+    tab = request.GET.get('tab', 'pending')
+    q = request.GET.get('q', '').strip()
+
+    posts = LFGPost.objects.select_related('author', 'author__gamer_profile')
+    if q:
+        posts = posts.filter(
+            Q(game_name__icontains=q) |
+            Q(author__username__icontains=q) |
+            Q(description__icontains=q) |
+            Q(contact__icontains=q)
+        )
+    if tab == 'pending':
+        posts = posts.filter(is_approved=False, is_active=True)
+    elif tab == 'inactive':
+        posts = posts.filter(is_active=False)
+    else:
+        posts = posts.filter(is_approved=True, is_active=True)
+
+    page_obj = Paginator(posts.order_by('-created_at'), 25).get_page(request.GET.get('page'))
+    feedbacks = LFGFeedback.objects.select_related(
+        'lfg_post', 'reviewer', 'reviewee', 'reviewee__gamer_profile'
+    ).filter(is_reviewed=False).order_by('-created_at')[:30]
+
+    return render(request, 'dashboard/lfg_moderation.html', {
+        'page_obj': page_obj,
+        'feedbacks': feedbacks,
+        'tab': tab,
+        'q': q,
+        'pending_count': LFGPost.objects.filter(is_approved=False, is_active=True).count(),
+        'active_count': LFGPost.objects.filter(is_approved=True, is_active=True).count(),
+        'inactive_count': LFGPost.objects.filter(is_active=False).count(),
+        'feedback_count': LFGFeedback.objects.filter(is_reviewed=False).count(),
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def lfg_post_action(request, post_id):
+    if request.method != 'POST':
+        return redirect('dashboard:lfg_moderation')
+    post = get_object_or_404(LFGPost, pk=post_id)
+    action = request.POST.get('action')
+    if action == 'approve':
+        post.is_approved = True
+        post.is_active = True
+        post.save(update_fields=['is_approved', 'is_active'])
+        messages.success(request, 'LFG تأیید شد.')
+    elif action == 'deactivate':
+        post.is_active = False
+        post.save(update_fields=['is_active'])
+        messages.success(request, 'LFG غیرفعال شد.')
+    elif action == 'activate':
+        post.is_active = True
+        post.save(update_fields=['is_active'])
+        messages.success(request, 'LFG فعال شد.')
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard:lfg_moderation')
+
+
+@login_required
+@user_passes_test(is_admin)
+def lfg_feedback_action(request, feedback_id):
+    if request.method != 'POST':
+        return redirect('dashboard:lfg_moderation')
+    feedback = get_object_or_404(LFGFeedback, pk=feedback_id)
+    action = request.POST.get('action')
+    if action == 'reviewed':
+        feedback.is_reviewed = True
+        feedback.save(update_fields=['is_reviewed'])
+        messages.success(request, 'گزارش بررسی‌شده شد.')
+    elif action == 'restore_trust':
+        profile, _ = GamerProfile.objects.get_or_create(user=feedback.reviewee)
+        profile.trust_score = min(100, profile.trust_score + 10)
+        profile.save(update_fields=['trust_score'])
+        feedback.is_reviewed = True
+        feedback.save(update_fields=['is_reviewed'])
+        messages.success(request, 'اعتماد کاربر اصلاح و گزارش بسته شد.')
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard:lfg_moderation')
+
+
+@login_required
+@user_passes_test(is_admin)
+def game_reviews_moderation(request):
+    tab = request.GET.get('tab', 'pending')
+    q = request.GET.get('q', '').strip()
+    reviews = GameReview.objects.select_related('user', 'user__gamer_profile')
+    if q:
+        reviews = reviews.filter(Q(game_name__icontains=q) | Q(user__username__icontains=q) | Q(body__icontains=q))
+    if tab == 'pending':
+        reviews = reviews.filter(is_approved=False)
+    elif tab == 'featured':
+        reviews = reviews.filter(is_featured=True)
+    else:
+        reviews = reviews.filter(is_approved=True)
+    page_obj = Paginator(reviews.order_by('-created_at'), 30).get_page(request.GET.get('page'))
+    return render(request, 'dashboard/game_reviews.html', {
+        'page_obj': page_obj,
+        'tab': tab,
+        'q': q,
+        'pending_count': GameReview.objects.filter(is_approved=False).count(),
+        'approved_count': GameReview.objects.filter(is_approved=True).count(),
+        'featured_count': GameReview.objects.filter(is_featured=True).count(),
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def game_review_action(request, review_id):
+    if request.method != 'POST':
+        return redirect('dashboard:game_reviews')
+    review = get_object_or_404(GameReview, pk=review_id)
+    action = request.POST.get('action')
+    if action == 'approve':
+        review.is_approved = True
+        review.save(update_fields=['is_approved'])
+        messages.success(request, 'ریویو تأیید شد.')
+    elif action == 'feature':
+        review.is_featured = not review.is_featured
+        review.is_approved = True
+        review.save(update_fields=['is_featured', 'is_approved'])
+        messages.success(request, 'وضعیت ویژه ریویو تغییر کرد.')
+    elif action == 'delete':
+        review.delete()
+        messages.success(request, 'ریویو حذف شد.')
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard:game_reviews')
 
 
 @login_required

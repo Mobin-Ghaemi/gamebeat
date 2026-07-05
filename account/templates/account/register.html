@@ -212,6 +212,16 @@
             margin-top: 5px;
             display: flex; align-items: center; gap: 4px;
         }
+        .field-error:empty { display: none; }
+        .field-input.input-error {
+            border-color: rgba(239,68,68,.75);
+            background: rgba(239,68,68,.08);
+            box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+        }
+        .field-input.input-ok {
+            border-color: rgba(34,197,94,.7);
+            background: rgba(34,197,94,.05);
+        }
 
         /* ══ STRENGTH BAR ══ */
         .strength-wrap {
@@ -335,12 +345,11 @@
                 <input type="text" id="id_username" name="username"
                        class="field-input" placeholder="username"
                        value="{{ form.username.value|default:'' }}"
-                       autocomplete="username">
+                       autocomplete="username"
+                       oninput="queueLiveValidation()">
                 <svg class="bi bi-person field-icon" aria-hidden="true"><use href="#bi-person"></use></svg>
             </div>
-            {% if form.username.errors %}
-            <div class="field-error"><svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.username.errors.0 }}</div>
-            {% endif %}
+            <div class="field-error" id="usernameError">{% if form.username.errors %}<svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.username.errors.0 }}{% endif %}</div>
         </div>
 
         <!-- Password -->
@@ -350,10 +359,10 @@
                 <input type="password" id="id_password1" name="password1"
                        class="field-input has-toggle" placeholder="••••••••"
                        autocomplete="new-password"
-                       oninput="checkStrength(this.value)">
+                       oninput="checkStrength(this.value); queueLiveValidation()">
                 <svg class="bi bi-lock field-icon" aria-hidden="true"><use href="#bi-lock"></use></svg>
                 <button type="button" class="toggle-pass" onclick="togglePass('id_password1','eye1')">
-                    <svg class="bi bi-eye" aria-hidden="true"><use href="#bi-eye"></use></svg>
+                    <svg class="bi bi-eye" id="eye1" aria-hidden="true"><use href="#bi-eye"></use></svg>
                 </button>
             </div>
             <!-- Strength bar -->
@@ -366,9 +375,7 @@
                 </div>
                 <span class="strength-label" id="sLabel"></span>
             </div>
-            {% if form.password1.errors %}
-            <div class="field-error"><svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.password1.errors.0 }}</div>
-            {% endif %}
+            <div class="field-error" id="password1Error">{% if form.password1.errors %}<svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.password1.errors.0 }}{% endif %}</div>
         </div>
 
         <!-- Confirm Password -->
@@ -379,19 +386,17 @@
                        class="field-input has-toggle" placeholder="••••••••"
                        autocomplete="new-password"
                        oninput="checkMatch()">
-                <svg class="bi bi-shield-lock field-icon" aria-hidden="true"><use href="#bi-shield-lock"></use></svg>
+                <svg class="bi bi-shield-lock field-icon" id="matchIcon" aria-hidden="true"><use href="#bi-shield-lock"></use></svg>
                 <button type="button" class="toggle-pass" onclick="togglePass('id_password2','eye2')">
-                    <svg class="bi bi-eye" aria-hidden="true"><use href="#bi-eye"></use></svg>
+                    <svg class="bi bi-eye" id="eye2" aria-hidden="true"><use href="#bi-eye"></use></svg>
                 </button>
             </div>
-            {% if form.password2.errors %}
-            <div class="field-error"><svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.password2.errors.0 }}</div>
-            {% endif %}
+            <div class="field-error" id="password2Error">{% if form.password2.errors %}<svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>{{ form.password2.errors.0 }}{% endif %}</div>
         </div>
 
         <!-- Submit -->
         <div class="submit-wrap">
-            <button type="submit" class="submit-btn">
+            <button type="submit" class="submit-btn" id="submitBtn">
                 <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg>
                 ساخت حساب GameBeat
             </button>
@@ -412,12 +417,16 @@
 </div>
 
 <script>
+const LIVE_VALIDATE_URL = "{% url 'account:register_validate' %}";
+let liveValidateTimer = null;
+let liveValidateSeq = 0;
+
 /* ── Toggle Password ── */
 function togglePass(inputId, iconId) {
     const inp = document.getElementById(inputId);
     const ico = document.getElementById(iconId);
     inp.type = inp.type === 'password' ? 'text' : 'password';
-    ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    ico.innerHTML = `<use href="${inp.type === 'password' ? '#bi-eye' : '#bi-eye-slash'}"></use>`;
 }
 
 /* ── Password Strength ── */
@@ -452,7 +461,12 @@ function checkMatch() {
     const p1  = document.getElementById('id_password1').value;
     const p2  = document.getElementById('id_password2').value;
     const ico = document.getElementById('matchIcon');
-    if (!p2) { ico.className = 'bi bi-shield-lock field-icon'; return; }
+    if (!p2) {
+        ico.className = 'bi bi-shield-lock field-icon';
+        ico.style.color = '';
+        queueLiveValidation();
+        return;
+    }
     if (p1 === p2) {
         ico.className = 'bi bi-shield-check field-icon';
         ico.style.color = '#22c55e';
@@ -460,7 +474,69 @@ function checkMatch() {
         ico.className = 'bi bi-shield-x field-icon';
         ico.style.color = '#ef4444';
     }
+    queueLiveValidation();
 }
+
+function setFieldState(inputId, errorId, message) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    error.innerHTML = message
+        ? `<svg class="bi bi-x-circle-fill" aria-hidden="true"><use href="#bi-x-circle-fill"></use></svg>${message}`
+        : '';
+    input.classList.remove('input-error', 'input-ok');
+    if (message) {
+        input.classList.add('input-error');
+    } else if (input.value.trim()) {
+        input.classList.add('input-ok');
+    }
+}
+
+function updateSubmitState() {
+    const hasErrors =
+        document.getElementById('usernameError').textContent.trim() ||
+        document.getElementById('password1Error').textContent.trim() ||
+        document.getElementById('password2Error').textContent.trim();
+    document.getElementById('submitBtn').disabled = !!hasErrors;
+    document.getElementById('submitBtn').style.opacity = hasErrors ? '.6' : '1';
+    document.getElementById('submitBtn').style.cursor = hasErrors ? 'not-allowed' : 'pointer';
+}
+
+function applyLiveErrors(errors) {
+    setFieldState('id_username', 'usernameError', errors.username || '');
+    setFieldState('id_password1', 'password1Error', errors.password1 || '');
+    setFieldState('id_password2', 'password2Error', errors.password2 || '');
+    updateSubmitState();
+}
+
+function queueLiveValidation() {
+    clearTimeout(liveValidateTimer);
+    liveValidateTimer = setTimeout(runLiveValidation, 220);
+}
+
+function runLiveValidation() {
+    const username = document.getElementById('id_username').value;
+    const password1 = document.getElementById('id_password1').value;
+    const password2 = document.getElementById('id_password2').value;
+
+    if (!username && !password1 && !password2) {
+        applyLiveErrors({ username: '', password1: '', password2: '' });
+        return;
+    }
+
+    const seq = ++liveValidateSeq;
+    const params = new URLSearchParams({ username, password1, password2 });
+    fetch(`${LIVE_VALIDATE_URL}?${params.toString()}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (seq !== liveValidateSeq) return;
+        applyLiveErrors(data.errors || {});
+    })
+    .catch(() => {});
+}
+
+updateSubmitState();
 
 /* ── Particle System ── */
 (function () {

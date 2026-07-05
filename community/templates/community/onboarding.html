@@ -3,137 +3,363 @@
 
 {% block extra_css %}
 <style>
+/* ═══════════ Backdrop ═══════════ */
 .ob-wrap {
     min-height: calc(100vh - 64px);
     display: flex; align-items: center; justify-content: center;
-    padding: 32px 16px;
-}
-.ob-card {
-    background: #130826;
-    border: 1px solid rgba(139,92,246,0.25);
-    border-radius: 24px;
-    width: 100%; max-width: 620px;
-    padding: 40px 36px;
+    padding: 40px 16px;
     position: relative;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.ob-orb {
+    position: absolute; border-radius: 50%; filter: blur(90px);
+    pointer-events: none; opacity: .55;
+}
+.ob-orb1 { width: 480px; height: 480px; background: rgba(124,58,237,.35); top: -140px; right: -120px; animation: obFloat 9s ease-in-out infinite; }
+.ob-orb2 { width: 380px; height: 380px; background: rgba(34,211,238,.14); bottom: -120px; left: -100px; animation: obFloat 11s ease-in-out infinite reverse; }
+@keyframes obFloat {
+    0%,100% { transform: translate(0,0); }
+    50%     { transform: translate(-30px, 30px); }
 }
 
-/* Progress bar */
-.ob-progress { display: flex; flex-direction: row-reverse; gap: 8px; margin-bottom: 32px; }
-.ob-prog-step {
-    flex: 1; height: 4px; border-radius: 4px;
-    background: rgba(255,255,255,0.1);
-    transition: background .3s;
+/* ═══════════ Card ═══════════ */
+.ob-card {
+    background: linear-gradient(160deg, rgba(26,13,50,.96), rgba(15,7,32,.98));
+    border: 1px solid rgba(139,92,246,.3);
+    border-radius: 26px;
+    width: 100%; max-width: 660px;
+    padding: 36px 38px 32px;
+    position: relative; z-index: 1;
+    box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02) inset;
 }
-.ob-prog-step.done { background: #8b5cf6; }
-.ob-prog-step.active { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 
-/* Steps */
+/* ═══════════ Stepper (progress) ═══════════ */
+.ob-stepper { display: flex; align-items: flex-start; margin-bottom: 34px; }
+.ob-st {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative;
+}
+.ob-st::before, .ob-st::after {
+    content: ''; position: absolute; top: 21px; height: 2px;
+    background: rgba(255,255,255,.08); width: calc(50% - 26px);
+    transition: background .4s;
+}
+.ob-st::before { right: 0; }
+.ob-st::after  { left: 0; }
+.ob-st:first-child::before { display: none; }
+.ob-st:last-child::after   { display: none; }
+.ob-st.done::before, .ob-st.done::after,
+.ob-st.active::before { background: #8b5cf6; }
+
+.ob-st-dot {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.05);
+    border: 2px solid rgba(255,255,255,.12);
+    color: rgba(255,255,255,.35);
+    transition: all .35s; position: relative; z-index: 1;
+}
+.ob-st-dot svg { width: 18px; height: 18px; }
+.ob-st.active .ob-st-dot {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    border-color: #a78bfa; color: #fff;
+    box-shadow: 0 0 0 5px rgba(139,92,246,.18), 0 6px 20px rgba(124,58,237,.5);
+}
+.ob-st.done .ob-st-dot {
+    background: rgba(139,92,246,.2); border-color: #8b5cf6; color: #c4b5fd;
+}
+.ob-st-label { font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.35); transition: color .3s; }
+.ob-st.active .ob-st-label { color: #c4b5fd; }
+.ob-st.done .ob-st-label   { color: rgba(196,181,253,.6); }
+
+/* ═══════════ Steps ═══════════ */
 .ob-step { display: none; }
-.ob-step.active { display: block; }
-.ob-step-title { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 6px; }
-.ob-step-sub { font-size: .85rem; color: rgba(255,255,255,0.4); margin-bottom: 28px; }
-
-/* Platform chips */
-.plat-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
-.plat-chip {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 18px; border-radius: 12px; cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.6); font-size: .85rem; font-weight: 700;
-    transition: all .15s; user-select: none;
+.ob-step.active { display: block; animation: obStepIn .35s ease both; }
+@keyframes obStepIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
-.plat-chip:hover { border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
-.plat-chip.selected { background: rgba(139,92,246,0.2); border-color: #8b5cf6; color: #fff; }
-.plat-chip svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* Game grid */
+.ob-head { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+.ob-head-icon {
+    width: 52px; height: 52px; border-radius: 15px; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(139,92,246,.15));
+    border: 1px solid rgba(139,92,246,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 24px rgba(124,58,237,.25);
+}
+.ob-step-title { font-size: 1.32rem; font-weight: 900; color: #fff; line-height: 1.4; }
+.ob-step-sub   { font-size: .82rem; color: rgba(255,255,255,.42); margin-top: 3px; }
+
+/* ═══════════ Platform cards ═══════════ */
+.plat-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px; margin-bottom: 30px;
+}
+.plat-chip {
+    display: flex; align-items: center; gap: 11px;
+    padding: 15px 16px; border-radius: 14px; cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.03);
+    color: rgba(255,255,255,.65); font-size: .87rem; font-weight: 800;
+    transition: all .18s; user-select: none; position: relative; overflow: hidden;
+}
+.plat-chip:hover {
+    border-color: rgba(139,92,246,.55); color: #e9d5ff;
+    background: rgba(139,92,246,.07); transform: translateY(-2px);
+}
+.plat-chip.selected {
+    background: linear-gradient(135deg, rgba(124,58,237,.28), rgba(139,92,246,.12));
+    border-color: #8b5cf6; color: #fff;
+    box-shadow: 0 6px 20px rgba(124,58,237,.3);
+}
+.plat-chip svg { width: 22px; height: 22px; flex-shrink: 0; }
+.plat-chip .pc-check {
+    margin-right: auto; width: 20px; height: 20px; border-radius: 50%;
+    background: #8b5cf6; display: none;
+    align-items: center; justify-content: center; flex-shrink: 0;
+}
+.plat-chip.selected .pc-check { display: flex; }
+
+/* ═══════════ Game grid ═══════════ */
+.ob-count-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.3);
+    color: #c4b5fd; font-size: .75rem; font-weight: 800;
+    padding: 5px 14px; border-radius: 999px; margin-bottom: 14px;
+    transition: all .2s;
+}
+.ob-count-chip.ok { background: rgba(52,211,153,.12); border-color: rgba(52,211,153,.4); color: #34d399; }
+
+/* Game search box */
+.ob-game-search {
+    position: relative; margin-bottom: 14px;
+}
+.ob-game-search svg.search-ic {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: rgba(255,255,255,.35); pointer-events: none;
+}
+.ob-game-search input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.1);
+    color: #fff; border-radius: 13px; padding: 11px 42px 11px 40px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .87rem; outline: none;
+    transition: all .2s;
+}
+.ob-game-search input:focus {
+    border-color: #8b5cf6; background: rgba(139,92,246,.07);
+    box-shadow: 0 0 0 4px rgba(139,92,246,.12);
+}
+.ob-game-search input::placeholder { color: rgba(255,255,255,.3); }
+.ob-search-clear {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255,255,255,.1); color: rgba(255,255,255,.6);
+    display: none; align-items: center; justify-content: center;
+    font-size: .7rem; line-height: 1; padding: 0;
+}
+.ob-search-clear:hover { background: rgba(255,255,255,.2); color: #fff; }
+.ob-search-empty {
+    text-align: center; color: rgba(255,255,255,.35); font-size: .82rem;
+    padding: 30px 0; display: none;
+}
+
 .game-pick-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 10px; max-height: 300px; overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.3) transparent;
-    margin-bottom: 16px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 11px; max-height: 320px; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.35) transparent;
+    margin-bottom: 20px; padding: 4px;
 }
 .game-pick-item {
-    border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;
-    border: 2px solid transparent; transition: border-color .15s, transform .15s;
-    aspect-ratio: 3/4; background: rgba(255,255,255,0.05);
+    border-radius: 12px; overflow: hidden; cursor: pointer; position: relative;
+    border: 2px solid transparent; transition: all .18s;
+    aspect-ratio: 3/4; background: rgba(255,255,255,.04);
 }
-.game-pick-item:hover { transform: scale(1.03); }
-.game-pick-item.selected { border-color: #8b5cf6; }
+.game-pick-item:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 26px rgba(0,0,0,.45); }
+.game-pick-item.selected {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139,92,246,.25), 0 10px 30px rgba(124,58,237,.35);
+}
 .game-pick-item img { width: 100%; height: 100%; object-fit: cover; }
+.game-pick-item .gpi-fallback {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: rgba(139,92,246,.35);
+}
 .game-pick-item .gpi-name {
     position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.9));
-    padding: 14px 6px 6px; font-size: .68rem; font-weight: 700; color: #fff;
-    text-align: center;
+    background: linear-gradient(transparent, rgba(0,0,0,.92));
+    padding: 18px 6px 7px; font-size: .68rem; font-weight: 700; color: #fff;
+    text-align: center; line-height: 1.5;
 }
+.game-pick-item .gpi-overlay {
+    position: absolute; inset: 0; background: rgba(124,58,237,.22);
+    opacity: 0; transition: opacity .18s; pointer-events: none;
+}
+.game-pick-item.selected .gpi-overlay { opacity: 1; }
 .game-pick-item .gpi-check {
-    position: absolute; top: 6px; right: 6px;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #8b5cf6; display: none; align-items: center; justify-content: center;
+    position: absolute; top: 7px; right: 7px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    box-shadow: 0 3px 10px rgba(0,0,0,.5);
+    display: none; align-items: center; justify-content: center; z-index: 1;
 }
-.game-pick-item.selected .gpi-check { display: flex; }
+.game-pick-item.selected .gpi-check { display: flex; animation: obPop .22s ease; }
+@keyframes obPop {
+    0% { transform: scale(.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); }
+}
 
-/* Bio / City inputs */
+/* ═══════════ Inputs (step 3) ═══════════ */
+.ob-field-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: .8rem; font-weight: 800; color: rgba(255,255,255,.65); margin-bottom: 8px;
+}
+.ob-field-label svg { width: 15px; height: 15px; color: #a78bfa; }
 .ob-input {
     width: 100%; box-sizing: border-box;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-    color: #fff; border-radius: 12px; padding: 12px 16px;
+    background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.1);
+    color: #fff; border-radius: 13px; padding: 13px 16px;
     font-family: 'Vazirmatn', sans-serif; font-size: .9rem; outline: none;
-    margin-bottom: 14px; resize: none;
+    margin-bottom: 18px; resize: none; transition: all .2s;
 }
-.ob-input:focus { border-color: #8b5cf6; background: rgba(139,92,246,0.08); }
+.ob-input:focus {
+    border-color: #8b5cf6; background: rgba(139,92,246,.07);
+    box-shadow: 0 0 0 4px rgba(139,92,246,.12);
+}
+.ob-char-count { font-size: .7rem; color: rgba(255,255,255,.3); text-align: left; margin: -12px 0 16px; }
 
-/* Buttons */
-.ob-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+/* ═══════════ Custom location picker ═══════════ */
+.loc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+@media (max-width: 480px) { .loc-row { grid-template-columns: 1fr; } }
+
+.ob-select-wrap {
+    position: relative;
+}
+.ob-select-box {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.45); border-radius: 13px; padding: 12px 40px 12px 16px;
+    font-family: 'Vazirmatn', sans-serif; font-size: .87rem; font-weight: 700;
+    cursor: pointer; transition: all .2s; user-select: none; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    display: flex; align-items: center; gap: 8px;
+}
+.ob-select-box.has-value { color: #fff; }
+.ob-select-box:hover { border-color: rgba(139,92,246,.5); }
+.ob-select-box.open { border-color: #8b5cf6; background: rgba(139,92,246,.08); box-shadow: 0 0 0 4px rgba(139,92,246,.12); }
+.ob-select-box svg.arr {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: rgba(255,255,255,.35); transition: transform .2s; pointer-events: none;
+}
+.ob-select-box.open svg.arr { transform: translateY(-50%) rotate(180deg); }
+.ob-select-box.disabled { opacity: .4; pointer-events: none; }
+
+.ob-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0; left: 0; z-index: 999;
+    background: #1a0d32; border: 1.5px solid rgba(139,92,246,.4);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset;
+    display: none;
+    animation: obDdIn .2s ease;
+    max-height: 300px; display: none; flex-direction: column;
+}
+.ob-dropdown.open { display: flex; }
+@keyframes obDdIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+.ob-dd-search {
+    padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.07); flex-shrink: 0;
+    display: flex; align-items: center; gap: 8px;
+}
+.ob-dd-search svg { width: 14px; height: 14px; color: rgba(255,255,255,.35); flex-shrink: 0; }
+.ob-dd-search input {
+    flex: 1; background: none; border: none; outline: none; color: #fff;
+    font-family: 'Vazirmatn', sans-serif; font-size: .84rem;
+}
+.ob-dd-search input::placeholder { color: rgba(255,255,255,.3); }
+
+.ob-dd-list { overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.3) transparent; }
+.ob-dd-item {
+    padding: 10px 14px; cursor: pointer; font-size: .86rem;
+    color: rgba(255,255,255,.75); transition: background .12s, color .12s;
+    display: flex; align-items: center; gap: 8px;
+}
+.ob-dd-item:hover { background: rgba(139,92,246,.18); color: #fff; }
+.ob-dd-item.selected { background: rgba(139,92,246,.22); color: #c4b5fd; font-weight: 800; }
+.ob-dd-item.selected::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: #8b5cf6; flex-shrink: 0;
+}
+.ob-dd-empty { padding: 20px; text-align: center; color: rgba(255,255,255,.3); font-size: .82rem; }
+
+/* ═══════════ Buttons ═══════════ */
+.ob-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 6px; align-items: center; }
 .ob-btn-next {
     background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-    color: #fff; border: none; border-radius: 12px;
-    padding: 11px 28px; font-family: 'Vazirmatn', sans-serif;
-    font-size: .9rem; font-weight: 800; cursor: pointer; transition: opacity .2s;
+    color: #fff; border: none; border-radius: 13px;
+    padding: 12px 30px; font-family: 'Vazirmatn', sans-serif;
+    font-size: .92rem; font-weight: 800; cursor: pointer;
+    transition: all .2s; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(124,58,237,.35);
 }
-.ob-btn-next:hover { opacity: .88; }
+.ob-btn-next:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124,58,237,.5); }
 .ob-btn-skip {
-    background: transparent; border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.4); border-radius: 12px;
-    padding: 11px 20px; font-family: 'Vazirmatn', sans-serif;
-    font-size: .85rem; cursor: pointer; transition: all .2s;
+    background: transparent; border: 1.5px solid rgba(255,255,255,.13);
+    color: rgba(255,255,255,.45); border-radius: 13px;
+    padding: 12px 22px; font-family: 'Vazirmatn', sans-serif;
+    font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .2s;
 }
-.ob-btn-skip:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+.ob-btn-skip:hover { border-color: rgba(255,255,255,.3); color: rgba(255,255,255,.7); }
 
-/* Welcome emoji */
-.ob-emoji { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-
-@media (max-width: 480px) {
-    .ob-card { padding: 28px 20px; }
-    .game-pick-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+@media (max-width: 520px) {
+    .ob-card { padding: 26px 20px 24px; }
+    .game-pick-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    .plat-grid { grid-template-columns: repeat(2, 1fr); }
+    .ob-st-label { font-size: .62rem; }
+    .ob-step-title { font-size: 1.1rem; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="ob-wrap">
-<form method="post" id="obForm">
+<div class="ob-orb ob-orb1"></div>
+<div class="ob-orb ob-orb2"></div>
+
+<form method="post" id="obForm" style="width:100%;max-width:660px;">
 {% csrf_token %}
 
-<!-- Progress -->
-<div style="display:none;" id="progressWrap"><!-- filled by JS --></div>
-
 <div class="ob-card">
-    <!-- Progress bar -->
-    <div class="ob-progress">
-        <div class="ob-prog-step active" id="prog0"></div>
-        <div class="ob-prog-step" id="prog1"></div>
-        <div class="ob-prog-step" id="prog2"></div>
+    <!-- Stepper -->
+    <div class="ob-stepper">
+        <div class="ob-st active" id="st0">
+            <div class="ob-st-dot">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M8 12h.01M12 10v4M6 10v4"/></svg>
+            </div>
+            <div class="ob-st-label">پلتفرم</div>
+        </div>
+        <div class="ob-st" id="st1">
+            <div class="ob-st-dot">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6.26L21.5 9.27l-4.75 4.87L17.8 21 12 17.77 6.2 21l1.05-6.86L2.5 9.27l6.6-1.01z"/></svg>
+            </div>
+            <div class="ob-st-label">بازی‌ها</div>
+        </div>
+        <div class="ob-st" id="st2">
+            <div class="ob-st-dot">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+            </div>
+            <div class="ob-st-label">پروفایل</div>
+        </div>
     </div>
 
-    <!-- Step 1: Platform -->
+    <!-- ═══ Step 1: Platform ═══ -->
     <div class="ob-step active" id="step0">
-        <span class="ob-emoji">🎮</span>
-        <div class="ob-step-title">خوش اومدی {{ request.user.username }} عزیز!</div>
-        <div class="ob-step-sub">بگو روی چه پلتفرمی بازی می‌کنی؟ (می‌تونی چند تا انتخاب کنی)</div>
+        <div class="ob-head">
+            <div class="ob-head-icon">🎮</div>
+            <div>
+                <div class="ob-step-title">خوش اومدی <span style="color:#a78bfa">{{ request.user.username }}</span> عزیز!</div>
+                <div class="ob-step-sub">روی چه پلتفرمی بازی می‌کنی؟ می‌تونی چند تا انتخاب کنی</div>
+            </div>
+        </div>
 
         <div class="plat-grid">
             {% for val, label in platform_choices %}
@@ -154,29 +380,56 @@
                     {% endif %}
                 </svg>
                 {{ label }}
+                <span class="pc-check">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
             </label>
             {% endfor %}
         </div>
 
         <div class="ob-actions">
             <button type="button" class="ob-btn-skip" onclick="nextStep()">بعداً</button>
-            <button type="button" class="ob-btn-next" onclick="nextStep()">بعدی ←</button>
+            <button type="button" class="ob-btn-next" onclick="nextStep()">
+                بعدی
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
         </div>
     </div>
 
-    <!-- Step 2: Favorite Games -->
+    <!-- ═══ Step 2: Favorite Games ═══ -->
     <div class="ob-step" id="step1">
-        <span class="ob-emoji">🏆</span>
-        <div class="ob-step-title">چه بازی‌هایی دوست داری؟</div>
-        <div class="ob-step-sub">حداقل ۳ تا انتخاب کن تا پیشنهادات بهتری بهت بدیم</div>
+        <div class="ob-head">
+            <div class="ob-head-icon">🏆</div>
+            <div>
+                <div class="ob-step-title">چه بازی‌هایی دوست داری؟</div>
+                <div class="ob-step-sub">حداقل ۳ تا انتخاب کن تا هم‌بازی و پیشنهادهای بهتری بهت بدیم</div>
+            </div>
+        </div>
 
-        <div class="game-pick-grid">
+        <div class="ob-count-chip" id="gameCountChip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l2.9 6.26L21.5 9.27l-4.75 4.87L17.8 21 12 17.77 6.2 21l1.05-6.86L2.5 9.27l6.6-1.01z"/></svg>
+            <span id="gameCountText">هنوز بازی‌ای انتخاب نکردی</span>
+        </div>
+
+        <div class="ob-game-search">
+            <svg class="search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="obGameSearch" placeholder="جستجوی نام بازی..." autocomplete="off">
+            <button type="button" class="ob-search-clear" id="obSearchClear" onclick="clearGameSearch()">✕</button>
+        </div>
+
+        <div class="ob-search-empty" id="obSearchEmpty">بازی‌ای با این اسم پیدا نشد 🤷</div>
+
+        <div class="game-pick-grid" id="gamePickGrid">
             {% for g in popular_games %}
-            <div class="game-pick-item" onclick="toggleGame(this, '{{ g.name|escapejs }}')">
+            <div class="game-pick-item" data-name="{{ g.name }}" onclick="toggleGame(this, '{{ g.name|escapejs }}')">
                 {% if g.steam_appid %}
                 <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ g.steam_appid|stringformat:'d' }}/library_600x900.jpg"
-                     alt="{{ g.name }}" onerror="this.style.display='none'">
+                     alt="{{ g.name }}" loading="lazy"
+                     onerror="this.outerHTML='<div class=\'gpi-fallback\'>🎮</div>'">
+                {% else %}
+                <div class="gpi-fallback">🎮</div>
                 {% endif %}
+                <div class="gpi-overlay"></div>
                 <div class="gpi-name">{{ g.name }}</div>
                 <div class="gpi-check">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
@@ -188,30 +441,79 @@
         </div>
 
         <div class="ob-actions">
-            <button type="button" class="ob-btn-skip" onclick="prevStep()">← قبلی</button>
-            <button type="button" class="ob-btn-next" onclick="nextStep()">بعدی ←</button>
+            <button type="button" class="ob-btn-skip" onclick="prevStep()">قبلی</button>
+            <button type="button" class="ob-btn-next" onclick="nextStep()">
+                بعدی
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
         </div>
     </div>
 
-    <!-- Step 3: Bio + City -->
+    <!-- ═══ Step 3: Bio + Location ═══ -->
     <div class="ob-step" id="step2">
-        <span class="ob-emoji">✨</span>
-        <div class="ob-step-title">کمی از خودت بگو</div>
-        <div class="ob-step-sub">این اطلاعات اختیاری‌اند و بعداً هم میتونی تغییرشون بدی</div>
+        <div class="ob-head">
+            <div class="ob-head-icon">✨</div>
+            <div>
+                <div class="ob-step-title">کمی از خودت بگو</div>
+                <div class="ob-step-sub">اختیاریه — بعداً هم از تنظیمات پروفایل می‌تونی تغییرش بدی</div>
+            </div>
+        </div>
 
-        <select class="ob-input" name="city">
-            <option value="">شهر رو انتخاب کن (اختیاری)</option>
-            {% for val, label in city_choices %}
-            <option value="{{ val }}">{{ label }}</option>
-            {% endfor %}
-        </select>
+        <div class="ob-field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            موقعیت
+        </div>
 
-        <textarea class="ob-input" name="bio" rows="3" maxlength="300"
-                  placeholder="یه چیزی درباره خودت بنویس... (اختیاری)"></textarea>
+        <div class="loc-row">
+            <!-- Province picker -->
+            <div class="ob-select-wrap">
+                <div class="ob-select-box" id="provBox" onclick="toggleDd('prov')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;color:#a78bfa"><path d="M3 10l9-7 9 7v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span id="provLabel">انتخاب استان</span>
+                    <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="ob-dropdown" id="provDd">
+                    <div class="ob-dd-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input type="text" id="provSearch" placeholder="جستجوی استان..." oninput="filterDd('prov')">
+                    </div>
+                    <div class="ob-dd-list" id="provList"></div>
+                </div>
+            </div>
+
+            <!-- City picker -->
+            <div class="ob-select-wrap">
+                <div class="ob-select-box disabled" id="cityBox" onclick="toggleDd('city')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;color:#a78bfa"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                    <span id="cityLabel">اول استان انتخاب کن</span>
+                    <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="ob-dropdown" id="cityDd">
+                    <div class="ob-dd-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input type="text" id="citySearch" placeholder="جستجوی شهر..." oninput="filterDd('city')">
+                    </div>
+                    <div class="ob-dd-list" id="cityList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- hidden inputs -->
+        <input type="hidden" name="city" id="cityHidden">
+
+        <div class="ob-field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+            بیو
+        </div>
+        <textarea class="ob-input" name="bio" id="obBio" rows="3" maxlength="300"
+                  placeholder="مثلاً: رنک ایمورتال دوتا، دنبال پارتی رنکد..."></textarea>
+        <div class="ob-char-count"><span id="bioCount">0</span>/300</div>
 
         <div class="ob-actions">
-            <button type="button" class="ob-btn-skip" onclick="prevStep()">← قبلی</button>
-            <button type="submit" class="ob-btn-next">ورود به GameBeat 🚀</button>
+            <button type="button" class="ob-btn-skip" onclick="prevStep()">قبلی</button>
+            <button type="submit" class="ob-btn-next">
+                ورود به GameBeat 🚀
+            </button>
         </div>
     </div>
 </div>
@@ -228,10 +530,8 @@ const selectedGames = new Set();
 
 function updateProgress() {
     for (let i = 0; i < 3; i++) {
-        const el = document.getElementById('prog' + i);
-        el.className = 'ob-prog-step ' + (i < currentStep ? 'done' : i === currentStep ? 'active' : '');
-    }
-    for (let i = 0; i < 3; i++) {
+        const st = document.getElementById('st' + i);
+        st.className = 'ob-st ' + (i < currentStep ? 'done' : i === currentStep ? 'active' : '');
         document.getElementById('step' + i).classList.toggle('active', i === currentStep);
     }
 }
@@ -254,11 +554,27 @@ function toggleGame(el, name) {
     el.classList.toggle('selected');
     if (selectedGames.has(name)) selectedGames.delete(name);
     else selectedGames.add(name);
+    updateGameCount();
     syncHiddenInputs();
 }
 
+function updateGameCount() {
+    const chip = document.getElementById('gameCountChip');
+    const txt = document.getElementById('gameCountText');
+    const n = selectedGames.size;
+    if (n === 0) {
+        txt.textContent = 'هنوز بازی‌ای انتخاب نکردی';
+        chip.classList.remove('ok');
+    } else if (n < 3) {
+        txt.textContent = n + ' بازی انتخاب شد — ' + (3 - n) + ' تای دیگه!';
+        chip.classList.remove('ok');
+    } else {
+        txt.textContent = n + ' بازی انتخاب شد ✓';
+        chip.classList.add('ok');
+    }
+}
+
 function syncHiddenInputs() {
-    // پاک کردن قدیمی‌ها
     document.querySelectorAll('input[name="platforms"], input[name="game_names"]').forEach(e => e.remove());
     const form = document.getElementById('obForm');
     selectedPlats.forEach(p => {
@@ -270,6 +586,214 @@ function syncHiddenInputs() {
         const inp = document.createElement('input');
         inp.type = 'hidden'; inp.name = 'game_names'; inp.value = g;
         form.appendChild(inp);
+    });
+}
+
+// شمارنده کاراکتر بیو
+document.getElementById('obBio').addEventListener('input', function() {
+    document.getElementById('bioCount').textContent = this.value.length;
+});
+
+// ═══ Location picker ═══
+const CITY_BY_PROV = {{ city_by_province_json|safe }};
+const CITY_MAP = {};
+CITY_BY_PROV.forEach(p => p.cities.forEach(c => { CITY_MAP[c.key] = c.label; }));
+
+let selProv = null, selCity = null;
+
+function buildProvList() {
+    const list = document.getElementById('provList');
+    list.innerHTML = '';
+    CITY_BY_PROV.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'ob-dd-item' + (selProv === p.province ? ' selected' : '');
+        item.dataset.val = p.province;
+        item.textContent = p.province;
+        item.addEventListener('click', () => selectProv(p.province));
+        list.appendChild(item);
+    });
+}
+
+function buildCityList(prov) {
+    const entry = CITY_BY_PROV.find(p => p.province === prov);
+    const list = document.getElementById('cityList');
+    list.innerHTML = '';
+    if (!entry) return;
+    entry.cities.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'ob-dd-item' + (selCity === c.key ? ' selected' : '');
+        item.dataset.val = c.key;
+        item.dataset.label = c.label;
+        item.textContent = c.label;
+        item.addEventListener('click', () => selectCity(c.key, c.label));
+        list.appendChild(item);
+    });
+}
+
+function selectProv(prov) {
+    selProv = prov;
+    selCity = null;
+    document.getElementById('cityHidden').value = '';
+    document.getElementById('provLabel').textContent = prov;
+    document.getElementById('provBox').classList.add('has-value');
+    // enable city
+    const cityBox = document.getElementById('cityBox');
+    cityBox.classList.remove('disabled');
+    document.getElementById('cityLabel').textContent = 'انتخاب شهر';
+    cityBox.classList.remove('has-value');
+    buildCityList(prov);
+    closeDd('prov');
+}
+
+function selectCity(key, label) {
+    selCity = key;
+    document.getElementById('cityHidden').value = key;
+    document.getElementById('cityLabel').textContent = label;
+    document.getElementById('cityBox').classList.add('has-value');
+    closeDd('city');
+}
+
+function toggleDd(which) {
+    const dd = document.getElementById(which + 'Dd');
+    const box = document.getElementById(which + 'Box');
+    const isOpen = dd.classList.contains('open');
+    // close all first
+    ['prov','city'].forEach(w => {
+        document.getElementById(w + 'Dd').classList.remove('open');
+        document.getElementById(w + 'Box').classList.remove('open');
+    });
+    if (!isOpen) {
+        dd.classList.add('open');
+        box.classList.add('open');
+        const si = document.getElementById(which + 'Search');
+        if (si) { si.value = ''; si.focus(); filterDd(which); }
+        if (which === 'prov') buildProvList();
+    }
+}
+
+function closeDd(which) {
+    document.getElementById(which + 'Dd').classList.remove('open');
+    document.getElementById(which + 'Box').classList.remove('open');
+}
+
+function filterDd(which) {
+    const q = document.getElementById(which + 'Search').value.trim().toLowerCase();
+    const list = document.getElementById(which + 'List');
+    let visible = 0;
+    list.querySelectorAll('.ob-dd-item').forEach(item => {
+        const match = item.textContent.toLowerCase().includes(q);
+        item.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+    // empty state
+    let empty = list.querySelector('.ob-dd-empty');
+    if (!visible) {
+        if (!empty) { empty = document.createElement('div'); empty.className = 'ob-dd-empty'; empty.textContent = 'موردی پیدا نشد'; list.appendChild(empty); }
+    } else { if (empty) empty.remove(); }
+}
+
+// بستن dropdown با کلیک بیرون
+document.addEventListener('click', function(e) {
+    ['prov','city'].forEach(w => {
+        const wrap = document.getElementById(w + 'Box') && document.getElementById(w + 'Box').closest('.ob-select-wrap');
+        if (wrap && !wrap.contains(e.target)) closeDd(w);
+    });
+});
+
+buildProvList();
+
+// ═══ جستجوی زنده بازی ═══
+const obSearchInput = document.getElementById('obGameSearch');
+const obGrid = document.getElementById('gamePickGrid');
+const obEmpty = document.getElementById('obSearchEmpty');
+const obClearBtn = document.getElementById('obSearchClear');
+const initialGridHTML = obGrid.innerHTML;
+let obSearchTimer = null;
+
+obSearchInput.addEventListener('input', function() {
+    const q = this.value.trim();
+    obClearBtn.style.display = q ? 'flex' : 'none';
+    clearTimeout(obSearchTimer);
+    if (!q) { restoreInitialGrid(); return; }
+    obSearchTimer = setTimeout(() => searchGames(q), 250);
+});
+
+function clearGameSearch() {
+    obSearchInput.value = '';
+    obClearBtn.style.display = 'none';
+    clearTimeout(obSearchTimer);
+    restoreInitialGrid();
+    obSearchInput.focus();
+}
+
+function restoreInitialGrid() {
+    obEmpty.style.display = 'none';
+    obGrid.style.display = 'grid';
+    obGrid.innerHTML = initialGridHTML;
+    // بازگرداندن حالت انتخاب روی آیتم‌های اولیه
+    obGrid.querySelectorAll('.game-pick-item').forEach(el => {
+        el.classList.toggle('selected', selectedGames.has(el.dataset.name));
+    });
+}
+
+function searchGames(q) {
+    fetch('{% url "community:game_search_api" %}?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(d => {
+            // اگه کاربر بعد از ارسال درخواست چیز دیگه‌ای تایپ کرده، این نتیجه قدیمیه
+            if (obSearchInput.value.trim() !== q) return;
+            renderSearchResults(d.games || []);
+        })
+        .catch(() => {});
+}
+
+function renderSearchResults(games) {
+    obGrid.innerHTML = '';
+    if (!games.length) {
+        obEmpty.style.display = 'block';
+        obGrid.style.display = 'none';
+        return;
+    }
+    obEmpty.style.display = 'none';
+    obGrid.style.display = 'grid';
+    games.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'game-pick-item' + (selectedGames.has(g.name) ? ' selected' : '');
+        item.dataset.name = g.name;
+        item.addEventListener('click', () => toggleGame(item, g.name));
+
+        const coverSrc = g.cover || (g.steam_appid
+            ? 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + g.steam_appid + '/library_600x900.jpg'
+            : '');
+        if (coverSrc) {
+            const img = document.createElement('img');
+            img.src = coverSrc; img.alt = g.name; img.loading = 'lazy';
+            img.onerror = function() {
+                const fb = document.createElement('div');
+                fb.className = 'gpi-fallback'; fb.textContent = '🎮';
+                this.replaceWith(fb);
+            };
+            item.appendChild(img);
+        } else {
+            const fb = document.createElement('div');
+            fb.className = 'gpi-fallback'; fb.textContent = '🎮';
+            item.appendChild(fb);
+        }
+
+        const ov = document.createElement('div');
+        ov.className = 'gpi-overlay';
+        item.appendChild(ov);
+
+        const nm = document.createElement('div');
+        nm.className = 'gpi-name'; nm.textContent = g.name;
+        item.appendChild(nm);
+
+        const ck = document.createElement('div');
+        ck.className = 'gpi-check';
+        ck.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+        item.appendChild(ck);
+
+        obGrid.appendChild(item);
     });
 }
 </script>

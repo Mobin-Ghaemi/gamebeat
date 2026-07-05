@@ -1,0 +1,143 @@
+{% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
+
+{% block title %}LFG و اعتماد - داشبورد GameBeat{% endblock %}
+{% block page_title %}نظارت LFG و اعتماد{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">LFG و اعتماد</div>
+        <div class="page-subtitle">تأیید درخواست‌های هم‌تیمی، بررسی گزارش‌ها و کنترل کیفیت کامیونیتی</div>
+    </div>
+</div>
+
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:220px;max-width:420px">
+            <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+            <input name="q" value="{{ q }}" class="dash-input" style="padding-right:36px" placeholder="جستجو در بازی، کاربر، توضیح یا تماس...">
+        </div>
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <button class="btn-ghost" type="submit">اعمال</button>
+    </form>
+</div>
+
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <a href="?tab=pending{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'pending' %}border-color:#fbbf24;color:#fbbf24;background:rgba(251,191,36,.1){% endif %}">در انتظار ({{ pending_count }})</a>
+    <a href="?tab=active{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'active' %}border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.1){% endif %}">فعال ({{ active_count }})</a>
+    <a href="?tab=inactive{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'inactive' %}border-color:#f87171;color:#f87171;background:rgba(248,113,113,.08){% endif %}">غیرفعال ({{ inactive_count }})</a>
+</div>
+
+{% if feedbacks %}
+<div class="dash-card mb-4">
+    <div class="dash-card-title">
+        <svg class="bi bi-shield-exclamation" aria-hidden="true" style="color:#fbbf24"><use href="#bi-shield-exclamation"></use></svg>
+        گزارش‌های اعتماد
+        <span style="font-size:.78rem;color:var(--text-faint);font-weight:400">({{ feedback_count }} باز)</span>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>بازی</th>
+                    <th>گزارش‌دهنده</th>
+                    <th>کاربر</th>
+                    <th>نتیجه</th>
+                    <th>اعتماد فعلی</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fb in feedbacks %}
+                <tr>
+                    <td>{{ fb.lfg_post.game_name }}</td>
+                    <td>{{ fb.reviewer.username }}</td>
+                    <td>{{ fb.reviewee.username }}</td>
+                    <td>{{ fb.get_result_display }}</td>
+                    <td>{{ fb.reviewee.gamer_profile.trust_score }} · {{ fb.reviewee.gamer_profile.trust_label }}</td>
+                    <td>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            <form method="post" action="{% url 'dashboard:lfg_feedback_action' fb.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="reviewed">
+                                <button class="btn-ghost" style="padding:5px 10px">بررسی شد</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard:lfg_feedback_action' fb.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="restore_trust">
+                                <button class="btn-ghost" style="padding:5px 10px;color:#22c55e;border-color:rgba(34,197,94,.35)">اصلاح اعتماد</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="dash-card">
+    <div class="dash-card-title">
+        <svg class="bi bi-people-fill" aria-hidden="true" style="color:var(--purple-light)"><use href="#bi-people-fill"></use></svg>
+        پست‌های LFG
+        <span style="font-size:.78rem;color:var(--text-faint);font-weight:400">({{ page_obj.paginator.count }} مورد)</span>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>بازی</th>
+                    <th>سازنده</th>
+                    <th>جزئیات</th>
+                    <th>ظرفیت</th>
+                    <th>اعتماد</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in page_obj %}
+                <tr>
+                    <td>
+                        <div style="font-weight:800;color:var(--text-white)">{{ post.game_name }}</div>
+                        <div style="font-size:.75rem;color:var(--text-faint)">{{ post.get_game_mode_display }} · {{ post.get_skill_level_display }}</div>
+                    </td>
+                    <td>{{ post.author.username }}</td>
+                    <td style="max-width:260px;color:var(--text-muted);font-size:.82rem">
+                        {{ post.description|default:"بدون توضیح"|truncatechars:90 }}
+                        {% if post.region %}<div>سرور: {{ post.region }}</div>{% endif %}
+                        {% if post.voice_required %}<div>ویس لازم است</div>{% endif %}
+                    </td>
+                    <td>{{ post.current_players }}/{{ post.max_players }}</td>
+                    <td>{{ post.author.gamer_profile.trust_score }} · {{ post.author.gamer_profile.trust_label }}</td>
+                    <td style="white-space:nowrap">{{ post.created_at|jalali:"Y/m/d H:i" }}</td>
+                    <td>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            {% if not post.is_approved %}
+                            <form method="post" action="{% url 'dashboard:lfg_post_action' post.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="approve">
+                                <button class="btn-ghost" style="padding:5px 10px;color:#22c55e;border-color:rgba(34,197,94,.35)">تأیید</button>
+                            </form>
+                            {% endif %}
+                            {% if post.is_active %}
+                            <form method="post" action="{% url 'dashboard:lfg_post_action' post.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="deactivate">
+                                <button class="btn-danger-ghost" style="padding:5px 10px">غیرفعال</button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'dashboard:lfg_post_action' post.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="activate">
+                                <button class="btn-ghost" style="padding:5px 10px">فعال</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:28px">موردی پیدا نشد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

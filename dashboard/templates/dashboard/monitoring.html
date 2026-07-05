@@ -294,4 +294,32 @@
 })();
 </script>
 
+<!-- ─── تست Alert ─────────────────────────────────────────────── -->
+<div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:32px 0 12px;">تست Alert</div>
+<div class="dash-card mb-4">
+    <div class="dash-card-title" style="margin-bottom:16px;">
+        <svg class="bi bi-bell" aria-hidden="true"><use href="#bi-bell"></use></svg>
+        تست نمایش پیام‌ها
+    </div>
+    <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:18px;">برای تست سیستم نمایش پیام گوشه پایین راست روی دکمه‌ها کلیک کن</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <button onclick="showDashToast('عملیات با موفقیت انجام شد ✓', 'success')"
+                style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-family:Vazirmatn,sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">
+            ✅ تست Success
+        </button>
+        <button onclick="showDashToast('این یک هشدار است — لطفاً توجه کنید', 'warning')"
+                style="background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-family:Vazirmatn,sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">
+            ⚠️ تست Warning
+        </button>
+        <button onclick="showDashToast('خطا رخ داد — لطفاً دوباره تلاش کنید', 'error')"
+                style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-family:Vazirmatn,sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">
+            ❌ تست Error
+        </button>
+        <button onclick="showDashToast('یک اطلاعیه اطلاع‌رسانی جدید', 'info')"
+                style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-family:Vazirmatn,sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;">
+            💡 تست Info
+        </button>
+    </div>
+</div>
+
 {% endblock %}

@@ -223,6 +223,9 @@ class GamerProfile(models.Model):
     show_on_map    = models.BooleanField(default=True,  verbose_name='نمایش دقیق روی نقشه')
 
     has_onboarded  = models.BooleanField(default=False, verbose_name='انجام آنبوردینگ اولیه')
+    trust_score    = models.PositiveSmallIntegerField(default=50, verbose_name='امتیاز اعتماد')
+    lfg_completed_count = models.PositiveIntegerField(default=0, verbose_name='LFG موفق')
+    lfg_no_show_count   = models.PositiveIntegerField(default=0, verbose_name='غیبت در LFG')
 
     class Meta:
         verbose_name = 'پروفایل گیمر'
@@ -263,6 +266,16 @@ class GamerProfile(models.Model):
         elif self.platform:
             return [self.platform]
         return []
+
+    @property
+    def trust_label(self):
+        if self.trust_score >= 80:
+            return 'هم‌تیمی قابل اعتماد'
+        if self.trust_score >= 60:
+            return 'اعتماد خوب'
+        if self.trust_score >= 40:
+            return 'تازه‌کار'
+        return 'نیازمند بررسی'
 
     def get_gaming_styles_list(self):
         """Returns list of gaming-style codes — uses new gaming_styles field, falls back to old gaming_style"""
@@ -492,9 +505,13 @@ class LFGPost(models.Model):
     skill_level = models.CharField(max_length=15, choices=SKILL_LEVELS, default='any', verbose_name='سطح مهارت')
     description = models.TextField(max_length=300, blank=True, verbose_name='توضیحات')
     contact = models.CharField(max_length=120, blank=True, verbose_name='دیسکورد / آیدی بازی')
+    scheduled_for = models.DateTimeField(null=True, blank=True, verbose_name='زمان پیشنهادی بازی')
+    region = models.CharField(max_length=60, blank=True, verbose_name='سرور / منطقه')
+    voice_required = models.BooleanField(default=False, verbose_name='نیاز به ویس')
     max_players = models.PositiveSmallIntegerField(default=4, verbose_name='حداکثر بازیکن')
     current_players = models.PositiveSmallIntegerField(default=1, verbose_name='بازیکنان فعلی')
     join_type = models.CharField(max_length=10, choices=JOIN_TYPES, default='open', verbose_name='نوع پیوستن')
+    is_approved = models.BooleanField(default=True, verbose_name='تأیید شده')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -536,6 +553,32 @@ class LFGJoinRequest(models.Model):
 
     def __str__(self):
         return f'{self.user.username} → {self.post}'
+
+
+class LFGFeedback(models.Model):
+    RESULT_CHOICES = [
+        ('good', 'بازی خوب بود'),
+        ('no_show', 'نیامد'),
+        ('toxic', 'رفتار نامناسب'),
+        ('other', 'سایر'),
+    ]
+
+    lfg_post = models.ForeignKey(LFGPost, on_delete=models.CASCADE, related_name='feedbacks', verbose_name='پست LFG')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lfg_feedback_given', verbose_name='گزارش‌دهنده')
+    reviewee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lfg_feedback_received', verbose_name='کاربر گزارش‌شده')
+    result = models.CharField(max_length=12, choices=RESULT_CHOICES, verbose_name='نتیجه')
+    note = models.CharField(max_length=300, blank=True, verbose_name='توضیح')
+    is_reviewed = models.BooleanField(default=False, verbose_name='بررسی شده توسط ادمین')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('lfg_post', 'reviewer', 'reviewee')]
+        ordering = ['-created_at']
+        verbose_name = 'بازخورد LFG'
+        verbose_name_plural = 'بازخوردهای LFG'
+
+    def __str__(self):
+        return f'{self.reviewer.username} → {self.reviewee.username} ({self.result})'
 
 
 class AchievementDefinition(models.Model):
@@ -1619,6 +1662,8 @@ class GameReview(models.Model):
     user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='game_reviews', verbose_name='کاربر')
     rating    = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='امتیاز (1-10)')
     body      = models.TextField(max_length=1000, verbose_name='متن نظر')
+    is_approved = models.BooleanField(default=False, verbose_name='تأیید شده')
+    is_featured = models.BooleanField(default=False, verbose_name='ویژه')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1778,6 +1823,9 @@ class DailyMission(models.Model):
     EVENT_COMMENT  = 'comment'
     EVENT_FOLLOW   = 'follow'
     EVENT_LFG_JOIN = 'lfg_join'
+    EVENT_LFG_CREATE = 'lfg_create'
+    EVENT_HIGHLIGHT = 'highlight'
+    EVENT_REVIEW = 'review'
     EVENT_REACT    = 'react'
     EVENT_CHOICES = [
         (EVENT_LOGIN,    'ورود روزانه'),
@@ -1785,6 +1833,9 @@ class DailyMission(models.Model):
         (EVENT_COMMENT,  'ارسال کامنت'),
         (EVENT_FOLLOW,   'دنبال کردن گیمر'),
         (EVENT_LFG_JOIN, 'پیوستن به LFG'),
+        (EVENT_LFG_CREATE, 'ساخت LFG'),
+        (EVENT_HIGHLIGHT, 'انتشار هایلایت'),
+        (EVENT_REVIEW, 'ثبت نظر بازی'),
         (EVENT_REACT,    'واکنش به پست'),
     ]
 

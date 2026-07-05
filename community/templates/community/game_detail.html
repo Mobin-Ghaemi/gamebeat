@@ -368,6 +368,9 @@
         <div class="gd-hero-bg">
             {% if game.cover %}
             <img src="{{ game.cover.url }}" alt="">
+            {% elif game.steam_appid %}
+            <img id="gdHeroBg" src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/library_hero.jpg" alt=""
+                 onerror="this.onerror=null;this.src='https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/header.jpg'">
             {% else %}
             <div class="gd-hero-bg-fallback"></div>
             {% endif %}
@@ -377,9 +380,14 @@
 
         <div class="gd-hero-content">
             <!-- Cover -->
-            <div class="gd-cover-box">
+            <div class="gd-cover-box"{% if not game.cover and game.steam_appid %} id="gdCoverBox"{% endif %}>
                 {% if game.cover %}
                 <img src="{{ game.cover.url }}" alt="{{ game.name }}">
+                {% elif game.steam_appid %}
+                <img id="gdCoverImg"
+                     src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/library_600x900.jpg"
+                     alt="{{ game.name }}"
+                     onerror="this.onerror=null;this.src='https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/header.jpg'">
                 {% else %}
                 <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
                 {% endif %}
@@ -573,6 +581,9 @@
                                 <span class="gd-rv-no-score">بدون امتیاز</span>
                                 {% endif %}
                                 <span class="gd-rv-date">{{ rv.created_at|jalali:"Y/m/d" }}</span>
+                                {% if not rv.is_approved %}
+                                <span style="font-size:.68rem;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:2px 8px;">در انتظار تأیید</span>
+                                {% endif %}
                                 {% if user == rv.user %}
                                 <button class="gd-rv-delete" onclick="deleteReview({{ rv.id }})"><svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg> حذف</button>
                                 {% endif %}
@@ -890,7 +901,7 @@ function submitReview() {
 
             btn.textContent = 'به‌روزرسانی';
             btn.disabled = false;
-            gdToast(d.created ? 'نظر ثبت شد ✓' : 'نظر ویرایش شد ✓');
+            gdToast(d.pending_moderation ? 'نظر ثبت شد و بعد از تأیید نمایش عمومی می‌گیرد' : (d.created ? 'نظر ثبت شد ✓' : 'نظر ویرایش شد ✓'));
 
             // Update avg badge
             if (d.review_avg) {
@@ -916,6 +927,7 @@ function buildReviewHtml(rv, canDelete) {
                 <span class="gd-rv-name">${rv.user}</span>
                 ${starsHtml}
                 <span class="gd-rv-date">${rv.created_at}</span>
+                <span style="font-size:.68rem;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:2px 8px;">در انتظار تأیید</span>
                 ${deleteBtn}
             </div>
             <div class="gd-rv-text">${rv.body}</div>

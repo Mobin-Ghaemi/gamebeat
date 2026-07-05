@@ -1,11 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from .models import Subscription, UserProfile
+from .forms import PersianAuthenticationForm, PersianUserCreationForm
 from django.urls import reverse
 
 def _get_community_data(user):
@@ -40,7 +44,7 @@ def home(request):
 def register(request):
     """ثبت نام کاربر جدید"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = PersianUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             UserProfile.objects.create(user=user)
@@ -48,15 +52,51 @@ def register(request):
             messages.success(request, 'حساب کاربری شما با موفقیت ایجاد شد!')
             return redirect(reverse('community:onboarding'))
     else:
-        form = UserCreationForm()
+        form = PersianUserCreationForm()
     return render(request, 'account/register.html', {'form': form})
+
+
+def validate_register_live(request):
+    username = (request.GET.get('username') or '').strip()
+    password1 = request.GET.get('password1') or ''
+    password2 = request.GET.get('password2') or ''
+
+    errors = {
+        'username': '',
+        'password1': '',
+        'password2': '',
+    }
+
+    if username:
+        form = PersianUserCreationForm()
+        try:
+            form.fields['username'].clean(username)
+            if User.objects.filter(username=username).exists():
+                errors['username'] = 'این نام کاربری قبلاً ثبت شده است.'
+        except ValidationError as exc:
+            errors['username'] = exc.messages[0]
+
+    if password1:
+        probe_user = User(username=username or 'temp_user')
+        try:
+            validate_password(password1, user=probe_user)
+        except ValidationError as exc:
+            errors['password1'] = exc.messages[0]
+
+    if password2 and password1 and password1 != password2:
+        errors['password2'] = 'دو رمز عبور با هم مطابقت ندارند.'
+
+    return JsonResponse({
+        'ok': not any(errors.values()),
+        'errors': errors,
+    })
 
 
 def user_login(request):
     """ورود کاربر"""
     next_url = request.POST.get('next') or request.GET.get('next', '')
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = PersianAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -68,7 +108,7 @@ def user_login(request):
                     return redirect(next_url)
                 return redirect(reverse('community:feed'))
     else:
-        form = AuthenticationForm()
+        form = PersianAuthenticationForm()
     return render(request, 'account/login.html', {'form': form, 'next': next_url})
 
 

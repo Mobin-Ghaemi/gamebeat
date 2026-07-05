@@ -9,6 +9,7 @@ urlpatterns = [
     path('lfg/', views.lfg_board, name='lfg'),
     path('lfg/create/', views.create_lfg, name='create_lfg'),
     path('lfg/<int:post_id>/join/', views.join_lfg, name='lfg_join'),
+    path('lfg/<int:post_id>/feedback/', views.submit_lfg_feedback, name='lfg_feedback'),
     path('lfg/<int:post_id>/delete-party-group/', views.delete_party_group, name='delete_party_group'),
     path('lfg/join-requests/<int:req_id>/respond/', views.respond_lfg_join, name='lfg_join_respond'),
     path('leaderboard/', views.leaderboard, name='leaderboard'),

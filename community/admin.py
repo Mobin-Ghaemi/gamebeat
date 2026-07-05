@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, Achievement
+from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, LFGFeedback, Achievement
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 from .models import DailyMission, DailyMissionProgress, MissionDay
-from .models import AchievementDefinition
+from .models import AchievementDefinition, GameReview
 
 
 @admin.register(MissionDay)
@@ -32,7 +32,31 @@ admin.site.register(Post)
 admin.site.register(PostLike)
 admin.site.register(Comment)
 admin.site.register(Follow)
-admin.site.register(LFGPost)
+@admin.register(LFGPost)
+class LFGPostAdmin(admin.ModelAdmin):
+    list_display = ('game_name', 'author', 'platform', 'skill_level', 'current_players', 'max_players', 'is_approved', 'is_active', 'created_at')
+    list_editable = ('is_approved', 'is_active')
+    list_filter = ('is_approved', 'is_active', 'platform', 'skill_level', 'voice_required')
+    search_fields = ('game_name', 'author__username', 'description', 'contact')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(LFGFeedback)
+class LFGFeedbackAdmin(admin.ModelAdmin):
+    list_display = ('lfg_post', 'reviewer', 'reviewee', 'result', 'is_reviewed', 'created_at')
+    list_editable = ('is_reviewed',)
+    list_filter = ('result', 'is_reviewed')
+    search_fields = ('lfg_post__game_name', 'reviewer__username', 'reviewee__username', 'note')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(GameReview)
+class GameReviewAdmin(admin.ModelAdmin):
+    list_display = ('game_name', 'user', 'rating', 'is_approved', 'is_featured', 'created_at')
+    list_editable = ('is_approved', 'is_featured')
+    list_filter = ('is_approved', 'is_featured', 'rating')
+    search_fields = ('game_name', 'user__username', 'body')
+    date_hierarchy = 'created_at'
 @admin.register(AchievementDefinition)
 class AchievementDefinitionAdmin(admin.ModelAdmin):
     list_display       = ('order', 'icon_preview', 'title', 'ach_type', 'description', 'reward_zarban', 'is_active')

@@ -6,23 +6,29 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q, Count
 from django.views.decorators.http import require_POST
-from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, Achievement, GamingAccount, Hashtag
+from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, GamingAccount, Hashtag
 from .models import Notification, Conversation, Message, Block, PinnedConversation, MutedConversation
 from .models import GameBacklog, PostReaction
 from .models import ActivityLog, Challenge, Club, ClubMember, ClubPost
 from .models import GroupChat, GroupMember, GroupMessage, PinnedGroupChat, MutedGroupChat
 from .models import Channel, ChannelMember, ChannelPost, ChannelReaction, PinnedChannel, MutedChannel
-from .models import PLATFORM_CHOICES, CITY_CHOICES, GAMING_STYLE_CHOICES, ScoreSettings, UserSession
+from .models import PLATFORM_CHOICES, CITY_CHOICES, CITY_BY_PROVINCE, GAMING_STYLE_CHOICES, ScoreSettings, UserSession
 from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
 from .models import ProfileView, PremiumPlan
 from .models import DailyMission, DailyMissionProgress, MissionDay
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 import re
 import json
 import urllib.request
 import urllib.parse
 import jdatetime
+
+ERR_METHOD_NOT_ALLOWED = 'متد درخواست مجاز نیست.'
+ERR_INVALID_REQUEST = 'درخواست نامعتبر است.'
+ERR_EMPTY_CONTENT = 'محتوا نمی‌تواند خالی باشد.'
+ERR_FORBIDDEN = 'اجازه انجام این عملیات را ندارید.'
 
 
 def _to_jalali(dt, fmt='%Y/%m/%d'):
@@ -93,6 +99,26 @@ def track_mission(user, event, amount=1):
             continue
         prog.progress = min(prog.progress + amount, mission.target_count)
         prog.save(update_fields=['progress'])
+
+
+def _apply_lfg_feedback_score(feedback):
+    profile = get_or_create_gamer_profile(feedback.reviewee)
+    delta = 0
+    update_fields = ['trust_score']
+    if feedback.result == 'good':
+        delta = 3
+        profile.lfg_completed_count += 1
+        update_fields.append('lfg_completed_count')
+    elif feedback.result == 'no_show':
+        delta = -8
+        profile.lfg_no_show_count += 1
+        update_fields.append('lfg_no_show_count')
+    elif feedback.result == 'toxic':
+        delta = -12
+    elif feedback.result == 'other':
+        delta = -2
+    profile.trust_score = max(0, min(100, profile.trust_score + delta))
+    profile.save(update_fields=update_fields)
 
 
 def _unlock_achievement(user, ach_type, title, desc='', icon='bi-trophy'):
@@ -291,9 +317,13 @@ def feed(request):
     my_profile = get_or_create_gamer_profile(request.user)
     track_mission(request.user, DailyMission.EVENT_LOGIN)
     following_ids = list(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
+    favorite_games = my_profile.get_favorite_games_list()
+    game_interest_q = Q()
+    for game in favorite_games[:8]:
+        game_interest_q |= Q(game_tag__iexact=game) | Q(content__icontains=game)
 
     posts = list(Post.objects.filter(
-        Q(author__in=following_ids) | Q(author=request.user),
+        Q(author__in=following_ids) | Q(author=request.user) | game_interest_q,
         is_public=True
     ).select_related('author', 'author__gamer_profile').prefetch_related('likes', 'comments', 'reactions').order_by('-created_at')[:50])
 
@@ -311,7 +341,8 @@ def feed(request):
 
         popular_ids = [u.id for u in popular_users]
         posts = list(Post.objects.filter(
-            author__in=popular_ids, is_public=True
+            Q(author__in=popular_ids) | game_interest_q,
+            is_public=True
         ).select_related('author', 'author__gamer_profile')
          .prefetch_related('likes', 'comments', 'reactions')
          .order_by('-created_at')[:30])
@@ -739,10 +770,11 @@ def create_post(request):
             messages.error(request, 'محتوای پست نمی‌تواند خالی باشد!')
             return redirect('community:feed')
 
+        post_type = request.POST.get('post_type', 'text')
         post = Post.objects.create(
             author=request.user,
             content=content,
-            post_type=request.POST.get('post_type', 'text'),
+            post_type=post_type,
             game_tag=request.POST.get('game_tag', ''),
             is_approved=False,
         )
@@ -757,6 +789,8 @@ def create_post(request):
 
         _award_zarban(request.user, 5, 'انتشار پست جدید')
         track_mission(request.user, DailyMission.EVENT_POST)
+        if post_type == 'highlight':
+            track_mission(request.user, DailyMission.EVENT_HIGHLIGHT)
         _unlock_achievement(
             request.user, 'first_post',
             'اولین پست', 'اولین پستت رو منتشر کردی!', 'bi-pencil-square',
@@ -1178,6 +1212,10 @@ def lfg_board(request):
     LFGPost.objects.filter(is_active=True, created_at__lt=expiry_cutoff).update(is_active=False)
 
     lfg_posts = LFGPost.objects.filter(is_active=True).select_related('author', 'author__gamer_profile')
+    if request.user.is_authenticated:
+        lfg_posts = lfg_posts.filter(Q(is_approved=True) | Q(author=request.user))
+    else:
+        lfg_posts = lfg_posts.filter(is_approved=True)
 
     if platform_filter:
         lfg_posts = lfg_posts.filter(platform=platform_filter)
@@ -1223,9 +1261,30 @@ def lfg_board(request):
         ).select_related('user', 'user__gamer_profile'):
             _pending_map.setdefault(r.post_id, []).append(r)
 
-    # annotate each post object so the template can iterate without a variable key lookup
+    accepted_map = {}
+    if request.user.is_authenticated:
+        accepted_reqs = LFGJoinRequest.objects.filter(
+            post__in=lfg_posts, status='accepted'
+        ).select_related('user', 'user__gamer_profile')
+        for req in accepted_reqs:
+            accepted_map.setdefault(req.post_id, []).append(req.user)
+
+        sent_feedback = set(
+            LFGFeedback.objects.filter(reviewer=request.user, lfg_post__in=lfg_posts)
+            .values_list('lfg_post_id', 'reviewee_id')
+        )
+
     for post in lfg_posts:
         post.pending_reqs = _pending_map.get(post.pk, [])
+        participants = [post.author] + accepted_map.get(post.pk, [])
+        is_participant = any(user.pk == request.user.pk for user in participants) if request.user.is_authenticated else False
+        post.feedback_targets = [
+            user for user in participants
+            if request.user.is_authenticated
+            and is_participant
+            and user.pk != request.user.pk
+            and (post.pk, user.pk) not in sent_feedback
+        ]
 
     _party_groups = {g.lfg_post_id: g for g in GroupChat.objects.filter(lfg_post__in=lfg_posts)}
     for post in lfg_posts:
@@ -1254,6 +1313,19 @@ def lfg_board(request):
 @require_POST
 def create_lfg(request):
     game_name = request.POST.get('game_name', '').strip()
+    if not game_name:
+        messages.error(request, 'نام بازی برای LFG الزامی است.')
+        return redirect('community:lfg')
+    profile = get_or_create_gamer_profile(request.user)
+    scheduled_for = parse_datetime(request.POST.get('scheduled_for', '').strip() or '')
+    if scheduled_for and timezone.is_naive(scheduled_for):
+        scheduled_for = timezone.make_aware(scheduled_for, timezone.get_current_timezone())
+    try:
+        max_players = int(request.POST.get('max_players', 4))
+    except (TypeError, ValueError):
+        max_players = 4
+    max_players = max(2, min(max_players, 6))
+
     post = LFGPost.objects.create(
         author=request.user,
         game_name=game_name,
@@ -1262,12 +1334,20 @@ def create_lfg(request):
         skill_level=request.POST.get('skill_level', 'any'),
         description=request.POST.get('description', ''),
         contact=request.POST.get('contact', '').strip(),
-        max_players=int(request.POST.get('max_players', 4)),
+        scheduled_for=scheduled_for,
+        region=request.POST.get('region', '').strip(),
+        voice_required=request.POST.get('voice_required') == 'on',
+        max_players=max_players,
         join_type=request.POST.get('join_type', 'open'),
+        is_approved=profile.trust_score >= 40,
     )
+    track_mission(request.user, DailyMission.EVENT_LFG_CREATE)
     # اعلان فوری به گیمرهایی که این بازی جزو علاقه‌مندی‌هاشونه
-    _notify_lfg_interested(post)
-    messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش 🎮')
+    if post.is_approved:
+        _notify_lfg_interested(post)
+        messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش 🎮')
+    else:
+        messages.info(request, 'پست LFG ثبت شد و بعد از بررسی ادمین نمایش داده می‌شود.')
     return redirect('community:lfg')
 
 
@@ -1446,6 +1526,53 @@ def respond_lfg_join(request, req_id):
         return JsonResponse({'ok': True, 'status': 'rejected'})
 
     return JsonResponse({'error': 'عملیات نامعتبر'}, status=400)
+
+
+@login_required
+@require_POST
+def submit_lfg_feedback(request, post_id):
+    post = get_object_or_404(LFGPost, pk=post_id)
+    result = request.POST.get('result', '').strip()
+    reviewee_id = request.POST.get('reviewee_id')
+    note = request.POST.get('note', '').strip()[:300]
+
+    valid_results = {choice[0] for choice in LFGFeedback.RESULT_CHOICES}
+    if result not in valid_results:
+        return JsonResponse({'error': 'نوع بازخورد نامعتبر است'}, status=400)
+
+    accepted_user_ids = set(
+        LFGJoinRequest.objects.filter(post=post, status='accepted').values_list('user_id', flat=True)
+    )
+    participant_ids = accepted_user_ids | {post.author_id}
+    if request.user.id not in participant_ids:
+        return JsonResponse({'error': 'فقط اعضای این LFG می‌توانند بازخورد بدهند'}, status=403)
+
+    try:
+        reviewee_id = int(reviewee_id)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'کاربر نامعتبر است'}, status=400)
+    if reviewee_id == request.user.id or reviewee_id not in participant_ids:
+        return JsonResponse({'error': 'کاربر انتخاب‌شده عضو این LFG نیست'}, status=400)
+
+    reviewee = get_object_or_404(User, pk=reviewee_id)
+    feedback, created = LFGFeedback.objects.get_or_create(
+        lfg_post=post,
+        reviewer=request.user,
+        reviewee=reviewee,
+        defaults={'result': result, 'note': note},
+    )
+    if not created:
+        return JsonResponse({'error': 'قبلاً برای این کاربر بازخورد ثبت کرده‌اید'}, status=400)
+
+    _apply_lfg_feedback_score(feedback)
+    if result in {'no_show', 'toxic', 'other'}:
+        Notification.objects.create(
+            recipient=post.author,
+            sender=request.user,
+            notif_type='lfg_req',
+            custom_text=f'یک بازخورد LFG برای «{post.game_name}» نیاز به بررسی دارد.',
+        )
+    return JsonResponse({'ok': True, 'label': feedback.get_result_display()})
 
 
 @login_required
@@ -1895,10 +2022,11 @@ def create_post_page(request):
         if not content:
             messages.error(request, 'محتوای پست نمی‌تواند خالی باشد!')
             return redirect('community:create_post_page')
+        post_type = request.POST.get('post_type', 'text')
         post = Post.objects.create(
             author=request.user,
             content=content,
-            post_type=request.POST.get('post_type', 'text'),
+            post_type=post_type,
             game_tag=request.POST.get('game_tag', ''),
             link_url=request.POST.get('link_url', ''),
             link_title=request.POST.get('link_title', ''),
@@ -1915,6 +2043,9 @@ def create_post_page(request):
         extract_and_save_hashtags(post)
         profile = get_or_create_gamer_profile(request.user)
         profile.save()
+        track_mission(request.user, DailyMission.EVENT_POST)
+        if post_type == 'highlight':
+            track_mission(request.user, DailyMission.EVENT_HIGHLIGHT)
         messages.success(request, 'پست منتشر شد! 🎮')
         return redirect('community:profile', username=request.user.username)
     trending = Hashtag.objects.filter(post_count__gt=0).order_by('-post_count')[:12]
@@ -2794,7 +2925,12 @@ def game_detail(request, game_id):
 
     # نظرات بازی
     from .models import GameReview
-    reviews = GameReview.objects.filter(game_id=game_id).select_related('user', 'user__gamer_profile').order_by('-created_at')
+    reviews_qs = GameReview.objects.filter(game_id=game_id).select_related('user', 'user__gamer_profile')
+    if request.user.is_authenticated:
+        reviews_qs = reviews_qs.filter(Q(is_approved=True) | Q(user=request.user))
+    else:
+        reviews_qs = reviews_qs.filter(is_approved=True)
+    reviews = reviews_qs.order_by('-is_featured', '-created_at')
     my_review = None
     if request.user.is_authenticated:
         my_review = reviews.filter(user=request.user).first()
@@ -2882,11 +3018,13 @@ def add_game_review(request, game_id):
     review, created = GameReview.objects.update_or_create(
         user=request.user,
         game_id=game_id,
-        defaults={'body': body, 'rating': rating, 'game_name': game.name}
+        defaults={'body': body, 'rating': rating, 'game_name': game.name, 'is_approved': False}
     )
+    track_mission(request.user, DailyMission.EVENT_REVIEW)
 
     # آمار به‌روز
-    reviews = GameReview.objects.filter(game_id=game_id)
+    reviews = GameReview.objects.filter(game_id=game_id, is_approved=True)
+    visible_review_count = GameReview.objects.filter(game_id=game_id).filter(Q(is_approved=True) | Q(user=request.user)).count()
     review_ratings = [r.rating for r in reviews if r.rating is not None]
     review_avg = round(sum(review_ratings) / len(review_ratings), 1) if review_ratings else None
 
@@ -2896,6 +3034,7 @@ def add_game_review(request, game_id):
     return JsonResponse({
         'ok': True,
         'created': created,
+        'pending_moderation': not review.is_approved,
         'review': {
             'id': review.id,
             'body': review.body,
@@ -2906,7 +3045,7 @@ def add_game_review(request, game_id):
             'created_at': _to_jalali(review.created_at, '%Y/%m/%d'),
         },
         'review_avg': review_avg,
-        'review_count': reviews.count(),
+        'review_count': visible_review_count,
         'review_rating_count': len(review_ratings),
     })
 
@@ -2920,14 +3059,15 @@ def delete_game_review(request, game_id, review_id):
     review = get_object_or_404(GameReview, pk=review_id, user=request.user, game_id=game_id)
     review.delete()
 
-    reviews = GameReview.objects.filter(game_id=game_id)
+    reviews = GameReview.objects.filter(game_id=game_id, is_approved=True)
+    visible_review_count = GameReview.objects.filter(game_id=game_id).filter(Q(is_approved=True) | Q(user=request.user)).count()
     review_ratings = [r.rating for r in reviews if r.rating is not None]
     review_avg = round(sum(review_ratings) / len(review_ratings), 1) if review_ratings else None
 
     return JsonResponse({
         'ok': True,
         'review_avg': review_avg,
-        'review_count': reviews.count(),
+        'review_count': visible_review_count,
         'review_rating_count': len(review_ratings),
     })
 
@@ -4415,6 +4555,7 @@ def game_search_api(request):
         results.append({
             'name': g.name,
             'cover': g.cover.url if g.cover else '',
+            'steam_appid': g.steam_appid,
         })
     return JsonResponse({'ok': True, 'games': results})
 
@@ -4566,6 +4707,14 @@ def onboarding(request):
     """ویزارد خوش‌آمدگویی برای کاربران جدید"""
     profile = get_or_create_gamer_profile(request.user)
 
+    # اگر قبلاً onboarding انجام داده، ارور بده و برگردون
+    if profile.has_onboarded and request.method == 'GET':
+        referer = request.META.get('HTTP_REFERER', '')
+        onboarding_url = request.build_absolute_uri(reverse('community:onboarding'))
+        back_url = referer if referer and referer != onboarding_url else reverse('community:feed')
+        messages.error(request, 'شما قبلاً مرحله خوش‌آمدگویی رو تکمیل کردید 👍')
+        return redirect(back_url)
+
     if request.method == 'POST':
         from dashboard.models import Game as DashboardGame
         # Step data
@@ -4587,8 +4736,8 @@ def onboarding(request):
         profile.has_onboarded = True
         profile.save(update_fields=['platforms', 'platform', 'favorite_games', 'bio', 'city', 'has_onboarded'])
 
-        messages.success(request, 'خوش اومدی به GameBeat! 🎮')
-        return redirect(reverse('community:feed'))
+        messages.success(request, 'خوش اومدی به GameBeat! چند LFG مرتبط با بازی‌هات برات آماده کردیم 🎮')
+        return redirect(f"{reverse('community:lfg')}?mine=1")
 
     from dashboard.models import Game as DashboardGame, GENRE_CHOICES as GAME_GENRE_CHOICES
     popular_games = list(
@@ -4599,9 +4748,16 @@ def onboarding(request):
             DashboardGame.objects.filter(is_active=True).order_by('-is_featured', 'name').values('name', 'steam_appid')[:30]
         )
 
+    import json as _json
+    city_by_province_json = _json.dumps(
+        [{'province': p, 'cities': [{'key': k, 'label': dict(CITY_CHOICES).get(k, k)} for k in keys]}
+         for p, keys in CITY_BY_PROVINCE],
+        ensure_ascii=False
+    )
     return render(request, 'community/onboarding.html', {
         'profile': profile,
         'platform_choices': PLATFORM_CHOICES,
         'city_choices': CITY_CHOICES,
+        'city_by_province_json': city_by_province_json,
         'popular_games': popular_games,
     })

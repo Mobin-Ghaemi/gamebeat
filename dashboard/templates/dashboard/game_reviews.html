@@ -1,0 +1,93 @@
+{% extends 'dashboard/base.html' %}
+{% load jalali_filters %}
+
+{% block title %}ریویوهای بازی - داشبورد GameBeat{% endblock %}
+{% block page_title %}نظارت ریویوهای بازی{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">ریویوهای بازی</div>
+        <div class="page-subtitle">تأیید، ویژه‌کردن و حذف نظرهای صفحه بازی‌ها</div>
+    </div>
+</div>
+
+<div class="dash-card mb-4">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <div class="search-wrapper" style="flex:1;min-width:220px;max-width:420px">
+            <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg>
+            <input name="q" value="{{ q }}" class="dash-input" style="padding-right:36px" placeholder="جستجو در بازی، کاربر یا متن نظر...">
+        </div>
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <button class="btn-ghost" type="submit">اعمال</button>
+    </form>
+</div>
+
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <a href="?tab=pending{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'pending' %}border-color:#fbbf24;color:#fbbf24;background:rgba(251,191,36,.1){% endif %}">در انتظار ({{ pending_count }})</a>
+    <a href="?tab=approved{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'approved' %}border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.1){% endif %}">تأیید شده ({{ approved_count }})</a>
+    <a href="?tab=featured{% if q %}&q={{ q }}{% endif %}" class="btn-ghost" style="{% if tab == 'featured' %}border-color:#a78bfa;color:#a78bfa;background:rgba(167,139,250,.1){% endif %}">ویژه ({{ featured_count }})</a>
+</div>
+
+<div class="dash-card">
+    <div class="dash-card-title">
+        <svg class="bi bi-star-fill" aria-hidden="true" style="color:#fbbf24"><use href="#bi-star-fill"></use></svg>
+        لیست ریویوها
+        <span style="font-size:.78rem;color:var(--text-faint);font-weight:400">({{ page_obj.paginator.count }} مورد)</span>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>بازی</th>
+                    <th>کاربر</th>
+                    <th>امتیاز</th>
+                    <th>متن</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in page_obj %}
+                <tr>
+                    <td style="font-weight:800;color:var(--text-white)">{{ review.game_name }}</td>
+                    <td>{{ review.user.username }}</td>
+                    <td>{% if review.rating %}{{ review.rating }}/5{% else %}بدون امتیاز{% endif %}</td>
+                    <td style="max-width:360px;color:var(--text-muted);font-size:.84rem">{{ review.body|truncatechars:140 }}</td>
+                    <td>
+                        {% if review.is_approved %}
+                        <span style="color:#22c55e">تأیید شده</span>
+                        {% else %}
+                        <span style="color:#fbbf24">در انتظار</span>
+                        {% endif %}
+                        {% if review.is_featured %}<span style="color:#a78bfa"> · ویژه</span>{% endif %}
+                    </td>
+                    <td style="white-space:nowrap">{{ review.created_at|jalali:"Y/m/d H:i" }}</td>
+                    <td>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            {% if not review.is_approved %}
+                            <form method="post" action="{% url 'dashboard:game_review_action' review.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="approve">
+                                <button class="btn-ghost" style="padding:5px 10px;color:#22c55e;border-color:rgba(34,197,94,.35)">تأیید</button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="{% url 'dashboard:game_review_action' review.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="feature">
+                                <button class="btn-ghost" style="padding:5px 10px">{% if review.is_featured %}حذف ویژه{% else %}ویژه{% endif %}</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard:game_review_action' review.pk %}">
+                                {% csrf_token %}<input type="hidden" name="action" value="delete">
+                                <button class="btn-danger-ghost" style="padding:5px 10px" onclick="return confirm('ریویو حذف شود؟')">حذف</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:28px">موردی پیدا نشد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

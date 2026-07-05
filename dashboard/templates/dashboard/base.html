@@ -554,29 +554,60 @@
             display: block;
         }
 
-        /* ─── Messages ────────────────────────────────────────────── */
-        .dash-alert {
-            border-radius: 12px;
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 20px;
+        /* ─── Toast Messages ──────────────────────────────────────── */
+        .dash-toast-wrap {
+            position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+            display: flex; flex-direction: column-reverse; gap: 10px;
+            width: min(360px, calc(100% - 48px)); pointer-events: none;
         }
-
-        .dash-alert-success {
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.3);
-            color: #34d399;
+        .dash-toast {
+            pointer-events: auto; position: relative; overflow: hidden;
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 14px 14px 18px; border-radius: 14px;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            color: #fff; border: 1px solid rgba(255,255,255,.15);
+            box-shadow: 0 16px 48px rgba(0,0,0,.45);
+            animation: dashToastIn .4s cubic-bezier(.16,1,.3,1) both;
         }
-
-        .dash-alert-error {
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
-            color: #f87171;
+        @keyframes dashToastIn {
+            from { opacity:0; transform:translateX(24px) scale(.97); }
+            to   { opacity:1; transform:translateX(0) scale(1); }
         }
+        .dash-toast.hide { animation: dashToastOut .3s forwards; }
+        @keyframes dashToastOut { to { opacity:0; transform:translateX(18px) scale(.96); } }
+        .dash-toast-success { background: linear-gradient(135deg,#16a34a,#15803d); }
+        .dash-toast-error   { background: linear-gradient(135deg,#dc2626,#991b1b); }
+        .dash-toast-warning { background: linear-gradient(135deg,#d97706,#b45309); }
+        .dash-toast-info    { background: linear-gradient(135deg,#7c3aed,#6d28d9); }
+        .dash-toast-icon { flex-shrink: 0; line-height: 1; margin-top: 2px; display: flex; align-items: center; }
+        .dash-toast-body { flex: 1; min-width: 0; }
+        .dash-toast-title {
+            font-size: .75rem; font-weight: 900; letter-spacing: .3px;
+            text-transform: uppercase; opacity: .75; margin-bottom: 3px;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+        }
+        .dash-toast-msg {
+            font-size: .86rem; font-weight: 600; line-height: 1.6;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+        }
+        .dash-toast-close {
+            flex-shrink: 0; background: rgba(0,0,0,.2);
+            border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.8);
+            width: 26px; height: 26px; border-radius: 8px; cursor: pointer;
+            font-size: .85rem; display: flex; align-items: center;
+            justify-content: center; transition: all .18s; margin-top: 1px;
+            font-family: system-ui, sans-serif;
+        }
+        .dash-toast-close:hover { background: rgba(255,255,255,.25); color: #fff; transform: scale(1.1); }
+        .dash-toast-timer {
+            position: absolute; bottom: 0; right: 0; left: 0; height: 3px;
+            background: rgba(255,255,255,.35);
+            transform-origin: right;
+            animation: dashTimer var(--toast-dur, 4s) linear forwards;
+            border-radius: 0 0 14px 14px;
+        }
+        @keyframes dashTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .dash-toast:hover .dash-toast-timer { animation-play-state: paused; }
 
         /* ─── Page header ─────────────────────────────────────────── */
         .page-header {
@@ -718,6 +749,12 @@
             پست‌ها
         </a>
 
+        <a href="{% url 'dashboard:lfg_moderation' %}"
+           class="sidebar-link {% if 'lfg' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg>
+            LFG و اعتماد
+        </a>
+
         <a href="{% url 'dashboard:comments' %}"
            class="sidebar-link {% if 'comment' in request.resolver_match.url_name %}active{% endif %}">
             <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg>
@@ -731,9 +768,15 @@
         </a>
 
         <a href="{% url 'dashboard:games' %}"
-           class="sidebar-link {% if 'game' in request.resolver_match.url_name %}active{% endif %}">
+           class="sidebar-link {% if request.resolver_match.url_name == 'games' or request.resolver_match.url_name == 'game_add' or request.resolver_match.url_name == 'game_edit' or request.resolver_match.url_name == 'game_delete' or request.resolver_match.url_name == 'game_toggle_active' or request.resolver_match.url_name == 'game_toggle_online' or request.resolver_match.url_name == 'game_bulk_delete' %}active{% endif %}">
             <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
             بازی‌ها
+        </a>
+
+        <a href="{% url 'dashboard:game_reviews' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'game_reviews' or request.resolver_match.url_name == 'game_review_action' %}active{% endif %}">
+            <svg class="bi bi-star-fill" aria-hidden="true"><use href="#bi-star-fill"></use></svg>
+            ریویوهای بازی
         </a>
 
         <a href="{% url 'dashboard:notify' %}"
@@ -837,25 +880,70 @@
 <!-- ═══ Main Content ══════════════════════════════════════════════ -->
 <main class="dash-main">
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="dash-alert {% if message.tags == 'success' %}dash-alert-success{% else %}dash-alert-error{% endif %}">
-                <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-circle{% endif %}"></i>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
     {% block content %}{% endblock %}
 
 </main>
 
+<!-- ═══ Toast wrap ═══════════════════════════════════════════════ -->
+<div class="dash-toast-wrap" id="dashToastWrap"></div>
+
 <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
 <script>
-    function toggleSidebar() {
-        document.getElementById('dashSidebar').classList.toggle('open');
-        document.getElementById('sidebarOverlay').classList.toggle('open');
-    }
+function toggleSidebar() {
+    document.getElementById('dashSidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+
+// ─── Toast system ────────────────────────────────────────────────
+const _TOAST_META = {
+    success: {icon:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>', title:'موفق'},
+    error:   {icon:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/></svg>', title:'خطا'},
+    warning: {icon:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>', title:'هشدار'},
+    info:    {icon:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>', title:'اطلاعیه'},
+};
+function showDashToast(msg, type, duration) {
+    type = type || 'info'; duration = duration || 4000;
+    const meta = _TOAST_META[type] || _TOAST_META.info;
+    const wrap = document.getElementById('dashToastWrap');
+    const t = document.createElement('div');
+    t.className = 'dash-toast dash-toast-' + type;
+    t.style.setProperty('--toast-dur', (duration/1000) + 's');
+    t.innerHTML =
+        `<span class="dash-toast-icon">${meta.icon}</span>`
+      + `<div class="dash-toast-body">`
+      +   `<div class="dash-toast-title">${meta.title}</div>`
+      +   `<div class="dash-toast-msg">${msg}</div>`
+      + `</div>`
+      + `<button class="dash-toast-close" onclick="closeDashToast(this.closest('.dash-toast'))">✕</button>`
+      + `<div class="dash-toast-timer"></div>`;
+    wrap.appendChild(t);
+    let remaining = duration;
+    let startTime = Date.now();
+    let timer = setTimeout(() => closeDashToast(t), remaining);
+    t.addEventListener('mouseenter', () => {
+        clearTimeout(timer);
+        remaining -= Date.now() - startTime;
+    });
+    t.addEventListener('mouseleave', () => {
+        startTime = Date.now();
+        timer = setTimeout(() => closeDashToast(t), remaining);
+    });
+}
+function closeDashToast(el) {
+    if (!el || el.classList.contains('hide')) return;
+    el.classList.add('hide');
+    setTimeout(() => el.remove(), 320);
+}
+
+// render Django messages as toasts
+(function(){
+    const msgs = [
+        {% for message in messages %}
+        {text: "{{ message|escapejs }}", type: "{% if 'error' in message.tags or 'danger' in message.tags %}error{% elif 'warning' in message.tags %}warning{% elif 'success' in message.tags %}success{% else %}info{% endif %}"},
+        {% endfor %}
+    ];
+    msgs.forEach((m, i) => setTimeout(() => showDashToast(m.text, m.type), i * 200));
+})();
 </script>
 {% block extra_js %}{% endblock %}
 </body>
