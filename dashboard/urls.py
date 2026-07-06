@@ -67,4 +67,5 @@ urlpatterns = [
     path('achievements/', views.achievements_list, name='achievements'),
     path('achievements/save/', views.achievement_definition_save, name='achievement_save'),
     path('achievements/icon-upload/', views.achievement_icon_upload, name='achievement_icon_upload'),
+    path('analytics/', views.site_analytics, name='analytics'),
 ]

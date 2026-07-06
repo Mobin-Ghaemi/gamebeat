@@ -57,6 +57,70 @@ class JsonErrorTranslationMiddleware:
         return response
 
 
+class PageViewMiddleware:
+    """ثبت بازدید صفحات اصلی سایت برای آمار."""
+
+    import re as _re
+    SKIP = _re.compile(
+        r'^/(admin-panel|api|static|media|__debug__|favicon|notifications/count'
+        r'|inbox/count|poll|conversation_poll|spin/result|zarban)'
+    )
+    PATTERNS = [
+        (_re.compile(r'^/$'),                    'feed',        None),
+        (_re.compile(r'^/games/(\d+)/'),         'game_detail', 1),
+        (_re.compile(r'^/games/'),               'games',       None),
+        (_re.compile(r'^/lfg/'),                 'lfg',         None),
+        (_re.compile(r'^/profile/'),             'profile',     None),
+        (_re.compile(r'^/leaderboard/'),         'leaderboard', None),
+        (_re.compile(r'^/gamefinder/'),          'gamefinder',  None),
+        (_re.compile(r'^/wheel/'),               'wheel',       None),
+        (_re.compile(r'^/missions/'),            'missions',    None),
+    ]
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.method != 'GET' or response.status_code != 200:
+            return response
+        path = request.path_info
+        if self.SKIP.match(path):
+            return response
+        page_type = 'other'
+        game_id = None
+        for pattern, ptype, gid_group in self.PATTERNS:
+            m = pattern.match(path)
+            if m:
+                page_type = ptype
+                if gid_group:
+                    try:
+                        game_id = int(m.group(gid_group))
+                    except (IndexError, ValueError):
+                        pass
+                break
+        try:
+            import threading
+            from community.models import PageView
+            user_id = request.user.pk if getattr(request, 'user', None) and request.user.is_authenticated else None
+
+            def _write():
+                try:
+                    PageView.objects.create(
+                        user_id=user_id,
+                        page_type=page_type,
+                        path=path[:200],
+                        game_id=game_id,
+                    )
+                except Exception:
+                    pass
+
+            threading.Thread(target=_write, daemon=True).start()
+        except Exception:
+            pass
+        return response
+
+
 class OnlineTrackingMiddleware:
     """
     بعد از AuthenticationMiddleware قرار می‌گیرد.

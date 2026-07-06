@@ -1,0 +1,331 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}آمار سایت - داشبورد GameBeat{% endblock %}
+{% block page_title %}آمار سایت{% endblock %}
+
+{% block extra_css %}
+<style>
+.an-grid { display:grid; gap:16px; }
+.an-grid-4 { grid-template-columns: repeat(4,1fr); }
+.an-grid-3 { grid-template-columns: repeat(3,1fr); }
+.an-grid-2 { grid-template-columns: repeat(2,1fr); }
+@media(max-width:1100px){ .an-grid-4{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:700px){ .an-grid-4,.an-grid-3,.an-grid-2{grid-template-columns:1fr;} }
+
+.an-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:20px 24px;
+}
+.an-card-title {
+    font-size:.75rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--text-muted); margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+}
+.an-stat {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:20px 24px;
+    display:flex; flex-direction:column; gap:6px;
+    position:relative; overflow:hidden;
+}
+.an-stat::before {
+    content:''; position:absolute; top:0; right:0;
+    width:4px; height:100%; border-radius:0 16px 16px 0;
+    background:var(--accent,var(--purple));
+}
+.an-stat-label { font-size:.75rem; color:var(--text-muted); font-weight:600; }
+.an-stat-val   { font-size:2rem; font-weight:900; color:#fff; line-height:1; }
+.an-stat-sub   { font-size:.78rem; color:var(--text-faint); margin-top:2px; }
+.an-stat-sub b { color:var(--accent,var(--purple-light)); }
+
+.an-chart-wrap {
+    display:flex; align-items:flex-end; gap:3px;
+    height:148px; overflow:hidden;
+}
+.an-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; }
+.an-bar {
+    width:100%; border-radius:3px 3px 0 0; min-height:2px;
+    transition:opacity .2s;
+}
+.an-bar:hover { opacity:.7; cursor:default; }
+.an-bar-lbl { font-size:.5rem; color:var(--text-faint); white-space:nowrap; }
+
+.an-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:7px 0; border-bottom:1px solid rgba(255,255,255,.04);
+}
+.an-row:last-child { border-bottom:none; }
+.an-row-label { font-size:.82rem; color:var(--text-muted); }
+.an-row-val   { font-size:.9rem; font-weight:900; }
+
+.an-game-row {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05);
+}
+.an-game-row:last-child { border-bottom:none; }
+.an-rank { width:22px; text-align:center; font-size:.72rem; font-weight:900; color:var(--text-faint); flex-shrink:0; }
+.an-rank.gold { color:#fbbf24; }
+.an-rank.silver { color:#94a3b8; }
+.an-rank.bronze { color:#cd7c3a; }
+.an-game-name { flex:1; font-size:.86rem; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.an-game-bar-bg { width:110px; height:6px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; flex-shrink:0; }
+.an-game-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#6d28d9,#a78bfa); }
+.an-game-cnt { width:32px; text-align:left; font-size:.78rem; font-weight:800; color:var(--purple-light); flex-shrink:0; }
+
+.sec-title {
+    font-size:.92rem; font-weight:800; color:#fff; margin:28px 0 14px;
+    display:flex; align-items:center; gap:8px;
+}
+.sec-title svg { color:var(--purple-light); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">آمار سایت</div>
+        <div class="page-subtitle">عملکرد ۳۰ روز اخیر و وضعیت کلی</div>
+    </div>
+</div>
+
+{# ───── کارت‌های ترکیبی ماه + امروز ────────────────────────── #}
+<div class="an-grid an-grid-4" style="margin-top:8px">
+
+    <div class="an-stat" style="--accent:#a78bfa">
+        <div class="an-stat-label">سشن</div>
+        <div class="an-stat-val">{{ sessions_month }}</div>
+        <div style="font-size:.68rem;color:var(--text-faint);margin-bottom:2px">این ماه &nbsp;|&nbsp; منحصربه‌فرد: <b style="color:#a78bfa">{{ unique_month }}</b></div>
+        <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 0"></div>
+        <div style="font-size:.72rem;color:var(--text-muted)">امروز: <b style="color:#fff;font-size:.85rem">{{ sessions_today }}</b> &nbsp;&nbsp; منحصربه‌فرد: <b style="color:#a78bfa">{{ unique_today }}</b></div>
+    </div>
+
+    <div class="an-stat" style="--accent:#34d399">
+        <div class="an-stat-label">ثبت‌نام</div>
+        <div class="an-stat-val">{{ users_month }}</div>
+        <div style="font-size:.68rem;color:var(--text-faint);margin-bottom:2px">این ماه &nbsp;|&nbsp; کل کاربران: <b style="color:#34d399">{{ total_users }}</b></div>
+        <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 0"></div>
+        <div style="font-size:.72rem;color:var(--text-muted)">امروز: <b style="color:#fff;font-size:.85rem">{{ users_today }}</b></div>
+    </div>
+
+    <div class="an-stat" style="--accent:#60a5fa">
+        <div class="an-stat-label">پست</div>
+        <div class="an-stat-val">{{ posts_month }}</div>
+        <div style="font-size:.68rem;color:var(--text-faint);margin-bottom:2px">این ماه &nbsp;|&nbsp; LFG: <b style="color:#60a5fa">{{ lfg_month }}</b> &nbsp; ریویو: <b style="color:#60a5fa">{{ reviews_month }}</b></div>
+        <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 0"></div>
+        <div style="font-size:.72rem;color:var(--text-muted)">امروز: <b style="color:#fff;font-size:.85rem">{{ posts_today }}</b> &nbsp;&nbsp; LFG: <b style="color:#60a5fa">{{ lfg_today }}</b></div>
+    </div>
+
+    <div class="an-stat" style="--accent:#fbbf24">
+        <div class="an-stat-label">پریمیوم</div>
+        <div class="an-stat-val">{{ premium_active }}</div>
+        <div style="font-size:.68rem;color:var(--text-faint);margin-bottom:2px">فعال الان &nbsp;|&nbsp; میانگین حضور: <b style="color:#fbbf24">{{ avg_dur_min }} دقیقه</b></div>
+        <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 0"></div>
+        <div style="font-size:.72rem;color:var(--text-muted)">جدید این ماه: <b style="color:#fff;font-size:.85rem">{{ premium_month }}</b></div>
+    </div>
+
+</div>
+
+{# ───── نمودار ──────────────────────────────────────────────── #}
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M4 11H2v3h2zm5-4H7v7h2zm5-5v12h-2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1z"/></svg>
+    نمودار ۳۰ روز اخیر
+</div>
+<div class="an-grid an-grid-2">
+
+    <div class="an-card">
+        <div class="an-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="#a78bfa" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>
+            سشن روزانه
+        </div>
+        <div class="an-chart-wrap">
+            {% for val in chart_sessions %}
+            <div class="an-bar-col">
+                <div class="an-bar" style="height:{% widthratio val max_session 148 %}px;background:linear-gradient(to top,#6d28d9,#a78bfa)" title="{{ val }} سشن — {{ chart_labels|slice:forloop.counter0|last }}"></div>
+                {% if forloop.counter0|divisibleby:5 %}<div class="an-bar-lbl">{{ chart_labels|slice:forloop.counter0|last }}</div>{% else %}<div class="an-bar-lbl" style="opacity:0">.</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="an-card">
+        <div class="an-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="#34d399" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>
+            ثبت‌نام روزانه
+        </div>
+        <div class="an-chart-wrap">
+            {% for val in chart_users %}
+            <div class="an-bar-col">
+                <div class="an-bar" style="height:{% if val > 0 %}{% widthratio val 5 148 %}{% else %}2{% endif %}px;background:linear-gradient(to top,#059669,#34d399)" title="{{ val }} نفر — {{ chart_labels|slice:forloop.counter0|last }}"></div>
+                {% if forloop.counter0|divisibleby:5 %}<div class="an-bar-lbl">{{ chart_labels|slice:forloop.counter0|last }}</div>{% else %}<div class="an-bar-lbl" style="opacity:0">.</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{# ───── بازدید صفحات ─────────────────────────────────────────── #}
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 3a.5.5 0 0 0 0 1h11a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h11a.5.5 0 0 0 0-1zm10.113-5.373a6.59 6.59 0 0 0-.445-.275l.21-.352a.5.5 0 0 0-.263-.718l-.25-.08a6.6 6.6 0 0 0 0-.573l.25-.08a.5.5 0 0 0 .263-.718l-.21-.352c.146-.09.29-.183.445-.275l.254.367a.5.5 0 0 0 .561.164l.25-.08c.16.13.318.263.461.4l-.08.25a.5.5 0 0 0 .164.561l.367.254a6.6 6.6 0 0 0-.275.445l-.352-.21a.5.5 0 0 0-.718.263l-.08.25a6.6 6.6 0 0 0-.573 0l-.08-.25a.5.5 0 0 0-.718-.263zm-1.833 1.89a1 1 0 1 1 1.414-1.414 1 1 0 0 1-1.414 1.414"/></svg>
+    بازدید صفحات — این ماه
+</div>
+<div class="an-card" style="padding:14px 16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+    {% for p in page_breakdown %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,.04);border-radius:7px;gap:8px">
+        <span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap">{{ p.label }}</span>
+        <span style="font-size:.9rem;font-weight:800;color:#a78bfa;white-space:nowrap">{{ p.month }}</span>
+        {% if p.today %}<span style="font-size:.7rem;color:var(--text-faint);white-space:nowrap">(+{{ p.today }})</span>{% endif %}
+    </div>
+    {% endfor %}
+    </div>
+</div>
+
+{# ───── ساعت‌های پرترافیک ────────────────────────────────────── #}
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/></svg>
+    ساعت‌های پرترافیک (۷ روز اخیر)
+</div>
+<div class="an-card">
+    <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-bottom:4px">
+        {% for c in hour_buckets %}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="width:100%;border-radius:2px 2px 0 0;min-height:2px;background:{% if c == max_hour %}#a78bfa{% else %}rgba(139,92,246,.4){% endif %};height:{% widthratio c max_hour 72 %}px" title="{{ forloop.counter0 }}:00 — {{ c }} بازدید"></div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="display:flex;gap:3px">
+        {% for c in hour_buckets %}
+        <div style="flex:1;text-align:center;font-size:.47rem;color:{% if forloop.counter0|divisibleby:3 %}var(--text-faint){% else %}transparent{% endif %}">{{ forloop.counter0 }}</div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ───── بازی‌های پربازدید + پرطرفدار ────────────────────────── #}
+<div class="an-grid an-grid-2">
+
+{% if top_game_views %}
+<div>
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1z"/></svg>
+    بازی‌های پربازدید (۳۰ روز)
+</div>
+<div class="an-card">
+    {% with max_v=top_game_views.0.views %}
+    {% for g in top_game_views %}
+    <div class="an-game-row">
+        <div class="an-rank {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">{{ forloop.counter }}</div>
+        <div class="an-game-name" title="{{ g.name }}">{{ g.name }}</div>
+        <div class="an-game-bar-bg"><div class="an-game-bar-fill" style="width:{% widthratio g.views max_v 100 %}%"></div></div>
+        <div class="an-game-cnt">{{ g.views }}</div>
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <div style="font-size:.7rem;color:var(--text-faint);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)">* بر اساس بازدید صفحه جزئیات بازی</div>
+</div>
+</div>
+{% endif %}
+
+{% if activity_games %}
+<div>
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1m-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1z"/><path d="M3.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466 0 .5.5 0 0 1 .62.36l1.932.518a.5.5 0 0 1 .306.729c-.14.197-.293.402-.456.61C14.965 5.698 13.684 7.016 12.124 7.983c-.324.197-.677.37-1.044.518.21.282.39.578.54.877.25.504.418 1.02.516 1.5a11 11 0 0 1 .074.47A11 11 0 0 0 11 10.5c.5 0 .993.026 1.476.073.029-.202.05-.408.056-.617a2.5 2.5 0 0 0-.005-.265.5.5 0 0 1 .997-.077c.007.083.01.168.01.255 0 .234-.018.464-.053.69A11 11 0 0 1 15.144 11.25c.3.177.576.368.828.57a.5.5 0 0 1-.65.761 10 10 0 0 0-.803-.553A10.5 10.5 0 0 0 11 11.5c-1.017 0-1.993.142-2.909.406a.5.5 0 0 1-.282-.96c.79-.232 1.625-.376 2.49-.43a10.5 10.5 0 0 0-1.67-1.875C7.86 7.893 7.03 7.5 6.25 7.5c-.78 0-1.61.393-2.38 1.14A10.5 10.5 0 0 0 2.2 10.516a.5.5 0 1 1-.898-.43 11.5 11.5 0 0 1 1.8-2.695A11 11 0 0 1 .74 6.027a.5.5 0 0 1 .306-.729l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466 0"/></svg>
+    بازی‌های پرفعالیت (۳۰ روز)
+</div>
+<div class="an-card">
+    {% with max_t=activity_games.0.total %}
+    {% for g in activity_games %}
+    <div class="an-game-row">
+        <div class="an-rank {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">{{ forloop.counter }}</div>
+        <div class="an-game-name" title="{{ g.game_name }}">{{ g.game_name }}</div>
+        <div class="an-game-bar-bg"><div class="an-game-bar-fill" style="width:{% if max_t > 0 %}{% widthratio g.total max_t 100 %}{% else %}0{% endif %}%"></div></div>
+        <div class="an-game-cnt">{{ g.total }}</div>
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <div style="font-size:.7rem;color:var(--text-faint);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)">* اضافه به لیست + امتیازدهی + ریویو</div>
+</div>
+</div>
+{% endif %}
+
+</div>
+
+{# ───── ظرفیت سرور ──────────────────────────────────────────── #}
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm1 3h14v1a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm0 3h14v1a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1z"/><circle cx="13" cy="5" r="1"/><circle cx="13" cy="9" r="1"/><circle cx="13" cy="13" r="1"/></svg>
+    ظرفیت سرور — اگه ۱۰۰۰ کاربر همزمان باشن
+</div>
+<div class="an-grid an-grid-3" style="margin-bottom:16px">
+
+    <div class="an-card">
+        <div class="an-card-title" style="color:#fbbf24">Gunicorn Workers</div>
+        <div style="font-size:2rem;font-weight:900;color:#fff;margin:8px 0 4px">{{ gunicorn_workers }}</div>
+        <div style="font-size:.75rem;color:var(--text-faint);margin-bottom:10px">worker فعال تخمینی</div>
+        <div class="an-row"><span class="an-row-label">ظرفیت همزمان</span><span class="an-row-val" style="color:#34d399">~{{ gunicorn_capacity }} req</span></div>
+        <div class="an-row"><span class="an-row-label">درخواست در ثانیه</span><span class="an-row-val" style="color:#60a5fa">~{{ rps_estimate }} rps</span></div>
+        <div style="margin-top:10px;padding:7px 10px;border-radius:6px;font-size:.75rem;
+            {% if gunicorn_capacity >= 1000 %}background:rgba(52,211,153,.1);color:#34d399{% elif gunicorn_capacity >= 500 %}background:rgba(251,191,36,.1);color:#fbbf24{% else %}background:rgba(248,113,113,.1);color:#f87171{% endif %}">
+            {% if gunicorn_capacity >= 1000 %}سرور توان ۱۰۰۰ کاربر همزمان دارد{% elif gunicorn_capacity >= 500 %}احتمال کندی — توصیه: افزایش worker{% else %}خطر overload — باید worker بیشتر شود{% endif %}
+        </div>
+    </div>
+
+    <div class="an-card">
+        <div class="an-card-title" style="color:#60a5fa">پایگاه داده (SQLite)</div>
+        <div style="font-size:2rem;font-weight:900;color:#fff;margin:8px 0 4px">{{ db_size_mb }} MB</div>
+        <div style="font-size:.75rem;color:var(--text-faint);margin-bottom:10px">حجم فعلی db.sqlite3</div>
+        <div class="an-row"><span class="an-row-label">Write lock ریسک</span><span class="an-row-val" style="color:#fbbf24">بالا</span></div>
+        <div class="an-row"><span class="an-row-label">Read همزمان</span><span class="an-row-val" style="color:#34d399">بی‌محدود</span></div>
+        <div style="margin-top:10px;padding:7px 10px;border-radius:6px;font-size:.75rem;background:rgba(251,191,36,.1);color:#fbbf24">
+            SQLite در write های همزمان lock میشه — برای ۱۰۰۰ کاربر فعال PostgreSQL توصیه میشه
+        </div>
+    </div>
+
+    <div class="an-card">
+        <div class="an-card-title" style="color:#a78bfa">حافظه و زمان پاسخ</div>
+        <div style="font-size:2rem;font-weight:900;color:#fff;margin:8px 0 4px">~{{ mem_per_worker }} MB</div>
+        <div style="font-size:.75rem;color:var(--text-faint);margin-bottom:10px">حافظه هر worker</div>
+        <div class="an-row"><span class="an-row-label">زمان پاسخ عادی</span><span class="an-row-val" style="color:#34d399">&lt;200ms</span></div>
+        <div class="an-row"><span class="an-row-label">زمان پاسخ زیر بار</span><span class="an-row-val" style="color:#fbbf24">200–800ms</span></div>
+        <div class="an-row"><span class="an-row-label">کل RAM تخمینی</span><span class="an-row-val" style="color:#f87171">~{{ total_mem_mb }} MB</span></div>
+        <div style="margin-top:10px;padding:7px 10px;border-radius:6px;font-size:.75rem;background:rgba(139,92,246,.1);color:#a78bfa">
+            با {{ gunicorn_workers }} worker و ۱۰۰۰ کاربر، صف انتظار شکل می‌گیره — کش Redis فشار را کم می‌کند
+        </div>
+    </div>
+
+</div>
+
+{# ───── خلاصه کلی ───────────────────────────────────────────── #}
+<div class="sec-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
+    خلاصه کلی
+</div>
+<div class="an-grid an-grid-3" style="margin-bottom:40px">
+
+    <div class="an-card">
+        <div class="an-card-title">کاربران</div>
+        <div class="an-row"><span class="an-row-label">کل کاربران</span><span class="an-row-val" style="color:#fff">{{ total_users }}</span></div>
+        <div class="an-row"><span class="an-row-label">پریمیوم فعال</span><span class="an-row-val" style="color:#fbbf24">{{ premium_active }}</span></div>
+        <div class="an-row"><span class="an-row-label">ثبت‌نام این ماه</span><span class="an-row-val" style="color:#34d399">{{ users_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">کاربران بازگشتی این ماه</span><span class="an-row-val" style="color:#60a5fa">{{ returning_users }}</span></div>
+        <div class="an-row"><span class="an-row-label">پریمیوم جدید این ماه</span><span class="an-row-val" style="color:#fbbf24">{{ premium_month }}</span></div>
+    </div>
+
+    <div class="an-card">
+        <div class="an-card-title">بازدید</div>
+        <div class="an-row"><span class="an-row-label">کل بازدید این ماه</span><span class="an-row-val" style="color:#fff">{{ total_pv_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">بازدید امروز</span><span class="an-row-val" style="color:#a78bfa">{{ total_pv_today }}</span></div>
+        <div class="an-row"><span class="an-row-label">کاربران لاگین‌شده</span><span class="an-row-val" style="color:#34d399">{{ pv_logged }}</span></div>
+        <div class="an-row"><span class="an-row-label">مهمان (لاگین‌نشده)</span><span class="an-row-val" style="color:#94a3b8">{{ pv_guest }}</span></div>
+        <div class="an-row"><span class="an-row-label">میانگین زمان حضور</span><span class="an-row-val" style="color:#f87171">{{ avg_dur_min }} دقیقه</span></div>
+    </div>
+
+    <div class="an-card">
+        <div class="an-card-title">محتوا</div>
+        <div class="an-row"><span class="an-row-label">پست این ماه</span><span class="an-row-val" style="color:#fff">{{ posts_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">LFG این ماه</span><span class="an-row-val" style="color:#34d399">{{ lfg_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">ریویو این ماه</span><span class="an-row-val" style="color:#f87171">{{ reviews_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">سشن این ماه</span><span class="an-row-val" style="color:#a78bfa">{{ sessions_month }}</span></div>
+        <div class="an-row"><span class="an-row-label">بازدیدکننده منحصربه‌فرد</span><span class="an-row-val" style="color:#60a5fa">{{ unique_month }}</span></div>
+    </div>
+
+</div>
+{% endblock %}

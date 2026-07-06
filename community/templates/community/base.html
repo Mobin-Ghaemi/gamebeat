@@ -4,7 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}GameBeat Community{% endblock %}</title>
+    <title>{% if seo.title %}{{ seo.title }}{% else %}{% block title %}{{ default_seo.title }}{% endblock %}{% endif %}</title>
+    <meta name="description" content="{{ seo.description|default:default_seo.description }}">
+    <meta name="robots" content="{{ seo.robots|default:default_seo.robots }}">
+    <meta name="theme-color" content="#16161e">
+    <meta name="format-detection" content="telephone=no">
+    <meta property="og:site_name" content="GameBeat">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:type" content="{{ seo.og_type|default:default_seo.og_type|default:'website' }}">
+    <meta property="og:title" content="{{ seo.title|default:default_seo.title }}">
+    <meta property="og:description" content="{{ seo.description|default:default_seo.description }}">
+    <meta property="og:url" content="{{ seo.canonical|default:default_seo.canonical }}">
+    <meta property="og:image" content="{{ seo.image|default:default_seo.image }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ seo.title|default:default_seo.title }}">
+    <meta name="twitter:description" content="{{ seo.description|default:default_seo.description }}">
+    <meta name="twitter:image" content="{{ seo.image|default:default_seo.image }}">
+    <link rel="canonical" href="{{ seo.canonical|default:default_seo.canonical }}">
+    <link rel="alternate" hreflang="fa-IR" href="{{ seo.canonical|default:default_seo.canonical }}">
+    {% if page_obj %}{% if page_obj.has_previous %}<link rel="prev" href="?page={{ page_obj.previous_page_number }}">{% endif %}{% if page_obj.has_next %}<link rel="next" href="?page={{ page_obj.next_page_number }}">{% endif %}{% endif %}
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/gamebeat-favicon.svg' %}">
     <link rel="shortcut icon" href="{% static 'images/gamebeat-favicon.svg' %}">
@@ -1119,6 +1137,9 @@
         .premium-frame.frame-lg { padding: 4px; }
     </style>
     {% block extra_css %}{% endblock %}
+    {% if seo.schema_json or default_seo.schema_json %}
+    <script type="application/ld+json">{{ seo.schema_json|default:default_seo.schema_json|safe }}</script>
+    {% endif %}
 </head>
 <body>
 {% include "community/icons_sprite.html" %}
@@ -1436,31 +1457,21 @@
 {% if messages %}
 <div class="gb-toast-wrap" id="gbToastWrap">
 {% for message in messages %}
-{% if 'error' in message.tags or 'danger' in message.tags %}
-  {% with icon="error" title="خطا" cls="gb-toast-error" %}
-{% elif 'success' in message.tags %}
-  {% with icon="success" title="موفق" cls="gb-toast-success" %}
-{% elif 'warning' in message.tags %}
-  {% with icon="warning" title="هشدار" cls="gb-toast-warning" %}
-{% else %}
-  {% with icon="info" title="اطلاعیه" cls="gb-toast-info" %}
-{% endif %}
-<div class="gb-toast {{ cls }}" role="alert" style="--toast-dur:5s">
+<div class="gb-toast {% if 'error' in message.tags or 'danger' in message.tags %}gb-toast-error{% elif 'success' in message.tags %}gb-toast-success{% elif 'warning' in message.tags %}gb-toast-warning{% else %}gb-toast-info{% endif %}" role="alert" style="--toast-dur:5s">
     <span class="gb-toast-icon">
-    {% if icon == "error" %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/></svg>
-    {% elif icon == "success" %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
-    {% elif icon == "warning" %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>
+    {% if 'error' in message.tags or 'danger' in message.tags %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/></svg>
+    {% elif 'success' in message.tags %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+    {% elif 'warning' in message.tags %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>
     {% else %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     {% endif %}
     </span>
     <div class="gb-toast-body">
-        <div class="gb-toast-title">{{ title }}</div>
+        <div class="gb-toast-title">{% if 'error' in message.tags or 'danger' in message.tags %}خطا{% elif 'success' in message.tags %}موفق{% elif 'warning' in message.tags %}هشدار{% else %}اطلاعیه{% endif %}</div>
         <div class="gb-toast-msg">{{ message }}</div>
     </div>
     <button class="gb-toast-close" onclick="gbDismiss(this.closest('.gb-toast'))" title="بستن">✕</button>
     <div class="gb-toast-timer"></div>
 </div>
-{% endwith %}
 {% endfor %}
 </div>
 <script>
@@ -1753,7 +1764,17 @@ function gbDismiss(t){
         const panel = document.getElementById('notifPanel');
         _notifPanelOpen = !_notifPanelOpen;
         panel.style.display = _notifPanelOpen ? 'block' : 'none';
-        if (_notifPanelOpen && !_notifLoaded) loadNotifPanel();
+        if (_notifPanelOpen) {
+            if (!_notifLoaded) loadNotifPanel();
+            fetch('{% url "community:notifications_mark_all_read" %}', {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            }).then(() => {
+                document.getElementById('notifBadge').style.display = 'none';
+                document.getElementById('navBellBtn').classList.remove('has-notif');
+                localStorage.removeItem('gb_notif_c');
+            });
+        }
     }
 
     function loadNotifPanel() {
@@ -1762,13 +1783,13 @@ function gbDismiss(t){
                 _notifLoaded = true;
                 const list = document.getElementById('notifPanelList');
                 if (!d.notifications.length) {
-                    list.innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری 🎉</div>';
+                    list.innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری</div>';
                     return;
                 }
                 list.innerHTML = d.notifications.map(n => `
                     <div class="notif-panel-item">
                         <div class="npi-avatar">
-                            ${n.avatar ? `<img src="${n.avatar}" alt="">` : (n.icon || '🔔')}
+                            ${n.avatar ? `<img src="${n.avatar}" alt="">` : (n.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/></svg>')}
                         </div>
                         <div>
                             <div class="npi-text">${n.text}</div>
@@ -1789,7 +1810,7 @@ function gbDismiss(t){
             _notifLoaded = false;
             document.getElementById('notifBadge').style.display = 'none';
             document.getElementById('navBellBtn').classList.remove('has-notif');
-            document.getElementById('notifPanelList').innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری 🎉</div>';
+            document.getElementById('notifPanelList').innerHTML = '<div class="notif-panel-empty">اعلان جدیدی نداری</div>';
             localStorage.removeItem('gb_notif_c');
         });
     }
@@ -1808,7 +1829,7 @@ function gbDismiss(t){
         const prevCount = parseInt(localStorage.getItem(storageKey) || '0');
         fetch(url, {credentials:'same-origin'}).then(r => r.json()).then(d => {
             if (badgeId === 'notifBadge' && d.count > prevCount && prevCount > 0) {
-                showGbToast('🔔 اعلان جدید داری!');
+                showGbToast('اعلان جدید داری!');
                 _notifLoaded = false;
             }
             const badge = document.getElementById(badgeId);
@@ -1952,9 +1973,6 @@ function gbDismiss(t){
                 info:    {bg:'rgba(139,92,246,.13)',   border:'rgba(139,92,246,.45)',  color:'#a78bfa'},
             };
             const c = colors[type] || colors.info;
-            const icons = {error:'⚠️', success:'✅', warning:'⚠️', info:'ℹ️'};
-            const icon = icons[type] || icons.info;
-
             const t = document.createElement('div');
             Object.assign(t.style, {
                 background: c.bg,
@@ -1977,7 +1995,7 @@ function gbDismiss(t){
                 cursor: 'pointer',
                 direction: 'rtl',
             });
-            t.textContent = icon + ' ' + msg;
+            t.textContent = msg;
             t.onclick = function(){ dismiss(t); };
             _getBox().appendChild(t);
 

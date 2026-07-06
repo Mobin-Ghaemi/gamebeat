@@ -369,6 +369,21 @@
                            {% if action == 'add' %}required{% endif %}>
                 </div>
 
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="dash-label">نام فارسی اصلی</label>
+                        <input type="text" name="title_fa" value="{% if game %}{{ game.title_fa }}{% endif %}"
+                               class="dash-input" placeholder="مثال: ویچر ۳">
+                        <div style="font-size:.72rem;color:var(--text-faint);margin-top:6px">برای عنوان صفحه و نمایش به کاربر استفاده می‌شود.</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="dash-label">اسم‌های فارسی برای جستجو</label>
+                        <input type="text" name="name_fa" value="{% if game %}{{ game.name_fa }}{% endif %}"
+                               class="dash-input" placeholder="مثال: ویچر ویچر ۳ witcher">
+                        <div style="font-size:.72rem;color:var(--text-faint);margin-top:6px">Aliasهای جستجو؛ در ظاهر صفحه نمایش داده نمی‌شود.</div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="dash-label">ژانرها <span style="font-size:.72rem;color:var(--text-faint)">(می‌توانید چند ژانر انتخاب کنید)</span></label>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="genreCheckboxes">

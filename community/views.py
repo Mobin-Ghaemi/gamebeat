@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.db.models import Q, Count
 from django.views.decorators.http import require_POST
 from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, GamingAccount, Hashtag
@@ -17,6 +17,14 @@ from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
 from .models import ProfileView, PremiumPlan
 from .models import DailyMission, DailyMissionProgress, MissionDay
+from .seo import (
+    DEFAULT_ROBOTS,
+    build_seo,
+    make_breadcrumb_schema,
+    make_organization_schema,
+    make_website_schema,
+    normalize_text,
+)
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 import re
@@ -43,6 +51,60 @@ def _to_jalali(dt, fmt='%Y/%m/%d'):
 def get_or_create_gamer_profile(user):
     profile, _ = GamerProfile.objects.get_or_create(user=user)
     return profile
+
+
+def robots_txt(request):
+    lines = [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /account/',
+        'Disallow: /admin/',
+        'Disallow: /admin-panel/',
+        'Disallow: /inbox/',
+        'Disallow: /dm/',
+        'Disallow: /notifications/',
+        'Disallow: /groups/',
+        'Disallow: /api/',
+        'Disallow: /settings/',
+        'Disallow: /follow-requests/',
+        'Disallow: /onboarding/',
+        'Disallow: /gaming/',
+        'Disallow: /heartbeat/',
+        'Disallow: /profile/me/',
+        'Disallow: /zarban/',
+        'Disallow: /spin/',
+        f'Sitemap: {request.build_absolute_uri(reverse("sitemap"))}',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
+
+
+def llms_txt(request):
+    site_url = request.build_absolute_uri('/').rstrip('/')
+    lines = [
+        '# GameBeat',
+        '',
+        '> GameBeat is a Persian gaming community for finding teammates, exploring games, reading reviews, and joining clubs and channels.',
+        '',
+        '## Primary public sections',
+        f'- Home: {site_url}/',
+        f'- LFG: {site_url}/lfg/',
+        f'- Games: {site_url}/games/',
+        f'- Clubs: {site_url}/clubs/',
+        f'- Gamer Finder: {site_url}/gamer-finder/',
+        f'- Premium: {site_url}/premium/',
+        '',
+        '## Content types',
+        '- Public gamer profiles',
+        '- Public posts and highlights',
+        '- Game detail pages with reviews',
+        '- Public clubs and channels',
+        '- Hashtag pages',
+        '',
+        '## Notes',
+        '- Main language: Persian (fa)',
+        '- Private inbox, notifications, and account pages should not be indexed',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
 
 
 def _award_zarban(user, amount, reason):
@@ -73,13 +135,19 @@ def _game_search_q(q):
     from .ai_service import normalize_fa
     q = (q or '').strip()
     qn = normalize_fa(q)
-    cond = Q(name__icontains=q) | Q(name_fa__icontains=q) | Q(name_fa__icontains=qn)
+    cond = (
+        Q(name__icontains=q) |
+        Q(title_fa__icontains=q) |
+        Q(title_fa__icontains=qn) |
+        Q(name_fa__icontains=q) |
+        Q(name_fa__icontains=qn)
+    )
     # سرچ توکنی: همه‌ی کلمات کوئری در نام یا نام فارسی باشند
     tokens = [t for t in qn.split() if len(t) >= 2]
     if len(tokens) > 1:
         tok = Q()
         for t in tokens:
-            tok &= (Q(name__icontains=t) | Q(name_fa__icontains=t))
+            tok &= (Q(name__icontains=t) | Q(title_fa__icontains=t) | Q(name_fa__icontains=t))
         cond |= tok
     return cond
 
@@ -268,6 +336,12 @@ def _build_combined_feed(posts, lfg_list):
 
 def feed(request):
     # Unauthenticated users see posts from top popular gamers
+    homepage_seo = build_seo(
+        request,
+        title='GameBeat | کامیونیتی فارسی گیمرها، هم‌تیمی و بازی',
+        description='GameBeat یک کامیونیتی فارسی برای پیدا کردن هم‌تیمی، دیدن هایلایت‌ها، دنبال کردن بازی‌ها، کلاب‌ها و ارتباط با گیمرهاست.',
+        schema=[make_organization_schema(request), make_website_schema(request)],
+    )
     if not request.user.is_authenticated:
         popular_users = User.objects.filter(
             gamer_profile__isnull=False
@@ -312,6 +386,7 @@ def feed(request):
             'my_profile': None,
             'suggested_gamers': suggested_gamers,
             'stats': stats,
+            'seo': homepage_seo,
         })
 
     my_profile = get_or_create_gamer_profile(request.user)
@@ -386,6 +461,7 @@ def feed(request):
         'suggested_gamers': suggested_gamers,
         'is_discover': is_discover,
         'following_ids': set(following_ids),
+        'seo': homepage_seo,
     }
     return render(request, 'community/feed.html', context)
 
@@ -423,6 +499,12 @@ def gamer_profile(request, username):
                 'following_count': profile.following_count,
                 'posts_count': profile.posts_count,
                 'follow_request': follow_request,
+                'seo': build_seo(
+                    request,
+                    title=f'پروفایل خصوصی {profile.display_name} | GameBeat',
+                    description='این پروفایل خصوصی است و فقط برای دنبال‌کننده‌ها نمایش داده می‌شود.',
+                    robots='noindex,follow',
+                ),
             })
 
     posts = list(Post.objects.filter(author=profile_user, is_public=True)
@@ -540,6 +622,37 @@ def gamer_profile(request, username):
         'profile_views_30d': profile_views_30d,
         'reactions_14d': reactions_14d,
         'zarban_balance': zarban_balance,
+        'seo': build_seo(
+            request,
+            title=f'{profile.display_name} | پروفایل گیمر در GameBeat',
+            description=normalize_text(
+                profile.bio or f'پروفایل گیمر {profile.display_name} در GameBeat. بازی‌های مورد علاقه، پلتفرم‌ها، دستاوردها و فعالیت‌ها را ببین.',
+                170,
+            ),
+            image=profile.avatar.url if profile.avatar else None,
+            robots='noindex,follow' if is_own_profile else DEFAULT_ROBOTS,
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'پروفایل گیمر', 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'ProfilePage',
+                    'name': f'{profile.display_name} | GameBeat',
+                    'description': normalize_text(profile.bio or '', 200),
+                    'url': request.build_absolute_uri(),
+                    'inLanguage': 'fa',
+                    'mainEntity': {
+                        '@type': 'Person',
+                        'name': profile.display_name,
+                        'identifier': profile_user.username,
+                        'image': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+                        'description': normalize_text(profile.bio or '', 200),
+                    },
+                },
+            ],
+        ),
     }
     return render(request, 'community/profile.html', context)
 
@@ -1194,6 +1307,12 @@ def search_gamers(request):
         'city_choices': CITY_CHOICES,
         'pending_requests': pending_requests,
         'pending_count': pending_requests.count(),
+        'seo': build_seo(
+            request,
+            title='جستجوی گیمرها | GameBeat',
+            description='جستجوی داخلی گیمرها در GameBeat.',
+            robots='noindex,follow',
+        ),
     }
     return render(request, 'community/search.html', context)
 
@@ -1305,6 +1424,27 @@ def lfg_board(request):
         'joined_ids': joined_ids,
         'pending_ids': pending_ids,
         'rejected_ids': rejected_ids,
+        'seo': build_seo(
+            request,
+            title='LFG و پیدا کردن هم‌تیمی | GameBeat',
+            description='در GameBeat برای بازی‌های آنلاین هم‌تیمی پیدا کن، LFG بساز و برای امشب یا همین حالا پارتی مناسب خودت را پیدا کن.',
+            canonical=request.build_absolute_uri(reverse('community:lfg')),
+            robots='noindex,follow' if any([platform_filter, game_filter, skill_filter, mine_filter]) else DEFAULT_ROBOTS,
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'LFG', 'url': request.build_absolute_uri(reverse('community:lfg'))},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': 'LFG و پیدا کردن هم‌تیمی',
+                    'description': 'لیست درخواست‌های هم‌تیمی و LFG در GameBeat',
+                    'url': request.build_absolute_uri(reverse('community:lfg')),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     }
     return render(request, 'community/lfg.html', context)
 
@@ -1345,7 +1485,7 @@ def create_lfg(request):
     # اعلان فوری به گیمرهایی که این بازی جزو علاقه‌مندی‌هاشونه
     if post.is_approved:
         _notify_lfg_interested(post)
-        messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش 🎮')
+        messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش')
     else:
         messages.info(request, 'پست LFG ثبت شد و بعد از بررسی ادمین نمایش داده می‌شود.')
     return redirect('community:lfg')
@@ -1752,6 +1892,27 @@ def leaderboard(request):
         'my_entry':          my_entry,
         'score_cfg':         cfg,
         'current_reset_ts':  current_reset_ts,   # Unix timestamp برای countdown
+        'seo': build_seo(
+            request,
+            title='لیدربورد گیمرها | رتبه‌بندی فعالیت کاربران GameBeat',
+            description='رتبه‌بندی برترین گیمرهای GameBeat بر اساس فعالیت، پست، کامنت و حضور در کامیونیتی.',
+            canonical=request.build_absolute_uri(reverse('community:leaderboard')),
+            robots='noindex,follow' if period != 'monthly' else DEFAULT_ROBOTS,
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'لیدربورد', 'url': request.build_absolute_uri(reverse('community:leaderboard'))},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': 'لیدربورد GameBeat',
+                    'description': 'صفحه رتبه‌بندی کاربران فعال در GameBeat',
+                    'url': request.build_absolute_uri(reverse('community:leaderboard')),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     }
     return render(request, 'community/leaderboard.html', context)
 
@@ -1944,7 +2105,7 @@ def steam_callback(request):
 
     name = result.get('display_name', '') or 'استیم'
     if extra.get('total_hours'):
-        messages.success(request, f'حساب استیم «{name}» متصل شد — {extra["total_hours"]} ساعت بازی! 🎮')
+        messages.success(request, f'حساب استیم «{name}» متصل شد — {extra["total_hours"]} ساعت بازی')
     else:
         messages.success(request, f'حساب استیم «{name}» متصل شد! (برای نمایش ساعت، پروفایلت رو Public کن)')
     # با فلگ مودال به پروفایل برگرد
@@ -2000,6 +2161,25 @@ def hashtag_feed(request, tag_name):
         'liked_post_ids': liked_post_ids,
         'my_profile': my_profile,
         'trending': trending,
+        'seo': build_seo(
+            request,
+            title=f'#{hashtag.name} | هشتگ گیمینگ در GameBeat',
+            description=f'پست‌ها، هایلایت‌ها و گفت‌وگوهای مرتبط با هشتگ #{hashtag.name} را در GameBeat ببین.',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': f'#{hashtag.name}', 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': f'#{hashtag.name}',
+                    'description': f'صفحه هشتگ #{hashtag.name} در GameBeat',
+                    'url': request.build_absolute_uri(),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     }
     return render(request, 'community/hashtag_feed.html', context)
 
@@ -2046,7 +2226,7 @@ def create_post_page(request):
         track_mission(request.user, DailyMission.EVENT_POST)
         if post_type == 'highlight':
             track_mission(request.user, DailyMission.EVENT_HIGHLIGHT)
-        messages.success(request, 'پست منتشر شد! 🎮')
+        messages.success(request, 'پست منتشر شد!')
         return redirect('community:profile', username=request.user.username)
     trending = Hashtag.objects.filter(post_count__gt=0).order_by('-post_count')[:12]
     popular_games = ['Valorant', 'FIFA 25', 'CS2', 'GTA Online', 'PUBG', 'Dota 2', 'Fortnite', 'Elden Ring']
@@ -2899,6 +3079,27 @@ def games_ranking(request):
         'genre':        genre,
         'genre_choices': GAME_GENRE_CHOICES,
         'my_backlog':   my_backlog,
+        'seo': build_seo(
+            request,
+            title='بازی‌ها و رتبه‌بندی بازی‌ها | GameBeat',
+            description='بازی‌های محبوب، آنلاین و چندنفره را در GameBeat پیدا کن و جزئیات، ریویوها و فعالیت گیمرها را ببین.',
+            canonical=request.build_absolute_uri(reverse('community:games_ranking')),
+            robots='noindex,follow' if q or genre else DEFAULT_ROBOTS,
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'بازی‌ها', 'url': request.build_absolute_uri(reverse('community:games_ranking'))},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': 'بازی‌ها',
+                    'description': 'فهرست بازی‌ها در GameBeat',
+                    'url': request.build_absolute_uri(reverse('community:games_ranking')),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     })
 
 
@@ -2939,9 +3140,12 @@ def game_detail(request, game_id):
     review_ratings = [r.rating for r in reviews if r.rating is not None]
     review_avg = round(sum(review_ratings) / len(review_ratings), 1) if review_ratings else None
     review_rating_count = len(review_ratings)
+    display_name = game.full_display_name
+    game_schema_name = game.primary_name
 
     return render(request, 'community/game_detail.html', {
         'game':            game,
+        'display_name':    display_name,
         'backlog_count':   backlog_count,
         'playing_count':   playing_count,
         'completed_count': completed_count,
@@ -2952,6 +3156,44 @@ def game_detail(request, game_id):
         'my_review':          my_review,
         'review_avg':         review_avg,
         'review_rating_count': review_rating_count,
+        'seo': build_seo(
+            request,
+            title=f'{display_name} | کامیونیتی، جزئیات و ریویو در GameBeat',
+            description=normalize_text(
+                game.description or f'جزئیات بازی {display_name}، ریویوها، امتیاز کاربران و وضعیت بک‌لاگ گیمرها را در GameBeat ببین.',
+                170,
+            ),
+            image=game.cover.url if game.cover else None,
+            og_type='article',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'بازی‌ها', 'url': request.build_absolute_uri(reverse('community:games_ranking'))},
+                    {'name': display_name, 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'VideoGame',
+                    'name': game_schema_name,
+                    'alternateName': ' | '.join([alias for alias in [game.name, game.name_fa] if alias]),
+                    'description': normalize_text(game.description or '', 220),
+                    'url': request.build_absolute_uri(),
+                    'image': request.build_absolute_uri(game.cover.url) if game.cover else None,
+                    'genre': game.get_genres_display(),
+                    'gamePlatform': game.get_platform_labels(),
+                    'datePublished': f'{game.release_year}-01-01' if game.release_year else None,
+                    'aggregateRating': (
+                        {
+                            '@type': 'AggregateRating',
+                            'ratingValue': review_avg,
+                            'ratingCount': review_rating_count,
+                        }
+                        if review_avg and review_rating_count
+                        else None
+                    ),
+                },
+            ],
+        ),
     })
 
 
@@ -3153,7 +3395,29 @@ def clubs_list(request):
     my_clubs = []
     if request.user.is_authenticated:
         my_clubs = Club.objects.filter(memberships__user=request.user)
-    return render(request, 'community/clubs_list.html', {'clubs': clubs, 'my_clubs': my_clubs})
+    return render(request, 'community/clubs_list.html', {
+        'clubs': clubs,
+        'my_clubs': my_clubs,
+        'seo': build_seo(
+            request,
+            title='کلاب‌های گیمینگ | GameBeat',
+            description='کلاب‌های گیمینگ عمومی را در GameBeat پیدا کن، عضو شو و گفت‌وگوها و پست‌های هر کلاب را دنبال کن.',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'کلاب‌ها', 'url': request.build_absolute_uri(reverse('community:clubs_list'))},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': 'کلاب‌های گیمینگ',
+                    'description': 'فهرست کلاب‌های عمومی در GameBeat',
+                    'url': request.build_absolute_uri(reverse('community:clubs_list')),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
+    })
 
 
 @login_required
@@ -3186,11 +3450,38 @@ def club_detail(request, slug):
     members = club.memberships.select_related('user', 'user__gamer_profile')[:20]
     is_member = request.user.is_authenticated and club.memberships.filter(user=request.user).exists()
     user_role = None
+    if not club.is_public and not is_member:
+        raise Http404('کلاب موردنظر پیدا نشد.')
     if is_member:
         user_role = club.memberships.get(user=request.user).role
     return render(request, 'community/club_detail.html', {
         'club': club, 'posts': posts, 'members': members,
         'is_member': is_member, 'user_role': user_role,
+        'seo': build_seo(
+            request,
+            title=f'{club.name} | کلاب گیمینگ در GameBeat',
+            description=normalize_text(
+                club.description or f'کلاب {club.name} در GameBeat برای بحث، پست و پیدا کردن گیمرهای هم‌سلیقه.',
+                170,
+            ),
+            image=club.avatar.url if club.avatar else None,
+            robots=DEFAULT_ROBOTS if club.is_public else 'noindex,follow',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'کلاب‌ها', 'url': request.build_absolute_uri(reverse('community:clubs_list'))},
+                    {'name': club.name, 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': club.name,
+                    'description': normalize_text(club.description or '', 220),
+                    'url': request.build_absolute_uri(),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     })
 
 
@@ -3599,22 +3890,32 @@ def create_channel(request):
     return render(request, 'community/create_channel.html')
 
 
-@login_required
 def channel_view(request, channel_username):
     channel = get_object_or_404(Channel, username=channel_username)
-    membership = ChannelMember.objects.filter(channel=channel, user=request.user).first()
+    membership = (
+        ChannelMember.objects.filter(channel=channel, user=request.user).first()
+        if request.user.is_authenticated else None
+    )
+    if not channel.is_public and not membership:
+        raise Http404('کانال موردنظر پیدا نشد.')
     is_subscribed = membership is not None
     can_post = membership and membership.can_post
 
-    pinned_ids = set(PinnedChannel.objects.filter(user=request.user).values_list('channel_id', flat=True))
-    muted_ids  = set(MutedChannel.objects.filter(user=request.user).values_list('channel_id', flat=True))
+    pinned_ids = (
+        set(PinnedChannel.objects.filter(user=request.user).values_list('channel_id', flat=True))
+        if request.user.is_authenticated else set()
+    )
+    muted_ids = (
+        set(MutedChannel.objects.filter(user=request.user).values_list('channel_id', flat=True))
+        if request.user.is_authenticated else set()
+    )
 
     posts = channel.channel_posts.select_related('author', 'author__gamer_profile').prefetch_related('channel_reactions')
 
     # ری‌اکشن‌های کاربر
     # set از "post_id:emoji" — قابل چک در template
     my_reactions = set()
-    if is_subscribed:
+    if request.user.is_authenticated and is_subscribed:
         for r in ChannelReaction.objects.filter(post__channel=channel, user=request.user):
             my_reactions.add(f"{r.post_id}:{r.emoji}")
 
@@ -3623,9 +3924,9 @@ def channel_view(request, channel_username):
         from django.utils import timezone as tz
         ChannelMember.objects.filter(channel=channel, user=request.user).update(last_read_at=tz.now())
 
-    conv_data    = _get_inbox_sidebar(request.user, show_all=True)
-    group_data   = _get_group_sidebar(request.user)
-    channel_data = _get_channel_sidebar(request.user)
+    conv_data = _get_inbox_sidebar(request.user, show_all=True) if request.user.is_authenticated else []
+    group_data = _get_group_sidebar(request.user) if request.user.is_authenticated else []
+    channel_data = _get_channel_sidebar(request.user) if request.user.is_authenticated else []
 
     return render(request, 'community/channel_view.html', {
         'channel': channel,
@@ -3641,6 +3942,30 @@ def channel_view(request, channel_username):
         'channel_data': channel_data,
         'group_unread_count':   sum(g['unread'] for g in group_data if not g['is_muted']),
         'channel_unread_count': sum(c['unread'] for c in channel_data if not c['is_muted']),
+        'seo': build_seo(
+            request,
+            title=f'{channel.name} | کانال گیمینگ @ {channel.username} در GameBeat',
+            description=normalize_text(
+                channel.description or f'کانال {channel.name} در GameBeat برای دنبال کردن پست‌ها و اخبار این جامعه گیمینگ.',
+                170,
+            ),
+            image=channel.icon.url if channel.icon else None,
+            robots=DEFAULT_ROBOTS if channel.is_public else 'noindex,follow',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'کانال', 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'CollectionPage',
+                    'name': channel.name,
+                    'description': normalize_text(channel.description or '', 220),
+                    'url': request.build_absolute_uri(),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     })
 
 
@@ -3994,6 +4319,12 @@ def gamer_finder_page(request):
         'city_gamers_count': len(city_gamers_list),
         'citymates_count':   len(all_citymates),
         'user_city':         user_city,
+        'seo': build_seo(
+            request,
+            title='گیمر یابی | GameBeat',
+            description='گیمرهای نزدیک و هم‌بازی‌های مناسب را در GameBeat پیدا کن.',
+            robots='noindex,follow',
+        ),
     })
 
 
@@ -4496,11 +4827,48 @@ def profile_stats(request):
     })
 
 
-@login_required
 def premium_info(request):
     """صفحه پریمیوم پابلیک — نمایش پلن‌ها به کاربر عادی"""
     plans = PremiumPlan.objects.filter(is_active=True)
-    return render(request, 'community/premium_info.html', {'plans': plans})
+    offers = [
+        {
+            '@type': 'Offer',
+            'name': plan.name,
+            'price': plan.price * 10,
+            'priceCurrency': 'IRR',
+            'availability': 'https://schema.org/InStock',
+            'description': normalize_text(plan.description or 'اشتراک پریمیوم GameBeat', 160),
+        }
+        for plan in plans
+    ]
+    return render(request, 'community/premium_info.html', {
+        'plans': plans,
+        'seo': build_seo(
+            request,
+            title='اشتراک پریمیوم گیم‌بیت | امکانات ویژه برای گیمرها',
+            description='پلن‌های پریمیوم GameBeat را ببین و برای امکانات ویژه مثل بازدیدکنندگان پروفایل، بج اختصاصی و قابلیت‌های بیشتر اقدام کن.',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'پریمیوم', 'url': request.build_absolute_uri(reverse('community:premium_info'))},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'Service',
+                    'name': 'GameBeat Premium',
+                    'description': 'اشتراک پریمیوم برای دسترسی به امکانات ویژه جامعه گیمینگ GameBeat',
+                    'provider': {
+                        '@type': 'Organization',
+                        'name': 'GameBeat',
+                        'url': request.build_absolute_uri(reverse('community:feed')),
+                    },
+                    'areaServed': 'IR',
+                    'inLanguage': 'fa',
+                    'offers': offers,
+                },
+            ],
+        ),
+    })
 
 
 @login_required
@@ -4678,6 +5046,13 @@ def global_search(request):
         'games_results': games_results,
         'posts_results': posts_results,
         'total_count': len(users_results) + len(games_results) + len(posts_results),
+        'seo': build_seo(
+            request,
+            title='جستجوی سراسری | GameBeat',
+            description='جستجوی گیمرها، بازی‌ها و پست‌ها در GameBeat.',
+            canonical=request.build_absolute_uri(reverse('community:global_search')),
+            robots='noindex,follow',
+        ),
     })
 
 
@@ -4691,10 +5066,50 @@ def post_detail(request, post_id):
     _annotate_reactions([post], request.user)
     liked = PostLike.objects.filter(post=post, user=request.user).exists() if request.user.is_authenticated else False
     my_profile = get_or_create_gamer_profile(request.user) if request.user.is_authenticated else None
+    author_name = getattr(getattr(post.author, 'gamer_profile', None), 'display_name', None) or post.author.username
+    post_description = normalize_text(post.content, 170)
+    post_image = request.build_absolute_uri(post.image.url) if post.image else (post.link_image_url or None)
     return render(request, 'community/post_detail.html', {
         'post': post,
         'liked': liked,
         'my_profile': my_profile,
+        'seo': build_seo(
+            request,
+            title=f'پست {author_name} | GameBeat',
+            description=post_description,
+            image=post_image,
+            og_type='article',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': f'پست {author_name}', 'url': request.build_absolute_uri()},
+                ]),
+                {
+                    '@context': 'https://schema.org',
+                    '@type': 'DiscussionForumPosting',
+                    'headline': f'پست {author_name} در GameBeat',
+                    'articleBody': normalize_text(post.content, 500),
+                    'datePublished': post.created_at.isoformat(),
+                    'dateModified': post.updated_at.isoformat(),
+                    'url': request.build_absolute_uri(),
+                    'image': post_image,
+                    'author': {
+                        '@type': 'Person',
+                        'name': author_name,
+                        'url': request.build_absolute_uri(
+                            reverse('community:profile', kwargs={'username': post.author.username})
+                        ),
+                    },
+                    'publisher': {
+                        '@type': 'Organization',
+                        'name': 'GameBeat',
+                        'url': request.build_absolute_uri(reverse('community:feed')),
+                    },
+                    'mainEntityOfPage': request.build_absolute_uri(),
+                    'inLanguage': 'fa',
+                },
+            ],
+        ),
     })
 
 
@@ -4712,7 +5127,7 @@ def onboarding(request):
         referer = request.META.get('HTTP_REFERER', '')
         onboarding_url = request.build_absolute_uri(reverse('community:onboarding'))
         back_url = referer if referer and referer != onboarding_url else reverse('community:feed')
-        messages.error(request, 'شما قبلاً مرحله خوش‌آمدگویی رو تکمیل کردید 👍')
+        messages.error(request, 'شما قبلاً مرحله خوش‌آمدگویی رو تکمیل کردید')
         return redirect(back_url)
 
     if request.method == 'POST':
@@ -4736,7 +5151,7 @@ def onboarding(request):
         profile.has_onboarded = True
         profile.save(update_fields=['platforms', 'platform', 'favorite_games', 'bio', 'city', 'has_onboarded'])
 
-        messages.success(request, 'خوش اومدی به GameBeat! چند LFG مرتبط با بازی‌هات برات آماده کردیم 🎮')
+        messages.success(request, 'خوش اومدی به GameBeat! چند LFG مرتبط با بازی‌هات برات آماده کردیم')
         return redirect(f"{reverse('community:lfg')}?mine=1")
 
     from dashboard.models import Game as DashboardGame, GENRE_CHOICES as GAME_GENRE_CHOICES

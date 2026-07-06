@@ -199,10 +199,10 @@
                 {% if game.cover %}
                     <img src="{{ game.cover.url }}" alt="" class="bg-blur"
                          onload="this.closest('.gp-cover').classList.replace('sk','loaded')">
-                    <img src="{{ game.cover.url }}" alt="{{ game.name }}" class="fg-img">
+                    <img src="{{ game.cover.url }}" alt="{{ game.full_display_name }}" class="fg-img">
                 {% elif game.steam_appid %}
                     <img src="" alt="" class="bg-blur">
-                    <img src="" alt="{{ game.name }}" class="fg-img">
+                    <img src="" alt="{{ game.full_display_name }}" class="fg-img">
                 {% else %}
                     <div class="no-cover"><svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg></div>
                 {% endif %}
@@ -220,7 +220,10 @@
 
             <!-- Info -->
             <div class="gp-info">
-                <div class="gp-name">{{ game.name }}</div>
+                <div class="gp-name">{{ game.primary_name }}</div>
+                {% if game.title_fa %}
+                <div style="font-size:.72rem;color:rgba(255,255,255,0.42);margin-top:-2px;">{{ game.name }}</div>
+                {% endif %}
                 <div class="gp-meta">
                     {% if game.developer %}<span><svg class="bi bi-building me-1" aria-hidden="true"><use href="#bi-building"></use></svg>{{ game.developer }}</span>{% endif %}
                     {% if game.release_year %}<span>{{ game.release_year }}</span>{% endif %}

@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GameBeat - پلتفرم خدمات گیمینگ{% endblock %}</title>
+    <meta name="description" content="{{ seo.description|default:default_seo.description|default:'GameBeat برای مدیریت سرویس‌های گیمینگ و تجربه بهتر کاربران ساخته شده است.' }}">
+    <meta name="robots" content="{{ seo.robots|default:default_seo.robots|default:'noindex,follow' }}">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ seo.title|default:default_seo.title|default:'GameBeat' }}">
+    <meta property="og:description" content="{{ seo.description|default:default_seo.description|default:'GameBeat برای مدیریت سرویس‌های گیمینگ و تجربه بهتر کاربران ساخته شده است.' }}">
+    <meta property="og:url" content="{{ seo.canonical|default:default_seo.canonical }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="{{ seo.canonical|default:default_seo.canonical }}">
     
     <!-- Bootstrap & Icons (local - no CDN) -->
     {% load static %}
@@ -317,6 +327,9 @@
     </style>
     
     {% block extra_css %}{% endblock %}
+    {% if seo.schema_json or default_seo.schema_json %}
+    <script type="application/ld+json">{{ seo.schema_json|default:default_seo.schema_json|safe }}</script>
+    {% endif %}
 </head>
 <body>
 {% include "community/icons_sprite.html" %}

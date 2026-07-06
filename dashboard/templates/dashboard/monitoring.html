@@ -160,45 +160,28 @@
 
 <!-- ─── کاربرهای آنلاین ────────────────────────────────────────── -->
 <div class="section-label" style="font-size:.78rem;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">کاربرهای آنلاین همین الان ({{ online_count }})</div>
-<div class="dash-card">
+<div class="dash-card" style="padding:0;overflow:hidden">
     {% if online_users %}
-    <div class="table-responsive">
-        <table class="table" style="margin-bottom:0;">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>آخرین فعالیت</th>
-                    <th>شروع سشن</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in online_users %}
-                <tr>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:10px">
-                            <div style="position:relative;flex-shrink:0;">
-                                <div class="avatar-sm" style="background:{% cycle '#8b5cf6' '#10b981' '#3b82f6' '#f59e0b' '#ef4444' '#06b6d4' %}">
-                                    {{ s.user.username|slice:":1"|upper }}
-                                </div>
-                                <span style="position:absolute;bottom:-1px;left:-1px;width:9px;height:9px;border-radius:50%;background:#34d399;border:2px solid var(--bg-card);"></span>
-                            </div>
-                            <div style="font-weight:600;font-size:0.875rem;display:flex;align-items:center;gap:5px;">
-                                {{ s.user.username }}
-                                {% if s.user.gamer_profile.is_verified %}
-                                <svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </td>
-                    <td style="color:var(--text-muted);font-size:0.82rem">{{ s.last_activity|timesince }} پیش</td>
-                    <td style="color:var(--text-muted);font-size:0.82rem">{{ s.started_at|timesince }} پیش</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;font-size:.72rem;font-weight:700;color:var(--text-faint);padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;background:var(--bg-card);z-index:1">
+        <span>کاربر</span><span style="text-align:center">آخرین فعالیت</span><span style="text-align:left">شروع سشن</span>
+    </div>
+    <div style="max-height:340px;overflow-y:auto">
+        {% for s in online_users %}
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:0;padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.04){% if forloop.last %};border-bottom:none{% endif %}">
+            <div style="display:flex;align-items:center;gap:8px">
+                <div style="position:relative;flex-shrink:0">
+                    <div style="width:26px;height:26px;border-radius:50%;background:{% cycle '#8b5cf6' '#10b981' '#3b82f6' '#f59e0b' '#ef4444' '#06b6d4' %};display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff">{{ s.user.username|slice:":1"|upper }}</div>
+                    <span style="position:absolute;bottom:-1px;left:-1px;width:8px;height:8px;border-radius:50%;background:#34d399;border:2px solid var(--bg-card)"></span>
+                </div>
+                <span style="font-size:.8rem;font-weight:600">{{ s.user.username }}{% if s.user.gamer_profile.is_verified %}<svg viewBox="0 0 24 24" width="10" height="10" style="margin-right:3px"><circle cx="12" cy="12" r="11" fill="#22d3ee"/><path d="M9 12.5l2 2 4-4.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endif %}</span>
+            </div>
+            <span style="font-size:.75rem;color:var(--text-faint);text-align:center">{{ s.last_activity|timesince }} پیش</span>
+            <span style="font-size:.75rem;color:var(--text-faint);text-align:left">{{ s.started_at|timesince }} پیش</span>
+        </div>
+        {% endfor %}
     </div>
     {% else %}
-    <div style="text-align:center;padding:30px;color:var(--text-faint);font-size:.85rem;">
+    <div style="text-align:center;padding:30px;color:var(--text-faint);font-size:.85rem">
         الان هیچ‌کس آنلاین نیست
     </div>
     {% endif %}

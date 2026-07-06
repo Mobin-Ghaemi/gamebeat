@@ -1,6 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
-{% block title %}{{ game.name }} | GameBeat{% endblock %}
+{% block title %}{{ display_name|default:game.full_display_name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -382,11 +382,11 @@
             <!-- Cover -->
             <div class="gd-cover-box"{% if not game.cover and game.steam_appid %} id="gdCoverBox"{% endif %}>
                 {% if game.cover %}
-                <img src="{{ game.cover.url }}" alt="{{ game.name }}">
+                <img src="{{ game.cover.url }}" alt="{{ display_name|default:game.full_display_name }}">
                 {% elif game.steam_appid %}
                 <img id="gdCoverImg"
                      src="https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/library_600x900.jpg"
-                     alt="{{ game.name }}"
+                     alt="{{ display_name|default:game.full_display_name }}"
                      onerror="this.onerror=null;this.src='https://cdn.cloudflare.steamstatic.com/steam/apps/{{ game.steam_appid|stringformat:'d' }}/header.jpg'">
                 {% else %}
                 <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg>
@@ -398,10 +398,13 @@
                 <div class="gd-breadcrumb">
                     <a href="{% url 'community:games_ranking' %}">کتابخانه</a>
                     <svg class="bi bi-chevron-left mx-1" aria-hidden="true" style="font-size:.6rem;"><use href="#bi-chevron-left"></use></svg>
-                    {{ game.name }}
+                    {{ display_name|default:game.full_display_name }}
                 </div>
 
-                <h1 class="gd-title">{{ game.name }}</h1>
+                <h1 class="gd-title">{{ game.primary_name }}</h1>
+                {% if game.title_fa %}
+                <div style="font-size:.9rem;color:rgba(255,255,255,.48);margin:-2px 0 12px;">{{ game.name }}</div>
+                {% endif %}
 
                 <div class="gd-tags">
                     {% for g in game.get_genres_display %}

@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}داشبورد GameBeat{% endblock %}</title>
+    <meta name="description" content="پنل داخلی مدیریت GameBeat">
+    <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+    <meta name="theme-color" content="#16161e">
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/gamebeat-favicon.svg' %}">
     <link rel="shortcut icon" href="{% static 'images/gamebeat-favicon.svg' %}">
@@ -735,6 +738,12 @@
             مانیتورینگ زنده
         </a>
 
+        <a href="{% url 'dashboard:analytics' %}"
+           class="sidebar-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+            <svg class="bi bi-bar-chart-fill" aria-hidden="true"><use href="#bi-bar-chart-fill"></use></svg>
+            آمار سایت
+        </a>
+
         <div class="sidebar-section-label" style="margin-top:8px">مدیریت</div>
 
         <a href="{% url 'dashboard:users' %}"
@@ -777,6 +786,7 @@
            class="sidebar-link {% if request.resolver_match.url_name == 'game_reviews' or request.resolver_match.url_name == 'game_review_action' %}active{% endif %}">
             <svg class="bi bi-star-fill" aria-hidden="true"><use href="#bi-star-fill"></use></svg>
             ریویوهای بازی
+            {% if pending_reviews_count %}<span style="margin-right:auto;background:#ef4444;color:#fff;font-size:.62rem;font-weight:900;min-width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;">{% if pending_reviews_count > 99 %}99+{% else %}{{ pending_reviews_count }}{% endif %}</span>{% endif %}
         </a>
 
         <a href="{% url 'dashboard:notify' %}"

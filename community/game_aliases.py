@@ -78,3 +78,12 @@ def persian_aliases_for(name):
                 if a not in out:
                     out.append(a)
     return ' '.join(out)
+
+
+def primary_persian_name_for(name):
+    """یک نام فارسیِ اصلی و کوتاه برای نمایش برمی‌گرداند."""
+    name_l = (name or '').lower()
+    for kw, aliases in _GAME_ALIASES.items():
+        if kw in name_l and aliases:
+            return aliases[0]
+    return ''

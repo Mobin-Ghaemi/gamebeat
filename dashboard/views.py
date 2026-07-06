@@ -159,7 +159,7 @@ def monitoring(request):
     online_sessions = list(
         UserSession.objects.filter(ended_at__isnull=True, last_activity__gte=online_cutoff)
         .select_related('user', 'user__gamer_profile')
-        .order_by('-last_activity')
+        .order_by('-last_activity')[:200]
     )
     seen_user_ids = set()
     online_users = []
@@ -685,7 +685,7 @@ def game_list(request):
     filter_genre = request.GET.get('filter_genre', genre)
     games = Game.objects.all().order_by('name')
     if q:
-        games = games.filter(Q(name__icontains=q) | Q(name_fa__icontains=q))
+        games = games.filter(Q(name__icontains=q) | Q(title_fa__icontains=q) | Q(name_fa__icontains=q))
     if filter_genre and filter_genre != 'all':
         # SQLite از contains روی JSONField پشتیبانی نمی‌کند؛ با icontains و کوتیشن مچ دقیق
         games = games.filter(genres__icontains='"%s"' % filter_genre)
@@ -734,6 +734,7 @@ def game_bulk_delete(request):
 @user_passes_test(is_admin)
 def game_add(request):
     if request.method == 'POST':
+        from community.game_aliases import persian_aliases_for, primary_persian_name_for
         name = request.POST.get('name', '').strip()
         steam_url = request.POST.get('steam_url', '').strip()
 
@@ -750,6 +751,8 @@ def game_add(request):
 
         g = Game()
         g.name = name
+        g.title_fa = request.POST.get('title_fa', '').strip() or primary_persian_name_for(name)
+        g.name_fa = request.POST.get('name_fa', '').strip() or persian_aliases_for(name)
         g.steam_url = steam_url
         g.genre = request.POST.get('genre', '')
         g.developer = request.POST.get('developer', '')
@@ -780,6 +783,7 @@ def game_add(request):
 def game_edit(request, game_id):
     game = get_object_or_404(Game, pk=game_id)
     if request.method == 'POST':
+        from community.game_aliases import persian_aliases_for, primary_persian_name_for
         new_name = request.POST.get('name', '').strip()
         new_steam_url = request.POST.get('steam_url', '').strip()
 
@@ -797,6 +801,8 @@ def game_edit(request, game_id):
             })
 
         game.name = new_name
+        game.title_fa = request.POST.get('title_fa', '').strip() or primary_persian_name_for(new_name)
+        game.name_fa = request.POST.get('name_fa', '').strip() or persian_aliases_for(new_name)
         game.steam_url = new_steam_url
         game.genre = request.POST.get('genre', '')
         game.developer = request.POST.get('developer', '')
@@ -1761,3 +1767,241 @@ def achievement_icon_upload(request):
         defn.icon_svg.delete(save=False)
     defn.icon_svg.save(f.name, f, save=True)
     return JsonResponse({'ok': True, 'url': defn.icon_svg.url})
+
+
+@login_required
+@user_passes_test(is_admin)
+def site_analytics(request):
+    from community.models import ActivityLog, ProfileView
+    from django.db.models import Avg, Sum
+
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+    last_30 = today - timedelta(days=29)
+
+    # ── کاربران ──────────────────────────────────────────────────
+    total_users = User.objects.count()
+    users_today = User.objects.filter(date_joined__date=today).count()
+    users_month = User.objects.filter(date_joined__date__gte=month_start).count()
+
+    # ── پریمیوم ───────────────────────────────────────────────────
+    now = timezone.now()
+    premium_active = PremiumSubscription.objects.filter(
+        is_active=True, end_date__gte=now
+    ).count()
+    premium_month = PremiumSubscription.objects.filter(
+        created_at__date__gte=month_start
+    ).count()
+
+    # ── سشن / بازدید ──────────────────────────────────────────────
+    sessions_today = UserSession.objects.filter(started_at__date=today).count()
+    sessions_month = UserSession.objects.filter(started_at__date__gte=month_start).count()
+    unique_today = UserSession.objects.filter(
+        started_at__date=today
+    ).values('user').distinct().count()
+    unique_month = UserSession.objects.filter(
+        started_at__date__gte=month_start
+    ).values('user').distinct().count()
+    avg_dur_secs = UserSession.objects.filter(
+        ended_at__isnull=False, duration_secs__gt=0,
+        started_at__date__gte=month_start
+    ).aggregate(avg=Avg('duration_secs'))['avg'] or 0
+    avg_dur_min = round(avg_dur_secs / 60, 1)
+
+    # ── محتوا ─────────────────────────────────────────────────────
+    posts_today = Post.objects.filter(created_at__date=today).count()
+    posts_month = Post.objects.filter(created_at__date__gte=month_start).count()
+    lfg_today = LFGPost.objects.filter(created_at__date=today).count()
+    lfg_month = LFGPost.objects.filter(created_at__date__gte=month_start).count()
+    reviews_month = GameReview.objects.filter(created_at__date__gte=month_start).count()
+
+    # ── بازی‌های پرطرفدار (بر اساس ActivityLog + GameReview) ────────
+    activity_games = list(
+        ActivityLog.objects
+        .filter(created_at__date__gte=last_30)
+        .values('game_name', 'game_id')
+        .annotate(activity_count=Count('id'))
+        .order_by('-activity_count')[:10]
+    )
+    review_counts = dict(
+        GameReview.objects
+        .values('game_name')
+        .annotate(c=Count('id'))
+        .values_list('game_name', 'c')
+    )
+    for g in activity_games:
+        g['review_count'] = review_counts.get(g['game_name'], 0)
+        g['total'] = g['activity_count'] + g['review_count']
+
+    # ── چارت سشن روزانه (۳۰ روز اخیر) ───────────────────────────
+    raw_sessions = dict(
+        UserSession.objects
+        .filter(started_at__date__gte=last_30)
+        .annotate(day=TruncDate('started_at'))
+        .values('day')
+        .annotate(c=Count('id'))
+        .values_list('day', 'c')
+    )
+    raw_users = dict(
+        User.objects
+        .filter(date_joined__date__gte=last_30)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day')
+        .annotate(c=Count('id'))
+        .values_list('day', 'c')
+    )
+
+    chart_labels, chart_sessions, chart_users = [], [], []
+    for i in range(30):
+        day = last_30 + timedelta(days=i)
+        try:
+            import jdatetime
+            jd = jdatetime.date.fromgregorian(date=day)
+            label = f'{jd.month}/{jd.day}'
+        except Exception:
+            label = f'{day.month}/{day.day}'
+        chart_labels.append(label)
+        chart_sessions.append(raw_sessions.get(day, 0))
+        chart_users.append(raw_users.get(day, 0))
+
+    max_session = max(chart_sessions) if chart_sessions else 1
+
+    # ── بازدید صفحات (PageView) ───────────────────────────────────
+    from community.models import PageView
+    from django.db.models.functions import TruncHour
+
+    PAGE_LABELS = {
+        'feed': 'فید اصلی', 'games': 'لیست بازی‌ها',
+        'game_detail': 'جزئیات بازی', 'lfg': 'LFG',
+        'profile': 'پروفایل', 'leaderboard': 'برترین‌ها',
+        'gamefinder': 'گیمریاب', 'wheel': 'گردونه',
+        'missions': 'ماموریت‌ها', 'other': 'سایر',
+    }
+
+    pv_month_qs = PageView.objects.filter(viewed_at__date__gte=month_start)
+    pv_today_qs = PageView.objects.filter(viewed_at__date=today)
+
+    page_stats_month = {
+        row['page_type']: row['c']
+        for row in pv_month_qs.values('page_type').annotate(c=Count('id'))
+    }
+    page_stats_today = {
+        row['page_type']: row['c']
+        for row in pv_today_qs.values('page_type').annotate(c=Count('id'))
+    }
+
+    page_breakdown = [
+        {
+            'key': k,
+            'label': PAGE_LABELS.get(k, k),
+            'month': page_stats_month.get(k, 0),
+            'today': page_stats_today.get(k, 0),
+        }
+        for k in PAGE_LABELS
+    ]
+    page_breakdown.sort(key=lambda x: x['month'], reverse=True)
+    total_pv_month = sum(page_stats_month.values()) or 1
+    total_pv_today = sum(page_stats_today.values()) or 1
+
+    # بازی‌های پربازدید (game_detail views)
+    top_game_views = list(
+        PageView.objects
+        .filter(viewed_at__date__gte=last_30, page_type='game_detail', game_id__isnull=False)
+        .values('game_id')
+        .annotate(views=Count('id'))
+        .order_by('-views')[:10]
+    )
+    from dashboard.models import Game as DashGame
+    game_map = {g.pk: g.name for g in DashGame.objects.filter(
+        pk__in=[x['game_id'] for x in top_game_views]
+    )}
+    for g in top_game_views:
+        g['name'] = game_map.get(g['game_id'], f'بازی #{g["game_id"]}')
+
+    # ساعت‌های پرترافیک (۷ روز اخیر)
+    hourly_raw = dict(
+        PageView.objects
+        .filter(viewed_at__date__gte=today - timedelta(days=6))
+        .annotate(h=TruncHour('viewed_at'))
+        .values('h')
+        .annotate(c=Count('id'))
+        .values_list('h', 'c')
+    )
+    hour_buckets = [0] * 24
+    for dt, c in hourly_raw.items():
+        try:
+            local_dt = timezone.localtime(dt) if timezone.is_aware(dt) else dt
+            hour_buckets[local_dt.hour] += c
+        except Exception:
+            pass
+    max_hour = max(hour_buckets) or 1
+
+    # نسبت لاگین / مهمان این ماه
+    pv_logged = pv_month_qs.filter(user__isnull=False).count()
+    pv_guest  = pv_month_qs.filter(user__isnull=True).count()
+
+    # نرخ بازگشت: کاربرانی که بیش از یک روز این ماه سشن داشتن
+    returning_users = (
+        UserSession.objects
+        .filter(started_at__date__gte=month_start)
+        .values('user')
+        .annotate(days=Count(TruncDate('started_at'), distinct=True))
+        .filter(days__gt=1)
+        .count()
+    )
+
+    # ── ظرفیت سرور ───────────────────────────────────────────────
+    import multiprocessing
+    cpu_count = multiprocessing.cpu_count()
+    gunicorn_workers = max(2, cpu_count * 2 + 1)
+    rps_estimate = gunicorn_workers * 5          # ~200ms per request → 5 rps/worker
+    gunicorn_capacity = gunicorn_workers * 20    # queue depth ~20 per worker
+
+    db_path = settings.DATABASES['default']['NAME']
+    try:
+        db_size_mb = round(os.path.getsize(db_path) / 1024 / 1024, 1)
+    except Exception:
+        db_size_mb = 0
+
+    mem_per_worker = 80   # ~80 MB typical Django worker
+    total_mem_mb = gunicorn_workers * mem_per_worker
+
+    return render(request, 'dashboard/analytics.html', {
+        'total_users': total_users,
+        'users_today': users_today,
+        'users_month': users_month,
+        'premium_active': premium_active,
+        'premium_month': premium_month,
+        'sessions_today': sessions_today,
+        'sessions_month': sessions_month,
+        'unique_today': unique_today,
+        'unique_month': unique_month,
+        'avg_dur_min': avg_dur_min,
+        'posts_today': posts_today,
+        'posts_month': posts_month,
+        'lfg_today': lfg_today,
+        'lfg_month': lfg_month,
+        'reviews_month': reviews_month,
+        'activity_games': activity_games,
+        'chart_labels': chart_labels,
+        'chart_sessions': chart_sessions,
+        'chart_users': chart_users,
+        'max_session': max_session or 1,
+        # page views
+        'page_breakdown': page_breakdown,
+        'total_pv_month': total_pv_month,
+        'total_pv_today': total_pv_today,
+        'top_game_views': top_game_views,
+        'hour_buckets': hour_buckets,
+        'max_hour': max_hour,
+        'pv_logged': pv_logged,
+        'pv_guest': pv_guest,
+        'returning_users': returning_users,
+        # server capacity
+        'gunicorn_workers': gunicorn_workers,
+        'gunicorn_capacity': gunicorn_capacity,
+        'rps_estimate': rps_estimate,
+        'db_size_mb': db_size_mb,
+        'mem_per_worker': mem_per_worker,
+        'total_mem_mb': total_mem_mb,
+    })

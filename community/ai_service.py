@@ -22,12 +22,15 @@ def _has_persian(text):
 
 
 def enrich_game_with_ai(game):
-    """یک بازی را با AI غنی می‌کند: name_fa، پلتفرم (اتحاد)، توضیح فارسی.
+    """یک بازی را با AI غنی می‌کند: title_fa، name_fa، پلتفرم و توضیح فارسی.
     خروجی: True اگر چیزی تغییر کرد."""
     info = ai_game_info(game.name)
     if not info:
         return False
     changed = []
+    if info.get('title_fa'):
+        game.title_fa = info['title_fa']
+        changed.append('title_fa')
     if info.get('name_fa'):
         game.name_fa = info['name_fa']
         changed.append('name_fa')
@@ -39,6 +42,12 @@ def enrich_game_with_ai(game):
     if merged != existing:
         game.platforms = merged
         changed.append('platforms')
+    if info.get('release_year') and not game.release_year:
+        game.release_year = info['release_year']
+        changed.append('release_year')
+    if info.get('is_crack_online') is not None:
+        game.is_crack_online = info['is_crack_online']
+        changed.append('is_crack_online')
     if changed:
         game.save(update_fields=changed)
     return bool(changed)
@@ -49,7 +58,7 @@ def enrich_games(queryset, resume=True):
     قبلاً توضیح فارسی دارند را رد می‌کند (قابل ادامه و امن برای اجرای مجدد)."""
     n = 0
     for game in queryset:
-        if resume and game.name_fa and _has_persian(game.description):
+        if resume and game.title_fa and game.name_fa and _has_persian(game.description) and game.release_year:
             continue
         if enrich_game_with_ai(game):
             n += 1
@@ -69,22 +78,29 @@ def normalize_fa(text):
 
 
 def ai_game_info(name):
-    """برای یک بازی، نام فارسی و پلتفرم‌ها را از AI می‌گیرد.
-    خروجی: {'name_fa': str, 'platforms': [..]} یا None در صورت خطا."""
+    """برای یک بازی، نام فارسی اصلی، aliasهای جستجو و پلتفرم‌ها را از AI می‌گیرد."""
     if not AVALAI_API_KEY or not name:
         return None
     user_prompt = (
         f'بازی: "{name}"\n'
-        '۱) این بازی رو گیمرهای ایرانی با چه اسم‌های کوتاهِ فارسی/فینگلیشی می‌شناسن و سرچ می‌کنن؟ '
+        '۱) یک اسم فارسیِ اصلی و طبیعی برای نمایش این بازی در سایت بده؛ کوتاه، رایج و مناسب تیتر صفحه. '
+        'مثلاً Valorant → ولورانت.\n'
+        '۲) این بازی رو گیمرهای ایرانی با چه اسم‌های کوتاهِ فارسی/فینگلیشی می‌شناسن و سرچ می‌کنن؟ '
         'چند املای رایج بده (مثلاً برای Call of Duty: کالاف، کالاف دیوتی، کالاف دی یو تی). '
-        'کوتاه و محاوره‌ای، نه ترجمه‌ی تحت‌اللفظی.\n'
-        '۲) این بازی روی چه پلتفرم‌هاییه؟\n'
-        '۳) یه توضیح کاملِ فارسیِ خفن و جذاب درباره‌ی بازی بنویس (حدود ۴ تا ۶ جمله، یک پاراگراف خوب). '
+        'این بخش برای alias جستجو است، نه تیتر صفحه.\n'
+        '۳) این بازی روی چه پلتفرم‌هاییه؟\n'
+        '۴) سال انتشار اصلی این بازی چنده؟ (عدد صحیح میلادی، مثلاً 2019)\n'
+        '۵) آیا این بازی کرک آنلاین (crack online / LAN emulator مثل Goldberg, Spacewar, ReLive) داره '
+        'که بشه بدون خرید به‌صورت آنلاین/چندنفره باهاش بازی کرد؟ true یا false بده.\n'
+        '۶) یه توضیح کاملِ فارسیِ خفن و جذاب درباره‌ی بازی بنویس (حدود ۴ تا ۶ جمله، یک پاراگراف خوب). '
         'به این‌ها بپرداز: داستان/زمینه‌ی بازی، نوع گیم‌پلی و ژانر، حال‌وهوا و گرافیک، '
         'و چیزی که این بازی رو خاص و دیدنی می‌کنه. لحن گیمری و گیرا، نه خشک و ویکی‌پدیایی.\n'
         'فقط JSON معتبر برگردون با این ساختار:\n'
-        '{"name_fa": "اسم‌های فارسی جدا با فاصله", '
+        '{"title_fa": "اسم فارسی اصلی", '
+        '"name_fa": "اسم‌های فارسی و فینگلیشی برای جستجو", '
         '"platforms": ["زیرمجموعه‌ای از: pc, ps4, ps5, xbox, switch, mobile"], '
+        '"release_year": 2019, '
+        '"is_crack_online": true, '
         '"description": "توضیح فارسی خفن"}'
     )
     payload = {
@@ -111,9 +127,21 @@ def ai_game_info(name):
             if not m:
                 return None
             data = json.loads(m.group(0))
+            try:
+                release_year = int(data['release_year']) if data.get('release_year') else None
+                if release_year and not (1970 <= release_year <= 2030):
+                    release_year = None
+            except (ValueError, TypeError):
+                release_year = None
+            is_crack_online = data.get('is_crack_online')
+            if isinstance(is_crack_online, str):
+                is_crack_online = is_crack_online.lower() == 'true'
             return {
+                'title_fa': normalize_fa(data.get('title_fa') or ''),
                 'name_fa': normalize_fa(data.get('name_fa') or ''),
                 'platforms': [p for p in (data.get('platforms') or []) if p in _VALID_PLATFORMS],
+                'release_year': release_year,
+                'is_crack_online': bool(is_crack_online) if is_crack_online is not None else None,
                 'description': (data.get('description') or '').strip(),
             }
         except Exception:

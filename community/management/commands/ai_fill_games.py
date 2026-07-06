@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-پر کردن نام فارسی و پلتفرم بازی‌ها با کمک AI (AvalAI).
+پر کردن نام فارسی اصلی، aliasهای جستجو و پلتفرم بازی‌ها با کمک AI (AvalAI).
 اجرا:
     python manage.py ai_fill_games                # همه‌ی بازی‌ها
     python manage.py ai_fill_games --missing-only  # فقط بازی‌های بدون نام فارسی (صرفه‌جویی هزینه)
@@ -11,7 +11,7 @@ from community.ai_service import ai_game_info
 
 
 class Command(BaseCommand):
-    help = 'پر کردن name_fa و پلتفرم بازی‌ها با AI'
+    help = 'پر کردن title_fa, name_fa و پلتفرم بازی‌ها با AI'
 
     def add_arguments(self, parser):
         parser.add_argument('--missing-only', action='store_true',
@@ -29,13 +29,13 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         qs = Game.objects.all()
         if opts['missing_only']:
-            qs = qs.filter(name_fa='')
+            qs = qs.filter(title_fa='', name_fa='')
         if opts['desc_only']:
             qs = qs.filter(description='')
         if opts['limit']:
             qs = qs[:opts['limit']]
 
-        total = name_fa = plat = desc = skipped = 0
+        total = title_fa = name_fa = plat = desc = skipped = 0
         for g in qs:
             # resume: اگر توضیح فارسی دارد، رد کن
             if opts['resume'] and self._has_persian(g.description):
@@ -46,6 +46,10 @@ class Command(BaseCommand):
             if not info:
                 continue
             changed = []
+            if info.get('title_fa'):
+                g.title_fa = info['title_fa']
+                title_fa += 1
+                changed.append('title_fa')
             if info.get('name_fa'):
                 g.name_fa = info['name_fa']
                 name_fa += 1
@@ -62,7 +66,7 @@ class Command(BaseCommand):
                 changed.append('description')
             if changed:
                 g.save(update_fields=changed)
-            self.stdout.write(f'  {g.name[:38]:40} {info.get("name_fa","")}')
+            self.stdout.write(f'  {g.name[:38]:40} {info.get("title_fa","") or info.get("name_fa","")}')
         self.stdout.write(self.style.SUCCESS(
-            f'انجام شد — {total} پردازش | name_fa: {name_fa} | پلتفرم: {plat} | توضیح: {desc} | رد(resume): {skipped}'
+            f'انجام شد — {total} پردازش | title_fa: {title_fa} | name_fa: {name_fa} | پلتفرم: {plat} | توضیح: {desc} | رد(resume): {skipped}'
         ))

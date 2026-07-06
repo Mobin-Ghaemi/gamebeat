@@ -216,9 +216,10 @@ def import_steam_games_to_catalog(steam64, max_games=200):
             if details.get('type') and details['type'] != 'game':
                 continue
             try:
-                from .game_aliases import persian_aliases_for
+                from .game_aliases import persian_aliases_for, primary_persian_name_for
                 game = Game(
                     name=name,
+                    title_fa=primary_persian_name_for(name),
                     name_fa=persian_aliases_for(name),
                     steam_appid=appid,
                     steam_url=f'https://store.steampowered.com/app/{appid}/',

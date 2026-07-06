@@ -16,6 +16,12 @@ PLATFORM_CHOICES = [
 
 class Game(models.Model):
     name = models.CharField(max_length=200, unique=True, verbose_name='نام بازی')
+    title_fa = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='نام فارسی اصلی',
+        help_text='نام فارسی/رایج اصلی برای نمایش در صفحه و سئو. مثال: ولورانت',
+    )
     name_fa = models.CharField(max_length=300, blank=True, verbose_name='نام/معادل فارسی (فقط برای جستجو)',
                                help_text='اسم‌های فارسی/فینگلیش که کاربر ممکنه باهاشون سرچ کنه. نمایش داده نمی‌شه.')
     cover = models.ImageField(upload_to='games/covers/', blank=True, null=True, verbose_name='کاور')
@@ -37,6 +43,7 @@ class Game(models.Model):
     metacritic   = models.IntegerField(null=True, blank=True, verbose_name='امتیاز متاکریتیک')
     screenshots  = models.JSONField(default=list, blank=True, verbose_name='اسکرین‌شات‌ها')
     created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['name']
@@ -44,6 +51,17 @@ class Game(models.Model):
         verbose_name_plural = 'بازی‌ها'
 
     def __str__(self):
+        return self.name
+
+    @property
+    def primary_name(self):
+        return (self.title_fa or '').strip() or self.name
+
+    @property
+    def full_display_name(self):
+        title_fa = (self.title_fa or '').strip()
+        if title_fa:
+            return f'{title_fa} ({self.name})'
         return self.name
 
     def get_platform_labels(self):

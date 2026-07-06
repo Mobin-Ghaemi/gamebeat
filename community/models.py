@@ -1884,3 +1884,32 @@ class DailyMissionProgress(models.Model):
     @property
     def is_complete(self):
         return self.progress >= self.mission.target_count
+
+
+# ═══════════════════════════════════════════════════════════════
+#  PAGE VIEW TRACKING
+# ═══════════════════════════════════════════════════════════════
+
+class PageView(models.Model):
+    PAGE_TYPES = [
+        ('feed',        'فید اصلی'),
+        ('games',       'لیست بازی‌ها'),
+        ('game_detail', 'جزئیات بازی'),
+        ('lfg',         'LFG'),
+        ('profile',     'پروفایل'),
+        ('leaderboard', 'برترین‌ها'),
+        ('gamefinder',  'گیمریاب'),
+        ('wheel',       'گردونه'),
+        ('missions',    'ماموریت‌ها'),
+        ('other',       'سایر'),
+    ]
+    user      = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='page_views')
+    page_type = models.CharField(max_length=20, choices=PAGE_TYPES, default='other', db_index=True)
+    path      = models.CharField(max_length=200)
+    game_id   = models.PositiveIntegerField(null=True, blank=True)
+    viewed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name        = 'بازدید صفحه'
+        verbose_name_plural = 'بازدیدهای صفحات'
+        indexes = [models.Index(fields=['page_type', 'viewed_at'])]
