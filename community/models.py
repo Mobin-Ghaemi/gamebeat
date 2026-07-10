@@ -855,6 +855,7 @@ class Message(models.Model):
     image        = models.ImageField(upload_to='dm/images/', blank=True, null=True)
     file         = models.FileField(upload_to='dm/files/', blank=True, null=True)
     file_name    = models.CharField(max_length=255, blank=True)
+    shared_post  = models.ForeignKey('Post', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     is_read      = models.BooleanField(default=False)
     created_at   = models.DateTimeField(auto_now_add=True)
 

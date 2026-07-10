@@ -1,0 +1,175 @@
+{% load community_tags %}
+<div class="post-card t-{{ post.post_type }}" id="post-card-{{ post.id }}" data-post-id="{{ post.id }}">
+
+    <div class="post-head">
+        <a href="{% url 'community:profile' username=post.author.username %}" class="post-author">
+            {% avatar_with_frame post.author.gamer_profile 'md' %}
+            <div>
+                <div class="pa-name" style="display:flex;align-items:center;gap:5px;">{{ post.author.get_full_name|default:post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</div>
+                <div class="pa-meta">
+                    @{{ post.author.username }}
+                    {% if post.author.gamer_profile.platform %}
+                    <span class="platform-badge" style="font-size:0.68rem; padding:1px 7px;">{{ post.author.gamer_profile.get_platform_display }}</span>
+                    {% endif %}
+                    {% if post.author.followers_count %}
+                    · {{ post.author.followers_count }} دنبال‌کننده
+                    {% endif %}
+                    · {{ post.created_at|timesince }} پیش
+                </div>
+            </div>
+        </a>
+        <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
+            {% if post.boost_active %}
+                <span class="post-type-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35);">🚀 بوست شده</span>
+            {% endif %}
+            {% if post.post_type == 'achievement' %}
+                <span class="post-type-badge ptb-achievement"><svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg> دستاورد</span>
+            {% elif post.post_type == 'highlight' %}
+                <span class="post-type-badge ptb-highlight"><svg class="bi bi-lightning-fill" aria-hidden="true"><use href="#bi-lightning-fill"></use></svg> هایلایت</span>
+            {% endif %}
+            {% if is_discover or is_guest_discover %}
+            <button class="follow-btn" id="fbtn-{{ post.author.id }}"
+                data-username="{{ post.author.username }}"
+                onclick="followUser('{{ post.author.username }}', this)">
+                <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> دنبال کردن
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="post-body">
+        {% if post.game_tag %}<span class="game-tag" style="margin-bottom:10px; display:inline-block;"><svg class="bi bi-controller" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-controller"></use></svg> {{ post.game_tag }}</span>{% endif %}
+        <p class="post-text">{{ post.content|hashtagify }}</p>
+        {% if post.image %}<img src="{{ post.image.url }}" class="post-img" onclick="openLightbox(this.src)" alt="post image">{% endif %}
+        {% if post.video %}
+        <video src="{{ post.video.url }}" class="post-img" controls preload="metadata"
+               style="max-height:480px; background:#111; border-radius:14px; margin-top:12px;"></video>
+        {% endif %}
+    </div>
+
+    <!-- Reaction chips -->
+    <div class="post-reactions" id="rxn-chips-{{ post.id }}">
+        {% for rxn, cnt in post.reactions_summary.items %}
+        <span class="rxn-chip {% if rxn == post.my_reaction %}mine{% endif %}"
+              onclick="sendReaction({{ post.id }}, '{{ rxn }}')" title="{{ rxn }}">
+            {{ cnt.emoji }} <span class="rxn-count">{{ cnt.count }}</span>
+        </span>
+        {% endfor %}
+    </div>
+
+    <div class="post-foot">
+        {% if user.is_authenticated %}
+        <!-- ─ Like: heart toggles, count opens modal ─ -->
+        <div style="display:flex;align-items:center;gap:0;">
+            <button class="pf-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                    id="like-btn-{{ post.id }}"
+                    onclick="toggleLike({{ post.id }}, this)"
+                    style="padding-left:6px; gap:5px;">
+                <span class="like-ripple-wrap"></span>
+                <svg class="bi bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}" aria-hidden="true" style="width:1rem;height:1rem;transition:color .2s;"><use href="#bi-heart{% if post.id in liked_post_ids %}-fill{% endif %}"></use></svg>
+            </button>
+            <button class="pf-btn like-count-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                    id="like-count-{{ post.id }}"
+                    onclick="showLikesModal({{ post.id }})"
+                    title="نمایش لایک‌ها"
+                    style="padding:7px 10px 7px 4px; gap:0; border-radius:8px;">
+                <span class="like-count" style="font-size:.88rem; font-weight:700; min-width:14px; display:inline-block; text-align:center;">{{ post.likes_count }}</span>
+            </button>
+        </div>
+        <!-- Reaction button -->
+        <div class="reaction-wrap" id="rxn-wrap-{{ post.id }}" onclick="event.stopPropagation()">
+            <button class="pf-btn" id="rxn-main-{{ post.id }}"
+                data-my-reaction="{{ post.my_reaction }}"
+                onclick="toggleReactionPicker({{ post.id }})">
+                {% if post.my_reaction == 'fire' %}🔥 <span style="font-size:.8rem;">خفن</span>
+                {% elif post.my_reaction == 'dead' %}💀 <span style="font-size:.8rem;">GG</span>
+                {% elif post.my_reaction == 'tryhard' %}😤 <span style="font-size:.8rem;">عصبانی</span>
+                {% elif post.my_reaction == 'legend' %}👑 <span style="font-size:.8rem;">لجند</span>
+                {% elif post.my_reaction == 'ggez' %}😂 <span style="font-size:.8rem;">GG EZ</span>
+                {% elif post.my_reaction == 'cry' %}😢 <span style="font-size:.8rem;">گریه</span>
+                {% elif post.my_reaction == 'sob' %}😭 <span style="font-size:.8rem;">اشک</span>
+                {% else %}<svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> واکنش{% endif %}
+            </button>
+            <div class="reaction-picker"></div>
+        </div>
+        <!-- ─ Comment: chat icon toggles box, count opens modal ─ -->
+        <div style="display:flex;align-items:center;gap:0;">
+            <button class="pf-btn" onclick="toggleComments({{ post.id }})" style="padding-left:6px; gap:5px;" title="کامنت‌ها">
+                <svg class="bi bi-chat-dots" aria-hidden="true" style="font-size:1rem;"><use href="#bi-chat-dots"></use></svg>
+            </button>
+            <button class="pf-btn" onclick="showCommentsModal({{ post.id }})"
+                    title="نمایش کامنت‌ها"
+                    style="padding:7px 10px 7px 4px; gap:0; border-radius:8px;">
+                <span style="font-size:.88rem; font-weight:700; min-width:14px; display:inline-block; text-align:center;">{{ post.comments_count }}</span>
+            </button>
+        </div>
+        {% else %}
+        <!-- Guest: show login prompt -->
+        <a href="{% url 'account:login' %}?next={{ request.get_full_path|urlencode }}" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
+            <svg class="bi bi-hand-thumbs-up" aria-hidden="true"><use href="#bi-hand-thumbs-up"></use></svg> ورود برای واکنش
+        </a>
+        <a href="{% url 'account:login' %}?next={{ request.get_full_path|urlencode }}" class="pf-btn" style="text-decoration:none; color:var(--text-dim); font-size:0.8rem;">
+            <svg class="bi bi-chat-dots" aria-hidden="true"><use href="#bi-chat-dots"></use></svg>
+            <span>{{ post.comments_count }}</span>
+        </a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <button class="pf-btn" onclick="sharePost({{ post.id }})">
+            <svg class="bi bi-share" aria-hidden="true"><use href="#bi-share"></use></svg>
+        </button>
+        {% else %}
+        <a href="{% url 'account:login' %}?next=/" class="pf-btn" style="text-decoration:none;">
+            <svg class="bi bi-share" aria-hidden="true"><use href="#bi-share"></use></svg>
+        </a>
+        {% endif %}
+        {% if user == post.author and my_profile.is_premium %}
+        <button class="pf-btn boost-btn {% if post.boost_active %}boosted{% endif %}"
+                id="boost-btn-{{ post.id }}"
+                onclick="boostPost({{ post.id }}, this)"
+                title="{% if post.boost_active %}بوست فعال است{% else %}بوست پست{% endif %}"
+                style="{% if post.boost_active %}color:#fbbf24;{% endif %}">
+            🚀 <span style="font-size:.78rem;font-weight:700;">{% if post.boost_active %}بوست فعال{% else %}بوست{% endif %}</span>
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="comment-box" id="c-{{ post.id }}">
+        <div class="c-list" id="cl-{{ post.id }}">
+        {% for comment in post.comments.all %}
+        <div class="c-item">
+            {% if comment.author.gamer_profile.avatar %}
+                <img src="{{ comment.author.gamer_profile.avatar.url }}" class="avatar avatar-sm">
+            {% else %}
+                <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ comment.author.username|first|upper }}</div>
+            {% endif %}
+            <div class="c-bubble">
+                <div class="c-author">@{{ comment.author.username }}</div>
+                <div class="c-text">{{ comment.content }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+        {% if user.is_authenticated %}
+        <form class="c-input-row" onsubmit="submitComment(event, {{ post.id }}, this)">
+            {% csrf_token %}
+            {% if my_profile.avatar %}
+                <img src="{{ my_profile.avatar.url }}" class="avatar avatar-sm" style="flex-shrink:0;">
+            {% else %}
+                <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; flex-shrink:0; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ user.username|first|upper }}</div>
+            {% endif %}
+            <input type="text" name="content" class="g-input"
+                   style="padding:8px 14px; border-radius:50px;"
+                   placeholder="کامنت بذار..."
+                   onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.closest('form').requestSubmit();}">
+            <button type="submit" class="btn-red" style="padding:8px 16px; flex-shrink:0; border-radius:50px;">
+                <svg class="bi bi-send-fill" aria-hidden="true"><use href="#bi-send-fill"></use></svg>
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'account:login' %}?next=/" class="c-input-row" style="text-decoration:none; padding:10px 14px; justify-content:center; color:var(--text-dim); font-size:0.85rem;">
+            <svg class="bi bi-lock-fill" aria-hidden="true" style="color:#8b5cf6; margin-left:6px;"><use href="#bi-lock-fill"></use></svg> برای کامنت گذاشتن ورود کن
+        </a>
+        {% endif %}
+    </div>
+
+</div>

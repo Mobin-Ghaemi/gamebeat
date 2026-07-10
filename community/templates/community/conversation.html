@@ -449,6 +449,52 @@
 }
 .dm-file-link i { font-size:1.2rem;flex-shrink:0; }
 
+/* Shared post card */
+.ms-bubble.has-shared-post {
+  padding:0;background:transparent !important;border:none !important;box-shadow:none !important;
+}
+.ms-bubble.has-shared-post::after { display:none; }
+.shared-post-card {
+  display:block;width:260px;max-width:100%;direction:rtl;
+  background:linear-gradient(160deg,#1c1630,#120e22);
+  border:1px solid rgba(139,92,246,.35);
+  border-radius:18px;overflow:hidden;
+  text-decoration:none;color:inherit;
+  box-shadow:0 6px 22px rgba(139,92,246,.18);
+  transition:transform .15s,box-shadow .15s,border-color .15s;
+}
+.shared-post-card:hover {
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(139,92,246,.32);
+  border-color:rgba(139,92,246,.6);
+}
+.spc-image { width:100%;height:130px;object-fit:cover;display:block; }
+.spc-body { padding:12px 14px; }
+.spc-head { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+.spc-avatar,.spc-avatar-ph { width:22px;height:22px;border-radius:50%;flex-shrink:0; }
+.spc-avatar { object-fit:cover; }
+.spc-avatar-ph {
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;font-size:.62rem;font-weight:800;
+}
+.spc-author { font-size:.75rem;font-weight:700;color:#c4b5fd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.spc-game-tag {
+  font-size:.62rem;background:rgba(139,92,246,.15);color:#a78bfa;
+  border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:1px 7px;
+  margin-right:auto;white-space:nowrap;flex-shrink:0;
+}
+.spc-text {
+  font-size:.8rem;color:#d8d8e8;line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.spc-footer {
+  display:flex;align-items:center;gap:6px;
+  padding:9px 14px;font-size:.72rem;font-weight:700;color:#a78bfa;
+  background:rgba(139,92,246,.08);border-top:1px solid rgba(139,92,246,.15);
+}
+.spc-footer svg { width:.9em;height:.9em;fill:currentColor;transform:scaleX(-1); }
+
 /* Empty state */
 .ms-empty-chat {
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -462,6 +508,16 @@
   box-shadow:0 8px 32px rgba(139,92,246,.15);
 }
 .ms-empty-chat p { font-size:.85rem;color:#2e2e40;text-align:center; }
+
+.ms-date-sep {
+  display:flex;align-items:center;justify-content:center;
+  margin:14px 0;
+}
+.ms-date-sep span {
+  font-size:.72rem;color:#9d9db0;background:#181826;
+  border:1px solid rgba(139,92,246,.18);
+  padding:4px 14px;border-radius:20px;
+}
 
 /* ── Input ── */
 .ms-input-wrap {
@@ -721,6 +777,9 @@
     <div class="ms-messages" id="chatMsgs">
       {% if msgs %}
         {% for msg in msgs %}
+        {% ifchanged msg.created_at|jalali_date %}
+        <div class="ms-date-sep"><span>{{ msg.created_at|jalali_full }}</span></div>
+        {% endifchanged %}
         <div class="ms-msg-row {% if msg.sender == request.user %}mine{% else %}other{% endif %}" id="msg-{{ msg.id }}">
 
           {% if msg.sender != request.user %}
@@ -734,17 +793,38 @@
           {% endif %}
 
           <div class="ms-bubble-wrap">
-            <div class="ms-bubble">
-              {% if msg.image %}
-                <img src="{{ msg.image.url }}" class="dm-img" onclick="window.open('{{ msg.image.url }}','_blank')" alt="عکس">
-              {% endif %}
-              {% if msg.file %}
-                <a href="{{ msg.file.url }}" class="dm-file-link" download="{{ msg.file_name }}">
-                  <svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>
-                  {{ msg.file_name|default:"دانلود فایل" }}
+            <div class="ms-bubble {% if msg.shared_post %}has-shared-post{% endif %}">
+              {% if msg.shared_post %}
+                <a href="{% url 'community:post_detail' post_id=msg.shared_post.id %}" class="shared-post-card">
+                  {% if msg.shared_post.image %}
+                    <img src="{{ msg.shared_post.image.url }}" class="spc-image" alt="">
+                  {% endif %}
+                  <div class="spc-body">
+                    <div class="spc-head">
+                      {% if msg.shared_post.author.gamer_profile.avatar %}
+                        <img src="{{ msg.shared_post.author.gamer_profile.avatar.url }}" class="spc-avatar">
+                      {% else %}
+                        <div class="spc-avatar-ph">{{ msg.shared_post.author.username|first|upper }}</div>
+                      {% endif %}
+                      <span class="spc-author">{{ msg.shared_post.author.get_full_name|default:msg.shared_post.author.username }}</span>
+                      {% if msg.shared_post.game_tag %}<span class="spc-game-tag">🎮 {{ msg.shared_post.game_tag }}</span>{% endif %}
+                    </div>
+                    {% if msg.shared_post.content %}<div class="spc-text">{{ msg.shared_post.content|truncatechars:140 }}</div>{% endif %}
+                  </div>
+                  <div class="spc-footer"><svg class="bi bi-arrow-left" aria-hidden="true"><use href="#bi-arrow-left"></use></svg> مشاهده پست</div>
                 </a>
+              {% else %}
+                {% if msg.image %}
+                  <img src="{{ msg.image.url }}" class="dm-img" onclick="window.open('{{ msg.image.url }}','_blank')" alt="عکس">
+                {% endif %}
+                {% if msg.file %}
+                  <a href="{{ msg.file.url }}" class="dm-file-link" download="{{ msg.file_name }}">
+                    <svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>
+                    {{ msg.file_name|default:"دانلود فایل" }}
+                  </a>
+                {% endif %}
+                {% if msg.content %}{{ msg.content }}{% endif %}
               {% endif %}
-              {% if msg.content %}{{ msg.content }}{% endif %}
             </div>
             <div class="ms-msg-time">{{ msg.created_at|time:"H:i" }}</div>
           </div>
@@ -1153,7 +1233,7 @@ function sendMsg() {
       input.value = '';
       input.style.height = 'auto';
       clearAttach();
-      appendMsg(data.content, data.created_at, data.id, data.image_url, data.file_url, data.file_name);
+      appendMsg(data.content, data.created_at, data.id, data.image_url, data.file_url, data.file_name, data.shared_post);
     } else {
       showToast(data.error || 'خطا در ارسال');
     }
@@ -1162,17 +1242,23 @@ function sendMsg() {
   }).catch(() => { btn.disabled = false; showToast('خطا در ارتباط'); });
 }
 
-function appendMsg(content, time, id, imageUrl, fileUrl, fileName) {
+function appendMsg(content, time, id, imageUrl, fileUrl, fileName, sharedPost) {
   const empty = chatBox.querySelector('[style*="اولین"]');
   if (empty) empty.parentElement && empty.parentElement.remove ? empty.parentElement.remove() : empty.remove();
 
-  let mediaHtml = '';
-  if (imageUrl) {
-    mediaHtml += `<img src="${imageUrl}" class="dm-img" onclick="window.open('${imageUrl}','_blank')" alt="عکس">`;
-  }
-  if (fileUrl) {
-    mediaHtml += `<a href="${fileUrl}" class="dm-file-link" download="${escHtml(fileName||'فایل')}">
-      <svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>${escHtml(fileName||'دانلود فایل')}</a>`;
+  let bubbleHtml;
+  if (sharedPost) {
+    bubbleHtml = buildSharedPostHtml(sharedPost);
+  } else {
+    let mediaHtml = '';
+    if (imageUrl) {
+      mediaHtml += `<img src="${imageUrl}" class="dm-img" onclick="window.open('${imageUrl}','_blank')" alt="عکس">`;
+    }
+    if (fileUrl) {
+      mediaHtml += `<a href="${fileUrl}" class="dm-file-link" download="${escHtml(fileName||'فایل')}">
+        <svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>${escHtml(fileName||'دانلود فایل')}</a>`;
+    }
+    bubbleHtml = mediaHtml + (content ? escHtml(content) : '');
   }
 
   const row = document.createElement('div');
@@ -1180,7 +1266,7 @@ function appendMsg(content, time, id, imageUrl, fileUrl, fileName) {
   row.id = 'msg-' + id;
   row.innerHTML = `
     <div class="ms-bubble-wrap">
-      <div class="ms-bubble">${mediaHtml}${content ? escHtml(content) : ''}</div>
+      <div class="ms-bubble ${sharedPost ? 'has-shared-post' : ''}">${bubbleHtml}</div>
       <div class="ms-msg-time">${time}</div>
     </div>`;
   chatBox.appendChild(row);
@@ -1191,6 +1277,25 @@ function escHtml(t) {
   return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function buildSharedPostHtml(sp) {
+  if (!sp) return '';
+  const img = sp.image_url ? `<img src="${sp.image_url}" class="spc-image" alt="">` : '';
+  const authorLabel = sp.author_name || sp.author_username || '?';
+  const av = sp.author_avatar
+    ? `<img src="${sp.author_avatar}" class="spc-avatar">`
+    : `<div class="spc-avatar-ph">${escHtml(authorLabel[0].toUpperCase())}</div>`;
+  const tag = sp.game_tag ? `<span class="spc-game-tag">🎮 ${escHtml(sp.game_tag)}</span>` : '';
+  const text = sp.content ? `<div class="spc-text">${escHtml(sp.content)}</div>` : '';
+  return `<a href="${sp.url}" class="shared-post-card">
+    ${img}
+    <div class="spc-body">
+      <div class="spc-head">${av}<span class="spc-author">${escHtml(authorLabel)}</span>${tag}</div>
+      ${text}
+    </div>
+    <div class="spc-footer"><svg class="bi bi-arrow-left" aria-hidden="true"><use href="#bi-arrow-left"></use></svg> مشاهده پست</div>
+  </a>`;
+}
+
 document.getElementById('msgInput').focus();
 {% endif %}
 
@@ -1198,9 +1303,15 @@ document.getElementById('msgInput').focus();
    Real-time polling (هر ۳ ثانیه)
    ══════════════════════════════════════ */
 function buildMsgRow(m) {
-  let mediaHtml = '';
-  if (m.image_url) mediaHtml += `<img src="${m.image_url}" class="dm-img" onclick="window.open('${m.image_url}','_blank')" alt="عکس">`;
-  if (m.file_url)  mediaHtml += `<a href="${m.file_url}" class="dm-file-link" download="${escHtml(m.file_name||'فایل')}"><svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>${escHtml(m.file_name||'دانلود')}</a>`;
+  let bubbleHtml;
+  if (m.shared_post) {
+    bubbleHtml = buildSharedPostHtml(m.shared_post);
+  } else {
+    let mediaHtml = '';
+    if (m.image_url) mediaHtml += `<img src="${m.image_url}" class="dm-img" onclick="window.open('${m.image_url}','_blank')" alt="عکس">`;
+    if (m.file_url)  mediaHtml += `<a href="${m.file_url}" class="dm-file-link" download="${escHtml(m.file_name||'فایل')}"><svg class="bi bi-file-earmark-arrow-down" aria-hidden="true"><use href="#bi-file-earmark-arrow-down"></use></svg>${escHtml(m.file_name||'دانلود')}</a>`;
+    bubbleHtml = mediaHtml + (m.content ? escHtml(m.content) : '');
+  }
 
   let avHtml = '';
   if (!m.is_mine) {
@@ -1221,7 +1332,7 @@ function buildMsgRow(m) {
   row.id = 'msg-' + m.id;
   row.innerHTML = avHtml + `
     <div class="ms-bubble-wrap">
-      <div class="ms-bubble">${mediaHtml}${m.content ? escHtml(m.content) : ''}</div>
+      <div class="ms-bubble ${m.shared_post ? 'has-shared-post' : ''}">${bubbleHtml}</div>
       <div class="ms-msg-time">${m.created_at}</div>
     </div>` + myAvHtml;
   return row;

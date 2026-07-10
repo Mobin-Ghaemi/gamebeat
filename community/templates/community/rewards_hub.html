@@ -1,0 +1,317 @@
+{% extends 'community/base.html' %}
+{% block title %}جوایز | گیم‌بیت{% endblock %}
+{% block nav_spin %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.rw-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 80px; }
+.rw-hero {
+    text-align: center;
+    padding: 22px 16px 30px;
+}
+.rw-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.rw-sub {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: .92rem;
+}
+.rw-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+}
+.rw-card {
+    background: linear-gradient(180deg, rgba(34,34,46,.96), rgba(22,22,30,.98));
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.18);
+}
+.rw-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.rw-card-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rw-card-sub {
+    color: var(--text-muted);
+    font-size: .84rem;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+.rw-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.rw-stat {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 12px 10px;
+    text-align: center;
+}
+.rw-stat-num {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #fff;
+}
+.rw-stat-lbl {
+    margin-top: 4px;
+    font-size: .72rem;
+    color: var(--text-dim);
+}
+.rw-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.rw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    border: 1px solid rgba(139,92,246,.18);
+    background: rgba(139,92,246,.08);
+    color: #c4b5fd;
+}
+.rw-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.rw-section {
+    background: rgba(34,34,46,.78);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 22px;
+    padding: 20px;
+}
+.rw-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.rw-section-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rw-ach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+.rw-ach-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 18px;
+    padding: 16px;
+}
+.rw-ach-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(251,191,36,.12);
+    color: #fbbf24;
+    margin-bottom: 12px;
+    font-size: 1.15rem;
+}
+.rw-ach-name {
+    font-size: .92rem;
+    font-weight: 800;
+    color: #fff;
+}
+.rw-ach-desc {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: .78rem;
+    line-height: 1.8;
+}
+.rw-ach-meta {
+    margin-top: 10px;
+    color: #fbbf24;
+    font-size: .74rem;
+    font-weight: 700;
+}
+.rw-empty {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 24px 10px 10px;
+}
+@media (max-width: 760px) {
+    .rw-grid { grid-template-columns: 1fr; }
+    .rw-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+    .rw-title { font-size: 1.55rem; }
+    .rw-stats { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rw-wrap">
+    <div class="rw-hero">
+        <div class="rw-title">
+            <svg class="bi bi-gift-fill" aria-hidden="true"><use href="#bi-gift-fill"></use></svg>
+            جوایز
+        </div>
+        <div class="rw-sub">همه چیزهای مربوط به جایزه اینجاست: ماموریت‌ها، گردونه و دستاوردهای تو.</div>
+    </div>
+
+    <div class="rw-grid">
+        <div class="rw-card">
+            <div class="rw-card-head">
+                <div class="rw-card-title">
+                    <svg class="bi bi-calendar-check" aria-hidden="true"><use href="#bi-calendar-check"></use></svg>
+                    جوایز روزانه
+                </div>
+                <span class="rw-chip">ماموریت‌ها</span>
+            </div>
+            <div class="rw-card-sub">ماموریت‌ها را کامل کن، جایزه بگیر و موجودی ضربانت را بیشتر کن.</div>
+            <div class="rw-stats">
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ rewards_data.total_missions }}</div>
+                    <div class="rw-stat-lbl">کل ماموریت</div>
+                </div>
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ rewards_data.claimable }}</div>
+                    <div class="rw-stat-lbl">آماده دریافت</div>
+                </div>
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ rewards_data.earned_today }}</div>
+                    <div class="rw-stat-lbl">جایزه امروز</div>
+                </div>
+            </div>
+            <div class="rw-chip-row">
+                {% if user.is_authenticated %}
+                <span class="rw-chip">💜 موجودی: {{ rewards_data.balance }}</span>
+                <span class="rw-chip">✅ دریافت‌شده: {{ rewards_data.claimed_count }}</span>
+                {% else %}
+                <span class="rw-chip">بعد از ورود، جوایزت اینجا فعال می‌شوند</span>
+                {% endif %}
+            </div>
+            <div class="rw-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'community:daily_missions' %}" class="btn-red">مشاهده ماموریت‌ها</a>
+                {% else %}
+                <a href="{% url 'account:login' %}?next={% url 'community:daily_missions' %}" class="btn-red">ورود برای جوایز</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="rw-card">
+            <div class="rw-card-head">
+                <div class="rw-card-title">
+                    <svg class="bi bi-circle-half" aria-hidden="true"><use href="#bi-circle-half"></use></svg>
+                    گردونه
+                </div>
+                <span class="rw-chip">شانس و جایزه</span>
+            </div>
+            <div class="rw-card-sub">گردونه‌های فعال را ببین، شانس رایگانت را امتحان کن و جوایز ویژه ببر.</div>
+            <div class="rw-stats">
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ active_wheels_count }}</div>
+                    <div class="rw-stat-lbl">گردونه فعال</div>
+                </div>
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ ready_wheels }}</div>
+                    <div class="rw-stat-lbl">آماده چرخش</div>
+                </div>
+                <div class="rw-stat">
+                    <div class="rw-stat-num">{{ wheel_cards|length }}</div>
+                    <div class="rw-stat-lbl">نمایش داده شده</div>
+                </div>
+            </div>
+            <div class="rw-chip-row">
+                {% for item in wheel_cards %}
+                <span class="rw-chip">
+                    🎰 {{ item.wheel.name }}
+                    {% if item.can_spin_free %} · آماده{% endif %}
+                </span>
+                {% empty %}
+                <span class="rw-chip">فعلاً گردونه‌ای فعال نیست</span>
+                {% endfor %}
+            </div>
+            <div class="rw-actions">
+                <a href="{% url 'community:spin_list' %}" class="btn-red">رفتن به گردونه</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="rw-section">
+        <div class="rw-section-head">
+            <div class="rw-section-title">
+                <svg class="bi bi-trophy-fill" aria-hidden="true"><use href="#bi-trophy-fill"></use></svg>
+                دستاوردها
+            </div>
+            {% if user.is_authenticated and total_achievements %}
+            <span class="rw-chip">{{ total_achievements }} دستاورد ثبت شده</span>
+            {% endif %}
+        </div>
+
+        {% if user.is_authenticated and achievements %}
+        <div class="rw-ach-grid">
+            {% for ach in achievements %}
+            <div class="rw-ach-card">
+                <div class="rw-ach-icon">
+                    <svg class="bi" aria-hidden="true"><use href="#{{ ach.icon }}"></use></svg>
+                </div>
+                <div class="rw-ach-name">{{ ach.title }}</div>
+                <div class="rw-ach-desc">{{ ach.description|default:'دستاورد جدیدی برای پروفایلت باز شده.' }}</div>
+                <div class="rw-ach-meta">سطح {{ ach.level }} · {{ ach.earned_at|timesince }} پیش</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif next_achievements %}
+        <div class="rw-ach-grid">
+            {% for ach in next_achievements %}
+            <div class="rw-ach-card">
+                <div class="rw-ach-icon">
+                    <svg class="bi" aria-hidden="true"><use href="#{{ ach.icon }}"></use></svg>
+                </div>
+                <div class="rw-ach-name">{{ ach.title }}</div>
+                <div class="rw-ach-desc">{{ ach.description|default:'این دستاورد را با فعالیت بیشتر در GameBeat باز کن.' }}</div>
+                <div class="rw-ach-meta">
+                    {% if ach.reward_zarban %}جایزه: {{ ach.reward_zarban }} ضربان{% else %}در حال باز شدن{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="rw-empty">هنوز دستاوردی برای نمایش نداریم.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

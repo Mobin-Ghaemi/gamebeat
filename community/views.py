@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import Http404, HttpResponse, JsonResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, Value, IntegerField
 from django.views.decorators.http import require_POST
-from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, GamingAccount, Hashtag
+from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, AchievementDefinition, GamingAccount, Hashtag
 from .models import Notification, Conversation, Message, Block, PinnedConversation, MutedConversation
 from .models import GameBacklog, PostReaction
 from .models import ActivityLog, Challenge, Club, ClubMember, ClubPost
@@ -28,6 +28,9 @@ from .seo import (
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 import json
 import urllib.request
 import urllib.parse
@@ -349,12 +352,24 @@ def feed(request):
         popular_ids = [u.id for u in popular_users]
         posts = list(Post.objects.filter(
             author__in=popular_ids, is_public=True
+        ).annotate(
+            guest_boost_priority=Case(
+                When(is_boosted=True, boost_expires_at__gt=timezone.now(), then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
         ).select_related('author', 'author__gamer_profile')
          .prefetch_related('reactions', 'comments')
-         .order_by('-created_at')[:30])
+         .order_by('-guest_boost_priority', '-boost_expires_at', '-created_at')[:30])
+        follower_counts = dict(
+            Follow.objects.filter(following_id__in=popular_ids)
+            .values_list('following_id')
+            .annotate(count=Count('id'))
+        )
         for p in posts:
             p.my_reaction = ''
             p.reactions_summary = {}
+            p.author.followers_count = follower_counts.get(p.author_id, 0)
 
         # یوزر رسمی گیم‌بیت (admin) همیشه آخرین نفر — ۴ تای اول پرفالوورترین گیمرها
         GAMEBEAT_OFFICIAL = 'admin'
@@ -382,6 +397,8 @@ def feed(request):
         return render(request, 'community/feed.html', {
             'posts': posts,
             'combined_feed': [{'kind': 'post', 'obj': p} for p in posts],
+            'following_ids': set(),
+            'is_guest_discover': True,
             'liked_post_ids': set(),
             'my_profile': None,
             'suggested_gamers': suggested_gamers,
@@ -464,6 +481,64 @@ def feed(request):
         'seo': homepage_seo,
     }
     return render(request, 'community/feed.html', context)
+
+
+@login_required
+def feed_poll(request):
+    """پست‌های جدیدتر از آخرین پستِ دیده‌شده در فید — برای آپدیت بدون رفرش."""
+    from django.template.loader import render_to_string
+
+    try:
+        after_id = int(request.GET.get('after', 0))
+    except (TypeError, ValueError):
+        after_id = 0
+
+    my_profile = get_or_create_gamer_profile(request.user)
+    following_ids = list(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
+    favorite_games = my_profile.get_favorite_games_list()
+    game_interest_q = Q()
+    for game in favorite_games[:8]:
+        game_interest_q |= Q(game_tag__iexact=game) | Q(content__icontains=game)
+
+    is_discover = len(following_ids) == 0
+    if is_discover:
+        popular_ids = list(User.objects.exclude(
+            id=request.user.id
+        ).filter(gamer_profile__isnull=False).annotate(
+            fc=Count('followers_set')
+        ).order_by('-fc')[:10].values_list('id', flat=True))
+        base_q = Q(author__in=popular_ids) | game_interest_q
+    else:
+        base_q = Q(author__in=following_ids) | Q(author=request.user) | game_interest_q
+
+    new_posts = list(Post.objects.filter(
+        base_q, is_public=True, id__gt=after_id
+    ).select_related('author', 'author__gamer_profile')
+     .prefetch_related('likes', 'comments', 'reactions')
+     .order_by('id')[:20])
+
+    if not new_posts:
+        return JsonResponse({'posts': [], 'last_id': after_id})
+
+    _annotate_reactions(new_posts, request.user)
+    liked_post_ids = set(PostLike.objects.filter(
+        user=request.user, post_id__in=[p.id for p in new_posts]
+    ).values_list('post_id', flat=True))
+
+    html_posts, max_id = [], after_id
+    for p in new_posts:
+        html = render_to_string('community/_post_card.html', {
+            'post': p,
+            'user': request.user,
+            'liked_post_ids': liked_post_ids,
+            'my_profile': my_profile,
+            'is_discover': is_discover,
+            'is_guest_discover': False,
+        }, request=request)
+        html_posts.append({'id': p.id, 'html': html})
+        max_id = max(max_id, p.id)
+
+    return JsonResponse({'posts': html_posts, 'last_id': max_id})
 
 
 def gamer_profile(request, username):
@@ -1426,20 +1501,20 @@ def lfg_board(request):
         'rejected_ids': rejected_ids,
         'seo': build_seo(
             request,
-            title='LFG و پیدا کردن هم‌تیمی | GameBeat',
-            description='در GameBeat برای بازی‌های آنلاین هم‌تیمی پیدا کن، LFG بساز و برای امشب یا همین حالا پارتی مناسب خودت را پیدا کن.',
+            title='پست همبازی و پیدا کردن هم‌تیمی | GameBeat',
+            description='در GameBeat برای بازی‌های آنلاین هم‌تیمی پیدا کن، پست همبازی بساز و برای امشب یا همین حالا پارتی مناسب خودت را پیدا کن.',
             canonical=request.build_absolute_uri(reverse('community:lfg')),
             robots='noindex,follow' if any([platform_filter, game_filter, skill_filter, mine_filter]) else DEFAULT_ROBOTS,
             schema=[
                 make_breadcrumb_schema([
                     {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
-                    {'name': 'LFG', 'url': request.build_absolute_uri(reverse('community:lfg'))},
+                    {'name': 'پست همبازی', 'url': request.build_absolute_uri(reverse('community:lfg'))},
                 ]),
                 {
                     '@context': 'https://schema.org',
                     '@type': 'CollectionPage',
-                    'name': 'LFG و پیدا کردن هم‌تیمی',
-                    'description': 'لیست درخواست‌های هم‌تیمی و LFG در GameBeat',
+                    'name': 'پست همبازی و پیدا کردن هم‌تیمی',
+                    'description': 'لیست درخواست‌های هم‌تیمی و پست‌های همبازی در GameBeat',
                     'url': request.build_absolute_uri(reverse('community:lfg')),
                     'inLanguage': 'fa',
                 },
@@ -1449,12 +1524,123 @@ def lfg_board(request):
     return render(request, 'community/lfg.html', context)
 
 
+def lfg_poll(request):
+    """پست‌های همبازیِ جدید + آپدیت پست‌های در حال نمایش (جوین‌شدن، تکمیل ظرفیت و ...) — بدون رفرش."""
+    from django.template.loader import render_to_string
+
+    try:
+        after_id = int(request.GET.get('after', 0))
+    except (TypeError, ValueError):
+        after_id = 0
+
+    visible_ids = []
+    for part in request.GET.get('visible', '').split(','):
+        part = part.strip()
+        if part.isdigit():
+            visible_ids.append(int(part))
+    visible_ids = visible_ids[:50]
+
+    platform_filter = request.GET.get('platform', '')
+    game_filter = request.GET.get('game', '')
+    skill_filter = request.GET.get('skill', '')
+
+    new_qs = LFGPost.objects.filter(is_active=True, id__gt=after_id).select_related(
+        'author', 'author__gamer_profile'
+    )
+    if request.user.is_authenticated:
+        new_qs = new_qs.filter(Q(is_approved=True) | Q(author=request.user))
+    else:
+        new_qs = new_qs.filter(is_approved=True)
+    if platform_filter:
+        new_qs = new_qs.filter(platform=platform_filter)
+    if skill_filter:
+        new_qs = new_qs.filter(skill_level=skill_filter)
+    if game_filter:
+        new_qs = new_qs.filter(game_name__icontains=game_filter)
+    new_posts = list(new_qs.order_by('id')[:20])
+    max_id = max([after_id] + [p.id for p in new_posts])
+
+    # ── آپدیت پست‌هایی که همین الان روی صفحه‌ی کاربر نمایش داده می‌شن ──
+    existing_posts, removed_ids = [], []
+    if visible_ids:
+        found = {p.id: p for p in LFGPost.objects.filter(
+            id__in=visible_ids
+        ).select_related('author', 'author__gamer_profile')}
+        for vid in visible_ids:
+            p = found.get(vid)
+            if not p or not p.is_active or (not p.is_approved and (not request.user.is_authenticated or p.author_id != request.user.id)):
+                removed_ids.append(vid)
+            else:
+                existing_posts.append(p)
+
+    if not new_posts and not existing_posts:
+        return JsonResponse({'posts': [], 'updates': [], 'removed': removed_ids, 'last_id': after_id})
+
+    all_posts = new_posts + existing_posts
+
+    joined_ids, pending_ids, rejected_ids = set(), set(), set()
+    _pending_map, accepted_map = {}, {}
+    if request.user.is_authenticated:
+        for r in LFGJoinRequest.objects.filter(user=request.user, post__in=all_posts):
+            if r.status == 'accepted':
+                joined_ids.add(r.post_id)
+            elif r.status == 'pending':
+                pending_ids.add(r.post_id)
+            elif r.status == 'rejected':
+                rejected_ids.add(r.post_id)
+        for r in LFGJoinRequest.objects.filter(
+            post__author=request.user, post__in=all_posts, status='pending'
+        ).select_related('user', 'user__gamer_profile'):
+            _pending_map.setdefault(r.post_id, []).append(r)
+        for req in LFGJoinRequest.objects.filter(
+            post__in=all_posts, status='accepted'
+        ).select_related('user', 'user__gamer_profile'):
+            accepted_map.setdefault(req.post_id, []).append(req.user)
+
+        sent_feedback = set(
+            LFGFeedback.objects.filter(reviewer=request.user, lfg_post__in=all_posts)
+            .values_list('lfg_post_id', 'reviewee_id')
+        )
+
+    _party_groups = {g.lfg_post_id: g for g in GroupChat.objects.filter(lfg_post__in=all_posts)}
+
+    for post in all_posts:
+        post.pending_reqs = _pending_map.get(post.pk, [])
+        post.party_group_obj = _party_groups.get(post.pk)
+        if post in new_posts:
+            post.feedback_targets = []  # پست تازه‌ساخته‌شده هنوز بازخوردی نداره
+        else:
+            participants = [post.author] + accepted_map.get(post.pk, [])
+            is_participant = any(u.pk == request.user.pk for u in participants) if request.user.is_authenticated else False
+            post.feedback_targets = [
+                u for u in participants
+                if request.user.is_authenticated and is_participant and u.pk != request.user.pk
+                and (post.pk, u.pk) not in sent_feedback
+            ]
+
+    def _render(p):
+        return render_to_string('community/_lfg_post_card.html', {
+            'post': p,
+            'joined_ids': joined_ids,
+            'pending_ids': pending_ids,
+            'rejected_ids': rejected_ids,
+        }, request=request)
+
+    html_posts = [{'id': p.id, 'html': _render(p)} for p in new_posts]
+    html_updates = [{'id': p.id, 'html': _render(p)} for p in existing_posts]
+
+    return JsonResponse({
+        'posts': html_posts, 'updates': html_updates,
+        'removed': removed_ids, 'last_id': max_id,
+    })
+
+
 @login_required
 @require_POST
 def create_lfg(request):
     game_name = request.POST.get('game_name', '').strip()
     if not game_name:
-        messages.error(request, 'نام بازی برای LFG الزامی است.')
+        messages.error(request, 'نام بازی برای پست همبازی الزامی است.')
         return redirect('community:lfg')
     profile = get_or_create_gamer_profile(request.user)
     scheduled_for = parse_datetime(request.POST.get('scheduled_for', '').strip() or '')
@@ -1485,9 +1671,9 @@ def create_lfg(request):
     # اعلان فوری به گیمرهایی که این بازی جزو علاقه‌مندی‌هاشونه
     if post.is_approved:
         _notify_lfg_interested(post)
-        messages.success(request, 'پست LFG منتشر شد! منتظر بازیکن باش')
+        messages.success(request, 'پست همبازی منتشر شد! منتظر بازیکن باش')
     else:
-        messages.info(request, 'پست LFG ثبت شد و بعد از بررسی ادمین نمایش داده می‌شود.')
+        messages.info(request, 'پست همبازی ثبت شد و بعد از بررسی ادمین نمایش داده می‌شود.')
     return redirect('community:lfg')
 
 
@@ -1685,14 +1871,14 @@ def submit_lfg_feedback(request, post_id):
     )
     participant_ids = accepted_user_ids | {post.author_id}
     if request.user.id not in participant_ids:
-        return JsonResponse({'error': 'فقط اعضای این LFG می‌توانند بازخورد بدهند'}, status=403)
+        return JsonResponse({'error': 'فقط اعضای این پست همبازی می‌توانند بازخورد بدهند'}, status=403)
 
     try:
         reviewee_id = int(reviewee_id)
     except (TypeError, ValueError):
         return JsonResponse({'error': 'کاربر نامعتبر است'}, status=400)
     if reviewee_id == request.user.id or reviewee_id not in participant_ids:
-        return JsonResponse({'error': 'کاربر انتخاب‌شده عضو این LFG نیست'}, status=400)
+        return JsonResponse({'error': 'کاربر انتخاب‌شده عضو این پست همبازی نیست'}, status=400)
 
     reviewee = get_object_or_404(User, pk=reviewee_id)
     feedback, created = LFGFeedback.objects.get_or_create(
@@ -1710,7 +1896,7 @@ def submit_lfg_feedback(request, post_id):
             recipient=post.author,
             sender=request.user,
             notif_type='lfg_req',
-            custom_text=f'یک بازخورد LFG برای «{post.game_name}» نیاز به بررسی دارد.',
+            custom_text=f'یک بازخورد پست همبازی برای «{post.game_name}» نیاز به بررسی دارد.',
         )
     return JsonResponse({'ok': True, 'label': feedback.get_result_display()})
 
@@ -2044,8 +2230,7 @@ def steam_login(request):
 @login_required
 def steam_callback(request):
     """بازگشت از استیم — پاسخ را تأیید و حساب را متصل می‌کند."""
-    import requests as _requests
-    from .gaming_apis import lookup_steam
+    from .gaming_apis import lookup_steam, _steam_post
 
     profile_url_redirect = redirect('community:profile', username=request.user.username)
 
@@ -2053,11 +2238,13 @@ def steam_callback(request):
     params = dict(request.GET.items())
     params['openid.mode'] = 'check_authentication'
     try:
-        resp = _requests.post(STEAM_OPENID_URL, data=params, timeout=8)
+        resp = _steam_post(STEAM_OPENID_URL, data=params, timeout=8)
         if 'is_valid:true' not in resp.text:
+            logger.warning('Steam OpenID check_authentication rejected: %s', resp.text[:300])
             messages.error(request, 'تأیید استیم ناموفق بود. دوباره تلاش کن.')
             return profile_url_redirect
     except Exception:
+        logger.exception('Steam OpenID check_authentication request failed (return_to=%s)', request.build_absolute_uri())
         messages.error(request, 'خطا در ارتباط با استیم. لطفاً دوباره تلاش کنید.')
         return profile_url_redirect
 
@@ -2141,6 +2328,70 @@ def steam_import_backlog(request):
         if created:
             added += 1
     return JsonResponse({'ok': True, 'added': added})
+
+
+@login_required
+@require_POST
+def steam_sync_hours(request):
+    """ساعت بازی واقعی کاربر را دوباره از استیم می‌خواند و پروفایل را به‌روز می‌کند.
+    شامل cooldown ۱۵ دقیقه‌ای برای جلوگیری از اسپم API."""
+    ga = GamingAccount.objects.filter(user=request.user, platform='steam').first()
+    if not ga:
+        return JsonResponse({'ok': False, 'error': 'ابتدا حساب استیم خود را متصل کنید'}, status=400)
+
+    # ── cooldown ۱۵ دقیقه ──
+    SYNC_COOLDOWN_MINS = 15
+    if ga.last_synced:
+        elapsed = (timezone.now() - ga.last_synced).total_seconds()
+        if elapsed < SYNC_COOLDOWN_MINS * 60:
+            remaining = int(SYNC_COOLDOWN_MINS * 60 - elapsed)
+            return JsonResponse({
+                'ok': False,
+                'error': f'کمی صبر کن — {remaining // 60 + 1} دقیقه دیگر می‌توانی دوباره همگام‌سازی کنی',
+                'cooldown': True,
+            }, status=429)
+
+    # ── استخراج steam64 از profile_url ذخیره‌شده ──
+    steam64 = None
+    if ga.profile_url:
+        m = re.search(r'/(?:profiles|id)/(\d+)', ga.profile_url)
+        steam64 = m.group(1) if m else None
+    # fallback به session (برای اکانت‌های قدیمی که profile_url شماره‌ای ندارند)
+    if not steam64:
+        steam64 = request.session.get('steam64')
+    if not steam64:
+        return JsonResponse({'ok': False, 'error': 'شناسه استیم پیدا نشد — اکانت را قطع و دوباره وصل کن'}, status=400)
+
+    from .gaming_apis import fetch_steam_games
+    games = fetch_steam_games(steam64)
+    if not games:
+        # پروفایل استیم کاربر احتمالاً Private است
+        ga.last_synced = timezone.now()
+        ga.save(update_fields=['last_synced'])
+        return JsonResponse({
+            'ok': False,
+            'error': 'داده‌ای دریافت نشد — پروفایل استیم‌ات را Public کن (تنظیمات حریم خصوصی استیم)',
+        })
+
+    # ── آپدیت extra_data اکانت + ساعت بازی پروفایل ──
+    extra = dict(ga.extra_data or {})
+    extra['total_hours'] = games['total_hours']
+    extra['game_count'] = games['game_count']
+    extra['top_games'] = games['top_games']
+    ga.extra_data = extra
+    ga.last_synced = timezone.now()
+    ga.save(update_fields=['extra_data', 'last_synced'])
+
+    profile = get_or_create_gamer_profile(request.user)
+    profile.total_hours_played = games['total_hours']
+    profile.save(update_fields=['total_hours_played'])
+
+    return JsonResponse({
+        'ok': True,
+        'total_hours': games['total_hours'],
+        'game_count': games['game_count'],
+        'top_games': games['top_games'],
+    })
 
 
 def hashtag_feed(request, tag_name):
@@ -2418,18 +2669,13 @@ def conversation(request, username):
         participants=request.user
     ).filter(participants=other_user).first()
 
-    # هیچ‌کس نمی‌تونه به admin پیام بده
-    if other_user.username == 'admin':
-        messages.error(request, 'ارسال پیام به مدیریت گیم‌بیت امکان‌پذیر نیست.')
-        return redirect('community:inbox')
-
     if not conv:
         conv = Conversation.objects.create()
         conv.participants.add(request.user, other_user)
 
     if request.method == 'POST':
         content = request.POST.get('content', '').strip()
-        if content:
+        if content and other_user.username != 'admin':
             Message.objects.create(
                 conversation=conv, sender=request.user, content=content
             )
@@ -2442,7 +2688,9 @@ def conversation(request, username):
             )
         return redirect('community:conversation', username=username)
 
-    msgs = conv.messages.select_related('sender', 'sender__gamer_profile').order_by('created_at')
+    msgs = conv.messages.select_related(
+        'sender', 'sender__gamer_profile', 'shared_post', 'shared_post__author', 'shared_post__author__gamer_profile'
+    ).order_by('created_at')
     other_profile = getattr(other_user, 'gamer_profile', None)
 
     blocked_ids = set(Block.objects.filter(blocker=request.user).values_list('blocked_id', flat=True))
@@ -2504,6 +2752,25 @@ def conversation(request, username):
     })
 
 
+def _shared_post_payload(post):
+    """دیتای لازم برای کارت پیش‌نمایش پست share‌شده در چت"""
+    if not post:
+        return None
+    from django.utils.text import Truncator
+    gp = getattr(post.author, 'gamer_profile', None)
+    return {
+        'id': post.id,
+        'url': reverse('community:post_detail', kwargs={'post_id': post.id}),
+        'author_username': post.author.username,
+        'author_name': post.author.get_full_name() or post.author.username,
+        'author_avatar': gp.avatar.url if (gp and gp.avatar) else '',
+        'content': Truncator(post.content or '').chars(140),
+        'image_url': post.image.url if post.image else '',
+        'game_tag': post.game_tag or '',
+        'post_type': post.post_type,
+    }
+
+
 @login_required
 def send_message_ajax(request, username):
     """AJAX send message — returns JSON"""
@@ -2512,7 +2779,7 @@ def send_message_ajax(request, username):
     other_user = get_object_or_404(User, username=username)
     # کاربر عادی نمی‌تونه به یوزر admin (مدیریت گیم‌بیت) پیام بده
     if other_user.username == 'admin':
-        return JsonResponse({'error': 'ارسال پیام به مدیریت گیم‌بیت امکان‌پذیر نیست.'}, status=403)
+        return JsonResponse({'ok': True, 'locked': True})
     # بررسی بلاک
     if Block.objects.filter(blocker=other_user, blocked=request.user).exists():
         return JsonResponse({'error': 'blocked'}, status=403)
@@ -2529,8 +2796,14 @@ def send_message_ajax(request, username):
     content = request.POST.get('content', '').strip()
     image_file = request.FILES.get('image')
     attach_file = request.FILES.get('file')
+    shared_post = None
+    shared_post_id = request.POST.get('shared_post_id', '').strip()
+    if shared_post_id.isdigit():
+        shared_post = Post.objects.filter(id=shared_post_id, is_public=True).select_related(
+            'author', 'author__gamer_profile'
+        ).first()
 
-    if not content and not image_file and not attach_file:
+    if not content and not image_file and not attach_file and not shared_post:
         return JsonResponse({'error': 'empty'}, status=400)
 
     # اعتبارسنجی فایل‌ها
@@ -2560,7 +2833,7 @@ def send_message_ajax(request, username):
         conv = Conversation.objects.create()
         conv.participants.add(request.user, other_user)
 
-    msg = Message(conversation=conv, sender=request.user, content=content)
+    msg = Message(conversation=conv, sender=request.user, content=content, shared_post=shared_post)
     if image_file:
         msg.image = image_file
     if attach_file:
@@ -2570,7 +2843,10 @@ def send_message_ajax(request, username):
     conv.save()
 
     # نوتیف برای گیرنده بساز
-    notif_text = content[:100] if content else ('📎 فایل' if attach_file else '🖼 عکس')
+    if shared_post:
+        notif_text = f'📌 یک پست فرستاد: {shared_post.content[:80]}'
+    else:
+        notif_text = content[:100] if content else ('📎 فایل' if attach_file else '🖼 عکس')
     Notification.objects.create(
         recipient=other_user,
         sender=request.user,
@@ -2586,6 +2862,7 @@ def send_message_ajax(request, username):
         'image_url': msg.image.url if msg.image else None,
         'file_url': msg.file.url if msg.file else None,
         'file_name': msg.file_name,
+        'shared_post': _shared_post_payload(shared_post),
     }
     return JsonResponse(resp)
 
@@ -2732,11 +3009,12 @@ def conversation_poll(request, username):
 
     new_msgs = []
     if conv:
+        _rel = ('sender', 'sender__gamer_profile', 'shared_post', 'shared_post__author', 'shared_post__author__gamer_profile')
         if after_id:
-            qs = conv.messages.filter(id__gt=after_id).select_related('sender', 'sender__gamer_profile').order_by('id')
+            qs = conv.messages.filter(id__gt=after_id).select_related(*_rel).order_by('id')
         else:
             # بار اول: آخرین ۳۰ پیام رو بده
-            qs = conv.messages.select_related('sender', 'sender__gamer_profile').order_by('-id')[:30]
+            qs = conv.messages.select_related(*_rel).order_by('-id')[:30]
             qs = list(reversed(list(qs)))
         for msg in qs:
             is_mine = msg.sender == request.user
@@ -2756,6 +3034,7 @@ def conversation_poll(request, username):
                 'file_url': msg.file.url if msg.file else None,
                 'file_name': msg.file_name or '',
                 'is_admin': msg.sender.username == 'admin',
+                'shared_post': _shared_post_payload(msg.shared_post),
             })
         # پیام‌های جدید رو read کن
         if new_msgs:
@@ -2863,6 +3142,103 @@ def daily_missions(request):
         'today_day': today_day,
         'cycle_pos': cycle_pos,
         'cycle_len': cycle_len,
+    })
+
+
+def rewards_hub(request):
+    logged_in = request.user.is_authenticated
+    my_profile = get_or_create_gamer_profile(request.user) if logged_in else None
+
+    rewards_data = {
+        'total_missions': 0,
+        'claimable': 0,
+        'claimed_count': 0,
+        'earned_today': 0,
+        'balance': 0,
+    }
+
+    if logged_in:
+        today = timezone.localdate()
+        missions_qs, _ = get_today_missions()
+        missions = list(missions_qs)
+        prog_map = {
+            p.mission_id: p
+            for p in DailyMissionProgress.objects.filter(user=request.user, date=today)
+        }
+        claimed_count = 0
+        claimable = 0
+        earned_today = 0
+        for mission in missions:
+            prog = prog_map.get(mission.id)
+            progress = prog.progress if prog else 0
+            claimed = prog.claimed if prog else False
+            done = progress >= mission.target_count
+            if claimed:
+                claimed_count += 1
+                earned_today += mission.reward_zarban
+            elif done:
+                claimable += 1
+
+        wallet = ZarbanWallet.get_or_create_for(request.user)
+        rewards_data = {
+            'total_missions': len(missions),
+            'claimable': claimable,
+            'claimed_count': claimed_count,
+            'earned_today': earned_today,
+            'balance': wallet.balance,
+        }
+
+    active_wheels = list(
+        SpinWheel.objects.filter(is_active=True)
+        .prefetch_related('items')
+        .order_by('order', '-created_at')[:3]
+    )
+    wheel_cards = []
+    ready_wheels = 0
+    for wheel in active_wheels:
+        item_count = wheel.items.filter(is_active=True).count()
+        can_spin_free = logged_in and _spin_eligible(request.user, wheel)
+        if can_spin_free:
+            ready_wheels += 1
+        wheel_cards.append({
+            'wheel': wheel,
+            'item_count': item_count,
+            'can_spin_free': can_spin_free,
+        })
+
+    achievements = []
+    total_achievements = 0
+    next_achievements = []
+    if logged_in:
+        achievements = list(
+            Achievement.objects.filter(user=request.user)
+            .order_by('-earned_at')[:6]
+        )
+        total_achievements = Achievement.objects.filter(user=request.user).count()
+        owned_keys = set(
+            Achievement.objects.filter(user=request.user)
+            .values_list('achievement_type', 'level')
+        )
+        next_achievements = [
+            definition for definition in AchievementDefinition.objects.filter(is_active=True)
+            .order_by('order', 'ach_type', 'level')
+            if (definition.ach_type, definition.level) not in owned_keys
+        ][:6]
+    else:
+        next_achievements = list(
+            AchievementDefinition.objects.filter(is_active=True)
+            .order_by('order', 'ach_type', 'level')[:6]
+        )
+
+    return render(request, 'community/rewards_hub.html', {
+        'my_profile': my_profile,
+        'rewards_data': rewards_data,
+        'wheel_cards': wheel_cards,
+        'active_wheels_count': len(active_wheels),
+        'ready_wheels': ready_wheels,
+        'achievements': achievements,
+        'total_achievements': total_achievements,
+        'next_achievements': next_achievements,
     })
 
 
@@ -5151,7 +5527,7 @@ def onboarding(request):
         profile.has_onboarded = True
         profile.save(update_fields=['platforms', 'platform', 'favorite_games', 'bio', 'city', 'has_onboarded'])
 
-        messages.success(request, 'خوش اومدی به GameBeat! چند LFG مرتبط با بازی‌هات برات آماده کردیم')
+        messages.success(request, 'خوش اومدی به GameBeat! چند پست همبازی مرتبط با بازی‌هات برات آماده کردیم')
         return redirect(f"{reverse('community:lfg')}?mine=1")
 
     from dashboard.models import Game as DashboardGame, GENRE_CHOICES as GAME_GENRE_CHOICES

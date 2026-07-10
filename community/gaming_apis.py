@@ -2,10 +2,33 @@ import re
 import time
 import requests
 import xml.etree.ElementTree as ET
+from urllib.parse import quote, urlencode
 from django.conf import settings
 
 STEAM_API_KEY = getattr(settings, 'STEAM_API_KEY', '')
 XBOX_API_KEY = getattr(settings, 'XBOX_API_KEY', '')
+
+# steamcommunity.com / steampowered.com اتصال از IP ایران را مسدود می‌کنند؛
+# اگر STEAM_PROXY_URL ست شده باشد (آدرس Cloudflare Worker به‌عنوان reverse
+# proxy)، همه‌ی درخواست‌های استیم از طریق آن عبور می‌کنند.
+STEAM_PROXY_URL = getattr(settings, 'STEAM_PROXY_URL', '')
+
+
+def _steam_get(url, params=None, headers=None, timeout=8):
+    """GET به دامنه‌های استیم — در صورت تنظیم STEAM_PROXY_URL از طریق
+    Cloudflare Worker (reverse proxy) عبور می‌کند تا بلاک IP ایران را دور بزند."""
+    if params:
+        url = url + ('&' if '?' in url else '?') + urlencode(params)
+    if STEAM_PROXY_URL:
+        url = f'{STEAM_PROXY_URL.rstrip("/")}/?url=' + quote(url, safe='')
+    return requests.get(url, headers=headers, timeout=timeout)
+
+
+def _steam_post(url, data=None, timeout=8):
+    """POST به دامنه‌های استیم از طریق همان Worker (در صورت تنظیم)."""
+    if STEAM_PROXY_URL:
+        url = f'{STEAM_PROXY_URL.rstrip("/")}/?url=' + quote(url, safe='')
+    return requests.post(url, data=data, timeout=timeout)
 
 
 def _steam_lookup_by_xml(vanity_or_id):
@@ -18,7 +41,7 @@ def _steam_lookup_by_xml(vanity_or_id):
     else:
         url = f'https://steamcommunity.com/id/{vanity_or_id}/?xml=1'
 
-    r = requests.get(url, timeout=8, headers={'User-Agent': 'GameBeat/1.0'})
+    r = _steam_get(url, timeout=8, headers={'User-Agent': 'GameBeat/1.0'})
     if r.status_code != 200:
         return None
 
@@ -56,7 +79,7 @@ def fetch_steam_games(steam64):
     if not STEAM_API_KEY or not steam64:
         return None
     try:
-        r = requests.get(
+        r = _steam_get(
             'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
             params={
                 'key': STEAM_API_KEY, 'steamid': steam64,
@@ -90,7 +113,7 @@ def get_steam_owned_games(steam64):
     if not STEAM_API_KEY or not steam64:
         return []
     try:
-        r = requests.get(
+        r = _steam_get(
             'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
             params={
                 'key': STEAM_API_KEY, 'steamid': steam64,
@@ -141,7 +164,7 @@ def fetch_steam_appdetails(appid):
     """جزئیات یک بازی از Steam Store — برای is_online، ژانر، توضیحات، کاور.
     خروجی: dict یا None."""
     try:
-        r = requests.get(
+        r = _steam_get(
             'https://store.steampowered.com/api/appdetails',
             params={'appids': appid, 'cc': 'us', 'l': 'english'},
             timeout=8, headers={'User-Agent': 'GameBeat/1.0'},
@@ -239,7 +262,7 @@ def import_steam_games_to_catalog(steam64, max_games=200):
                 header = details.get('header_image') or \
                     f'https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg'
                 try:
-                    ir = requests.get(header, timeout=8, headers={'User-Agent': 'GameBeat/1.0'})
+                    ir = _steam_get(header, timeout=8, headers={'User-Agent': 'GameBeat/1.0'})
                     if ir.status_code == 200 and ir.content:
                         game.cover.save(f'steam_{appid}.jpg', ContentFile(ir.content), save=False)
                 except Exception:
@@ -265,7 +288,7 @@ def _localize_badge_image(url):
         h = hashlib.md5(url.encode()).hexdigest()[:18]
         path = f'steam_badges/{h}.png'
         if not default_storage.exists(path):
-            ir = requests.get(url, timeout=12, headers={'User-Agent': 'Mozilla/5.0'})
+            ir = _steam_get(url, timeout=12, headers={'User-Agent': 'Mozilla/5.0'})
             if ir.status_code != 200 or not ir.content:
                 return url
             default_storage.save(path, ContentFile(ir.content))
@@ -285,7 +308,7 @@ def fetch_steam_badges(steam64):
 
     # ── ۱) اسکرپ صفحه‌ی badges استیم — برای عکس و نام واقعیِ هر نشان ──
     try:
-        r = requests.get(
+        r = _steam_get(
             f'https://steamcommunity.com/profiles/{steam64}/badges/?l=english',
             timeout=25, headers={'User-Agent': 'Mozilla/5.0'},
         )
@@ -319,7 +342,7 @@ def fetch_steam_badges(steam64):
         return empty
     for _ in range(3):
         try:
-            r = requests.get(
+            r = _steam_get(
                 'https://api.steampowered.com/IPlayerService/GetBadges/v1/',
                 params={'key': STEAM_API_KEY, 'steamid': steam64}, timeout=25,
             )
@@ -360,7 +383,7 @@ def fetch_steam_achievements(steam64, owned_games=None, max_games=120):
         data = None
         for _ in range(2):  # retry برای خطای SSL موقتی
             try:
-                r = requests.get(
+                r = _steam_get(
                     'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/',
                     params={'key': STEAM_API_KEY, 'steamid': steam64, 'appid': appid, 'l': 'english'},
                     timeout=20,
@@ -394,7 +417,7 @@ def fetch_cs2_medals(steam64):
     خروجی: list of {name, icon_url, desc, date_issued}"""
     STEAM_CDN = 'https://community.cloudflare.steamstatic.com/economy/image/'
     try:
-        r = requests.get(
+        r = _steam_get(
             f'https://steamcommunity.com/inventory/{steam64}/730/2',
             params={'l': 'english', 'count': 500},
             headers={'User-Agent': 'Mozilla/5.0'},
@@ -487,10 +510,10 @@ def lookup_steam(steam_id_or_vanity):
         if STEAM_API_KEY:
             # ── Official API path (faster, more data) ──
             if not steam_id_or_vanity.isdigit():
-                r = requests.get(
+                r = _steam_get(
                     'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/',
                     params={'key': STEAM_API_KEY, 'vanityurl': steam_id_or_vanity},
-                    timeout=6
+                    timeout=6,
                 )
                 data = r.json().get('response', {})
                 if data.get('success') == 1:
@@ -501,10 +524,10 @@ def lookup_steam(steam_id_or_vanity):
             else:
                 steam64 = steam_id_or_vanity
 
-            r = requests.get(
+            r = _steam_get(
                 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/',
                 params={'key': STEAM_API_KEY, 'steamids': steam64},
-                timeout=6
+                timeout=6,
             )
             players = r.json().get('response', {}).get('players', [])
             if not players:

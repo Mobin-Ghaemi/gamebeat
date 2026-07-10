@@ -499,6 +499,10 @@
 }
 .steam-sync-btn svg { width: 1em; height: 1em; fill: currentColor; }
 .steam-sync-btn:hover { background: rgba(102,192,244,0.16); border-color: #66c0f4; }
+.steam-sync-btn:disabled { opacity: 0.6; cursor: wait; }
+.steam-sync-btn.spinning svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.steam-sync-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px; position: relative; z-index: 1; }
 
 /* ── کارت پروفایل استیم ── */
 .steam-card {
@@ -1421,7 +1425,7 @@
                     <div class="profile-stat-lbl">دنبال‌شده</div>
                 </div>
                 <div class="profile-stat">
-                    <div class="profile-stat-val">{{ profile.total_hours_played }}</div>
+                    <div class="profile-stat-val" id="profileHoursStat">{{ profile.total_hours_played }}</div>
                     <div class="profile-stat-lbl">ساعت بازی</div>
                 </div>
                 {% if completed_count > 0 %}
@@ -1874,8 +1878,8 @@
 
                             {% if ga.extra_data.total_hours or ga.extra_data.game_count %}
                             <div class="steam-stats">
-                                <div class="steam-stat"><b>{{ ga.extra_data.total_hours|default:0 }}</b><span>ساعت بازی</span></div>
-                                <div class="steam-stat"><b>{{ ga.extra_data.game_count|default:0 }}</b><span>تعداد بازی</span></div>
+                                <div class="steam-stat"><b id="steam-hours">{{ ga.extra_data.total_hours|default:0 }}</b><span>ساعت بازی</span></div>
+                                <div class="steam-stat"><b id="steam-count">{{ ga.extra_data.game_count|default:0 }}</b><span>تعداد بازی</span></div>
                             </div>
                             {% endif %}
 
@@ -1883,6 +1887,7 @@
                             <div class="steam-games-title">
                                 <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> بیشترین بازی‌ها
                             </div>
+                            <div id="steam-top-games">
                             {% for g in ga.extra_data.top_games %}
                             <div class="steam-game-row">
                                 {% if g.icon %}<img class="steam-game-icon" src="{{ g.icon }}" alt="">
@@ -1892,9 +1897,20 @@
                                 <div class="steam-game-hours">{{ g.hours }}h</div>
                             </div>
                             {% endfor %}
+                            </div>
                             {% endif %}
 
-                            {% if ga.last_synced %}
+                            {% if is_own_profile %}
+                            <div class="steam-sync-row">
+                                <button class="steam-sync-btn" id="steamSyncBtn" onclick="steamSyncHours()">
+                                    <svg class="bi bi-arrow-repeat" aria-hidden="true"><use href="#bi-arrow-repeat"></use></svg>
+                                    به‌روزرسانی از استیم
+                                </button>
+                                {% if ga.last_synced %}
+                                <span class="steam-foot" id="steam-foot">آخرین به‌روزرسانی: {{ ga.last_synced|timesince }} پیش</span>
+                                {% endif %}
+                            </div>
+                            {% elif ga.last_synced %}
                             <div class="steam-foot">آخرین به‌روزرسانی: {{ ga.last_synced|timesince }} پیش</div>
                             {% endif %}
                         </div>
@@ -2347,6 +2363,74 @@ function steamImportYes() {
     .catch(function(){
         btn.disabled = false; btn.textContent = 'بله، اضافه کن';
         alert('خطا در افزودن بازی‌ها');
+    });
+}
+
+// ── همگام‌سازی ساعت بازی از استیم ──
+function steamSyncHours() {
+    var btn = document.getElementById('steamSyncBtn');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    var origText = btn.innerHTML;
+    btn.innerHTML = '<svg class="bi bi-arrow-repeat" aria-hidden="true"><use href="#bi-arrow-repeat"></use></svg> در حال دریافت...';
+    fetch("{% url 'community:steam_sync_hours' %}", {
+        method: 'POST', headers: {'X-CSRFToken': CSRF}
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        btn.classList.remove('spinning');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+        if (d.ok) {
+            // آپدیت اعداد نمایش‌داده‌شده
+            var hEl = document.getElementById('steam-hours');
+            var cEl = document.getElementById('steam-count');
+            if (hEl) hEl.textContent = d.total_hours;
+            if (cEl) cEl.textContent = d.game_count;
+            // آپدیت لیست بازی‌های برتر
+            if (d.top_games && d.top_games.length) {
+                var box = document.getElementById('steam-top-games');
+                if (box) {
+                    var maxH = d.top_games[0].hours;
+                    box.innerHTML = d.top_games.map(function(g){
+                        var pct = Math.round(g.hours / maxH * 100);
+                        var icon = g.icon
+                            ? '<img class="steam-game-icon" src="' + g.icon + '" alt="">'
+                            : '<span class="steam-game-icon-ph"><svg class="bi bi-controller" style="width:15px;height:15px;fill:#66c0f4;" aria-hidden="true"><use href="#bi-controller"></use></svg></span>';
+                        return '<div class="steam-game-row">' + icon +
+                            '<div class="steam-game-name">' + g.name + '</div>' +
+                            '<div class="steam-game-bar"><div class="steam-game-fill" style="width:' + pct + '%"></div></div>' +
+                            '<div class="steam-game-hours">' + g.hours + 'h</div></div>';
+                    }).join('');
+                }
+            }
+            // آپدیت متن آخرین به‌روزرسانی
+            var foot = document.getElementById('steam-foot');
+            if (foot) foot.textContent = 'آخرین به‌روزرسانی: چند ثانیه پیش';
+            else {
+                // اگه foot وجود نداشت (اولین sync)، بسازش
+                var row = document.querySelector('.steam-sync-row');
+                if (row) {
+                    var s = document.createElement('span');
+                    s.className = 'steam-foot'; s.id = 'steam-foot';
+                    s.textContent = 'آخرین به‌روزرسانی: چند ثانیه پیش';
+                    row.appendChild(s);
+                }
+            }
+            // آپدیت عدد ساعت بازی بالای پروفایل
+            var phStat = document.getElementById('profileHoursStat');
+            if (phStat) phStat.textContent = d.total_hours;
+            if (window.showToast) showToast('ساعت بازی از استیم به‌روز شد!', 'success');
+        } else {
+            if (window.showToast) showToast(d.error || 'خطا در همگام‌سازی', 'error');
+        }
+    })
+    .catch(function(){
+        btn.classList.remove('spinning');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+        if (window.showToast) showToast('خطا در ارتباط با سرور', 'error');
     });
 }
 

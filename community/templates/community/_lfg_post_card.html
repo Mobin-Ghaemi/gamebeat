@@ -1,0 +1,149 @@
+{% load jalali_filters %}
+{% load community_tags %}
+<div class="lfg-post-card {% if post.author.gamer_profile.is_premium %}lfg-boosted{% endif %}"
+     id="lfg-card-{{ post.pk }}"
+     {% if post.author.gamer_profile.is_premium %}style="border-color:rgba(251,191,36,.35);background:linear-gradient(135deg,rgba(251,191,36,.04),var(--bg-card));"{% endif %}>
+    <div class="lfg-post-header">
+        <div>
+            <div class="lfg-game-name">
+                <svg class="bi bi-controller" aria-hidden="true" style="color: var(--blue-accent);"><use href="#bi-controller"></use></svg>
+                {{ post.game_name }}
+                {% if post.author.gamer_profile.is_premium %}
+                <span style="font-size:.65rem;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:1px 7px;margin-right:4px;vertical-align:middle;">🚀 پریمیوم</span>
+                {% endif %}
+            </div>
+            <div class="lfg-badges">
+                <span class="lfg-badge lfg-badge-platform">{{ post.get_platform_display }}</span>
+                <span class="lfg-badge lfg-badge-mode">{{ post.get_game_mode_display }}</span>
+                <span class="lfg-badge lfg-badge-skill">{{ post.get_skill_level_display }}</span>
+                {% if post.voice_required %}<span class="lfg-badge lfg-badge-mode">ویس لازم</span>{% endif %}
+                {% if post.region %}<span class="lfg-badge lfg-badge-platform">{{ post.region }}</span>{% endif %}
+                {% if not post.is_approved %}<span class="lfg-badge lfg-badge-skill">در انتظار تأیید</span>{% endif %}
+            </div>
+        </div>
+        <a href="{% url 'community:profile' username=post.author.username %}" class="lfg-author">
+            {% avatar_with_frame post.author.gamer_profile 'sm' %}
+            <div class="lfg-author-info">
+                <span class="lfg-author-name" style="display:inline-flex;align-items:center;gap:4px;">{{ post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</span>
+                <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>
+                <span class="lfg-trust">{{ post.author.gamer_profile.trust_label }} · {{ post.author.gamer_profile.trust_score }}</span>
+            </div>
+        </a>
+    </div>
+
+    {% if post.description %}
+        <div class="lfg-desc">{{ post.description }}</div>
+    {% endif %}
+
+    {% if post.contact %}
+        <div class="lfg-contact" style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#7dd3fc;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:6px 10px;margin-bottom:10px;">
+            <svg class="bi bi-headset" aria-hidden="true" style="flex-shrink:0;"><use href="#bi-headset"></use></svg>
+            <span style="word-break:break-all;">{{ post.contact }}</span>
+        </div>
+    {% endif %}
+
+    <div class="lfg-players-bar">
+        <div class="players-dots">
+            {% for i in "123456" %}
+                {% if forloop.counter <= post.current_players %}
+                    <div class="player-dot filled"></div>
+                {% elif forloop.counter <= post.max_players %}
+                    <div class="player-dot open"></div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <span class="spots-text">
+            <span class="spots-count">{{ post.current_players }}</span> از {{ post.max_players }} نفر
+            &nbsp;·&nbsp;
+            <span class="spots-count">{{ post.spots_left }}</span> جای خالی
+        </span>
+    </div>
+
+    <div class="lfg-time"><svg class="bi bi-clock" aria-hidden="true"><use href="#bi-clock"></use></svg> {{ post.created_at|timesince }} پیش</div>
+    {% if post.scheduled_for %}
+    <div class="lfg-time"><svg class="bi bi-calendar-event" aria-hidden="true"><use href="#bi-calendar-event"></use></svg> زمان بازی: {{ post.scheduled_for|jalali:"Y/m/d H:i" }}</div>
+    {% endif %}
+
+    <!-- ── join row ── -->
+    {% if request.user.is_authenticated %}
+    {% if request.user != post.author %}
+        <div class="lfg-join-row" id="join-row-{{ post.pk }}">
+            {% if post.spots_left <= 0 %}
+                <button class="lfg-join-btn lfg-btn-full" disabled><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg> ظرفیت تکمیل شد</button>
+            {% elif post.pk in joined_ids %}
+                <button class="lfg-join-btn lfg-btn-joined" disabled><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg> پیوستید</button>
+            {% elif post.pk in pending_ids %}
+                <button class="lfg-join-btn lfg-btn-pending" disabled>⏳ در انتظار تأیید</button>
+            {% elif post.pk in rejected_ids %}
+                <button class="lfg-join-btn lfg-btn-rejected" disabled>❌ رد شد</button>
+            {% elif post.join_type == 'open' %}
+                <button class="lfg-join-btn lfg-btn-open"
+                        data-post="{{ post.pk }}" data-jtype="open"
+                        onclick="joinLFG(this)"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/></svg> بپیوند</button>
+            {% else %}
+                <button class="lfg-join-btn lfg-btn-request"
+                        data-post="{{ post.pk }}" data-jtype="request"
+                        onclick="joinLFG(this)">📩 درخواست پیوستن</button>
+            {% endif %}
+            {% if post.party_group_obj %}
+            <a href="{% url 'community:group_chat' post.party_group_obj.pk %}" class="lfg-join-btn" style="background:rgba(139,92,246,.15);color:#a855f7;border:1px solid rgba(139,92,246,.3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+              <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> چت پارتی
+            </a>
+            {% endif %}
+        </div>
+    {% else %}
+        <!-- owner: pending requests panel -->
+        {% if post.pending_reqs %}
+        <div class="lfg-requests-panel" id="req-panel-{{ post.pk }}">
+            <div class="lfg-req-title">
+                <svg class="bi bi-person-plus-fill" aria-hidden="true"><use href="#bi-person-plus-fill"></use></svg> درخواست‌های پیوستن
+                <span class="lfg-req-badge">{{ post.pending_reqs|length }}</span>
+            </div>
+            {% for req in post.pending_reqs %}
+            <div class="lfg-req-item" id="req-item-{{ req.pk }}">
+                {% if req.user.gamer_profile.avatar %}
+                    <img src="{{ req.user.gamer_profile.avatar.url }}" class="avatar avatar-xs">
+                {% else %}
+                    <div class="avatar-placeholder avatar-xs" style="font-size:.65rem">{{ req.user.username|first|upper }}</div>
+                {% endif %}
+                <span class="lfg-req-name">{{ req.user.username }}</span>
+                <div style="display:flex;gap:6px;margin-right:auto">
+                    <button class="lfg-req-btn lfg-req-accept"
+                            onclick="respondJoin({{ req.pk }},'accept',{{ post.pk }},this)">✓ قبول</button>
+                    <button class="lfg-req-btn lfg-req-reject"
+                            onclick="respondJoin({{ req.pk }},'reject',{{ post.pk }},this)">✕ رد</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if post.party_group_obj %}
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="{% url 'community:group_chat' post.party_group_obj.pk %}" class="lfg-join-btn" style="background:rgba(139,92,246,.15);color:#a855f7;border:1px solid rgba(139,92,246,.3);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+              <svg class="bi bi-chat-dots-fill" aria-hidden="true"><use href="#bi-chat-dots-fill"></use></svg> چت پارتی
+            </a>
+            <button onclick="deletePartyGroup({{ post.pk }}, this)"
+                    class="lfg-join-btn"
+                    style="background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.25);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:600;">
+              <svg class="bi bi-trash3-fill" aria-hidden="true"><use href="#bi-trash3-fill"></use></svg> حذف گروه
+            </button>
+        </div>
+        {% endif %}
+    {% endif %}
+    {% endif %}
+    {% if post.feedback_targets %}
+    <div class="lfg-feedback-box" id="feedback-box-{{ post.pk }}">
+        <div class="lfg-feedback-title">بعد از بازی، تجربه‌ات با هم‌تیمی‌ها را ثبت کن</div>
+        {% for target in post.feedback_targets %}
+        <div class="lfg-feedback-row" id="feedback-row-{{ post.pk }}-{{ target.pk }}">
+            <span class="lfg-feedback-name">{{ target.username }}</span>
+            <div class="lfg-feedback-actions">
+                <button class="lfg-feedback-btn good" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'good', this)">خوب بود</button>
+                <button class="lfg-feedback-btn warn" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'no_show', this)">نیامد</button>
+                <button class="lfg-feedback-btn bad" onclick="sendLfgFeedback({{ post.pk }}, {{ target.pk }}, 'toxic', this)">رفتار بد</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

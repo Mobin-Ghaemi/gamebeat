@@ -5,8 +5,10 @@ app_name = 'community'
 
 urlpatterns = [
     path('', views.feed, name='feed'),
+    path('feed/poll/', views.feed_poll, name='feed_poll'),
     path('search/', views.search_gamers, name='search'),
     path('lfg/', views.lfg_board, name='lfg'),
+    path('lfg/poll/', views.lfg_poll, name='lfg_poll'),
     path('lfg/create/', views.create_lfg, name='create_lfg'),
     path('lfg/<int:post_id>/join/', views.join_lfg, name='lfg_join'),
     path('lfg/<int:post_id>/feedback/', views.submit_lfg_feedback, name='lfg_feedback'),
@@ -35,6 +37,7 @@ urlpatterns = [
     path('gaming/steam/login/', views.steam_login, name='steam_login'),
     path('gaming/steam/callback/', views.steam_callback, name='steam_callback'),
     path('gaming/steam/import-backlog/', views.steam_import_backlog, name='steam_import_backlog'),
+    path('gaming/steam/sync-hours/', views.steam_sync_hours, name='steam_sync_hours'),
     path('post/new/', views.create_post_page, name='create_post_page'),
     path('api/hashtags/', views.hashtag_suggest, name='hashtag_suggest'),
     path('api/link-preview/', views.link_preview, name='link_preview'),
@@ -123,7 +126,8 @@ urlpatterns = [
     path('gamer-finder/', views.gamer_finder_page, name='gamer_finder'),
     path('api/gamer-finder/search/', views.gamer_finder_search, name='gamer_finder_search'),
     path('api/location/save/', views.save_location, name='save_location'),
-    # گردونه شانس
+    # جوایز و گردونه شانس
+    path('rewards/', views.rewards_hub, name='rewards_hub'),
     path('spin/', views.spin_list, name='spin_list'),
     path('spin/<int:wheel_id>/', views.spin_detail, name='spin_detail'),
     path('spin/<int:wheel_id>/go/', views.spin_go, name='spin_go'),

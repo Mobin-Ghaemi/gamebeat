@@ -272,7 +272,7 @@
             <!-- Button -->
             <div class="spin-btn-wrap">
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'account:login' %}?next={% url 'community:spin_list' %}" class="spin-btn spin-btn-wait" style="cursor:pointer;opacity:.85;">
+                    <a href="{% url 'account:login' %}?next={% url 'community:rewards_hub' %}" class="spin-btn spin-btn-wait" style="cursor:pointer;opacity:.85;">
                         <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg> ورود برای بازی
                     </a>
                 {% elif wheel.cost_zarban %}
