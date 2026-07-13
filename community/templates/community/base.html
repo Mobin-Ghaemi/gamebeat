@@ -1309,7 +1309,7 @@
                                 {% endif %}
                             </div>
                             <div class="pf-head-info">
-                                <div class="pf-head-name">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="pf-head-name">{{ user|user_display_name }}</div>
                                 <div class="pf-head-un">@{{ user.username }}</div>
                             </div>
                         </div>
@@ -1333,6 +1333,9 @@
                             <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/></svg></span> پنل ادمین
                         </a>
                         {% endif %}
+                        <a class="pf-item" href="{% url 'community:contact' %}">
+                            <span class="pf-item-icon"><svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.602.211 1.287.033 1.771-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zm-2.61-.443a1.68 1.68 0 0 1 2.514.156L5.51 3.379a1.68 1.68 0 0 1 .318 1.415l-.548 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.68 1.68 0 0 1 1.416.318l2.307 1.794a1.68 1.68 0 0 1 .157 2.514l-1.034 1.034c-.803.803-2.04 1.089-3.089.685a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.419-7.009c-.404-1.05-.118-2.286.685-3.089z"/></svg></span> تماس با ما
+                        </a>
 
                         <div class="pf-sep"></div>
 
@@ -1343,6 +1346,7 @@
                     </div>
                 </div>
             {% else %}
+                <a href="{% url 'community:contact' %}" class="btn-ghost">تماس با ما</a>
                 <a href="{% url 'account:login' %}" class="btn-ghost">ورود</a>
                 <a href="{% url 'account:register' %}" class="btn-red">ثبت نام</a>
             {% endif %}
@@ -1432,6 +1436,10 @@
             ورود
         </a>
         {% endif %}
+        <a href="{% url 'community:contact' %}" class="nd-link {% if request.resolver_match.url_name == 'contact' %}nd-active{% endif %}">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.602.211 1.287.033 1.771-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zm-2.61-.443a1.68 1.68 0 0 1 2.514.156L5.51 3.379a1.68 1.68 0 0 1 .318 1.415l-.548 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.68 1.68 0 0 1 1.416.318l2.307 1.794a1.68 1.68 0 0 1 .157 2.514l-1.034 1.034c-.803.803-2.04 1.089-3.089.685a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.419-7.009c-.404-1.05-.118-2.286.685-3.089z"/></svg>
+            تماس با ما
+        </a>
     </nav>
 </div>
 
@@ -1812,20 +1820,24 @@ function gbDismiss(t){
         _notifPanelOpen = !_notifPanelOpen;
         panel.style.display = _notifPanelOpen ? 'block' : 'none';
         if (_notifPanelOpen) {
-            if (!_notifLoaded) loadNotifPanel();
-            fetch('{% url "community:notifications_mark_all_read" %}', {
-                method: 'POST', credentials: 'same-origin',
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            }).then(() => {
-                document.getElementById('notifBadge').style.display = 'none';
-                document.getElementById('navBellBtn').classList.remove('has-notif');
-                localStorage.removeItem('gb_notif_c');
+            // اول لیست رو بگیر (بر اساس is_read=False)، بعد علامت‌گذاریِ خونده‌شده رو بزن —
+            // تا race condition باعث خالی دیدن پنل نشه
+            const afterLoad = _notifLoaded ? Promise.resolve() : loadNotifPanel();
+            afterLoad.then(() => {
+                fetch('{% url "community:notifications_mark_all_read" %}', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                }).then(() => {
+                    document.getElementById('notifBadge').style.display = 'none';
+                    document.getElementById('navBellBtn').classList.remove('has-notif');
+                    localStorage.removeItem('gb_notif_c');
+                });
             });
         }
     }
 
     function loadNotifPanel() {
-        fetch('{% url "community:notifications_recent" %}', {credentials:'same-origin'})
+        return fetch('{% url "community:notifications_recent" %}', {credentials:'same-origin'})
             .then(r => r.json()).then(d => {
                 _notifLoaded = true;
                 const list = document.getElementById('notifPanelList');
@@ -1834,7 +1846,7 @@ function gbDismiss(t){
                     return;
                 }
                 list.innerHTML = d.notifications.map(n => `
-                    <div class="notif-panel-item">
+                    <a href="${n.url || '#'}" class="notif-panel-item" style="text-decoration:none;color:inherit;">
                         <div class="npi-avatar">
                             ${n.avatar ? `<img src="${n.avatar}" alt="">` : (n.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/></svg>')}
                         </div>
@@ -1842,7 +1854,7 @@ function gbDismiss(t){
                             <div class="npi-text">${n.text}</div>
                             <div class="npi-time">${n.time}</div>
                         </div>
-                    </div>`).join('');
+                    </a>`).join('');
             }).catch(() => {
                 document.getElementById('notifPanelList').innerHTML =
                     '<div class="notif-panel-empty">خطا در بارگذاری</div>';

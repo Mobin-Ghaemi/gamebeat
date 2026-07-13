@@ -1082,11 +1082,14 @@ function initGameSearch() {
     });
 }
 
+let _favGamesReqSeq = 0;
 function fetchGames(q) {
     const dd = document.getElementById('favSearchDropdown');
+    const mySeq = ++_favGamesReqSeq;
     fetch(`{% url 'community:game_search_api' %}?q=${encodeURIComponent(q)}`)
         .then(r => r.json())
         .then(data => {
+            if (mySeq !== _favGamesReqSeq) return;
             if (!data.ok || !data.games.length) {
                 dd.innerHTML = '<div class="fav-drop-empty">بازی‌ای پیدا نشد 😕</div>';
                 dd.classList.add('open');

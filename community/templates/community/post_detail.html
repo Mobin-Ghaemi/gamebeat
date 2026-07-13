@@ -225,7 +225,7 @@
         {% avatar_with_frame post.author.gamer_profile 'md' %}
         <div>
           <div class="pa-name">
-            {{ post.author.get_full_name|default:post.author.username }}
+            {{ post.author|user_display_name }}
             {% verified_badge post.author.gamer_profile 'sm' %}
           </div>
           <div class="pa-meta">
@@ -387,7 +387,7 @@
           <a href="{% url 'community:profile' username=comment.author.username %}" class="c-author" style="text-decoration:none;">@{{ comment.author.username }}</a>
           <span class="c-time">{{ comment.created_at|timesince }} پیش</span>
         </div>
-        <div class="c-text">{{ comment.content }}</div>
+        <div class="c-text">{{ comment.content|hashtagify }}</div>
       </div>
     </div>
     {% empty %}
@@ -425,6 +425,24 @@ function shareCopyPostLink() {
   });
 }
 
+function hashtagifyJs(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  const escaped = div.innerHTML;
+  return escaped.replace(/(https?:\/\/[^\s<]+)|#([a-zA-Z؀-ۿ\w]{2,50})/g, function(match, url, tag) {
+    if (url) {
+      let trail = '';
+      while (url && ".,!?;:)،".includes(url[url.length - 1])) {
+        trail = url[url.length - 1] + trail;
+        url = url.slice(0, -1);
+      }
+      const display = url.length <= 60 ? url : url.slice(0, 57) + '…';
+      return `<a href="${url}" class="post-link" target="_blank" rel="noopener noreferrer nofollow">${display}</a>${trail}`;
+    }
+    return `<a href="/hashtag/${tag.toLowerCase()}/" class="hashtag-link">#${tag}</a>`;
+  });
+}
+
 function submitCommentDetail(e, postId, form) {
   e.preventDefault();
   const input = form.querySelector('input[name="content"]');
@@ -458,7 +476,7 @@ function submitCommentDetail(e, postId, form) {
             <a href="/profile/${name}/" class="c-author" style="text-decoration:none;">@${name}</a>
             <span class="c-time">الان</span>
           </div>
-          <div class="c-text">${c.content}</div>
+          <div class="c-text">${hashtagifyJs(c.content)}</div>
         </div>
       </div>`;
       list.insertAdjacentHTML('beforeend', html);

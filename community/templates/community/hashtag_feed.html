@@ -155,7 +155,7 @@
                         </a>
                         <div>
                             <a href="{% url 'community:profile' username=post.author.username %}" style="text-decoration:none;">
-                                <div class="post-author-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+                                <div class="post-author-name">{{ post.author|user_display_name }}</div>
                             </a>
                             <div class="post-author-sub">@{{ post.author.username }}</div>
                         </div>

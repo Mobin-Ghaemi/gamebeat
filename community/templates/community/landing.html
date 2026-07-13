@@ -1,5 +1,6 @@
 {% load jalali_filters %}
 {% load static %}
+{% load community_tags %}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -370,6 +371,9 @@
         GameBeat
     </a>
     <div class="land-nav-actions">
+        <a href="{% url 'community:contact' %}" class="btn-login">
+            تماس با ما
+        </a>
         <a href="{% url 'account:login' %}" class="btn-login">
             <svg class="bi bi-box-arrow-in-right me-1" aria-hidden="true"><use href="#bi-box-arrow-in-right"></use></svg>ورود
         </a>
@@ -536,7 +540,7 @@
                     {% endif %}
                 </div>
                 <div>
-                    <div class="pp-name">{{ post.author.username }}</div>
+                    <div class="pp-name">{{ post.author|user_display_name }}</div>
                     <div class="pp-time">{{ post.created_at|timesince }} پیش</div>
                 </div>
             </div>
@@ -566,6 +570,7 @@
     <div class="land-footer-brand">
         <svg class="bi bi-controller" aria-hidden="true"><use href="#bi-controller"></use></svg> GameBeat
     </div>
+    <a href="{% url 'community:contact' %}" style="color:var(--dim);font-size:.82rem;text-decoration:none;">تماس با ما</a>
     <div class="land-footer-copy">© 2025 GameBeat — پلتفرم گیمرهای ایران</div>
 </footer>
 

@@ -1,0 +1,157 @@
+{% extends 'community/base.html' %}
+{% block title %}کانال‌ها | GameBeat{% endblock %}
+
+{% block extra_css %}
+<style>
+.chl-wrap { max-width: 1000px; margin: 0 auto; padding: 30px 16px 80px; }
+
+.chl-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 20px;
+}
+.chl-title { font-size: 1.6rem; font-weight: 900; color: #fff; display:flex; align-items:center; gap:8px; }
+.chl-create-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 22px; border-radius: 12px;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff; font-weight: 800; font-size: .88rem;
+    text-decoration: none; transition: all .2s;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.35);
+}
+.chl-create-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(139,92,246,0.5); color:#fff; }
+
+.chl-search-box {
+    display:flex; align-items:center; gap:10px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 11px 16px; margin-bottom: 26px;
+}
+.chl-search-box svg { width:1.1em;height:1.1em;fill:#666;flex-shrink:0; }
+.chl-search-input {
+    background:none; border:none; outline:none; color:#e2e2e2;
+    font-size:.88rem; width:100%; font-family:'Vazirmatn',sans-serif;
+}
+
+.chl-section-title {
+    font-size: .75rem; font-weight: 800; color: #a78bfa;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.chl-section-title::after { content:''; flex:1; height:1px; background:linear-gradient(to left,transparent,rgba(139,92,246,0.2)); }
+
+.chl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px; margin-bottom: 32px;
+}
+
+.chl-card {
+    background: #130826;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px; overflow: hidden;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+    text-decoration: none; display: flex; flex-direction: column;
+    padding: 16px;
+}
+.chl-card:hover {
+    border-color: rgba(139,92,246,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    transform: translateY(-2px);
+}
+.chl-card-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.chl-card-avatar {
+    width: 50px; height: 50px; border-radius: 14px;
+    background: linear-gradient(135deg, #2d1154, #1a0a2e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; overflow: hidden; flex-shrink: 0;
+}
+.chl-card-avatar img { width:100%; height:100%; object-fit:cover; }
+.chl-card-name { font-size: 1rem; font-weight: 800; color: #fff; }
+.chl-card-handle { font-size: .78rem; color: rgba(255,255,255,0.35); }
+.chl-card-desc { font-size: .78rem; color: rgba(255,255,255,0.4); line-height: 1.5; flex: 1; margin-bottom: 10px; }
+.chl-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+.chl-card-meta { font-size: .72rem; color: rgba(255,255,255,0.3); display: flex; align-items: center; gap: 6px; }
+
+.chl-empty { text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3); }
+.chl-empty svg { width:3rem;height:3rem;fill:rgba(139,92,246,0.25);display:block;margin:0 auto 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chl-wrap">
+    <div class="chl-header">
+        <div class="chl-title">
+            <svg style="width:1em;height:1em;fill:currentColor;vertical-align:-.125em" viewBox="0 0 16 16"><path d="M8.051 3.26a.5.5 0 0 1 .354-.613l1.932-.518a.5.5 0 0 1 .62.36 48 48 0 0 0 9.466 0 .5.5 0 0 1 .62-.36l1.932.518a.5.5 0 0 1 .306.729"/></svg>
+            کانال‌ها
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'community:create_channel' %}" class="chl-create-btn">
+            <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت کانال جدید
+        </a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="chl-search-box">
+        <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
+        <input type="text" name="q" value="{{ q }}" class="chl-search-input" placeholder="جستجوی نام یا آیدی کانال...">
+    </form>
+
+    {% if my_channels %}
+    <div class="chl-section-title"><svg class="bi bi-bookmark-star-fill" aria-hidden="true"><use href="#bi-bookmark-star-fill"></use></svg> کانال‌های من</div>
+    <div class="chl-grid">
+        {% for ch in my_channels %}
+        <a href="{% url 'community:channel_view' ch.username %}" class="chl-card">
+            <div class="chl-card-top">
+                <div class="chl-card-avatar">
+                    {% if ch.icon %}<img src="{{ ch.icon.url }}" alt="">{% else %}📢{% endif %}
+                </div>
+                <div>
+                    <div class="chl-card-name">{{ ch.name }}</div>
+                    <div class="chl-card-handle">@{{ ch.username }}</div>
+                </div>
+            </div>
+            {% if ch.description %}<div class="chl-card-desc">{{ ch.description|truncatechars:80 }}</div>{% endif %}
+            <div class="chl-card-footer">
+                <div class="chl-card-meta"><svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> {{ ch.subscriber_count }} مشترک</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="chl-section-title"><svg class="bi bi-globe2" aria-hidden="true"><use href="#bi-globe2"></use></svg> {% if q %}نتایج جستجو{% else %}همه کانال‌ها{% endif %}</div>
+
+    {% if channels %}
+    <div class="chl-grid">
+        {% for ch in channels %}
+        <a href="{% url 'community:channel_view' ch.username %}" class="chl-card">
+            <div class="chl-card-top">
+                <div class="chl-card-avatar">
+                    {% if ch.icon %}<img src="{{ ch.icon.url }}" alt="">{% else %}📢{% endif %}
+                </div>
+                <div>
+                    <div class="chl-card-name">{{ ch.name }}</div>
+                    <div class="chl-card-handle">@{{ ch.username }}</div>
+                </div>
+            </div>
+            {% if ch.description %}<div class="chl-card-desc">{{ ch.description|truncatechars:80 }}</div>{% endif %}
+            <div class="chl-card-footer">
+                <div class="chl-card-meta"><svg class="bi bi-people-fill" aria-hidden="true"><use href="#bi-people-fill"></use></svg> {{ ch.sc }} مشترک</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="chl-empty">
+        <svg viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/></svg>
+        <div style="font-size:.95rem;font-weight:700;color:rgba(255,255,255,0.35);">
+            {% if q %}کانالی پیدا نشد{% else %}هنوز کانالی ساخته نشده{% endif %}
+        </div>
+        {% if not q %}<div style="font-size:.82rem;margin-top:6px;">اولین نفر باش و کانالت رو بساز!</div>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

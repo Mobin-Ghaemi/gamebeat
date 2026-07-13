@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}{{ display_name|default:game.full_display_name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -567,12 +568,12 @@
                             {% if rv.user.gamer_profile.avatar %}
                             <img src="{{ rv.user.gamer_profile.avatar.url }}" alt="">
                             {% else %}
-                            {{ rv.user.get_full_name|default:rv.user.username|slice:":1"|upper }}
+                            {{ rv.user|user_display_name|slice:":1"|upper }}
                             {% endif %}
                         </div>
                         <div class="gd-rv-body">
                             <div class="gd-rv-head">
-                                <span class="gd-rv-name">{{ rv.user.get_full_name|default:rv.user.username }}</span>
+                                <span class="gd-rv-name">{{ rv.user|user_display_name }}</span>
                                 {% if rv.rating %}
                                 <span class="gd-rv-stars" title="{{ rv.rating }}/5">
                                     {% for i in "12345" %}{% with n=forloop.counter %}

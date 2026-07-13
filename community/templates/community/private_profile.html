@@ -190,9 +190,7 @@ body { background: #080810; }
         {% endif %}
 
         <!-- Name & Username -->
-        {% if profile_user.get_full_name %}
-            <div class="private-display-name">{{ profile_user.get_full_name }}</div>
-        {% endif %}
+        <div class="private-display-name">{{ profile.display_name }}</div>
         <div class="private-username">@{{ profile_user.username }}</div>
 
         <!-- Stats -->

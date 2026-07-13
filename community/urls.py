@@ -107,11 +107,13 @@ urlpatterns = [
     path('groups/<int:group_id>/pin/', views.group_pin, name='group_pin'),
     path('groups/<int:group_id>/mute/', views.group_mute, name='group_mute'),
     path('groups/<int:group_id>/leave/', views.group_leave, name='group_leave'),
+    path('groups/<int:group_id>/delete/', views.group_delete, name='group_delete'),
     path('groups/<int:group_id>/add-member/', views.group_add_member, name='group_add_member'),
     path('groups/<int:group_id>/add-admin/<str:username>/', views.group_add_admin, name='group_add_admin'),
     path('groups/<int:group_id>/remove-admin/<str:username>/', views.group_remove_admin, name='group_remove_admin'),
     path('groups/<int:group_id>/remove-member/<str:username>/', views.group_remove_member, name='group_remove_member'),
     # Channels
+    path('channels/', views.channels_list, name='channels_list'),
     path('channels/create/', views.create_channel, name='create_channel'),
     path('channels/post/<int:post_id>/react/', views.channel_react, name='channel_react'),
     path('channels/<str:channel_username>/', views.channel_view, name='channel_view'),
@@ -137,4 +139,6 @@ urlpatterns = [
     path('stats/', views.profile_stats, name='profile_stats'),
     # پریمیوم (پابلیک)
     path('premium/', views.premium_info, name='premium_info'),
+    # تماس با ما (پابلیک)
+    path('contact/', views.contact, name='contact'),
 ]

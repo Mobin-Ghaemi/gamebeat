@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}پیام‌ها | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -130,6 +131,10 @@
   background: rgba(139,92,246,.3);
   border-color: rgba(139,92,246,.6);
   color: #c084fc;
+}
+/* روی موبایل/تاچ که hover معنی نداره، دکمه‌ی ⋯ همیشه نمایش داده بشه */
+@media (hover: none) {
+  .ms-conv-more { display: flex; }
 }
 
 /* Avatars */
@@ -400,7 +405,7 @@
               {% if item.other.username == 'admin' %}
                 <span style="color:#c084fc">مدیریت گیم بیت</span>
               {% else %}
-                {{ item.other.get_full_name|default:item.other.username }}
+                {{ item.other|user_display_name }}
               {% endif %}
             </div>
             <div class="ms-conv-preview">
@@ -481,9 +486,14 @@
 
     <!-- ── Channel Panel ── -->
     <div class="ms-tab-panel" id="panel-channel">
-      <a href="{% url 'community:create_channel' %}" class="ms-new-btn">
-        <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت کانال جدید
-      </a>
+      <div style="display:flex;gap:8px;">
+        <a href="{% url 'community:create_channel' %}" class="ms-new-btn" style="flex:1;">
+          <svg class="bi bi-plus-circle-fill" aria-hidden="true"><use href="#bi-plus-circle-fill"></use></svg> ساخت کانال جدید
+        </a>
+        <a href="{% url 'community:channels_list' %}" class="ms-new-btn" style="flex:1;" title="جستجوی کانال">
+          <svg class="bi bi-search" aria-hidden="true"><use href="#bi-search"></use></svg> جستجوی کانال
+        </a>
+      </div>
       {% if channel_data %}
         {% for item in channel_data %}
         <a href="{% url 'community:channel_view' channel_username=item.channel.username %}"

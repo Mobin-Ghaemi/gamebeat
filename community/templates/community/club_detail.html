@@ -206,7 +206,7 @@
                     </div>
                     <div>
                         <div class="cd-post-username" style="display:inline-flex;align-items:center;gap:4px;">
-                            <a href="{% url 'community:profile' post.author.username %}" style="color:#fff;text-decoration:none;">{{ post.author.username }}</a>
+                            <a href="{% url 'community:profile' post.author.username %}" style="color:#fff;text-decoration:none;">{{ post.author|user_display_name }}</a>
                             {% verified_badge post.author.gamer_profile 'sm' %}
                         </div>
                         <div class="cd-post-time">{{ post.created_at|timesince }} پیش</div>

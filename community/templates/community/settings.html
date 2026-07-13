@@ -529,7 +529,7 @@ function toggleAccVis(pk, checkbox) {
     const chip = document.getElementById('c-acc-' + pk);
     const btn  = document.getElementById('acc-btn-' + pk);
     if (chip) chip.classList.remove('on');
-    fetch(`/community/gaming/${pk}/toggle-visibility/`, {
+    fetch(`/gaming/${pk}/toggle-visibility/`, {
         method: 'POST',
         headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
         credentials: 'same-origin'

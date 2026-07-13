@@ -66,9 +66,12 @@
     </button>
 </div>
 
+<!-- فرم bulk-delete جدا از جدول — چک‌باکس‌ها با attribute «form» بهش وصل می‌شن
+     تا هیچ فرمی داخل فرم دیگه nest نشه (nested form باعث می‌شد دکمه‌ی «تأیید»
+     به‌جای post_approve، فرم بیرونیِ bulk-delete رو submit کنه و پست حذف بشه) -->
+<form id="bulkForm" method="post" action="{% url 'dashboard:post_bulk_delete' %}">{% csrf_token %}</form>
+
 <!-- Posts Table -->
-<form id="bulkForm" method="post" action="{% url 'dashboard:post_bulk_delete' %}">
-{% csrf_token %}
 <div class="dash-card">
     <div class="dash-card-title" style="margin-bottom:0;padding-bottom:14px;border-bottom:1px solid var(--border)">
         <svg class="bi bi-file-post-fill" aria-hidden="true" style="color:var(--purple-light)"><use href="#bi-file-post-fill"></use></svg>
@@ -97,7 +100,7 @@
                 {% for post in page_obj %}
                 <tr>
                     <td>
-                        <input type="checkbox" name="ids" value="{{ post.pk }}" class="row-check"
+                        <input type="checkbox" name="ids" value="{{ post.pk }}" class="row-check" form="bulkForm"
                                style="accent-color:var(--purple);width:16px;height:16px;cursor:pointer">
                     </td>
                     <td style="color:var(--text-faint);font-size:0.78rem">{{ page_obj.start_index|add:forloop.counter0 }}</td>
@@ -202,7 +205,6 @@
         {% endif %}
     </div>
 </div>
-</form>
 
 {% endblock %}
 

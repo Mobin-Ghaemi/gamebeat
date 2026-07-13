@@ -807,7 +807,7 @@ function sFetchSteam() {
     btn.disabled = true;
     btn.innerHTML = '<span class="mini-spin" style="color:#fff"></span> دریافت...';
     err.style.display = 'none';
-    fetch('/steam/fetch/?url=' + encodeURIComponent(url))
+    fetch('/steam/fetch/?q=' + encodeURIComponent(url))
         .then(function(r){ return r.json(); })
         .then(function(d){
             btn.disabled = false; btn.innerHTML = '<svg class="bi bi-download" aria-hidden="true"><use href="#bi-download"></use></svg> دریافت اطلاعات';
@@ -882,7 +882,7 @@ function sPickResult(item) {
 
     // 10s timeout
     var timeout = new Promise(function(_, reject) { setTimeout(function(){ reject(new Error('timeout')); }, 10000); });
-    var fetcher = fetch('/steam/fetch/?url=https://store.steampowered.com/app/' + item.appid + '/').then(function(r){ return r.json(); });
+    var fetcher = fetch('/steam/fetch/?q=' + encodeURIComponent('https://store.steampowered.com/app/' + item.appid + '/')).then(function(r){ return r.json(); });
 
     Promise.race([fetcher, timeout])
         .then(function(d) {

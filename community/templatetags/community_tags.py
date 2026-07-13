@@ -8,6 +8,19 @@ import re
 register = template.Library()
 
 
+def _resolve_user_display_name(user):
+    if not user:
+        return ''
+    profile = getattr(user, 'gamer_profile', None)
+    if profile:
+        try:
+            return profile.display_name
+        except Exception:
+            pass
+    full_name = user.get_full_name().strip()
+    return full_name or user.username
+
+
 @register.filter
 def smart_time(value):
     """مثل timesince ولی وقتی کمتر از ۱ دقیقه‌ست می‌نویسد «همین الان»."""
@@ -75,16 +88,27 @@ def zarban_balance(user):
         return 0
 
 
+_HASHTAGIFY_TOKEN_RE = re.compile(r'(https?://[^\s<]+)|#([a-zA-Z؀-ۿ\w]{2,50})')
+
+
 @register.filter
 def hashtagify(text):
     escaped = escape(text)
 
     def replace(m):
-        tag = m.group(1)
+        if m.group(1):
+            url = m.group(1)
+            trail = ''
+            while url and url[-1] in '.,!?;:)،':
+                trail = url[-1] + trail
+                url = url[:-1]
+            display = url if len(url) <= 60 else url[:57] + '…'
+            return f'<a href="{url}" class="post-link" target="_blank" rel="noopener noreferrer nofollow">{display}</a>{trail}'
+        tag = m.group(2)
         url = reverse('community:hashtag_feed', args=[tag.lower()])
         return f'<a href="{url}" class="hashtag-link">#{tag}</a>'
 
-    return mark_safe(re.sub(r'#([a-zA-Z؀-ۿ\w]{2,50})', replace, escaped))
+    return mark_safe(_HASHTAGIFY_TOKEN_RE.sub(replace, escaped))
 
 
 @register.simple_tag
@@ -128,3 +152,8 @@ def verified_badge(profile, size='md'):
         f'<svg viewBox="0 0 24 24" fill="white" width="{icon_px}" height="{icon_px}">'
         f'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>'
     )
+
+
+@register.filter
+def user_display_name(user):
+    return _resolve_user_display_name(user)

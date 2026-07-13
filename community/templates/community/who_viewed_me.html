@@ -204,7 +204,7 @@
 
     <div class="v-info">
       <div class="v-name">
-        {{ v.viewer.get_full_name|default:v.viewer.username }}
+        {{ v.viewer|user_display_name }}
         {% verified_badge v.viewer.gamer_profile 'sm' %}
         {% if v.viewer.gamer_profile.is_premium %}
           <span class="v-badge premium"><svg class="bi bi-gem" style="width:.7em;height:.7em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-gem"></use></svg> پریمیوم</span>

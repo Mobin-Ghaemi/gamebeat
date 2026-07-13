@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}{{ other_user.username }} | پیام | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -159,6 +160,9 @@
 }
 .ms-conv-item:hover .ms-conv-more { display:flex; }
 .ms-conv-more:hover { background:rgba(139,92,246,.3);border-color:rgba(139,92,246,.6);color:#c084fc; }
+@media (hover: none) {
+  .ms-conv-more { display:flex; }
+}
 
 /* Pin animation */
 @keyframes pinGlow {
@@ -670,7 +674,7 @@
             {% if item.other.username == 'admin' %}
             <div class="ms-conv-name" style="color:#c084fc">مدیریت گیم بیت</div>
             {% else %}
-            <div class="ms-conv-name">{{ item.other.get_full_name|default:item.other.username }}</div>
+            <div class="ms-conv-name">{{ item.other|user_display_name }}</div>
             {% endif %}
             <div class="ms-conv-preview">
               {% if item.last %}
@@ -730,7 +734,7 @@
         <div class="ms-chat-name" style="color:#c084fc">مدیریت گیم بیت</div>
         <div class="ms-chat-sub">پیام‌های رسمی <span class="ms-online-dot"></span></div>
         {% else %}
-        <div class="ms-chat-name">{{ other_user.get_full_name|default:other_user.username }}</div>
+        <div class="ms-chat-name">{{ other_user|user_display_name }}</div>
         <div class="ms-chat-sub">@{{ other_user.username }}</div>
         {% endif %}
       </div>
@@ -806,7 +810,7 @@
                       {% else %}
                         <div class="spc-avatar-ph">{{ msg.shared_post.author.username|first|upper }}</div>
                       {% endif %}
-                      <span class="spc-author">{{ msg.shared_post.author.get_full_name|default:msg.shared_post.author.username }}</span>
+                      <span class="spc-author">{{ msg.shared_post.author|user_display_name }}</span>
                       {% if msg.shared_post.game_tag %}<span class="spc-game-tag">🎮 {{ msg.shared_post.game_tag }}</span>{% endif %}
                     </div>
                     {% if msg.shared_post.content %}<div class="spc-text">{{ msg.shared_post.content|truncatechars:140 }}</div>{% endif %}

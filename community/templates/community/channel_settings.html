@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}تنظیمات @{{ channel.username }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -304,6 +305,15 @@ select.cs-input { appearance: none; -webkit-appearance: none; cursor: pointer; }
                 <svg class="bi bi-arrow-right" aria-hidden="true"><use href="#bi-arrow-right"></use></svg> بازگشت
             </a>
         </div>
+
+        <!-- Danger Zone -->
+        <div class="cs-section" style="border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.04);border-radius:14px;padding:16px;margin-top:20px;">
+            <div class="cs-section-title" style="color:#f87171;"><svg class="bi bi-exclamation-triangle-fill" aria-hidden="true"><use href="#bi-exclamation-triangle-fill"></use></svg> منطقه‌ی خطر</div>
+            <p style="font-size:.8rem;color:rgba(255,255,255,0.4);margin:0 0 12px;">حذف کانال غیرقابل بازگشت است و تمام پست‌ها و اعضا از بین می‌روند.</p>
+            <button onclick="deleteChannel()" style="padding:10px 20px;border-radius:12px;border:1px solid rgba(239,68,68,.4);color:#f87171;font-size:.85rem;font-weight:700;background:rgba(239,68,68,.1);cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <svg class="bi bi-trash3-fill" aria-hidden="true"><use href="#bi-trash3-fill"></use></svg> حذف کانال
+            </button>
+        </div>
     </div>
 
     <!-- ═══ TAB: Members ═══ -->
@@ -318,7 +328,7 @@ select.cs-input { appearance: none; -webkit-appearance: none; cursor: pointer; }
                     {% else %}{{ m.user.username|first|upper }}{% endif %}
                 </div>
                 <div class="cs-member-name">
-                    <a href="{% url 'community:profile' m.user.username %}" style="color:inherit;text-decoration:none;">{{ m.user.username }}</a>
+                    <a href="{% url 'community:profile' m.user.username %}" style="color:inherit;text-decoration:none;">{{ m.user|user_display_name }}</a>
                 </div>
                 <span class="cs-role-badge {{ m.role }}">{{ m.get_role_display }}</span>
                 {% if m.role != 'owner' %}
@@ -421,6 +431,24 @@ function saveSettings() {
             }, 900);
         } else {
             showToast('خطا در ذخیره', true);
+        }
+    }).catch(() => showToast('خطا در ارتباط', true));
+}
+
+function deleteChannel() {
+    if (!confirm('این کانال برای همیشه حذف بشه؟ این کار قابل بازگشت نیست.')) return;
+    const fd = new FormData();
+    fd.append('action', 'delete_channel');
+    fetch(`/channels/${CH_USER}/settings/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+        body: fd
+    }).then(r=>r.json()).then(d => {
+        if (d.ok) {
+            showToast('کانال حذف شد');
+            setTimeout(() => { window.location.href = d.redirect || '/'; }, 700);
+        } else {
+            showToast(d.error || 'خطا در حذف کانال', true);
         }
     }).catch(() => showToast('خطا در ارتباط', true));
 }

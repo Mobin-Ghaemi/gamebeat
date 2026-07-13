@@ -1,4 +1,5 @@
 {% extends 'community/base.html' %}
+{% load community_tags %}
 {% block title %}ساخت گروه | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -160,7 +161,7 @@
                 {{ friend.username|first|upper }}
               {% endif %}
             </div>
-            <div class="cg-member-name">{{ friend.get_full_name|default:friend.username }}</div>
+            <div class="cg-member-name">{{ friend|user_display_name }}</div>
             <div class="cg-member-check"><svg class="bi bi-check" aria-hidden="true"><use href="#bi-check"></use></svg></div>
           </div>
           {% endfor %}

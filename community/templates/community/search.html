@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}جستجوی گیمر | GameBeat Community{% endblock %}
 {% block nav_search %}active{% endblock %}
 
@@ -387,7 +388,7 @@
                 </a>
                 <div class="fr-info">
                     <a href="{% url 'community:profile' username=fr.from_user.username %}" class="fr-name">
-                        {{ fr.from_user.get_full_name|default:fr.from_user.username }}
+                        {{ fr.from_user|user_display_name }}
                     </a>
                     <div class="fr-username">@{{ fr.from_user.username }}</div>
                     <div class="fr-time">{{ fr.created_at|timesince }} پیش</div>
@@ -425,7 +426,7 @@
                 </a>
 
                 <a href="{% url 'community:profile' username=gamer.user.username %}" class="gamer-card-name">
-                    {% if gamer.user.get_full_name %}{{ gamer.user.get_full_name }}{% else %}{{ gamer.user.username }}{% endif %}
+                    {{ gamer.display_name }}
                 </a>
                 <div class="gamer-card-username">@{{ gamer.user.username }}</div>
 

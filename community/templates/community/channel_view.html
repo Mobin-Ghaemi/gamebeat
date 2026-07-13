@@ -1,5 +1,6 @@
 {% extends 'community/base.html' %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}{{ channel.name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -252,7 +253,7 @@
           <div class="ms-av-ph">{{ item.other.username|first|upper }}</div>
         {% endif %}
         <div class="ms-conv-body">
-          <div class="ms-conv-name">{{ item.other.get_full_name|default:item.other.username }}</div>
+          <div class="ms-conv-name">{{ item.other|user_display_name }}</div>
           <div class="ms-conv-preview">{% if item.last %}{{ item.last.content|truncatechars:28 }}{% endif %}</div>
           <div class="ms-conv-icons">
             {% if item.is_pinned %}<span title="پین‌شده">📌</span>{% endif %}
@@ -393,7 +394,7 @@
               {% else %}{{ post.author.username|first|upper }}{% endif %}
             </div>
             <div>
-              <div class="ch-post-author-name">{{ post.author.get_full_name|default:post.author.username }}</div>
+              <div class="ch-post-author-name">{{ post.author|user_display_name }}</div>
               <span class="ch-post-badge">📢 {{ channel.name }}</span>
             </div>
             <div class="ch-post-time">{{ post.created_at|time:"H:i" }} — {{ post.created_at|jalali:"j M" }}</div>

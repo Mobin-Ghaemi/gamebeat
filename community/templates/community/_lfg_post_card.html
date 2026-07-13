@@ -24,7 +24,7 @@
         <a href="{% url 'community:profile' username=post.author.username %}" class="lfg-author">
             {% avatar_with_frame post.author.gamer_profile 'sm' %}
             <div class="lfg-author-info">
-                <span class="lfg-author-name" style="display:inline-flex;align-items:center;gap:4px;">{{ post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</span>
+                <span class="lfg-author-name" style="display:inline-flex;align-items:center;gap:4px;">{{ post.author|user_display_name }} {% verified_badge post.author.gamer_profile 'sm' %}</span>
                 <span class="lfg-author-meta">{% if post.author.gamer_profile.rank %}{{ post.author.gamer_profile.get_rank_display }}{% else %}گیمر{% endif %}</span>
                 <span class="lfg-trust">{{ post.author.gamer_profile.trust_label }} · {{ post.author.gamer_profile.trust_score }}</span>
             </div>

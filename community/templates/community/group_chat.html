@@ -1,4 +1,5 @@
 {% extends 'community/base.html' %}
+{% load community_tags %}
 {% block title %}{{ group.name }} | GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -382,7 +383,7 @@
         <div class="ms-conv-body">
           <div class="ms-conv-name">
             {% if item.other.username == 'admin' %}<span style="color:#c084fc">مدیریت گیم بیت</span>
-            {% else %}{{ item.other.get_full_name|default:item.other.username }}{% endif %}
+            {% else %}{{ item.other|user_display_name }}{% endif %}
           </div>
           <div class="ms-conv-preview">{% if item.last %}{{ item.last.content|truncatechars:28 }}{% endif %}</div>
           <div class="ms-conv-icons">
@@ -494,6 +495,8 @@
           <button class="gc-header-btn" title="اعضا" id="toggleMembersBtn" onclick="toggleMembersPanel()"><svg class="bi bi-people" aria-hidden="true"><use href="#bi-people"></use></svg></button>
           {% if membership.role != 'owner' %}
           <button class="gc-header-btn" title="خروج از گروه" onclick="leaveGroup()" style="color:#f87171"><svg class="bi bi-box-arrow-right" aria-hidden="true"><use href="#bi-box-arrow-right"></use></svg></button>
+          {% else %}
+          <button class="gc-header-btn" title="حذف گروه" onclick="deleteGroup()" style="color:#f87171"><svg class="bi bi-trash3" aria-hidden="true"><use href="#bi-trash3"></use></svg></button>
           {% endif %}
         </div>
       </div>
@@ -510,7 +513,7 @@
           {% endif %}
           <div class="gc-bubble {% if msg.sender == request.user %}mine{% else %}other{% endif %}">
             {% if msg.sender != request.user %}
-            <div class="gc-sender-name">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+            <div class="gc-sender-name">{{ msg.sender|user_display_name }}</div>
             {% endif %}
             {% if msg.content %}{{ msg.content }}{% endif %}
             {% if msg.image %}<img src="{{ msg.image.url }}" class="gc-msg-img" onclick="window.open(this.src)">{% endif %}
@@ -551,7 +554,7 @@
             {% else %}{{ m.user.username|first|upper }}{% endif %}
           </div>
           <div class="gc-member-info">
-            <div class="gc-member-name">{{ m.user.get_full_name|default:m.user.username }}</div>
+            <div class="gc-member-name">{{ m.user|user_display_name }}</div>
             <div class="gc-member-role {{ m.role }}">
               {% if m.role == 'owner' %}👑 مالک{% elif m.role == 'admin' %}⚡ ادمین{% else %}عضو{% endif %}
             </div>
@@ -745,6 +748,16 @@ function leaveGroup() {
   if (!confirm('از گروه خارج بشی؟')) return;
   fetch(`/groups/${GROUP_ID}/leave/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF } })
   .then(r => r.json()).then(d => { if (d.ok) window.location.href = '/inbox/'; });
+}
+
+/* ── Delete (owner only) ── */
+function deleteGroup() {
+  if (!confirm('این گروه برای همیشه حذف بشه؟ این کار قابل بازگشت نیست.')) return;
+  fetch(`/groups/${GROUP_ID}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF } })
+  .then(r => r.json()).then(d => {
+    if (d.ok) { window.location.href = '/inbox/'; }
+    else { showToast(d.error || 'خطا در حذف گروه'); }
+  });
 }
 
 /* ── Admin actions ── */

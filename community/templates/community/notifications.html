@@ -182,7 +182,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> پست شما را لایک کرد</span>
                     {% if n.post %}
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
@@ -215,7 +215,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> روی پست شما کامنت گذاشت</span>
                     {% if n.custom_text %}
                     <span class="notif-preview"><svg class="bi bi-chat-dots" style="width:0.9em;height:0.9em;vertical-align:-.125em;fill:currentColor;" aria-hidden="true"><use href="#bi-chat-dots"></use></svg> {{ n.custom_text|truncatechars:55 }}</span>
@@ -250,7 +250,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> شما را دنبال کرد</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -273,7 +273,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> درخواست دنبال کردن فرستاد</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -296,7 +296,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#4ade80;font-weight:700">پذیرفت</span></span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -319,7 +319,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> درخواست دنبال کردن شما را <span style="color:#f87171;font-weight:700">رد کرد</span></span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -342,7 +342,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> شما را منشن کرد</span>
                     {% if n.post %}
                     <span class="notif-preview">{{ n.post.content|truncatechars:55 }}</span>
@@ -390,7 +390,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -410,7 +410,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -430,7 +430,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>
@@ -450,7 +450,7 @@
             </div>
             <div class="notif-body">
                 <div class="notif-text">
-                    <b>{{ n.sender.get_full_name|default:n.sender.username }}</b>
+                    <b>{{ n.sender|user_display_name }}</b>
                     <span class="notif-action"> — {{ n.custom_text }}</span>
                 </div>
                 <div class="notif-time">{{ n.created_at|smart_time }}</div>

@@ -2624,14 +2624,17 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAchModa
 
 // ── جستجو و افزودن از کاتالوگ سایت ──
 let _blCatTimer = null;
+let _blCatReqSeq = 0;
 function blCatSearchDebounce() { clearTimeout(_blCatTimer); _blCatTimer = setTimeout(blCatSearch, 300); }
 function blCatSearch() {
     const q = document.getElementById('blCatSearch').value.trim();
     const box = document.getElementById('blCatResults');
     if (q.length < 2) { box.innerHTML = ''; return; }
+    const mySeq = ++_blCatReqSeq;
     fetch('/api/game-search/?q=' + encodeURIComponent(q))
       .then(r => r.json())
       .then(d => {
+        if (mySeq !== _blCatReqSeq) return;
         const games = d.games || [];
         if (!games.length) { box.innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:10px;">بازی‌ای با این نام در سایت نیست</div>'; return; }
         box.innerHTML = games.map(g => {

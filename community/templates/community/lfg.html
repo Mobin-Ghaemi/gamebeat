@@ -943,6 +943,7 @@
   if (!input || !dd) return;
 
   var timer = null;
+  var reqSeq = 0;
 
   function navTo(gameName){
     var params = new URLSearchParams(window.location.search);
@@ -973,15 +974,23 @@
   }
 
   function fetchGames(q){
+    var mySeq = ++reqSeq;
     fetch('{% url "community:game_search_api" %}?q=' + encodeURIComponent(q))
       .then(function(r){ return r.json(); })
-      .then(function(data){ renderResults((data.ok && data.games) || []); })
-      .catch(function(){ dd.innerHTML = '<div class="lfg-drop-empty">خطا در جستجو</div>'; dd.classList.add('open'); });
+      .then(function(data){
+        if (mySeq !== reqSeq) return; // یه جستجوی جدیدتر شروع شده — این نتیجه‌ی قدیمی رو نادیده بگیر
+        renderResults((data.ok && data.games) || []);
+      })
+      .catch(function(){
+        if (mySeq !== reqSeq) return;
+        dd.innerHTML = '<div class="lfg-drop-empty">خطا در جستجو</div>'; dd.classList.add('open');
+      });
   }
 
   input.addEventListener('input', function(){
     var q = this.value.trim();
     clearTimeout(timer);
+    reqSeq++; // درخواست‌های در حالِ پرواز قبلی رو باطل کن
     if (!q){ closeDropdown(); return; }
     dd.innerHTML = '<div class="lfg-drop-empty">🔍 در حال جستجو...</div>';
     dd.classList.add('open');

@@ -5,7 +5,7 @@
         <a href="{% url 'community:profile' username=post.author.username %}" class="post-author">
             {% avatar_with_frame post.author.gamer_profile 'md' %}
             <div>
-                <div class="pa-name" style="display:flex;align-items:center;gap:5px;">{{ post.author.get_full_name|default:post.author.username }} {% verified_badge post.author.gamer_profile 'sm' %}</div>
+                <div class="pa-name" style="display:flex;align-items:center;gap:5px;">{{ post.author|user_display_name }} {% verified_badge post.author.gamer_profile 'sm' %}</div>
                 <div class="pa-meta">
                     @{{ post.author.username }}
                     {% if post.author.gamer_profile.platform %}
@@ -144,7 +144,7 @@
             {% endif %}
             <div class="c-bubble">
                 <div class="c-author">@{{ comment.author.username }}</div>
-                <div class="c-text">{{ comment.content }}</div>
+                <div class="c-text">{{ comment.content|hashtagify }}</div>
             </div>
         </div>
         {% endfor %}

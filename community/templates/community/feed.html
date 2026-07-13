@@ -458,6 +458,12 @@
 }
 .hashtag-link:hover { background:rgba(139,92,246,0.18); }
 
+.post-link {
+    color:#7dd3fc; text-decoration:underline; text-underline-offset:2px;
+    word-break:break-all;
+}
+.post-link:hover { color:#38bdf8; }
+
 /* ══════════════ SIDEBAR CARD ══════════════ */
 .sb-panel {
     background: var(--bg-card);
@@ -498,7 +504,7 @@
                     {% endif %}
                 </a>
                 <div style="margin-top:10px;">
-                    <a href="{% url 'community:profile' username=user.username %}" style="color:var(--text-white); font-weight:800; font-size:0.98rem; text-decoration:none;">{{ user.get_full_name|default:user.username }}</a>
+                    <a href="{% url 'community:profile' username=user.username %}" style="color:var(--text-white); font-weight:800; font-size:0.98rem; text-decoration:none;">{{ user|user_display_name }}</a>
                     <div style="color:var(--text-dim); font-size:0.78rem; margin-top:2px;">@{{ user.username }}</div>
                 </div>
                 <div class="mini-stats">
@@ -619,7 +625,7 @@
                     <div class="avatar-placeholder avatar-sm" style="font-size:0.75rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ gamer.username|first|upper }}</div>
                 {% endif %}
                 <div class="sug-info">
-                    <a href="{% url 'community:profile' username=gamer.username %}" class="sug-name">{{ gamer.get_full_name|default:gamer.username }}</a>
+                    <a href="{% url 'community:profile' username=gamer.username %}" class="sug-name">{{ gamer|user_display_name }}</a>
                     <div class="sug-meta">
                         {{ gamer.gamer_profile.get_platform_display }}
                         {% if gamer.followers_count %} · {{ gamer.followers_count }} دنبال‌کننده{% endif %}
@@ -833,7 +839,7 @@ function _buildCommentEl(c) {
             <div class="c-author">@${c.username}
                 <span style="font-size:.65rem;color:#3a3a3a;font-weight:400;margin-right:6px;">${c.created_at}</span>
             </div>
-            <div class="c-text">${_escHtml(c.content)}</div>
+            <div class="c-text">${_hashtagifyJs(c.content)}</div>
         </div>`;
     return div;
 }
@@ -998,6 +1004,22 @@ function _escHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function _hashtagifyJs(text) {
+    const escaped = _escHtml(text || '');
+    return escaped.replace(/(https?:\/\/[^\s<]+)|#([a-zA-Z؀-ۿ\w]{2,50})/g, function(match, url, tag) {
+        if (url) {
+            let trail = '';
+            while (url && ".,!?;:)،".includes(url[url.length - 1])) {
+                trail = url[url.length - 1] + trail;
+                url = url.slice(0, -1);
+            }
+            const display = url.length <= 60 ? url : url.slice(0, 57) + '…';
+            return `<a href="${url}" class="post-link" target="_blank" rel="noopener noreferrer nofollow">${display}</a>${trail}`;
+        }
+        return `<a href="/hashtag/${tag.toLowerCase()}/" class="hashtag-link">#${tag}</a>`;
+    });
+}
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLmModal(); });
 
 /* ──── Share Bottom-Sheet ──── */
@@ -1053,7 +1075,7 @@ function sharePost(postId) {
 
     // بار اول contacts رو بارگذاری کن
     if (!_shareContacts) {
-        fetch('/api/dm-list/', {credentials: 'same-origin'})
+        fetch('/api/dm-list/?exclude_admin=1', {credentials: 'same-origin'})
             .then(r => r.json())
             .then(data => {
                 _shareContacts = data.contacts || [];

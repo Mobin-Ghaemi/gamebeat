@@ -1,5 +1,6 @@
 {% extends "community/base.html" %}
 {% load jalali_filters %}
+{% load community_tags %}
 {% block title %}درخواست‌های دنبال کردن — GameBeat{% endblock %}
 
 {% block extra_css %}
@@ -159,7 +160,7 @@ body { background: #080810; }
 
                 <div class="fr-info">
                     <a href="{% url 'community:profile' username=fr.from_user.username %}" class="fr-name">
-                        {{ fr.from_user.get_full_name|default:fr.from_user.username }}
+                        {{ fr.from_user|user_display_name }}
                     </a>
                     <span class="fr-uname">@{{ fr.from_user.username }}</span>
                     <span class="fr-time">{{ fr.created_at|timesince }} پیش</span>

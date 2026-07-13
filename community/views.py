@@ -56,6 +56,19 @@ def get_or_create_gamer_profile(user):
     return profile
 
 
+def _display_name_for_user(user):
+    if not user:
+        return ''
+    profile = getattr(user, 'gamer_profile', None)
+    if profile:
+        try:
+            return profile.display_name
+        except Exception:
+            pass
+    full_name = user.get_full_name().strip()
+    return full_name or user.username
+
+
 def robots_txt(request):
     lines = [
         'User-agent: *',
@@ -556,8 +569,9 @@ def gamer_profile(request, username):
     # آپدیت آخرین بازدید کاربر لاگین‌شده
     from django.utils import timezone
     if request.user.is_authenticated:
-        request.user.gamer_profile.last_seen = timezone.now()
-        request.user.gamer_profile.save(update_fields=['last_seen'])
+        viewer_profile = get_or_create_gamer_profile(request.user)
+        viewer_profile.last_seen = timezone.now()
+        viewer_profile.save(update_fields=['last_seen'])
 
     # ثبت بازدید پروفایل — برای همه (پریمیوم نوتیف آنی، غیرپریمیوم digest شبانه)
     if request.user.is_authenticated and not is_own_profile:
@@ -775,7 +789,7 @@ def profile_follow_list(request, username):
 
 @login_required
 def user_settings(request):
-    profile = request.user.gamer_profile
+    profile = get_or_create_gamer_profile(request.user)
     if request.method == 'POST':
         profile.is_private     = 'is_private'     in request.POST
         profile.show_online    = 'show_online'     in request.POST
@@ -829,6 +843,18 @@ def update_banner(request):
             return JsonResponse({'ok': False, 'error': 'فرمت فایل پشتیبانی نمیشه'}, status=400)
         if f.size > 5 * 1024 * 1024:
             return JsonResponse({'ok': False, 'error': 'حداکثر حجم ۵ مگابایت'}, status=400)
+
+        # اعتبارسنجی واقعیِ محتوای فایل (نه فقط content-type ارسالی از کلاینت) —
+        # فایل خراب/جعلی رد بشه به‌جای اینکه ذخیره بشه و بعداً به‌صورت تصویر شکسته نشون داده بشه
+        from PIL import Image, UnidentifiedImageError
+        try:
+            f.seek(0)
+            with Image.open(f) as img:
+                img.verify()
+        except (UnidentifiedImageError, OSError):
+            return JsonResponse({'ok': False, 'error': 'فایل تصویر معتبر نیست یا خراب است'}, status=400)
+        finally:
+            f.seek(0)
 
         import os
         ext = os.path.splitext(f.name)[1].lower() or '.jpg'
@@ -1050,7 +1076,7 @@ def post_interactions(request, post_id):
             av  = pr.avatar.url if pr.avatar else None
         except Exception:
             av = None
-        return {'username': u.username, 'full_name': u.get_full_name() or u.username,
+        return {'username': u.username, 'full_name': _display_name_for_user(u),
                 'avatar': av, 'badge': badge}
 
     def _search_filter(qs, field_prefix):
@@ -1148,7 +1174,7 @@ def post_likes_list(request, post_id):
             avatar_url = None
         data.append({
             'username':  u.username,
-            'full_name': u.get_full_name() or u.username,
+            'full_name': _display_name_for_user(u),
             'avatar':    avatar_url,
         })
     return JsonResponse({
@@ -1179,7 +1205,7 @@ def post_comments_list(request, post_id):
         data.append({
             'id': c.id,
             'username': u.username,
-            'full_name': u.get_full_name() or u.username,
+            'full_name': _display_name_for_user(u),
             'avatar': avatar_url,
             'content': c.content,
             'created_at': _to_jalali(c.created_at, '%Y/%m/%d %H:%M'),
@@ -1222,7 +1248,7 @@ def add_comment(request, post_id):
                 'comment': {
                     'id': comment.id,
                     'username': request.user.username,
-                    'full_name': request.user.get_full_name() or request.user.username,
+                    'full_name': _display_name_for_user(request.user),
                     'avatar': profile.avatar.url if profile.avatar else None,
                     'content': comment.content,
                     'created_at': comment.created_at.strftime('%H:%M'),
@@ -1263,7 +1289,7 @@ def toggle_follow(request, username):
                 recipient=target_user,
                 sender=request.user,
                 notif_type='follow_request',
-                custom_text=f'{request.user.get_full_name() or request.user.username} درخواست دنبال کردن فرستاد'
+                custom_text=f'{_display_name_for_user(request.user)} درخواست دنبال کردن فرستاد'
             )
             return JsonResponse({'status': 'requested', 'followers_count': target_profile.followers_count})
 
@@ -1307,7 +1333,7 @@ def respond_follow_request(request, request_id):
     fr = get_object_or_404(FollowRequest, id=request_id, to_user=request.user)
     action = request.POST.get('action')  # 'accept' or 'reject'
 
-    sender_name = request.user.get_full_name() or request.user.username
+    sender_name = _display_name_for_user(request.user)
 
     if action == 'accept':
         fr.status = 'accepted'
@@ -2762,7 +2788,7 @@ def _shared_post_payload(post):
         'id': post.id,
         'url': reverse('community:post_detail', kwargs={'post_id': post.id}),
         'author_username': post.author.username,
-        'author_name': post.author.get_full_name() or post.author.username,
+        'author_name': _display_name_for_user(post.author),
         'author_avatar': gp.avatar.url if (gp and gp.avatar) else '',
         'content': Truncator(post.content or '').chars(140),
         'image_url': post.image.url if post.image else '',
@@ -3375,11 +3401,15 @@ def steam_fetch(request):
     if not appid:
         return JsonResponse({'error': 'invalid Steam URL or AppID'}, status=400)
 
+    import requests as _requests
+    from .gaming_apis import _steam_get
     try:
-        api_url = f'https://store.steampowered.com/api/appdetails?appids={appid}&cc=ir&l=english'
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=8) as r:
-            data = json.loads(r.read())
+        r = _steam_get(
+            'https://store.steampowered.com/api/appdetails',
+            params={'appids': appid, 'cc': 'ir', 'l': 'english'},
+            headers={'User-Agent': 'Mozilla/5.0'}, timeout=8,
+        )
+        data = r.json()
 
         app_data = data.get(str(appid), {})
         if not app_data.get('success'):
@@ -3394,7 +3424,7 @@ def steam_fetch(request):
             'release_date': game.get('release_date', {}).get('date', ''),
             'genres': [g['description'] for g in game.get('genres', [])[:3]],
         })
-    except urllib.error.URLError:
+    except _requests.exceptions.RequestException:
         return JsonResponse({'error': 'اتصال به Steam برقرار نشد'}, status=503)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -3407,12 +3437,14 @@ def steam_search(request):
     if len(q) < 2:
         return JsonResponse({'results': []})
 
+    from .gaming_apis import _steam_get
     try:
-        encoded = urllib.parse.quote(q)
-        api_url = f'https://store.steampowered.com/api/storesearch/?term={encoded}&l=english&cc=us'
-        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=8) as r:
-            data = json.loads(r.read())
+        r = _steam_get(
+            'https://store.steampowered.com/api/storesearch/',
+            params={'term': q, 'l': 'english', 'cc': 'us'},
+            headers={'User-Agent': 'Mozilla/5.0'}, timeout=8,
+        )
+        data = r.json()
 
         results = []
         for item in data.get('items', [])[:8]:
@@ -3657,7 +3689,7 @@ def add_game_review(request, game_id):
             'id': review.id,
             'body': review.body,
             'rating': review.rating,
-            'user': request.user.get_full_name() or request.user.username,
+            'user': _display_name_for_user(request.user),
             'username': request.user.username,
             'avatar': avatar_url,
             'created_at': _to_jalali(review.created_at, '%Y/%m/%d'),
@@ -3711,7 +3743,7 @@ def set_pinned_game(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'method'}, status=405)
     game_name = request.POST.get('game_name', '').strip()
-    profile = request.user.gamer_profile
+    profile = get_or_create_gamer_profile(request.user)
     profile.pinned_game_name = game_name
     profile.save()
     return JsonResponse({'ok': True})
@@ -4075,7 +4107,7 @@ def group_send_message(request, group_id):
             'id': msg.id,
             'content': msg.content,
             'sender': request.user.username,
-            'sender_name': request.user.get_full_name() or request.user.username,
+            'sender_name': _display_name_for_user(request.user),
             'avatar': sender_profile.avatar.url if sender_profile and sender_profile.avatar else None,
             'time': msg.created_at.strftime('%H:%M'),
             'image': msg.image.url if msg.image else None,
@@ -4098,7 +4130,7 @@ def group_poll_messages(request, group_id):
             'id': m.id,
             'content': m.content,
             'sender': m.sender.username,
-            'sender_name': m.sender.get_full_name() or m.sender.username,
+            'sender_name': _display_name_for_user(m.sender),
             'avatar': sp.avatar.url if sp and sp.avatar else None,
             'time': m.created_at.strftime('%H:%M'),
             'is_me': m.sender == request.user,
@@ -4139,6 +4171,18 @@ def group_leave(request, group_id):
         return JsonResponse({'error': 'method'}, status=405)
     group = get_object_or_404(GroupChat, id=group_id)
     GroupMember.objects.filter(group=group, user=request.user).exclude(role='owner').delete()
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def group_delete(request, group_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'method'}, status=405)
+    group = get_object_or_404(GroupChat, id=group_id)
+    membership = get_object_or_404(GroupMember, group=group, user=request.user)
+    if membership.role != 'owner':
+        return JsonResponse({'error': 'فقط مالک گروه می‌تواند گروه را حذف کند'}, status=403)
+    group.delete()
     return JsonResponse({'ok': True})
 
 
@@ -4505,6 +4549,10 @@ def channel_settings(request, channel_username):
             ChannelPost.objects.filter(id=post_id, channel=channel).delete()
             return JsonResponse({'ok': True})
 
+        elif action == 'delete_channel':
+            channel.delete()
+            return JsonResponse({'ok': True, 'redirect': reverse('community:feed')})
+
     # GET
     members = channel.channel_members.select_related('user', 'user__gamer_profile').order_by('role', 'joined_at')
     join_requests = ChannelJoinRequest.objects.filter(channel=channel, status='pending').select_related('user', 'user__gamer_profile')
@@ -4515,6 +4563,34 @@ def channel_settings(request, channel_username):
         'members':       members,
         'join_requests': join_requests,
         'my_groups':     my_groups,
+    })
+
+
+def channels_list(request):
+    q = request.GET.get('q', '').strip()
+    channels = Channel.objects.filter(is_public=True).annotate(sc=Count('channel_members')).order_by('-sc')
+    if q:
+        channels = channels.filter(Q(name__icontains=q) | Q(username__icontains=q) | Q(description__icontains=q))
+
+    my_channels = []
+    if request.user.is_authenticated:
+        my_channels = Channel.objects.filter(channel_members__user=request.user)
+
+    return render(request, 'community/channels_list.html', {
+        'channels': channels,
+        'my_channels': my_channels,
+        'q': q,
+        'seo': build_seo(
+            request,
+            title='کانال‌ها | GameBeat',
+            description='کانال‌های عمومی گیمینگ را در GameBeat جستجو کن و مشترک شو.',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'کانال‌ها', 'url': request.build_absolute_uri(reverse('community:channels_list'))},
+                ]),
+            ],
+        ),
     })
 
 
@@ -4655,7 +4731,7 @@ def gamer_finder_page(request):
 
             base = {
                 'username':           p.user.username,
-                'display_name':       p.user.get_full_name() or p.user.username,
+                'display_name':       p.display_name,
                 'avatar':             p.avatar.url if p.avatar else None,
                 'location_label':     p.location_label,
                 'games':              games,
@@ -4757,7 +4833,7 @@ def gamer_finder_search(request):
         avatar_url = p.avatar.url if p.avatar else None
         gamers.append({
             'username': p.user.username,
-            'display_name': p.user.get_full_name() or p.user.username,
+            'display_name': p.display_name,
             'avatar': avatar_url,
             'location_label': p.location_label,
             'games': p.get_favorite_games_list()[:5],
@@ -5247,9 +5323,27 @@ def premium_info(request):
     })
 
 
+def contact(request):
+    """صفحه تماس با ما — پابلیک"""
+    return render(request, 'community/contact.html', {
+        'seo': build_seo(
+            request,
+            title='تماس با ما | GameBeat',
+            description='راه‌های ارتباطی با تیم گیم‌بیت — آدرس و شماره تماس.',
+            schema=[
+                make_breadcrumb_schema([
+                    {'name': 'GameBeat', 'url': request.build_absolute_uri(reverse('community:feed'))},
+                    {'name': 'تماس با ما', 'url': request.build_absolute_uri(reverse('community:contact'))},
+                ]),
+            ],
+        ),
+    })
+
+
 @login_required
 def dm_list_api(request):
-    """لیست DM‌ها برای شیر کردن پست — JSON"""
+    """لیست DM‌ها — هم برای ویجت پیام‌رسان، هم برای شیر کردن پست (با exclude_admin=1)"""
+    exclude_admin = request.GET.get('exclude_admin') == '1'
     blocked_ids = set(Block.objects.filter(blocker=request.user).values_list('blocked_id', flat=True))
     convs = request.user.conversations.prefetch_related(
         'participants', 'participants__gamer_profile'
@@ -5257,7 +5351,7 @@ def dm_list_api(request):
     result = []
     for c in convs:
         other = c.other_participant(request.user)
-        if not other or other.id in blocked_ids or other.username == 'admin':
+        if not other or other.id in blocked_ids or (exclude_admin and other.username == 'admin'):
             continue
         avatar_url = ''
         profile = getattr(other, 'gamer_profile', None)
@@ -5266,7 +5360,7 @@ def dm_list_api(request):
         unread_count = c.messages.filter(is_read=False).exclude(sender=request.user).count()
         result.append({
             'username': other.username,
-            'display': other.get_full_name() or other.username,
+            'display': _display_name_for_user(other),
             'avatar': avatar_url,
             'initial': other.username[0].upper() if other.username else '?',
             'unread': unread_count,
@@ -5280,7 +5374,7 @@ def dm_list_api(request):
         avatar_url = profile.avatar.url if profile and profile.avatar else ''
         result.append({
             'username': u.username,
-            'display': u.get_full_name() or u.username,
+            'display': _display_name_for_user(u),
             'avatar': avatar_url,
             'initial': u.username[0].upper(),
         })
@@ -5308,6 +5402,33 @@ def game_search_api(request):
 #  NOTIFICATIONS RECENT (dropdown API)
 # ═══════════════════════════════════════
 
+def _notification_target_url(n):
+    """آدرس مقصدی که با کلیک روی هر اعلان باید باز بشه"""
+    t = n.notif_type
+    try:
+        if t in ('like', 'comment', 'mention'):
+            if n.post_id:
+                return reverse('community:post_detail', kwargs={'post_id': n.post_id})
+            if n.sender_id:
+                return reverse('community:profile', kwargs={'username': n.sender.username})
+        elif t in ('follow', 'follow_request', 'follow_accepted', 'follow_rejected'):
+            if n.sender_id:
+                return reverse('community:profile', kwargs={'username': n.sender.username})
+        elif t == 'admin':
+            return reverse('community:conversation', kwargs={'username': 'admin'})
+        elif t in ('lfg_join', 'lfg_req', 'lfg_ok', 'lfg_no', 'lfg_party'):
+            return reverse('community:lfg')
+        elif t == 'group_add':
+            return reverse('community:inbox')
+        elif t in ('profile_view', 'view_digest'):
+            return reverse('community:who_viewed_me')
+        elif t == 'zarban':
+            return reverse('community:my_profile')
+    except Exception:
+        pass
+    return ''
+
+
 @login_required
 def notifications_recent(request):
     """آخرین ۶ اعلان نخوانده برای dropdown در navbar"""
@@ -5315,7 +5436,7 @@ def notifications_recent(request):
     notifs = (Notification.objects
               .filter(recipient=request.user, is_read=False)
               .exclude(notif_type='dm')
-              .select_related('sender', 'sender__gamer_profile')
+              .select_related('sender', 'sender__gamer_profile', 'post')
               .order_by('-created_at')[:6])
 
     data = []
@@ -5334,6 +5455,7 @@ def notifications_recent(request):
             'sender': n.sender.username if n.sender else '',
             'avatar': avatar,
             'time':   timesince(n.created_at) + ' پیش',
+            'url':    _notification_target_url(n),
         })
 
     count = Notification.objects.filter(
@@ -5368,7 +5490,7 @@ def global_search(request):
                 avatar, is_premium = None, False
             users_results.append({
                 'username': u.username,
-                'name': u.get_full_name() or u.username,
+                'name': _display_name_for_user(u),
                 'avatar': avatar,
                 'is_premium': is_premium,
             })
