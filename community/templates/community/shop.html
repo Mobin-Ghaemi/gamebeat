@@ -1,0 +1,181 @@
+{% extends 'community/base.html' %}
+{% load humanize %}
+{% block title %}فروشگاه آیتم استیم | گیم‌بیت{% endblock %}
+{% block nav_shop %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.shop-wrap{max-width:1240px;margin:0 auto;padding:30px 18px 80px}.shop-hero{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:24px}
+.shop-intro,.wallet-card{border:1px solid var(--border);border-radius:24px;background:linear-gradient(145deg,#242432,#191922);padding:26px;position:relative;overflow:hidden}
+.shop-intro:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(139,92,246,.16);filter:blur(35px);left:-80px;top:-120px}
+.shop-title{font-size:2rem;font-weight:950;margin-bottom:9px;position:relative;z-index:1}.shop-title span{color:#a78bfa}.shop-sub{color:var(--text-muted);line-height:1.9;max-width:660px;position:relative;z-index:1}
+.wallet-label{font-size:.78rem;color:var(--text-muted)}.wallet-balance{font-size:1.75rem;font-weight:950;margin:8px 0}.wallet-balance small{font-size:.85rem;color:#a78bfa}
+.wallet-lock{font-size:.78rem;color:#fbbf24;background:rgba(251,191,36,.08);border-radius:10px;padding:8px 10px}.shop-note{font-size:.72rem;color:var(--text-dim);margin-top:12px;line-height:1.8}
+.shop-section{margin-top:30px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:14px}.section-title{font-size:1.25rem;font-weight:900}.section-sub{font-size:.8rem;color:var(--text-muted);margin-top:5px}
+.item-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.item-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:.2s}.item-card:hover{transform:translateY(-3px);border-color:rgba(139,92,246,.5)}
+.item-image{height:155px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,rgba(139,92,246,.13),transparent 65%);padding:18px}.item-image img{max-width:100%;max-height:100%;object-fit:contain}
+.item-body{padding:14px}.item-name{font-weight:850;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-meta{font-size:.72rem;color:var(--text-muted);margin:7px 0 12px;min-height:18px}
+.price{font-size:1.05rem;font-weight:950;color:#fff}.price span{font-size:.7rem;color:#a78bfa}.seller{font-size:.72rem;color:var(--text-dim);margin-top:4px}.card-actions{display:flex;gap:7px;margin-top:12px}.card-actions form{flex:1}
+.shop-btn{width:100%;border:0;border-radius:10px;padding:9px 10px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}.shop-btn.danger{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.sell-form{display:flex;gap:7px;margin-top:10px}.sell-form input{width:100%;min-width:0;background:#181820;border:1px solid var(--border);color:#fff;border-radius:9px;padding:8px;font:inherit;font-size:.75rem}.sell-form .shop-btn{width:auto;white-space:nowrap}
+.empty-state{border:1px dashed var(--border);border-radius:18px;padding:32px;text-align:center;color:var(--text-muted);grid-column:1/-1}.steam-connect{display:inline-block;margin-top:14px;text-decoration:none}
+.rate-pill{display:inline-flex;padding:7px 11px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:999px;color:#c4b5fd;font-size:.75rem}
+@media(max-width:1000px){.item-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.shop-hero{grid-template-columns:1fr}.item-grid{grid-template-columns:repeat(2,1fr)}.shop-title{font-size:1.55rem}}
+@media(max-width:480px){.item-grid{grid-template-columns:1fr}.shop-wrap{padding-right:12px;padding-left:12px}}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="shop-wrap">
+    <section class="shop-hero">
+        <div class="shop-intro">
+            <h1 class="shop-title">بازار آیتم‌های <span>Steam</span></h1>
+            <p class="shop-sub">آیتم‌های قابل معامله‌ات را از Inventory استیم ببین، با قیمت تومانی آگهی کن و از کاربران گیم‌بیت خرید انجام بده.</p>
+        </div>
+        <aside class="wallet-card">
+            <div class="wallet-label">کیف پول تومانی من</div>
+            <div class="wallet-balance">{{ wallet.balance|intcomma }} <small>تومان</small></div>
+            {% if wallet.locked_balance %}<div class="wallet-lock">{{ wallet.locked_balance|intcomma }} تومان در انتظار تحویل معامله</div>{% endif %}
+            <div class="shop-note">شارژ آنلاین کیف پول پس از اتصال درگاه پرداخت فعال می‌شود. فعلاً مدیر می‌تواند موجودی را از پنل مدیریت ثبت کند.</div>
+        </aside>
+    </section>
+
+    <div class="section-head">
+        <div><div class="section-title">بازار گیم‌بیت</div><div class="section-sub">آگهی‌های فعال کاربران، با پرداخت امن از کیف پول</div></div>
+        <span class="rate-pill" id="liveDollarRate">در حال دریافت نرخ زنده دلار…</span>
+    </div>
+    <div class="item-grid">
+        {% for listing in market_listings %}
+        <article class="item-card">
+            <div class="item-image"><img src="{{ listing.icon_url }}" alt="{{ listing.item_name }}" loading="lazy"></div>
+            <div class="item-body">
+                <div class="item-name" title="{{ listing.item_name }}">{{ listing.item_name }}</div>
+                <div class="item-meta">{{ listing.rarity|default:"آیتم قابل معامله" }}{% if listing.exterior %} · {{ listing.exterior }}{% endif %}</div>
+                <div class="price">{{ listing.price_toman|intcomma }} <span>تومان</span></div>
+                <div class="seller">فروشنده: @{{ listing.seller.username }}</div>
+                <div class="card-actions"><form method="post" action="{% url 'community:shop_buy_listing' listing.id %}">{% csrf_token %}<button class="shop-btn">خرید امن</button></form></div>
+            </div>
+        </article>
+        {% empty %}<div class="empty-state">فعلاً آگهی فعالی از سایر کاربران وجود ندارد.</div>{% endfor %}
+    </div>
+
+    {% if my_listings %}
+    <section class="shop-section">
+        <div class="section-head"><div><div class="section-title">آگهی‌های من</div><div class="section-sub">آگهی‌های خودت در بازار عمومی نمایش داده نمی‌شوند؛ از اینجا آن‌ها را مدیریت کن.</div></div></div>
+        <div class="item-grid">
+            {% for listing in my_listings %}
+            <article class="item-card">
+                <div class="item-image"><img src="{{ listing.icon_url }}" alt="{{ listing.item_name }}"></div>
+                <div class="item-body"><div class="item-name">{{ listing.item_name }}</div><div class="price">{{ listing.price_toman|intcomma }} <span>تومان</span></div>
+                    <div class="card-actions"><form method="post" action="{% url 'community:shop_cancel_listing' listing.id %}">{% csrf_token %}<button class="shop-btn danger">لغو آگهی</button></form></div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="shop-section">
+        <div class="section-head"><div><div class="section-title">Inventory من</div><div class="section-sub">فقط آیتم‌های Marketable و Tradable نمایش داده می‌شوند</div></div></div>
+        <div class="item-grid" id="steamInventory">
+            {% if not steam_account %}
+            <div class="empty-state">برای دیدن موجودی، حساب Steam را متصل کن.<br><a class="btn-red steam-connect" href="{% url 'community:steam_login' %}">اتصال حساب Steam</a></div>
+            {% else %}
+            <div class="empty-state" id="inventoryLoading">در حال دریافت سریع Inventory…</div>
+            {% endif %}
+        </div>
+    </section>
+
+</main>
+{% endblock %}
+
+{% block extra_js %}
+{% if steam_account %}
+<script>
+(() => {
+    const grid = document.getElementById('steamInventory');
+    const csrf = '{{ csrf_token }}';
+    const escapeHtml = value => String(value || '').replace(/[&<>"']/g, char => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+    })[char]);
+    const money = value => Number(value || 0).toLocaleString('fa-IR');
+
+    function itemCard(item, listed) {
+        const meta = [item.rarity || 'Steam Item', item.exterior].filter(Boolean).join(' · ');
+        const action = listed
+            ? '<div class="seller">این آیتم هم‌اکنون آگهی فعال دارد.</div><button class="shop-btn" disabled>آگهی فعال</button>'
+            : `<form class="sell-form" method="post" action="{% url 'community:shop_create_listing' %}">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">
+                <input type="hidden" name="asset_id" value="${escapeHtml(item.asset_id)}">
+                <input type="hidden" name="app_id" value="${escapeHtml(item.app_id)}">
+                <input name="price_toman" inputmode="numeric" placeholder="قیمت تومان" required>
+                <button class="shop-btn">فروش</button>
+               </form>`;
+        return `<article class="item-card" data-market-name="${escapeHtml(item.market_hash_name)}">
+            <div class="item-image"><img src="${escapeHtml(item.icon_url)}" alt="${escapeHtml(item.name)}" loading="lazy"></div>
+            <div class="item-body">
+                <div class="item-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+                <div class="item-meta">${escapeHtml(meta)}</div>
+                <div class="seller item-live-price">در حال دریافت قیمت بازار…</div>
+                ${action}
+            </div>
+        </article>`;
+    }
+
+    async function loadPriceBatch(items) {
+        try {
+            const response = await fetch('{% url "community:shop_prices_api" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+                body: JSON.stringify({items: items.map(item => ({
+                    app_id: item.app_id, market_hash_name: item.market_hash_name
+                }))})
+            });
+            const data = await response.json();
+            if (!data.ok) return;
+            const rate = document.getElementById('liveDollarRate');
+            if (rate && data.rate) rate.textContent = `نرخ زنده دلار: ${money(data.rate)} تومان`;
+            data.items.forEach(price => {
+                const card = [...grid.querySelectorAll('[data-market-name]')]
+                    .find(node => node.dataset.marketName === price.market_hash_name);
+                if (!card) return;
+                const target = card.querySelector('.item-live-price');
+                target.className = price.usd ? 'price item-live-price' : 'seller item-live-price';
+                target.innerHTML = price.usd
+                    ? `$${escapeHtml(price.usd)} <span>≈ ${money(price.toman)} تومان</span>`
+                    : 'قیمت بازار موجود نیست';
+            });
+        } catch (_) {}
+    }
+
+    async function loadInventory() {
+        try {
+            const response = await fetch('{% url "community:shop_inventory_api" %}', {
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const data = await response.json();
+            if (!data.ok) throw new Error(data.error);
+            if (!data.items.length) {
+                grid.innerHTML = '<div class="empty-state">آیتم قابل معامله‌ای پیدا نشد؛ Inventory استیم باید Public باشد.</div>';
+                return;
+            }
+            const listed = new Set(data.listed_asset_ids);
+            grid.innerHTML = data.items.map(item => itemCard(item, listed.has(item.asset_id))).join('');
+            const batches = [];
+            for (let index = 0; index < data.items.length; index += 6) {
+                batches.push(data.items.slice(index, index + 6));
+            }
+            async function priceWorker() {
+                while (batches.length) await loadPriceBatch(batches.shift());
+            }
+            priceWorker();
+            priceWorker();
+        } catch (error) {
+            grid.innerHTML = '<div class="empty-state">دریافت Inventory ناموفق بود؛ دوباره تلاش کن.</div>';
+        }
+    }
+    loadInventory();
+})();
+</script>
+{% endif %}
+{% endblock %}

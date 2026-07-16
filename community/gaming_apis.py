@@ -1,6 +1,8 @@
 import re
 import time
 import requests
+import json
+import subprocess
 import xml.etree.ElementTree as ET
 from urllib.parse import quote, urlencode
 from django.conf import settings
@@ -29,6 +31,92 @@ def _steam_post(url, data=None, timeout=8):
     if STEAM_PROXY_URL:
         url = f'{STEAM_PROXY_URL.rstrip("/")}/?url=' + quote(url, safe='')
     return requests.post(url, data=data, timeout=timeout)
+
+
+def _steam_inventory_payload(url, params=None, timeout=20):
+    """Inventory روی بعضی IPها درخواست‌های python-requests را 429 می‌کند.
+    در این حالت curl با TLS/browser fingerprint متفاوت fallback مطمئن‌تری است."""
+    response = _steam_get(
+        url,
+        params=params,
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                          '(KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+            'Accept': 'application/json,text/plain,*/*',
+            'Referer': url.rsplit('/inventory/', 1)[0] + '/inventory/',
+        },
+        timeout=timeout,
+    )
+    if response.status_code == 200:
+        return response.json()
+    if response.status_code != 429:
+        response.raise_for_status()
+
+    query = urlencode(params or {})
+    final_url = url + (('?' + query) if query else '')
+    completed = subprocess.run(
+        [
+            'curl', '--silent', '--show-error', '--fail', '--location',
+            '--max-time', str(timeout),
+            '--header', 'Accept: application/json,text/plain,*/*',
+            '--header', 'User-Agent: Mozilla/5.0',
+            final_url,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return json.loads(completed.stdout)
+
+
+def _curl_json(url, params=None, timeout=15):
+    command = [
+        'curl', '--silent', '--show-error', '--fail', '--location',
+        '--max-time', str(timeout),
+        '--header', 'Accept: application/json',
+        '--header', 'User-Agent: Mozilla/5.0',
+    ]
+    if params:
+        command.extend(['--get', url])
+        for key, value in params.items():
+            command.extend(['--data-urlencode', f'{key}={value}'])
+    else:
+        command.append(url)
+    completed = subprocess.run(
+        command, check=True, capture_output=True, text=True,
+    )
+    return json.loads(completed.stdout)
+
+
+def get_live_usd_to_toman():
+    """نرخ لحظه‌ای USDT/IRT نوبیتکس؛ fallback به مقدار تنظیمات پروژه."""
+    from decimal import Decimal
+    from django.core.cache import cache
+
+    cache_key = 'shop_live_usd_to_toman'
+    cached = cache.get(cache_key)
+    if cached:
+        return int(cached)
+    fallback = int(getattr(settings, 'USD_TO_TOMAN', 60000))
+    try:
+        params = {'srcCurrency': 'usdt', 'dstCurrency': 'rls'}
+        response = requests.get(
+            'https://apiv2.nobitex.ir/market/stats', params=params, timeout=10,
+            headers={'Accept': 'application/json', 'User-Agent': 'GameBeat/1.0'},
+        )
+        payload = response.json() if response.status_code == 200 else _curl_json(
+            'https://apiv2.nobitex.ir/market/stats', params=params, timeout=10,
+        )
+        stats = payload.get('stats', {}).get('usdt-rls', {})
+        # API بازار RLS مبلغ را به ریال می‌دهد؛ فروشگاه با تومان کار می‌کند.
+        rial_rate = Decimal(str(stats.get('latest') or stats.get('mark') or stats.get('bestSell')))
+        toman_rate = int(rial_rate / 10)
+        if toman_rate > 10000:
+            cache.set(cache_key, toman_rate, 300)
+            return toman_rate
+    except Exception:
+        pass
+    return fallback
 
 
 def _steam_lookup_by_xml(vanity_or_id):
@@ -454,6 +542,128 @@ def fetch_cs2_medals(steam64):
         return out
     except Exception:
         return []
+
+
+def fetch_steam_inventory(steam64, app_id=730, context_id='2', count=500):
+    """موجودی قابل معاملهٔ استیم را با اطلاعات لازم برای فروشگاه برمی‌گرداند."""
+    from decimal import Decimal
+    from django.conf import settings
+
+    cdn = 'https://community.cloudflare.steamstatic.com/economy/image/'
+    from django.core.cache import cache
+
+    cache_key = f'steam_inventory_{steam64}_{app_id}_{context_id}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        payload = _steam_inventory_payload(
+            f'https://steamcommunity.com/inventory/{steam64}/{int(app_id)}/{context_id}',
+            params={'l': 'english', 'count': min(int(count), 1000)},
+            timeout=20,
+        )
+        if not payload.get('success'):
+            return []
+        descriptions = {
+            (str(item.get('classid')), str(item.get('instanceid', '0'))): item
+            for item in payload.get('descriptions', [])
+        }
+        usd_to_toman = Decimal(str(getattr(settings, 'USD_TO_TOMAN', 60000)))
+        result = []
+        for asset in payload.get('assets', []):
+            desc = descriptions.get((str(asset.get('classid')), str(asset.get('instanceid', '0'))), {})
+            if not desc or desc.get('tradable') != 1 or not desc.get('marketable'):
+                continue
+            tags = {tag.get('category'): tag.get('localized_tag_name', '') for tag in desc.get('tags', [])}
+            result.append({
+                'app_id': int(app_id),
+                'context_id': str(context_id),
+                'asset_id': str(asset.get('assetid', '')),
+                'class_id': str(asset.get('classid', '')),
+                'instance_id': str(asset.get('instanceid', '0')),
+                'name': desc.get('market_name') or desc.get('name', ''),
+                'market_hash_name': desc.get('market_hash_name') or desc.get('market_name') or desc.get('name', ''),
+                'icon_url': cdn + (desc.get('icon_url_large') or desc.get('icon_url', '')),
+                'exterior': tags.get('Exterior', ''),
+                'rarity': tags.get('Rarity', ''),
+                'amount': int(asset.get('amount', 1)),
+                'estimated_usd': None,
+                'estimated_toman': None,
+                'usd_to_toman': int(usd_to_toman),
+            })
+        cache.set(cache_key, result, 300)
+        return result
+    except Exception:
+        return []
+
+
+def enrich_steam_inventory_prices(items, max_items=32, usd_to_toman=None):
+    """قیمت دلاری Steam Community Market را موازی می‌خواند و به تومان تبدیل می‌کند."""
+    import re
+    from concurrent.futures import ThreadPoolExecutor
+    from decimal import Decimal, InvalidOperation
+    from django.conf import settings
+
+    from django.core.cache import cache
+    from hashlib import sha256
+
+    usd_to_toman = Decimal(str(usd_to_toman or get_live_usd_to_toman()))
+
+    def fetch_price(item):
+        price_key = sha256(item['market_hash_name'].encode('utf-8')).hexdigest()[:24]
+        cache_key = f"steam_market_price_{item['app_id']}_{price_key}"
+        try:
+            cached_usd = cache.get(cache_key)
+            if cached_usd is not None:
+                usd = Decimal(str(cached_usd))
+                item['estimated_usd'] = usd
+                item['estimated_toman'] = int(usd * usd_to_toman)
+                return item
+            params = {
+                'appid': item['app_id'],
+                'currency': 1,
+                'market_hash_name': item['market_hash_name'],
+            }
+            # search/render نسبت به priceoverview محدودیت نرخ بسیار کمتری دارد
+            # و پایین‌ترین قیمت فروش را مستقیماً به سنت برمی‌گرداند.
+            search_payload = _curl_json(
+                'https://steamcommunity.com/market/search/render/',
+                params={
+                    'query': item['market_hash_name'],
+                    'start': 0,
+                    'count': 10,
+                    'search_descriptions': 0,
+                    'sort_column': 'popular',
+                    'sort_dir': 'desc',
+                    'appid': item['app_id'],
+                    'norender': 1,
+                },
+                timeout=10,
+            )
+            exact = next(
+                (
+                    result for result in search_payload.get('results', [])
+                    if result.get('hash_name') == item['market_hash_name']
+                ),
+                None,
+            )
+            if not exact or exact.get('sell_price') is None:
+                return item
+            usd = Decimal(str(exact['sell_price'])) / Decimal('100')
+
+            if usd >= 0:
+                item['estimated_usd'] = usd
+                item['estimated_toman'] = int(usd * usd_to_toman)
+                cache.set(cache_key, str(usd), 60 * 60)
+        except (InvalidOperation, ValueError, TypeError, Exception):
+            pass
+        return item
+
+    priced = list(items[:max(max_items, len(items))])
+    # Steam برای priceoverview روی درخواست‌های هم‌زمان زیاد 429 می‌دهد.
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        priced = list(executor.map(fetch_price, priced))
+    return priced + list(items[max_items:])
 
 
 def import_and_enrich_steam(steam64, user_id=None):

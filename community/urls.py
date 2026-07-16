@@ -142,4 +142,11 @@ urlpatterns = [
     path('premium/', views.premium_info, name='premium_info'),
     # تماس با ما (پابلیک)
     path('contact/', views.contact, name='contact'),
+    # فروشگاه آیتم‌های استیم و کیف پول تومانی
+    path('shop/', views.shop, name='shop'),
+    path('shop/api/inventory/', views.shop_inventory_api, name='shop_inventory_api'),
+    path('shop/api/prices/', views.shop_prices_api, name='shop_prices_api'),
+    path('shop/listings/create/', views.shop_create_listing, name='shop_create_listing'),
+    path('shop/listings/<int:listing_id>/buy/', views.shop_buy_listing, name='shop_buy_listing'),
+    path('shop/listings/<int:listing_id>/cancel/', views.shop_cancel_listing, name='shop_cancel_listing'),
 ]

@@ -675,6 +675,89 @@ class GamingAccount(models.Model):
 
 
 # ═══════════════════════════════════════
+#  STEAM MARKET & TOMAN WALLET
+# ═══════════════════════════════════════
+
+class TomanWallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='toman_wallet')
+    balance = models.PositiveBigIntegerField(default=0, verbose_name='موجودی (تومان)')
+    locked_balance = models.PositiveBigIntegerField(default=0, verbose_name='موجودی مسدود (تومان)')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'کیف پول تومانی'
+        verbose_name_plural = 'کیف پول‌های تومانی'
+
+    def __str__(self):
+        return f'{self.user.username}: {self.balance:,} تومان'
+
+
+class TomanWalletTransaction(models.Model):
+    TYPE_CHOICES = [
+        ('deposit', 'واریز'),
+        ('purchase', 'خرید آیتم'),
+        ('sale', 'فروش آیتم'),
+        ('refund', 'بازگشت وجه'),
+        ('adjustment', 'اصلاح دستی'),
+    ]
+    wallet = models.ForeignKey(TomanWallet, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=16, choices=TYPE_CHOICES)
+    amount = models.BigIntegerField(help_text='مبلغ مثبت برای افزایش و منفی برای کاهش موجودی')
+    balance_after = models.PositiveBigIntegerField()
+    reference = models.CharField(max_length=80, blank=True, db_index=True)
+    description = models.CharField(max_length=240, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'تراکنش تومانی'
+        verbose_name_plural = 'تراکنش‌های تومانی'
+
+
+class SteamMarketListing(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'فعال'),
+        ('reserved', 'رزرو شده'),
+        ('sold', 'فروخته شده'),
+        ('cancelled', 'لغو شده'),
+    ]
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='steam_listings')
+    buyer = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name='steam_purchases'
+    )
+    app_id = models.PositiveIntegerField(default=730)
+    context_id = models.CharField(max_length=20, default='2')
+    asset_id = models.CharField(max_length=80)
+    class_id = models.CharField(max_length=80, blank=True)
+    instance_id = models.CharField(max_length=80, blank=True)
+    market_hash_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=255)
+    icon_url = models.URLField(max_length=600, blank=True)
+    exterior = models.CharField(max_length=80, blank=True)
+    rarity = models.CharField(max_length=80, blank=True)
+    steam_price_usd = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    price_toman = models.PositiveBigIntegerField()
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='active', db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    sold_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['seller', 'app_id', 'context_id', 'asset_id'],
+                condition=models.Q(status__in=['active', 'reserved']),
+                name='unique_open_steam_asset_listing',
+            ),
+        ]
+        verbose_name = 'آگهی بازار استیم'
+        verbose_name_plural = 'آگهی‌های بازار استیم'
+
+    def __str__(self):
+        return f'{self.item_name} - {self.price_toman:,} تومان'
+
+
+# ═══════════════════════════════════════
 #  GAME BACKLOG
 # ═══════════════════════════════════════
 

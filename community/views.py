@@ -3,7 +3,9 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
+from django.db import IntegrityError, transaction
 from django.db.models import Q, Count, Case, When, Value, IntegerField
 from django.views.decorators.http import require_POST
 from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, AchievementDefinition, GamingAccount, Hashtag, Report
@@ -17,6 +19,7 @@ from .models import SpinWheel, SpinWheelItem, SpinRecord
 from .models import ZarbanWallet, ZarbanTransaction
 from .models import ProfileView, PremiumPlan
 from .models import DailyMission, DailyMissionProgress, MissionDay
+from .models import TomanWallet, TomanWalletTransaction, SteamMarketListing
 from .seo import (
     DEFAULT_ROBOTS,
     build_seo,
@@ -54,6 +57,199 @@ def _to_jalali(dt, fmt='%Y/%m/%d'):
 def get_or_create_gamer_profile(user):
     profile, _ = GamerProfile.objects.get_or_create(user=user)
     return profile
+
+
+def _steam64_for_user(user):
+    account = GamingAccount.objects.filter(user=user, platform='steam', verified=True).first()
+    if not account:
+        return None, None
+    match = re.search(r'/(?:profiles|id)/(\d+)', account.profile_url or '')
+    steam64 = match.group(1) if match else None
+    return account, steam64
+
+
+@login_required
+def shop(request):
+    wallet, _ = TomanWallet.objects.get_or_create(user=request.user)
+    steam_account, steam64 = _steam64_for_user(request.user)
+
+    listings = SteamMarketListing.objects.filter(status='active').select_related('seller')
+    my_listings = listings.filter(seller=request.user)
+    market_listings = listings.exclude(seller=request.user)
+    return render(request, 'community/shop.html', {
+        'wallet': wallet,
+        'steam_account': steam_account,
+        'my_listings': my_listings[:20],
+        'listed_asset_ids': set(my_listings.values_list('asset_id', flat=True)),
+        'market_listings': market_listings[:60],
+        'usd_to_toman': getattr(settings, 'USD_TO_TOMAN', 60000),
+    })
+
+
+@login_required
+def shop_inventory_api(request):
+    _, steam64 = _steam64_for_user(request.user)
+    if not steam64:
+        return JsonResponse({'ok': False, 'error': 'حساب Steam متصل نیست.'}, status=400)
+    from .gaming_apis import fetch_steam_inventory
+    inventory = fetch_steam_inventory(steam64)
+    return JsonResponse({
+        'ok': True,
+        'items': inventory,
+        'listed_asset_ids': list(
+            SteamMarketListing.objects.filter(
+                seller=request.user, status__in=['active', 'reserved']
+            ).values_list('asset_id', flat=True)
+        ),
+    })
+
+
+@login_required
+@require_POST
+def shop_prices_api(request):
+    try:
+        body = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+    requested = body.get('items', [])[:6]
+    safe_items = []
+    for item in requested:
+        name = str(item.get('market_hash_name', ''))[:255]
+        if not name:
+            continue
+        safe_items.append({
+            'app_id': int(item.get('app_id', 730)),
+            'market_hash_name': name,
+            'estimated_usd': None,
+            'estimated_toman': None,
+        })
+    from .gaming_apis import enrich_steam_inventory_prices, get_live_usd_to_toman
+    rate = get_live_usd_to_toman()
+    priced = enrich_steam_inventory_prices(safe_items, usd_to_toman=rate)
+    return JsonResponse({
+        'ok': True,
+        'rate': rate,
+        'items': [{
+            'market_hash_name': item['market_hash_name'],
+            'usd': str(item['estimated_usd']) if item['estimated_usd'] is not None else None,
+            'toman': item['estimated_toman'],
+        } for item in priced],
+    })
+
+
+@login_required
+@require_POST
+def shop_create_listing(request):
+    _, steam64 = _steam64_for_user(request.user)
+    if not steam64:
+        messages.error(request, 'ابتدا حساب استیم تأییدشده‌ات را متصل کن.')
+        return redirect('community:shop')
+    try:
+        price_toman = int(request.POST.get('price_toman', '0').replace(',', ''))
+        app_id = int(request.POST.get('app_id', '730'))
+    except (TypeError, ValueError):
+        price_toman, app_id = 0, 730
+    if price_toman < 1000:
+        messages.error(request, 'حداقل قیمت آگهی ۱٬۰۰۰ تومان است.')
+        return redirect('community:shop')
+
+    asset_id = request.POST.get('asset_id', '').strip()
+    from .gaming_apis import fetch_steam_inventory
+    owned_item = next(
+        (item for item in fetch_steam_inventory(steam64, app_id) if item['asset_id'] == asset_id),
+        None,
+    )
+    if not owned_item:
+        messages.error(request, 'مالکیت یا قابل‌معامله بودن این آیتم تأیید نشد.')
+        return redirect('community:shop')
+
+    # فقط آگهی‌های باز مانع ثبت دوباره هستند؛ تاریخچهٔ لغوشده یا فروخته‌شده نباید
+    # جلوی فروش دوبارهٔ یک asset را بگیرد.
+    if SteamMarketListing.objects.filter(
+        seller=request.user,
+        app_id=app_id,
+        context_id=owned_item['context_id'],
+        asset_id=owned_item['asset_id'],
+        status__in=['active', 'reserved'],
+    ).exists():
+        messages.error(request, 'این آیتم هم‌اکنون آگهی فعال دارد. از بخش «آگهی‌های من» آن را مدیریت یا لغو کن.')
+        return redirect('community:shop')
+
+    try:
+        SteamMarketListing.objects.create(
+            seller=request.user,
+            app_id=app_id,
+            context_id=owned_item['context_id'],
+            asset_id=owned_item['asset_id'],
+            class_id=owned_item['class_id'],
+            instance_id=owned_item['instance_id'],
+            market_hash_name=owned_item['market_hash_name'],
+            item_name=owned_item['name'],
+            icon_url=owned_item['icon_url'],
+            exterior=owned_item['exterior'],
+            rarity=owned_item['rarity'],
+            price_toman=price_toman,
+        )
+    except IntegrityError:
+        # محافظت در برابر ثبت هم‌زمان از دو تب مرورگر.
+        messages.error(request, 'این آیتم هم‌اکنون آگهی فعال دارد.')
+    except Exception:
+        logger.exception('Unable to create Steam market listing for user=%s asset=%s', request.user.pk, asset_id)
+        messages.error(request, 'ثبت آگهی انجام نشد. لطفاً دوباره تلاش کن.')
+    else:
+        messages.success(request, 'آیتم با موفقیت در فروشگاه ثبت شد.')
+    return redirect('community:shop')
+
+
+@login_required
+@require_POST
+def shop_cancel_listing(request, listing_id):
+    listing = get_object_or_404(
+        SteamMarketListing, pk=listing_id, seller=request.user, status='active'
+    )
+    listing.status = 'cancelled'
+    listing.save(update_fields=['status'])
+    messages.success(request, 'آگهی لغو شد.')
+    return redirect('community:shop')
+
+
+@login_required
+@require_POST
+def shop_buy_listing(request, listing_id):
+    with transaction.atomic():
+        listing = (
+            SteamMarketListing.objects.select_for_update()
+            .select_related('seller')
+            .filter(pk=listing_id, status='active')
+            .first()
+        )
+        if not listing:
+            messages.error(request, 'این آگهی دیگر در دسترس نیست.')
+            return redirect('community:shop')
+        if listing.seller_id == request.user.id:
+            messages.error(request, 'نمی‌توانی آیتم خودت را بخری.')
+            return redirect('community:shop')
+        buyer_wallet, _ = TomanWallet.objects.select_for_update().get_or_create(user=request.user)
+        seller_wallet, _ = TomanWallet.objects.select_for_update().get_or_create(user=listing.seller)
+        if buyer_wallet.balance < listing.price_toman:
+            messages.error(request, 'موجودی کیف پول برای این خرید کافی نیست.')
+            return redirect('community:shop')
+
+        buyer_wallet.balance -= listing.price_toman
+        buyer_wallet.locked_balance += listing.price_toman
+        buyer_wallet.save(update_fields=['balance', 'locked_balance', 'updated_at'])
+        TomanWalletTransaction.objects.create(
+            wallet=buyer_wallet, transaction_type='purchase', amount=-listing.price_toman,
+            balance_after=buyer_wallet.balance, reference=f'listing:{listing.pk}',
+            description=f'رزرو خرید {listing.item_name}',
+        )
+        listing.buyer = request.user
+        listing.status = 'reserved'
+        listing.save(update_fields=['buyer', 'status'])
+        # وجه تا زمان تحویل Steam Trade Offer در کیف خریدار مسدود می‌ماند.
+        seller_wallet.save(update_fields=['updated_at'])
+    messages.success(request, 'خرید رزرو شد؛ مبلغ تا تأیید انتقال استیم در امانت است.')
+    return redirect('community:shop')
 
 
 def _display_name_for_user(user):

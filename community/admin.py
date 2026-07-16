@@ -4,6 +4,7 @@ from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, LFGF
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 from .models import DailyMission, DailyMissionProgress, MissionDay
 from .models import AchievementDefinition, GameReview, Report
+from .models import TomanWallet, TomanWalletTransaction, SteamMarketListing
 
 
 @admin.register(MissionDay)
@@ -83,6 +84,9 @@ admin.site.register(ActivityLog)
 admin.site.register(Club)
 admin.site.register(ClubMember)
 admin.site.register(ClubPost)
+admin.site.register(TomanWallet)
+admin.site.register(TomanWalletTransaction)
+admin.site.register(SteamMarketListing)
 
 
 @admin.register(Report)

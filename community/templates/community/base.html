@@ -1230,6 +1230,9 @@
             <a href="{% url 'community:games_ranking' %}" class="nav-link-item {% block nav_games %}{% endblock %}">
                 <svg class="bi bi-joystick" aria-hidden="true"><use href="#bi-joystick"></use></svg> بازی‌ها
             </a>
+            <a href="{% url 'community:shop' %}" class="nav-link-item {% block nav_shop %}{% endblock %}">
+                <svg class="bi bi-cart-plus" aria-hidden="true"><use href="#bi-cart-plus"></use></svg> فروشگاه
+            </a>
             <a href="{% url 'community:rewards_hub' %}" class="nav-link-item {% block nav_spin %}{% endblock %}" style="{% if request.resolver_match.url_name == 'rewards_hub' or request.resolver_match.url_name == 'spin_list' or request.resolver_match.url_name == 'spin_detail' or request.resolver_match.url_name == 'daily_missions' %}color:#a78bfa;{% endif %}">
                 <svg class="bi bi-circle-half" aria-hidden="true"><use href="#bi-circle-half"></use></svg> جوایز
             </a>
