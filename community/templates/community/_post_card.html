@@ -19,6 +19,9 @@
             </div>
         </a>
         <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
+            {% if user.is_authenticated %}
+            <button class="report-menu-btn" type="button" title="گزینه‌ها" onclick="openReportMenu(event, 'post', {{ post.id }})">⋮</button>
+            {% endif %}
             {% if post.boost_active %}
                 <span class="post-type-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.35);">🚀 بوست شده</span>
             {% endif %}
@@ -143,7 +146,9 @@
                 <div class="avatar-placeholder avatar-sm" style="font-size:0.7rem; background:linear-gradient(135deg,#4c1d95,#6d28d9); border:none; color:#fff;">{{ comment.author.username|first|upper }}</div>
             {% endif %}
             <div class="c-bubble">
-                <div class="c-author">@{{ comment.author.username }}</div>
+                <div class="c-author">@{{ comment.author.username }}
+                    {% if user.is_authenticated and user.id != comment.author_id %}<button class="comment-report-btn" type="button" onclick="openReportMenu(event, 'comment', {{ comment.id }})" title="گزارش کامنت">⋮</button>{% endif %}
+                </div>
                 <div class="c-text">{{ comment.content|hashtagify }}</div>
             </div>
         </div>

@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.http import Http404, HttpResponse, JsonResponse
 from django.db.models import Q, Count, Case, When, Value, IntegerField
 from django.views.decorators.http import require_POST
-from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, AchievementDefinition, GamingAccount, Hashtag
+from .models import GamerProfile, Post, PostLike, Comment, Follow, FollowRequest, LFGPost, LFGJoinRequest, LFGFeedback, Achievement, AchievementDefinition, GamingAccount, Hashtag, Report
 from .models import Notification, Conversation, Message, Block, PinnedConversation, MutedConversation
 from .models import GameBacklog, PostReaction
 from .models import ActivityLog, Challenge, Club, ClubMember, ClubPost
@@ -1259,6 +1259,27 @@ def add_comment(request, post_id):
         return JsonResponse({'ok': False, 'error': 'کامنت خالی است'}, status=400)
 
     return redirect(request.META.get('HTTP_REFERER', 'community:feed'))
+
+
+@login_required
+@require_POST
+def submit_report(request):
+    target_type = request.POST.get('target_type', '').strip()
+    target_id = request.POST.get('target_id', '').strip()
+    reason = request.POST.get('reason', 'other').strip()
+    details = request.POST.get('details', '').strip()[:500]
+    targets = {'post': Post, 'comment': Comment, 'user': User, 'message': Message}
+    if target_type not in targets or not target_id.isdigit() or reason not in dict(Report.REASON_CHOICES):
+        return JsonResponse({'ok': False, 'error': 'درخواست گزارش نامعتبر است'}, status=400)
+    target = get_object_or_404(targets[target_type], pk=int(target_id))
+    field = {'post': 'post', 'comment': 'comment', 'user': 'target_user', 'message': 'message'}[target_type]
+    report, created = Report.objects.get_or_create(
+        reporter=request.user, target_type=target_type, **{field: target},
+        defaults={'reason': reason, 'details': details},
+    )
+    if not created:
+        return JsonResponse({'ok': False, 'error': 'این مورد را قبلاً گزارش کرده‌اید'}, status=409)
+    return JsonResponse({'ok': True, 'message': 'گزارش شما ثبت شد و بررسی می‌شود.'})
 
 
 @login_required

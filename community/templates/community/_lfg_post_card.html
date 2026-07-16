@@ -61,7 +61,7 @@
 
     <div class="lfg-time"><svg class="bi bi-clock" aria-hidden="true"><use href="#bi-clock"></use></svg> {{ post.created_at|timesince }} پیش</div>
     {% if post.scheduled_for %}
-    <div class="lfg-time"><svg class="bi bi-calendar-event" aria-hidden="true"><use href="#bi-calendar-event"></use></svg> زمان بازی: {{ post.scheduled_for|jalali:"Y/m/d H:i" }}</div>
+    <div class="lfg-time"><svg class="bi bi-calendar-event" aria-hidden="true"><use href="#bi-calendar-event"></use></svg> زمان شروع: {{ post.scheduled_for|jalali:"Y/m/d H:i" }}</div>
     {% endif %}
 
     <!-- ── join row ── -->

@@ -1914,3 +1914,25 @@ class PageView(models.Model):
         verbose_name        = 'بازدید صفحه'
         verbose_name_plural = 'بازدیدهای صفحات'
         indexes = [models.Index(fields=['page_type', 'viewed_at'])]
+
+
+class Report(models.Model):
+    TARGET_CHOICES = [('post', 'پست'), ('comment', 'کامنت'), ('user', 'کاربر'), ('message', 'پیام')]
+    REASON_CHOICES = [('spam', 'اسپم یا تبلیغات'), ('abuse', 'توهین یا آزار'), ('sexual', 'محتوای نامناسب'), ('cheating', 'تقلب یا کلاهبرداری'), ('other', 'سایر')]
+    STATUS_CHOICES = [('open', 'باز'), ('reviewing', 'در حال بررسی'), ('resolved', 'رسیدگی شد'), ('rejected', 'رد شد')]
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_reports', verbose_name='گزارش‌دهنده')
+    target_type = models.CharField(max_length=10, choices=TARGET_CHOICES, verbose_name='نوع هدف')
+    post = models.ForeignKey('Post', null=True, blank=True, on_delete=models.CASCADE, related_name='reports')
+    comment = models.ForeignKey('Comment', null=True, blank=True, on_delete=models.CASCADE, related_name='reports')
+    target_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='received_reports', verbose_name='کاربر گزارش‌شده')
+    message = models.ForeignKey('Message', null=True, blank=True, on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES, default='other', verbose_name='دلیل')
+    details = models.CharField(max_length=500, blank=True, verbose_name='توضیحات')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='open', db_index=True, verbose_name='وضعیت')
+    admin_note = models.TextField(blank=True, verbose_name='یادداشت ادمین')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'گزارش محتوا'
+        verbose_name_plural = 'گزارش‌های محتوا'

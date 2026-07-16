@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import GamerProfile, Post, PostLike, Comment, Follow, LFGPost, LFGFeedback, Achievement
 from .models import Challenge, Club, ClubMember, ClubPost, ActivityLog, ScoreSettings
 from .models import DailyMission, DailyMissionProgress, MissionDay
-from .models import AchievementDefinition, GameReview
+from .models import AchievementDefinition, GameReview, Report
 
 
 @admin.register(MissionDay)
@@ -83,6 +83,21 @@ admin.site.register(ActivityLog)
 admin.site.register(Club)
 admin.site.register(ClubMember)
 admin.site.register(ClubPost)
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'target_type', 'target_summary', 'reporter', 'reason', 'status', 'created_at')
+    list_editable = ('status',)
+    list_filter = ('target_type', 'reason', 'status', 'created_at')
+    search_fields = ('reporter__username', 'target_user__username', 'details', 'admin_note', 'post__content', 'comment__content', 'message__content')
+    readonly_fields = ('reporter', 'target_type', 'post', 'comment', 'target_user', 'message', 'reason', 'details', 'created_at')
+    date_hierarchy = 'created_at'
+
+    @admin.display(description='مورد گزارش')
+    def target_summary(self, obj):
+        target = obj.post or obj.comment or obj.target_user or obj.message
+        return str(target)[:80] if target else '-'
 
 
 @admin.register(GamerProfile)
