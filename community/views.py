@@ -32,6 +32,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 import re
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 import json
@@ -1161,6 +1162,7 @@ def edit_profile(request):
 
     context = {
         'profile': profile,
+        'neshan_map_api_key': os.environ.get('NESHAN_MAP_API_KEY', '').strip(),
         'platform_choices': PLATFORM_CHOICES,
         'city_choices': CITY_CHOICES,
         'name_display_choices': GamerProfile.NAME_DISPLAY_CHOICES,
@@ -4977,6 +4979,7 @@ def gamer_finder_page(request):
     all_games = sorted(all_games_set, key=lambda x: x.lower())
 
     return render(request, 'community/gamer_finder.html', {
+        'neshan_map_api_key': os.environ.get('NESHAN_MAP_API_KEY', '').strip(),
         'user_lat':          float(profile.location_lat) if profile.location_lat else None,
         'user_lng':          float(profile.location_lng) if profile.location_lng else None,
         'user_label':        user_label,

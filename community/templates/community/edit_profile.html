@@ -979,8 +979,16 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if neshan_map_api_key %}
+<link rel="stylesheet" href="https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.css">
+<script src="https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.js"></script>
+{% else %}
 <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/css/maplibre-gl-4.7.1.css' %}">
 <script src="{% static 'js/leaflet.js' %}"></script>
+<script src="{% static 'vendor/js/maplibre-gl-4.7.1.js' %}"></script>
+<script src="{% static 'vendor/js/leaflet-maplibre-gl-0.0.22.js' %}"></script>
+{% endif %}
 <script>
 /* ── Avatar preview ── */
 function previewAvatar(input) {
@@ -1276,15 +1284,25 @@ function initEpMap() {
   const savedLng = parseFloat('{{ profile.location_lng|default:"51.4" }}') || 51.4;
   const hasLoc   = {{ profile.location_lat|yesno:"true,false" }};
 
+  {% if neshan_map_api_key %}
+  epMap = new L.Map('ep-map', {
+    key: '{{ neshan_map_api_key|escapejs }}',
+    maptype: 'standard-night',
+    center: [savedLat, savedLng],
+    zoom: hasLoc ? 13 : 6,
+    zoomControl: false
+  });
+  {% else %}
   epMap = L.map('ep-map', { zoomControl: false }).setView([savedLat, savedLng], hasLoc ? 13 : 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(epMap);
+  L.maplibreGL({ style: "{% static 'maps/openfreemap-liberty-fa.json' %}" }).addTo(epMap);
+  epMap.attributionControl.addAttribution('<a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>');
+  {% endif %}
   L.control.zoom({ position: 'topleft' }).addTo(epMap);
 
-  epMap.on('tileload', () => {
-    document.querySelectorAll('#ep-map .leaflet-tile').forEach(t => {
-      t.style.filter = 'brightness(0.82) saturate(0.55) hue-rotate(195deg) contrast(1.06)';
-    });
-  });
+  {% if not neshan_map_api_key %}
+  const mapCanvas = epMap.getContainer().querySelector('.maplibregl-canvas');
+  if (mapCanvas) mapCanvas.style.filter = 'brightness(0.82) saturate(0.55) hue-rotate(195deg) contrast(1.06)';
+  {% endif %}
 
   if (hasLoc) {
     epMarker = L.marker([savedLat, savedLng], { icon: neonIcon }).addTo(epMap);

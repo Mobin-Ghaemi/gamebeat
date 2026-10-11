@@ -4,7 +4,12 @@
 {% block nav_gamer_finder %}active{% endblock %}
 
 {% block extra_css %}
+{% if neshan_map_api_key %}
+<link rel="stylesheet" href="https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.css">
+{% else %}
 <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/css/maplibre-gl-4.7.1.css' %}">
+{% endif %}
 <style>
 /* Orbitron removed — fallback to system monospace */
 
@@ -403,9 +408,10 @@ body{background:var(--bg);font-family:'Vazirmatn',sans-serif;color:var(--text)}
 /* ════ MAP ════ */
 .gf-map-wrap{flex:1;position:relative;overflow:hidden}
 #gf-map{width:100%;height:100%}
-.leaflet-tile{filter:brightness(.7) saturate(.3) hue-rotate(205deg) contrast(1.18)}
+{% if not neshan_map_api_key %}.leaflet-gl-layer canvas{filter:brightness(.7) saturate(.3) hue-rotate(205deg) contrast(1.18)}{% endif %}
 .leaflet-container{background:var(--bg) !important;font-family:'Vazirmatn',sans-serif !important}
-.leaflet-control-attribution{display:none}
+.leaflet-control-attribution{font:10px Arial,sans-serif !important;background:rgba(4,4,20,.8) !important;color:#cbd5e1 !important}
+.leaflet-control-attribution a{color:#a5b4fc !important}
 .leaflet-control-zoom a{
   background:rgba(4,4,18,.95) !important;border:1px solid var(--brd) !important;
   color:var(--p2) !important;width:30px !important;height:30px !important;line-height:28px !important;
@@ -877,7 +883,13 @@ body{background:var(--bg);font-family:'Vazirmatn',sans-serif;color:var(--text)}
 {% endblock %}
 
 {% block extra_js %}
+{% if neshan_map_api_key %}
+<script src="https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.js"></script>
+{% else %}
 <script src="{% static 'js/leaflet.js' %}"></script>
+<script src="{% static 'vendor/js/maplibre-gl-4.7.1.js' %}"></script>
+<script src="{% static 'vendor/js/leaflet-maplibre-gl-0.0.22.js' %}"></script>
+{% endif %}
 <script>
 const CITY_GAMERS = {{ city_gamers_json|safe }};
 const CITYMATES   = {{ citymates_json|safe }};
@@ -901,9 +913,20 @@ const getPlt = c => PLT[c] || PLT.multi;
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 /* ══ Map ══ */
+{% if neshan_map_api_key %}
+const map = new L.Map('gf-map', {
+  key: '{{ neshan_map_api_key|escapejs }}',
+  maptype: 'standard-night',
+  center: HAS_LOC&&USER_LAT?[USER_LAT,USER_LNG]:[32.5,53.7],
+  zoom: HAS_LOC&&USER_LAT?12:5,
+  zoomControl: false
+});
+{% else %}
 const map = L.map('gf-map',{zoomControl:false})
   .setView(HAS_LOC&&USER_LAT?[USER_LAT,USER_LNG]:[32.5,53.7], HAS_LOC&&USER_LAT?12:5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+L.maplibreGL({style:"{% static 'maps/openfreemap-liberty-fa.json' %}"}).addTo(map);
+map.attributionControl.addAttribution('<a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>');
+{% endif %}
 L.control.zoom({position:'bottomleft'}).addTo(map);
 
 if(HAS_LOC&&USER_LAT){
