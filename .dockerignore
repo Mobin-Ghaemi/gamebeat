@@ -1,14 +1,10 @@
 .git
-.gitignore
+.env
+.env.*
 __pycache__
 *.pyc
-*.pyo
-.env
-env/
-.venv/
 *.sqlite3
 media/
 staticfiles/
 .claude/
-start_server.py
-node_modules/
+.claire/

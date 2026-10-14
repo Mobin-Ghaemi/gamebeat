@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+__pycache__
+*.pyc
+*.sqlite3
+media/
+staticfiles/
+.claude/
+.claire/
