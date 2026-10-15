@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install -r /tmp/requirements.
     && pip check \
     && groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home app
-COPY . /app
+COPY --chown=10001:10001 . /app
 RUN pip freeze > /app/deploy/requirements.resolved.txt
 ENV DJANGO_SETTINGS_MODULE=deploy.settings
 USER 10001:10001

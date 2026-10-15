@@ -1,0 +1,6 @@
+app.env
+secrets/
+*.key
+*.pem
+__pycache__/
+*.pyc

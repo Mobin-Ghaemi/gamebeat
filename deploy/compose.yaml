@@ -1,0 +1,88 @@
+name: gamebeat
+x-logging: &logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+services:
+  db:
+    image: postgres:17-bookworm@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets:
+      - postgres_admin_password
+      - source: db_init_password
+        target: db_password
+    command: ["postgres", "-c", "max_connections=50", "-c", "shared_buffers=256MB", "-c", "work_mem=4MB", "-c", "maintenance_work_mem=64MB", "-c", "log_min_duration_statement=1000", "-c", "log_statement=none"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    networks: [database]
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 200
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    logging: *logging
+  web:
+    image: gamebeat-web:20261014T171224Z-fd810a061b5b-745196
+    build:
+      context: /root/gamebeat
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file: app.env
+    environment:
+      DJANGO_SETTINGS_MODULE: deploy.settings
+      DJANGO_SECRET_KEY_FILE: /run/secrets/django_secret_key
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_HOST: db
+      DB_NAME: gamebeat
+      DB_USER: gamebeat
+    secrets: [django_secret_key, db_password]
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["127.0.0.1:18002:8000"]
+    networks: [database, outbound]
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1536m
+    cpus: 1.5
+    pids_limit: 150
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz/',timeout=5).read()"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 30s
+    logging: *logging
+networks:
+  database:
+    internal: true
+  outbound: {}
+volumes:
+  postgres_data: {}
+secrets:
+  db_init_password:
+    file: ./secrets/db_init_password
+  postgres_admin_password:
+    file: ./secrets/postgres_admin_password
+  db_password:
+    file: ./secrets/db_password
+  django_secret_key:
+    file: ./secrets/django_secret_key
